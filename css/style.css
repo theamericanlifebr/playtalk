@@ -1,0 +1,516 @@
+body {
+  margin: 0;
+  background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+  font-family: 'Open Sans', sans-serif;
+}
+
+body.dark-mode {
+  background: #000;
+  color: #fff;
+}
+
+body.dark-mode #pt,
+body.dark-mode #texto-exibicao,
+body.dark-mode #resultado,
+body.dark-mode #acertos,
+body.dark-mode #nivel-mensagem,
+body.dark-mode #timer {
+  color: #fff;
+  caret-color: #fff;
+}
+
+#top-nav {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 10px 0;
+  background: linear-gradient(90deg, #00b3b3, #00cccc);
+  font-family: 'Open Sans', sans-serif;
+}
+
+body.dark-mode #top-nav {
+  background: linear-gradient(90deg, #006666, #008080);
+}
+
+#top-nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: normal;
+  font-size: 14px;
+}
+
+body.dark-mode #top-nav a {
+  color: #fff;
+}
+
+body.dark-mode #intro-overlay {
+  background: #000;
+}
+
+.custom-title {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 15px;
+}
+
+.custom-info {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  margin: 5px 0;
+}
+
+#visor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: 100vh;
+  padding: 0 5vw 200px 5vw;
+  display: none;
+}
+
+#menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  height: 100vh;
+}
+
+#clock {
+  font-size: clamp(40px, 8vw, 80px);
+  font-family: 'Open Sans', sans-serif;
+  font-weight: normal;
+  color: #000;
+  text-align: center;
+}
+
+#menu-logo {
+  width: 100px;
+  height: auto;
+}
+
+body.dark-mode #menu-logo {
+  filter: invert(1);
+}
+
+body.dark-mode #clock {
+  color: #fff;
+}
+
+#menu-modes {
+  display: grid;
+  grid-template-columns: repeat(3, 227px);
+  grid-auto-rows: 227px;
+  gap: 50px;
+}
+
+#menu-modes img {
+  width: 227px;
+  height: 227px;
+  object-fit: contain;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.2s linear;
+}
+
+
+#pt-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 90vw;
+}
+
+#pt {
+  font-size: clamp(32px, 6vw, 50px);
+  color: #333;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: center;
+  width: 100%;
+  caret-color: #333;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: normal;
+  display: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  resize: none;
+}
+
+
+#texto-exibicao {
+  font-size: clamp(32px, 6vw, 50px);
+  color: #333;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: bold;
+  text-align: center;
+  max-width: 90vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#score {
+  display: none;
+}
+
+#barra-progresso {
+  width: 100%;
+  max-width: 90vw;
+  height: 20px;
+  background: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+#barra-preenchida {
+  height: 100%;
+  width: 0%;
+  background-color: #ff0000;
+  border-radius: 10px;
+  transition: width 1.5s linear, background-color 1.5s linear;
+}
+
+#resultado, #acertos {
+  color: #333;
+}
+
+#acertos {
+  display: none;
+}
+
+#nivel-indicador {
+  position: absolute;
+  top: 70px;
+  left: 70px;
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+
+#timer {
+  display: none;
+  font-size: 18px;
+  color: #333;
+}
+
+#nivel-mensagem {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 40px;
+  color: #444;
+  font-family: 'Open Sans', sans-serif;
+  display: none;
+}
+
+#intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#intro-image {
+  width: 250px;
+  height: 250px;
+}
+
+#intro-progress {
+  position: absolute;
+  bottom: 30px;
+  width: 100%;
+  max-width: 90vw;
+  height: 20px;
+  background: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#intro-progress-filled {
+  width: 0%;
+  height: 100%;
+  background-color: #ff0000;
+}
+
+#mode-stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  margin-top: 100px;
+}
+
+#mode-stats .stat-circle {
+  width: 180px;
+  height: 230px;
+}
+
+#mode-stats .stat-circle svg {
+  width: 180px;
+  height: 180px;
+}
+
+#mode-icon {
+  width: 250px;
+  height: 250px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 500ms linear;
+}
+
+#mode-buttons {
+  position: fixed;
+  bottom: 135px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  z-index: 999;
+}
+
+#mode-buttons img {
+  width: 117px;
+  height: 117px;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.2s linear;
+}
+
+#play-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+}
+
+@media (max-width: 600px) {
+  #mode-icon {
+    width: 150px;
+    height: 150px;
+  }
+
+  #clock {
+    font-size: 12vw;
+  }
+
+  #menu-modes {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  #menu-modes img {
+    width: 36.4vw;
+    height: 36.4vw;
+  }
+}
+
+@keyframes mode1Zoom {
+  from { transform: scale(0.8); }
+  to { transform: scale(1); }
+}
+
+@keyframes modeZoom {
+  from { transform: scale(0.8); }
+  to { transform: scale(1); }
+}
+
+#logo-top {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: auto;
+  z-index: 1000;
+  display: none;
+}
+
+#tutorial-logo {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20%;
+  height: auto;
+  z-index: 10000;
+  display: none;
+}
+
+#ilife-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+#ilife-logo {
+  width: 20%;
+  height: auto;
+  opacity: 0;
+  animation: fadeIn 1000ms forwards;
+}
+
+#ilife-text {
+  margin-top: 10px;
+  color: #777;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: normal;
+  font-size: 17px;
+  text-align: center;
+}
+
+#next-level-msg {
+  margin-top: 10px;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: normal;
+  font-size: 14px;
+  color: #777;
+  opacity: 0;
+  transition: opacity 500ms linear;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Play stats page */
+.mode-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 60px;
+}
+
+.mode-section .mode-image {
+  width: 227px;
+  height: 227px;
+  object-fit: contain;
+  margin-bottom: 20px;
+}
+
+.graphs-row {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat-circle {
+  position: relative;
+  width: 210px;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-circle svg {
+  width: 210px;
+  height: 210px;
+  transform: rotate(-90deg);
+}
+
+.circle-bg {
+  fill: none;
+  stroke: #444;
+  stroke-width: 9.75;
+  opacity: 0.3;
+}
+
+.circle-progress {
+  fill: none;
+  stroke-width: 9.75;
+  stroke-linecap: butt;
+  transition: stroke-dashoffset 1s;
+}
+
+.circle-icon {
+  position: absolute;
+  top: calc(50% - 30px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+}
+
+.circle-value {
+  margin-top: 12px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+
+.circle-label {
+  margin-top: 8px;
+  font-size: 18px;
+  font-family: 'Open Sans', sans-serif;
+  text-align: center;
+}
+
+.circle-extra {
+  font-size: 16px;
+  font-family: 'Open Sans', sans-serif;
+  margin-top: 7px;
+  text-align: center;
+}
+.ranking-title-blue {
+  color: blue;
+}
+.ranking-title-red {
+  color: red;
+}
+.ranking-title-lime {
+  color: lime;
+}
+.ranking-table {
+  margin: 10px auto;
+  border-collapse: collapse;
+}
+.ranking-table th, .ranking-table td {
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: 'Open Sans', sans-serif;
+}
+.ranking-table.blue {
+  color: blue;
+}
+.ranking-table.red {
+  color: red;
+}
+.ranking-table.lime {
+  color: lime;
+}
+
