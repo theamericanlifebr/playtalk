@@ -9,6 +9,29 @@ body.dark-mode {
   color: #fff;
 }
 
+body.theme-blue {
+  background: linear-gradient(180deg, #0b3d91 0%, #0a2a66 40%, #021533 100%);
+  color: #f0f6ff;
+}
+
+body.theme-blue #top-nav {
+  background: linear-gradient(90deg, #0044cc, #0066ff);
+}
+
+body.theme-blue #top-nav a {
+  color: #f0f6ff;
+}
+
+body.theme-blue #pt,
+body.theme-blue #texto-exibicao,
+body.theme-blue #resultado,
+body.theme-blue #acertos,
+body.theme-blue #nivel-mensagem,
+body.theme-blue #timer {
+  color: #f0f6ff;
+  caret-color: #f0f6ff;
+}
+
 body.dark-mode #pt,
 body.dark-mode #texto-exibicao,
 body.dark-mode #resultado,
@@ -267,11 +290,14 @@ body.dark-mode #clock {
 #mode-buttons {
   position: fixed;
   bottom: 135px;
-  left: 0;
-  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90vw, calc(6 * 117px + 5 * 20px));
   display: flex;
   justify-content: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 0 10px;
   z-index: 999;
 }
 
@@ -290,10 +316,143 @@ body.dark-mode #clock {
   gap: 40px;
 }
 
+#fun-container {
+  width: min(90vw, 520px);
+  margin: 40px auto;
+  padding: 30px 24px 40px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+body.dark-mode #fun-container {
+  background: rgba(20, 20, 20, 0.92);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+}
+
+body.theme-blue #fun-container {
+  background: rgba(7, 26, 73, 0.9);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+}
+
+#fun-container h1 {
+  font-size: 28px;
+  text-align: center;
+  margin: 0;
+}
+
+#fun-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.fun-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fun-section h2 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.theme-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+
+.theme-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.fun-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.fun-field input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  font-size: 16px;
+}
+
+body.dark-mode .fun-field input,
+body.theme-blue .fun-field input {
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.fun-note {
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.fun-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fun-actions button {
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(90deg, #00b3b3, #00cccc);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fun-actions button:hover,
+.fun-actions button:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(0, 179, 179, 0.35);
+}
+
+body.dark-mode .fun-actions button,
+body.theme-blue .fun-actions button {
+  background: linear-gradient(90deg, #00cccc, #33ffff);
+  color: #001b2e;
+}
+
+#fun-feedback {
+  font-size: 14px;
+  min-height: 20px;
+}
+
 @media (max-width: 600px) {
+  #nivel-indicador {
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   #mode-icon {
     width: 150px;
     height: 150px;
+    position: relative;
+    top: -100px;
+  }
+
+  #texto-exibicao,
+  #barra-progresso {
+    position: relative;
+    top: -100px;
   }
 
   #clock {
@@ -315,15 +474,27 @@ body.dark-mode #clock {
   #mode-buttons {
     bottom: 20px;
     padding: 0 20px 20px 20px;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: min(92vw, 340px);
     gap: 20px;
-    justify-items: center;
   }
 
   #mode-buttons img {
     width: min(22vw, 90px);
     height: min(22vw, 90px);
+  }
+
+  #fun-container {
+    padding: 24px 20px 32px;
+    margin: 24px auto;
+  }
+
+  .fun-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fun-actions button {
+    width: 100%;
   }
 }
 
