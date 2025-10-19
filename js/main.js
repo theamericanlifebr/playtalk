@@ -1492,7 +1492,7 @@ function goHome() {
     sessionStart = null;
   }
   recordModeTime(selectedMode);
-  points = INITIAL_POINTS;
+  points = DEFAULT_STARTING_POINTS;
   saveTotals();
   atualizarBarraProgresso();
   document.getElementById('visor').style.display = 'none';
@@ -1606,7 +1606,7 @@ async function initGame() {
       reconhecimentoAtivo = false;
       try { reconhecimento.stop(); } catch {}
     }
-    points = INITIAL_POINTS;
+    points = DEFAULT_STARTING_POINTS;
     saveTotals();
     atualizarBarraProgresso();
     if (!tutorialDone) {
