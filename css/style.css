@@ -103,14 +103,18 @@ body.dark-mode #clock {
 
 #menu-modes {
   display: grid;
-  grid-template-columns: repeat(3, 227px);
+  grid-template-columns: repeat(3, minmax(0, 227px));
   grid-auto-rows: 227px;
-  gap: 50px;
+  gap: 20px;
+  justify-content: center;
+  justify-items: center;
 }
 
 #menu-modes img {
-  width: 227px;
-  height: 227px;
+  width: 100%;
+  height: 100%;
+  max-width: 227px;
+  max-height: 227px;
   object-fit: contain;
   cursor: pointer;
   opacity: 0.3;
@@ -252,24 +256,6 @@ body.dark-mode #clock {
   background-color: #ff0000;
 }
 
-#mode-stats {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 40px;
-  margin-top: 100px;
-}
-
-#mode-stats .stat-circle {
-  width: 180px;
-  height: 230px;
-}
-
-#mode-stats .stat-circle svg {
-  width: 180px;
-  height: 180px;
-}
-
 #mode-icon {
   width: 250px;
   height: 250px;
@@ -317,11 +303,27 @@ body.dark-mode #clock {
   #menu-modes {
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
+    justify-content: center;
+    justify-items: center;
   }
 
   #menu-modes img {
-    width: 36.4vw;
-    height: 36.4vw;
+    width: min(28vw, 120px);
+    height: min(28vw, 120px);
+  }
+
+  #mode-buttons {
+    bottom: 20px;
+    padding: 0 20px 20px 20px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    justify-items: center;
+  }
+
+  #mode-buttons img {
+    width: min(22vw, 90px);
+    height: min(22vw, 90px);
   }
 }
 
