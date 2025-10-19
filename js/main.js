@@ -1,5 +1,24 @@
 let pastas = {};
 
+const settingsAPI = window.playtalkSettings || {};
+const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
+  theme: 'light',
+  pointsPerHit: 4000,
+  pointsLossPerSecond: 0,
+  startingPoints: 0
+};
+let userSettings = { ...SETTINGS_FALLBACK };
+
+function refreshUserSettings() {
+  if (typeof settingsAPI.loadSettings === 'function') {
+    userSettings = settingsAPI.loadSettings();
+  } else {
+    userSettings = { ...SETTINGS_FALLBACK };
+  }
+}
+
+refreshUserSettings();
+
 function parsePastas(raw) {
   const result = {};
   for (const [key, texto] of Object.entries(raw)) {
@@ -115,7 +134,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         points += 25000;
         saveTotals();
         atualizarBarraProgresso();
-        const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+        const threshold = getCurrentThreshold();
         if (points >= threshold && !completedModes[selectedMode]) {
           finishMode();
         }
@@ -177,17 +196,23 @@ let lastExpected = '', lastInput = '', lastFolder = 1;
 const TOTAL_FRASES = 25;
 let selectedMode = 1;
 // Removed difficulty selection; game always starts on easy mode
-const INITIAL_POINTS = 3500;
+const DEFAULT_STARTING_POINTS = userSettings.startingPoints ?? SETTINGS_FALLBACK.startingPoints;
 const COMPLETION_THRESHOLD = 25000;
 const MODE6_THRESHOLD = 25115;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
+
+function getCurrentThreshold() {
+  return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+}
+
 let completedModes = JSON.parse(localStorage.getItem('completedModes') || '{}');
 let unlockedModes = JSON.parse(localStorage.getItem('unlockedModes') || '{}');
 let modeIntroShown = JSON.parse(localStorage.getItem('modeIntroShown') || '{}');
-let points = parseInt(localStorage.getItem('points') || INITIAL_POINTS, 10);
-let premioBase = 4000;
-let premioDec = 1;
+let points = Number(localStorage.getItem('points'));
+if (!Number.isFinite(points)) points = DEFAULT_STARTING_POINTS;
+let premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
+let premioDec = 0;
 let penaltyFactor = 0.5;
 let prizeStart = 0;
 let prizeTimer = null;
@@ -287,7 +312,8 @@ function saveTotals() {
   localStorage.setItem('errosTotais', errosTotais);
   localStorage.setItem('tentativasTotais', tentativasTotais);
   localStorage.setItem('points', points);
-  if (!paused && points >= 25115) {
+  const limite = getCurrentThreshold();
+  if (!paused && points >= limite) {
     pauseGame();
   }
 }
@@ -351,7 +377,8 @@ function resumeGame() {
     clearInterval(pauseInterval);
     pauseInterval = null;
   }
-  if (points >= 25115) {
+  const limite = getCurrentThreshold();
+  if (points >= limite) {
     pauseGame();
     return;
   }
@@ -797,7 +824,9 @@ function startGame(modo) {
     recordModeTime(prevMode);
   }
   selectedMode = modo;
-  points = modo === 1 ? 0 : INITIAL_POINTS;
+  refreshUserSettings();
+  const startingPoints = userSettings.startingPoints ?? SETTINGS_FALLBACK.startingPoints;
+  points = Math.max(0, startingPoints);
   saveTotals();
   atualizarBarraProgresso();
   updateModeIcons();
@@ -975,7 +1004,7 @@ function beginGame() {
     const icon = document.getElementById('mode-icon');
     if (icon) {
       icon.src = modeImages[selectedMode];
-      const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+      const threshold = getCurrentThreshold();
       const ratio = Math.max(0, Math.min(points, threshold)) / threshold;
       icon.style.opacity = ratio;
       icon.style.display = 'block';
@@ -1027,15 +1056,10 @@ function beginGame() {
       reconhecimentoAtivo = true;
       reconhecimento.start();
     }
-    if (selectedMode === 1) {
-      premioBase = 1000;
-      premioDec = 0;
-      penaltyFactor = 0;
-    } else {
-      premioBase = 4000;
-      premioDec = 1;
-      penaltyFactor = 0.5;
-    }
+    const rewardValue = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
+    premioBase = Math.max(0, rewardValue);
+    premioDec = 0;
+    penaltyFactor = selectedMode === 1 ? 0 : 0.5;
     carregarFrases();
   };
 
@@ -1134,7 +1158,13 @@ function carregarFrases() {
 }
 
 function mostrarFrase() {
+  refreshUserSettings();
   if (inputTimeout) clearTimeout(inputTimeout);
+  if (timerInterval) clearInterval(timerInterval);
+  const threshold = getCurrentThreshold();
+  if (points >= threshold) {
+    return;
+  }
   if (fraseIndex >= frasesArr.length) fraseIndex = 0;
   const [pt, en] = frasesArr[fraseIndex];
   const texto = document.getElementById("texto-exibicao");
@@ -1146,13 +1176,23 @@ function mostrarFrase() {
   if (voz === 'en') falar(en, 'en');
   else if (voz === 'pt') falar(pt, 'pt');
   bloqueado = false;
-  if (timerInterval) clearInterval(timerInterval);
   const timerEl = document.getElementById('timer');
   const start = Date.now();
   timerEl.textContent = 'Tempo: 0s';
+  const lossPerSecond = userSettings.pointsLossPerSecond ?? SETTINGS_FALLBACK.pointsLossPerSecond;
+  let lastTimerSecond = 0;
   timerInterval = setInterval(() => {
     const secs = Math.floor((Date.now() - start) / 1000);
     timerEl.textContent = `Tempo: ${secs}s`;
+    if (lossPerSecond > 0 && secs > lastTimerSecond) {
+      const dec = lossPerSecond * (secs - lastTimerSecond);
+      if (dec > 0) {
+        points = Math.max(0, points - dec);
+        saveTotals();
+        atualizarBarraProgresso();
+      }
+    }
+    lastTimerSecond = secs;
   }, 1000);
   if (prizeTimer) clearInterval(prizeTimer);
   prizeStart = Date.now();
@@ -1225,7 +1265,7 @@ function verificarResposta() {
     saveTotals();
     input.value = '';
     atualizarBarraProgresso();
-    const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+    const threshold = getCurrentThreshold();
     if (points >= threshold && !completedModes[selectedMode]) {
       finishMode();
     }
@@ -1249,10 +1289,10 @@ function verificarResposta() {
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
-    points += 1000;
+    points += premioAtual;
     saveTotals();
     resultado.textContent = '';
-    const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+    const threshold = getCurrentThreshold();
     const reached = points >= threshold && !completedModes[selectedMode];
     flashSuccess(() => {
       if (reached) finishMode();
@@ -1290,7 +1330,7 @@ function verificarResposta() {
       saveTotals();
       consecutiveErrors = 0;
       resultado.textContent = '';
-      const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+      const threshold = getCurrentThreshold();
       const reached = points >= threshold && !completedModes[selectedMode];
       flashSuccess(() => {
         if (reached) finishMode();
@@ -1338,6 +1378,10 @@ function continuar() {
   if (transitioning) {
     return;
   }
+  const threshold = getCurrentThreshold();
+  if (points >= threshold) {
+    return;
+  }
   fraseIndex++;
   mostrarFrase();
 }
@@ -1346,7 +1390,7 @@ function atualizarBarraProgresso() {
   const premioAtual = premioBase - (Date.now() - prizeStart) * premioDec;
   document.getElementById('score').textContent = `PREMIO (${Math.round(premioAtual)}) pontos: (${Math.round(points)})`;
   const filled = document.getElementById('barra-preenchida');
-  const limite = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+  const limite = getCurrentThreshold();
   const perc = Math.max(0, Math.min(points, limite)) / limite * 100;
   filled.style.width = perc + '%';
   filled.style.backgroundColor = calcularCor(points);
@@ -1368,7 +1412,12 @@ function finishMode() {
     if (audio) { audio.currentTime = 0; audio.play(); }
 
     if (selectedMode === 5) {
-      setTimeout(() => { continuar(); }, 500);
+      setTimeout(() => {
+        const threshold = getCurrentThreshold();
+        if (points < threshold) {
+          continuar();
+        }
+      }, 500);
     }
   }
 
@@ -1443,7 +1492,7 @@ function goHome() {
     sessionStart = null;
   }
   recordModeTime(selectedMode);
-  points = INITIAL_POINTS;
+  points = DEFAULT_STARTING_POINTS;
   saveTotals();
   atualizarBarraProgresso();
   document.getElementById('visor').style.display = 'none';
@@ -1557,7 +1606,7 @@ async function initGame() {
       reconhecimentoAtivo = false;
       try { reconhecimento.stop(); } catch {}
     }
-    points = INITIAL_POINTS;
+    points = DEFAULT_STARTING_POINTS;
     saveTotals();
     atualizarBarraProgresso();
     if (!tutorialDone) {
