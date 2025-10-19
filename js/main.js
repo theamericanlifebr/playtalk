@@ -60,7 +60,7 @@ function ehQuaseCorretoPalavras(resp, esp) {
 let reconhecimento;
 let reconhecimentoAtivo = false;
 let reconhecimentoRodando = false;
-let listeningForCommand = true;
+let listeningForCommand = false;
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -86,6 +86,11 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         if (menu) menu.style.display = 'flex';
         if (!tutorialDone) {
           startTutorial();
+        }
+        listeningForCommand = false;
+        if (reconhecimento) {
+          reconhecimentoAtivo = false;
+          try { reconhecimento.stop(); } catch {}
         }
       }
       return;
@@ -549,18 +554,28 @@ function menuLevelUpSequence() {
       idx++;
     } else {
       clearInterval(interval);
+      msg.textContent = 'toque para avançar para o próximo nível';
       msg.style.display = 'block';
-      setTimeout(() => { msg.style.opacity = '1'; }, 10);
-      awaitingNextLevel = true;
-      nextLevelCallback = () => {
+      msg.style.cursor = 'pointer';
+      msg.setAttribute('role', 'button');
+      msg.setAttribute('tabindex', '0');
+      setTimeout(() => { msg.style.opacity = '1'; msg.focus(); }, 10);
+      awaitingNextLevel = false;
+      nextLevelCallback = null;
+      function advance() {
+        msg.removeEventListener('click', advance);
+        msg.removeEventListener('keydown', handleKey);
         msg.remove();
         performMenuLevelUp();
-      };
-      if (reconhecimento) {
-        reconhecimentoAtivo = true;
-        reconhecimento.lang = 'en-US';
-        reconhecimento.start();
       }
+      function handleKey(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          advance();
+        }
+      }
+      msg.addEventListener('click', advance);
+      msg.addEventListener('keydown', handleKey);
     }
   }, 500);
 }
@@ -1436,11 +1451,10 @@ function goHome() {
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
   if (reconhecimento) {
-    reconhecimentoAtivo = true;
-    reconhecimento.lang = 'en-US';
-    reconhecimento.start();
+    reconhecimentoAtivo = false;
+    try { reconhecimento.stop(); } catch {}
   }
-  listeningForCommand = true;
+  listeningForCommand = false;
   updateModeIcons();
 }
 
@@ -1527,11 +1541,22 @@ async function initGame() {
       }, { once: true });
     }
     ilifeActive = true;
+    listeningForCommand = true;
+    if (reconhecimento) {
+      reconhecimento.lang = 'en-US';
+      reconhecimentoAtivo = true;
+      reconhecimento.start();
+    }
   } else {
     const screen = document.getElementById('ilife-screen');
     if (screen) screen.style.display = 'none';
     const menu = document.getElementById('menu');
     if (menu) menu.style.display = 'flex';
+    listeningForCommand = false;
+    if (reconhecimento) {
+      reconhecimentoAtivo = false;
+      try { reconhecimento.stop(); } catch {}
+    }
     points = INITIAL_POINTS;
     saveTotals();
     atualizarBarraProgresso();
@@ -1563,12 +1588,6 @@ async function initGame() {
       startGame(modo);
     });
   });
-
-  if (reconhecimento) {
-    reconhecimento.lang = 'en-US';
-    reconhecimentoAtivo = true;
-    reconhecimento.start();
-  }
 
   document.addEventListener('keydown', e => {
     if (ilifeActive && e.code === 'Space') {
