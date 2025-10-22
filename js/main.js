@@ -1,67 +1,5 @@
 let pastas = {};
 
-const authAPI = window.playtalkAuth || null;
-let currentUser = authAPI && typeof authAPI.getCurrentUser === 'function'
-  ? authAPI.getCurrentUser()
-  : null;
-
-function refreshCurrentUser() {
-  if (authAPI && typeof authAPI.getCurrentUser === 'function') {
-    currentUser = authAPI.getCurrentUser();
-  } else {
-    currentUser = null;
-  }
-}
-
-function persistUserProgress() {
-  if (authAPI && typeof authAPI.persistProgress === 'function') {
-    authAPI.persistProgress();
-    refreshCurrentUser();
-  }
-}
-
-let persistentMicStream = null;
-let micRequestInProgress = false;
-let shouldRefreshMobileMic = false;
-const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-
-async function requestPersistentMicAccess(forceRefresh = false) {
-  if (forceRefresh && persistentMicStream) {
-    try {
-      persistentMicStream.getTracks().forEach(track => track.stop());
-    } catch (error) {
-      console.warn('Falha ao reiniciar o microfone persistente:', error);
-    }
-    persistentMicStream = null;
-  }
-  if (persistentMicStream) {
-    const hasLiveTracks = persistentMicStream.getAudioTracks().some(track => track.readyState === 'live');
-    if (hasLiveTracks) {
-      return persistentMicStream;
-    }
-    persistentMicStream.getTracks().forEach(track => track.stop());
-    persistentMicStream = null;
-  }
-  if (micRequestInProgress) return persistentMicStream;
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
-  micRequestInProgress = true;
-  try {
-    persistentMicStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      }
-    });
-    return persistentMicStream;
-  } catch (error) {
-    console.warn('Permissão de microfone negada ou indisponível:', error);
-    return null;
-  } finally {
-    micRequestInProgress = false;
-  }
-}
-
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   theme: 'light',
@@ -81,20 +19,6 @@ function refreshUserSettings() {
 
 refreshUserSettings();
 
-if (isMobileDevice) {
-  document.addEventListener('touchstart', () => {
-    shouldRefreshMobileMic = true;
-    requestPersistentMicAccess(true);
-    initializeSpeechRecognition(true);
-  }, { once: true });
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      shouldRefreshMobileMic = true;
-    }
-  });
-}
-
 function parsePastas(raw) {
   const result = {};
   for (const [key, texto] of Object.entries(raw)) {
@@ -104,33 +28,15 @@ function parsePastas(raw) {
 }
 
 async function carregarPastas() {
-  try {
-    const resp = await fetch('/api/pastas');
-    if (!resp.ok) {
-      throw new Error(`Erro ao carregar pastas: ${resp.status}`);
-    }
-    const data = await resp.json();
-    if (!data || !data.pastas) {
-      throw new Error('Resposta inválida da API de pastas.');
-    }
-    pastas = parsePastas(data.pastas);
-  } catch (error) {
-    console.error('Não foi possível carregar pastas da API, utilizando fallback estático.', error);
-    try {
-      const resp = await fetch('data/pastas.json');
-      const text = await resp.text();
-      const obj = {};
-      const regex = /(\d+):\s*`([\s\S]*?)`/g;
-      let m;
-      while ((m = regex.exec(text))) {
-        obj[m[1]] = m[2];
-      }
-      pastas = parsePastas(obj);
-    } catch (fallbackError) {
-      console.error('Erro ao carregar pastas do fallback estático.', fallbackError);
-      pastas = {};
-    }
+  const resp = await fetch('data/pastas.json');
+  const text = await resp.text();
+  const obj = {};
+  const regex = /(\d+):\s*`([\s\S]*?)`/g;
+  let m;
+  while ((m = regex.exec(text))) {
+    obj[m[1]] = m[2];
   }
+  pastas = parsePastas(obj);
 }
 
 function ehQuaseCorreto(res, esp) {
@@ -170,16 +76,116 @@ function ehQuaseCorretoPalavras(resp, esp) {
 }
 
 
-let reconhecimento = null;
+let reconhecimento;
 let reconhecimentoAtivo = false;
+let reconhecimentoRodando = false;
 let listeningForCommand = false;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  reconhecimento = new SpeechRecognition();
+  reconhecimento.lang = 'en-US';
+  reconhecimento.continuous = true;
+  reconhecimento.interimResults = false;
+
+  reconhecimento.onstart = () => {
+    reconhecimentoRodando = true;
+  };
+
+  reconhecimento.onresult = (event) => {
+    const transcript = event.results[event.results.length - 1][0].transcript.trim();
+    const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (ilifeActive) {
+      if (normCmd.includes('play')) {
+        ilifeActive = false;
+        localStorage.setItem('ilifeDone', 'true');
+        const screen = document.getElementById('ilife-screen');
+        const menu = document.getElementById('menu');
+        if (screen) screen.style.display = 'none';
+        if (menu) menu.style.display = 'flex';
+        if (!tutorialDone) {
+          startTutorial();
+        }
+        listeningForCommand = false;
+        if (reconhecimento) {
+          reconhecimentoAtivo = false;
+          try { reconhecimento.stop(); } catch {}
+        }
+      }
+      return;
+    }
+    if (awaitingNextLevel) {
+      if (normCmd.includes('level') || normCmd.includes('next') || normCmd.includes('game')) {
+        awaitingNextLevel = false;
+        if (nextLevelCallback) {
+          const cb = nextLevelCallback;
+          nextLevelCallback = null;
+          cb();
+        }
+      }
+      } else if (awaitingRetry && (normCmd.includes('try again') || normCmd.includes('tentar de novo'))) {
+      awaitingRetry = false;
+      if (retryCallback) {
+        const cb = retryCallback;
+        retryCallback = null;
+        cb();
+      }
+      } else if (normCmd.includes('next level') || normCmd.includes('proximo nivel')) {
+        points += 25000;
+        saveTotals();
+        atualizarBarraProgresso();
+        const threshold = getCurrentThreshold();
+        if (points >= threshold && !completedModes[selectedMode]) {
+          finishMode();
+        }
+      } else if (listeningForCommand) {
+      if (normCmd.includes('play')) {
+        listeningForCommand = false;
+        startGame(getHighestUnlockedMode());
+      }
+    } else {
+      if (normCmd.includes('pause') || normCmd.includes('pausa')) {
+        pauseGame();
+      } else if (
+        normCmd.includes('reportar') ||
+        normCmd.includes('report') ||
+        normCmd.includes('my star') ||
+        normCmd.includes('mystar') ||
+        normCmd.includes('estrela')
+      ) {
+        reportLastError();
+      } else {
+        document.getElementById("pt").value = transcript;
+        verificarResposta();
+      }
+    }
+  };
+
+  reconhecimento.onerror = (event) => {
+    console.error('Erro no reconhecimento de voz:', event.error);
+    if (event.error === 'not-allowed') alert('Permissão do microfone negada.');
+  };
+
+  reconhecimento.onend = () => {
+    reconhecimentoRodando = false;
+    if (reconhecimentoAtivo) reconhecimento.start(); // reinicia se estiver ativo
+  };
+} else {
+  alert('Reconhecimento de voz não é suportado neste navegador. Use o Chrome.');
+}
+
+
+setInterval(() => {
+  if (reconhecimentoAtivo && !reconhecimentoRodando) {
+    try { reconhecimento.start(); } catch (e) {}
+  }
+}, 4000);
 
 let frasesArr = [], fraseIndex = 0;
 let acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
 let errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
 let tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
 let pastaAtual = 1;
-const MODE_IDS = [1, 2, 3, 4, 5, 6];
 let bloqueado = false;
 let mostrarTexto = 'pt';
 let voz = 'en';
@@ -195,203 +201,6 @@ const COMPLETION_THRESHOLD = 25000;
 const MODE6_THRESHOLD = 25115;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
-
-function normalizeCommandText(text) {
-  return text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
-function getFinalTranscript(event) {
-  let transcript = '';
-  for (let i = event.resultIndex; i < event.results.length; i++) {
-    const result = event.results[i];
-    if (!result || !result[0]) continue;
-    const value = result[0].transcript.trim();
-    if (!value) continue;
-    if (result.isFinal) {
-      transcript += (transcript ? ' ' : '') + value;
-    }
-  }
-  if (transcript) return transcript;
-  const last = event.results[event.results.length - 1];
-  if (last && last[0]) {
-    return last[0].transcript.trim();
-  }
-  return '';
-}
-
-function showMainMenuAfterIntro() {
-  ilifeActive = false;
-  listeningForCommand = false;
-  const screen = document.getElementById('ilife-screen');
-  if (screen) screen.style.display = 'none';
-  const menu = document.getElementById('menu');
-  if (menu) menu.style.display = 'flex';
-  if (reconhecimento) {
-    reconhecimentoAtivo = false;
-    try { reconhecimento.stop(); } catch {}
-  }
-  points = DEFAULT_STARTING_POINTS;
-  saveTotals();
-  atualizarBarraProgresso();
-  if (!tutorialDone) {
-    startTutorial();
-  } else {
-    const logoTop = document.getElementById('logo-top');
-    const levelIcon = document.getElementById('nivel-indicador');
-    const menuLogo = document.getElementById('menu-logo');
-    if (logoTop) logoTop.style.display = 'block';
-    if (levelIcon) levelIcon.style.display = 'block';
-    if (menuLogo) menuLogo.style.display = 'block';
-  }
-}
-
-function completeIlifeIntro() {
-  if (!listeningForCommand && !ilifeActive) return;
-  ilifeDone = true;
-  localStorage.setItem('ilifeDone', 'true');
-  persistUserProgress();
-  showMainMenuAfterIntro();
-}
-
-function handleVoiceCommand(transcript) {
-  const normalized = normalizeCommandText(transcript);
-  if (!normalized) return;
-  const words = normalized.split(' ');
-  if (awaitingNextLevel && normalized.includes('next level')) {
-    awaitingNextLevel = false;
-    const callback = nextLevelCallback;
-    nextLevelCallback = null;
-    if (typeof callback === 'function') {
-      callback();
-    } else {
-      performMenuLevelUp();
-    }
-    return;
-  }
-  if (awaitingRetry) {
-    if (normalized.includes('try again') || normalized.includes('retry')) {
-      awaitingRetry = false;
-      const retry = retryCallback;
-      retryCallback = null;
-      if (typeof retry === 'function') {
-        retry();
-      }
-    }
-    return;
-  }
-  const wantsStart = words.includes('play') || normalized.includes('start game') || words.includes('start');
-  if ((listeningForCommand || ilifeActive) && wantsStart) {
-    completeIlifeIntro();
-  }
-}
-
-function handleRecognitionResult(event) {
-  const transcript = getFinalTranscript(event);
-  if (!transcript) return;
-  if (listeningForCommand || awaitingNextLevel || awaitingRetry) {
-    handleVoiceCommand(transcript);
-    return;
-  }
-  const input = document.getElementById('pt');
-  if (!input) return;
-  input.value = transcript;
-  if (!bloqueado) {
-    verificarResposta();
-  }
-}
-
-function handleRecognitionEnd() {
-  if (!reconhecimentoAtivo) return;
-  startRecognition();
-}
-
-function handleRecognitionError(event) {
-  console.warn('Erro no reconhecimento de voz:', event.error);
-  if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-    reconhecimentoAtivo = false;
-    return;
-  }
-  if (event.error === 'audio-capture') {
-    persistentMicStream = null;
-    if (isMobileDevice) {
-      shouldRefreshMobileMic = true;
-    }
-    requestPersistentMicAccess(isMobileDevice).then(stream => {
-      if (stream) {
-        initializeSpeechRecognition(true);
-        if (reconhecimentoAtivo) {
-          startRecognition();
-        }
-      }
-    });
-    return;
-  }
-  if ((event.error === 'aborted' || event.error === 'no-speech') && reconhecimentoAtivo) {
-    setTimeout(() => startRecognition(), 150);
-  }
-}
-
-function handleRecognitionStart() {
-  if (isMobileDevice) {
-    requestPersistentMicAccess();
-  }
-}
-
-function initializeSpeechRecognition(forceReset = false) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    console.warn('SpeechRecognition API não suportada neste navegador.');
-    return;
-  }
-  if (reconhecimento && !forceReset) return;
-  if (reconhecimento && forceReset) {
-    try { reconhecimento.stop(); } catch {}
-  }
-  reconhecimento = new SpeechRecognition();
-  reconhecimento.continuous = false;
-  reconhecimento.interimResults = false;
-  reconhecimento.maxAlternatives = 1;
-  reconhecimento.lang = 'en-US';
-
-  reconhecimento.addEventListener('result', handleRecognitionResult);
-  reconhecimento.addEventListener('end', handleRecognitionEnd);
-  reconhecimento.addEventListener('error', handleRecognitionError);
-  reconhecimento.addEventListener('start', handleRecognitionStart);
-}
-
-async function startRecognition() {
-  const stream = await requestPersistentMicAccess(isMobileDevice && shouldRefreshMobileMic);
-  if (stream && isMobileDevice) {
-    shouldRefreshMobileMic = false;
-  }
-  if (!reconhecimento) {
-    initializeSpeechRecognition();
-  }
-  if (!reconhecimento) return;
-  reconhecimentoAtivo = true;
-  try {
-    reconhecimento.start();
-  } catch (error) {
-    if (error && error.name === 'InvalidStateError') {
-      initializeSpeechRecognition(true);
-      if (reconhecimento) {
-        try {
-          reconhecimento.start();
-        } catch (innerError) {
-          console.warn('Falha ao reiniciar reconhecimento de voz:', innerError);
-        }
-      }
-    } else {
-      console.warn('Falha ao iniciar reconhecimento de voz:', error);
-    }
-  }
-}
 
 function getCurrentThreshold() {
   return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
@@ -424,7 +233,6 @@ if (legacyStats && !modeStats[1]) {
   modeStats[1] = legacyStats;
   localStorage.removeItem('mode1Stats');
   localStorage.setItem('modeStats', JSON.stringify(modeStats));
-  persistUserProgress();
 }
 let modeStartTimes = {};
 let lastWasError = false;
@@ -452,48 +260,6 @@ const modeImages = {
   5: 'selos%20modos%20de%20jogo/modo5.png',
   6: 'selos%20modos%20de%20jogo/modo6.png'
 };
-
-if (!tutorialDone) {
-  tutorialDone = true;
-  localStorage.setItem('tutorialDone', 'true');
-  persistUserProgress();
-}
-
-if (!ilifeDone) {
-  ilifeDone = true;
-  localStorage.setItem('ilifeDone', 'true');
-  persistUserProgress();
-}
-
-if (!unlockedModes || typeof unlockedModes !== 'object') {
-  unlockedModes = {};
-}
-let unlocksUpdated = false;
-if (!unlockedModes[1]) {
-  unlockedModes[1] = true;
-  unlocksUpdated = true;
-}
-if (unlocksUpdated) {
-  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-  persistUserProgress();
-}
-
-if (!modeIntroShown || typeof modeIntroShown !== 'object') {
-  modeIntroShown = {};
-}
-let introsUpdated = false;
-MODE_IDS.forEach(mode => {
-  if (!modeIntroShown[mode]) {
-    modeIntroShown[mode] = true;
-    introsUpdated = true;
-  }
-});
-if (introsUpdated) {
-  localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
-  persistUserProgress();
-}
-
-const SKIP_MODE_INTROS = true;
 
 const modeTransitions = {
   1: { duration: 7500, img: modeImages[2], audio: 'somModo2Intro' },
@@ -533,11 +299,11 @@ function saveModeStats() {
   localStorage.setItem('modeStats', JSON.stringify(modeStats));
   if (typeof currentUser === 'object' && currentUser) {
     currentUser.stats = modeStats;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
   }
   if (typeof saveUserPerformance === 'function') {
     saveUserPerformance(modeStats);
   }
-  persistUserProgress();
   updateGeneralCircles();
 }
 
@@ -546,7 +312,6 @@ function saveTotals() {
   localStorage.setItem('errosTotais', errosTotais);
   localStorage.setItem('tentativasTotais', tentativasTotais);
   localStorage.setItem('points', points);
-  persistUserProgress();
   const limite = getCurrentThreshold();
   if (!paused && points >= limite) {
     pauseGame();
@@ -628,7 +393,10 @@ function resumeGame() {
     input.value = '';
   }
   bloqueado = false;
-  startRecognition();
+  if (reconhecimento) {
+    reconhecimentoAtivo = true;
+    reconhecimento.start();
+  }
   continuar();
 }
 
@@ -708,13 +476,11 @@ function updateLevelIcon() {
     }, 500);
   }
   localStorage.setItem('pastaAtual', pastaAtual);
-  persistUserProgress();
 }
 
 function unlockMode(mode, duration = 1000) {
   unlockedModes[mode] = true;
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-  persistUserProgress();
   document.querySelectorAll(`#menu-modes img[data-mode="${mode}"], #mode-buttons img[data-mode="${mode}"]`).forEach(img => {
     img.style.transition = `opacity ${duration}ms linear`;
     img.style.opacity = '1';
@@ -755,7 +521,6 @@ function performMenuLevelUp() {
     unlockedModes = { 1: true };
     localStorage.setItem('completedModes', JSON.stringify(completedModes));
     localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-    persistUserProgress();
     document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = modeImages[6];
     });
@@ -767,7 +532,7 @@ function performMenuLevelUp() {
 }
 
 function enforceStarClick() {
-  const all = document.querySelectorAll('#menu-modes img, #mode-buttons img, #main-nav a');
+  const all = document.querySelectorAll('#menu-modes img, #mode-buttons img, #top-nav a');
   all.forEach(el => { el.style.pointerEvents = 'none'; });
   const stars = document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]');
   stars.forEach(st => { st.style.pointerEvents = 'auto'; });
@@ -787,7 +552,6 @@ function startStatsSequence() {
   const audio = new Audio('gamesounds/nivel2.mp3');
   audio.addEventListener('ended', () => {
     localStorage.setItem('statsSequence', 'true');
-    persistUserProgress();
     window.location.href = 'play.html';
   });
   audio.play();
@@ -1059,9 +823,6 @@ function startGame(modo) {
   if (prevMode !== modo) {
     recordModeTime(prevMode);
   }
-  if (isMobileDevice) {
-    shouldRefreshMobileMic = true;
-  }
   selectedMode = modo;
   refreshUserSettings();
   const startingPoints = userSettings.startingPoints ?? SETTINGS_FALLBACK.startingPoints;
@@ -1079,21 +840,11 @@ function startGame(modo) {
     reconhecimento.stop();
   }
   const start = () => beginGame();
-  if (SKIP_MODE_INTROS) {
-    if (!modeIntroShown[modo]) {
-      modeIntroShown[modo] = true;
-      localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
-      persistUserProgress();
-    }
-    start();
-    return;
-  }
   if (!modeIntroShown[modo]) {
     if (modo === 1) {
       showMode1Intro(() => {
         modeIntroShown[1] = true;
         localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
-        persistUserProgress();
         start();
       });
     } else {
@@ -1102,7 +853,6 @@ function startGame(modo) {
         showModeIntro(info, () => {
           modeIntroShown[modo] = true;
           localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
-          persistUserProgress();
           start();
         });
       } else {
@@ -1238,9 +988,10 @@ function showLevelUp(callback) {
     callback();
   };
   if (reconhecimento) {
+    reconhecimentoAtivo = true;
     reconhecimento.lang = 'en-US';
+    reconhecimento.start();
   }
-  startRecognition();
 }
 
 function beginGame() {
@@ -1302,8 +1053,9 @@ function beginGame() {
       } else {
         reconhecimento.lang = esperadoLang === 'pt' ? 'pt-BR' : 'en-US';
       }
+      reconhecimentoAtivo = true;
+      reconhecimento.start();
     }
-    startRecognition();
     const rewardValue = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
     premioBase = Math.max(0, rewardValue);
     premioDec = 0;
@@ -1653,7 +1405,6 @@ function finishMode() {
   stopCurrentGame();
   completedModes[selectedMode] = true;
   localStorage.setItem('completedModes', JSON.stringify(completedModes));
-  persistUserProgress();
   const next = selectedMode + 1;
   if (next <= 6) {
     unlockMode(next, 500);
@@ -1686,7 +1437,6 @@ function finishMode() {
     const details = JSON.parse(localStorage.getItem('levelDetails') || '[]');
     details.push({ level: pastaAtual + 1, accuracy: acc, speed: speed.toFixed(2), reports: reportPerc });
     localStorage.setItem('levelDetails', JSON.stringify(details));
-    persistUserProgress();
     document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = 'selos%20modos%20de%20jogo/modostar.png';
     });
@@ -1739,7 +1489,6 @@ function goHome() {
   if (sessionStart) {
     const total = parseInt(localStorage.getItem('totalTime') || '0', 10);
     localStorage.setItem('totalTime', total + (Date.now() - sessionStart));
-    persistUserProgress();
     sessionStart = null;
   }
   recordModeTime(selectedMode);
@@ -1768,7 +1517,6 @@ function updateClock() {
 function startTutorial() {
   tutorialInProgress = true;
   localStorage.setItem('tutorialDone', 'true');
-  persistUserProgress();
   const welcome = document.getElementById('somWelcome');
   if (welcome) setTimeout(() => { welcome.currentTime = 0; welcome.play(); }, 1);
 
@@ -1845,10 +1593,32 @@ async function initGame() {
     listeningForCommand = true;
     if (reconhecimento) {
       reconhecimento.lang = 'en-US';
+      reconhecimentoAtivo = true;
+      reconhecimento.start();
     }
-    startRecognition();
   } else {
-    showMainMenuAfterIntro();
+    const screen = document.getElementById('ilife-screen');
+    if (screen) screen.style.display = 'none';
+    const menu = document.getElementById('menu');
+    if (menu) menu.style.display = 'flex';
+    listeningForCommand = false;
+    if (reconhecimento) {
+      reconhecimentoAtivo = false;
+      try { reconhecimento.stop(); } catch {}
+    }
+    points = DEFAULT_STARTING_POINTS;
+    saveTotals();
+    atualizarBarraProgresso();
+    if (!tutorialDone) {
+      startTutorial();
+    } else {
+      const logoTop = document.getElementById('logo-top');
+      const levelIcon = document.getElementById('nivel-indicador');
+      const menuLogo = document.getElementById('menu-logo');
+      if (logoTop) logoTop.style.display = 'block';
+      if (levelIcon) levelIcon.style.display = 'block';
+      if (menuLogo) menuLogo.style.display = 'block';
+    }
   }
 
   document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
@@ -1902,8 +1672,7 @@ async function initGame() {
 }
 
   window.onload = async () => {
-    refreshCurrentUser();
-    document.querySelectorAll('#main-nav a').forEach(a => {
+    document.querySelectorAll('#top-nav a').forEach(a => {
       a.addEventListener('click', stopCurrentGame);
     });
     const homeLink = document.getElementById('home-link');
@@ -1913,8 +1682,6 @@ async function initGame() {
         goHome();
       });
     }
-    await requestPersistentMicAccess();
-    initializeSpeechRecognition();
     await initGame();
     window.addEventListener('beforeunload', () => {
       recordModeTime(selectedMode);
