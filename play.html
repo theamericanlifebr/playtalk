@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/settings.js"></script>
+  <script src="js/auth.js"></script>
 </head>
 <body>
   <nav id="top-nav">
@@ -15,6 +16,13 @@
     <a href="play.html">play</a>
     <a href="custom.html">custom</a>
   </nav>
+  <div id="auth-controls">
+    <div class="auth-controls-left">
+      <button id="login-btn" class="login-button" type="button">Entrar</button>
+      <button id="logout-btn" class="logout-button" type="button">Sair</button>
+    </div>
+    <div id="auth-status" class="auth-status">Nenhum usuário conectado</div>
+  </div>
   <div id="play-content" style="text-align:center;margin-top:50px;"></div>
   <div id="mode-buttons">
     <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
@@ -23,6 +31,37 @@
     <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
     <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
     <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
+  </div>
+  <div id="auth-modal" class="auth-modal hidden">
+    <div class="auth-modal-content">
+      <button id="auth-close" class="auth-close" type="button" aria-label="Fechar">&times;</button>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" data-tab="login" type="button" role="tab">Entrar</button>
+        <button class="auth-tab" data-tab="register" type="button" role="tab">Criar conta</button>
+      </div>
+      <form id="login-form" class="auth-form active" data-tab="login">
+        <label>Usuário
+          <input type="text" name="login-username" autocomplete="username">
+        </label>
+        <label>Senha
+          <input type="password" name="login-password" autocomplete="current-password">
+        </label>
+        <button type="submit" class="auth-submit">Entrar</button>
+      </form>
+      <form id="register-form" class="auth-form" data-tab="register">
+        <label>Usuário
+          <input type="text" name="register-username" autocomplete="username">
+        </label>
+        <label>Senha
+          <input type="password" name="register-password" autocomplete="new-password">
+        </label>
+        <label>Confirme a senha
+          <input type="password" name="register-confirm" autocomplete="new-password">
+        </label>
+        <button type="submit" class="auth-submit">Criar conta</button>
+      </form>
+      <div id="auth-message" class="auth-message" role="alert"></div>
+    </div>
   </div>
   <script src="js/play.js"></script>
 </body>

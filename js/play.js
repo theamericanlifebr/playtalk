@@ -102,7 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
   container.style.transition = 'opacity 0.2s';
   const buttons = document.querySelectorAll('#mode-buttons img');
   const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
-  const statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
+  let statsData = {};
+  let activeMode = 1;
+  function refreshStatsData() {
+    statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
+  }
+  refreshStatsData();
   const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
   const MAX_TIME = 6.0;
 
@@ -169,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     buttons.forEach(img => {
       img.style.opacity = img.dataset.mode == mode ? '1' : '0.3';
     });
+    activeMode = mode;
     render(mode);
   }
 
@@ -191,4 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
       delay += 1500;
     });
   }
+
+  document.addEventListener('playtalk:user-change', () => {
+    refreshStatsData();
+    selectMode(activeMode);
+  });
 });
