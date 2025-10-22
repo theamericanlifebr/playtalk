@@ -134,14 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = '';
       if (mode === 1) {
         const { accPerc, timePerc, notReportPerc } = calcGeneralStats();
-        container.appendChild(createStatBar(accPerc, 'Precisão'));
         container.appendChild(createStatBar(timePerc, 'Tempo'));
+        container.appendChild(createStatBar(accPerc, 'Precisão'));
         container.appendChild(createStatBar(notReportPerc, 'Report'));
       } else {
         const { accPerc, timePerc, notReportPerc } = calcModeStats(mode);
         const displayTime = mode === 5 ? timePerc * 1.75 : timePerc;
-        container.appendChild(createStatBar(accPerc, 'Precisão'));
         container.appendChild(createStatBar(displayTime, 'Tempo'));
+        container.appendChild(createStatBar(accPerc, 'Precisão'));
         container.appendChild(createStatBar(notReportPerc, 'Report'));
       }
       container.style.opacity = 1;

@@ -22,9 +22,18 @@ function persistUserProgress() {
 
 let persistentMicStream = null;
 let micRequestInProgress = false;
+let shouldRefreshMobileMic = false;
 const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
 
-async function requestPersistentMicAccess() {
+async function requestPersistentMicAccess(forceRefresh = false) {
+  if (forceRefresh && persistentMicStream) {
+    try {
+      persistentMicStream.getTracks().forEach(track => track.stop());
+    } catch (error) {
+      console.warn('Falha ao reiniciar o microfone persistente:', error);
+    }
+    persistentMicStream = null;
+  }
   if (persistentMicStream) {
     const hasLiveTracks = persistentMicStream.getAudioTracks().some(track => track.readyState === 'live');
     if (hasLiveTracks) {
@@ -74,9 +83,16 @@ refreshUserSettings();
 
 if (isMobileDevice) {
   document.addEventListener('touchstart', () => {
-    requestPersistentMicAccess();
+    shouldRefreshMobileMic = true;
+    requestPersistentMicAccess(true);
     initializeSpeechRecognition(true);
   }, { once: true });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      shouldRefreshMobileMic = true;
+    }
+  });
 }
 
 function parsePastas(raw) {
@@ -303,7 +319,10 @@ function handleRecognitionError(event) {
   }
   if (event.error === 'audio-capture') {
     persistentMicStream = null;
-    requestPersistentMicAccess().then(stream => {
+    if (isMobileDevice) {
+      shouldRefreshMobileMic = true;
+    }
+    requestPersistentMicAccess(isMobileDevice).then(stream => {
       if (stream) {
         initializeSpeechRecognition(true);
         if (reconhecimentoAtivo) {
@@ -347,7 +366,10 @@ function initializeSpeechRecognition(forceReset = false) {
 }
 
 async function startRecognition() {
-  await requestPersistentMicAccess();
+  const stream = await requestPersistentMicAccess(isMobileDevice && shouldRefreshMobileMic);
+  if (stream && isMobileDevice) {
+    shouldRefreshMobileMic = false;
+  }
   if (!reconhecimento) {
     initializeSpeechRecognition();
   }
@@ -1036,6 +1058,9 @@ function startGame(modo) {
   const prevMode = selectedMode;
   if (prevMode !== modo) {
     recordModeTime(prevMode);
+  }
+  if (isMobileDevice) {
+    shouldRefreshMobileMic = true;
   }
   selectedMode = modo;
   refreshUserSettings();
