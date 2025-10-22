@@ -140,6 +140,147 @@ const MODE6_THRESHOLD = 25115;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 
+function normalizeCommandText(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function getFinalTranscript(event) {
+  let transcript = '';
+  for (let i = event.resultIndex; i < event.results.length; i++) {
+    const result = event.results[i];
+    if (!result || !result[0]) continue;
+    const value = result[0].transcript.trim();
+    if (!value) continue;
+    if (result.isFinal) {
+      transcript += (transcript ? ' ' : '') + value;
+    }
+  }
+  if (transcript) return transcript;
+  const last = event.results[event.results.length - 1];
+  if (last && last[0]) {
+    return last[0].transcript.trim();
+  }
+  return '';
+}
+
+function showMainMenuAfterIntro() {
+  ilifeActive = false;
+  listeningForCommand = false;
+  const screen = document.getElementById('ilife-screen');
+  if (screen) screen.style.display = 'none';
+  const menu = document.getElementById('menu');
+  if (menu) menu.style.display = 'flex';
+  if (reconhecimento) {
+    reconhecimentoAtivo = false;
+    try { reconhecimento.stop(); } catch {}
+  }
+  points = DEFAULT_STARTING_POINTS;
+  saveTotals();
+  atualizarBarraProgresso();
+  if (!tutorialDone) {
+    startTutorial();
+  } else {
+    const logoTop = document.getElementById('logo-top');
+    const levelIcon = document.getElementById('nivel-indicador');
+    const menuLogo = document.getElementById('menu-logo');
+    if (logoTop) logoTop.style.display = 'block';
+    if (levelIcon) levelIcon.style.display = 'block';
+    if (menuLogo) menuLogo.style.display = 'block';
+  }
+}
+
+function completeIlifeIntro() {
+  if (!listeningForCommand && !ilifeActive) return;
+  ilifeDone = true;
+  localStorage.setItem('ilifeDone', 'true');
+  persistUserProgress();
+  showMainMenuAfterIntro();
+}
+
+function handleVoiceCommand(transcript) {
+  const normalized = normalizeCommandText(transcript);
+  if (!normalized) return;
+  const words = normalized.split(' ');
+  if (awaitingNextLevel && normalized.includes('next level')) {
+    awaitingNextLevel = false;
+    const callback = nextLevelCallback;
+    nextLevelCallback = null;
+    if (typeof callback === 'function') {
+      callback();
+    } else {
+      performMenuLevelUp();
+    }
+    return;
+  }
+  if (awaitingRetry) {
+    if (normalized.includes('try again') || normalized.includes('retry')) {
+      awaitingRetry = false;
+      const retry = retryCallback;
+      retryCallback = null;
+      if (typeof retry === 'function') {
+        retry();
+      }
+    }
+    return;
+  }
+  const wantsStart = words.includes('play') || normalized.includes('start game') || words.includes('start');
+  if ((listeningForCommand || ilifeActive) && wantsStart) {
+    completeIlifeIntro();
+  }
+}
+
+function initializeSpeechRecognition() {
+  if (reconhecimento) return;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    console.warn('SpeechRecognition API não suportada neste navegador.');
+    return;
+  }
+  reconhecimento = new SpeechRecognition();
+  reconhecimento.continuous = false;
+  reconhecimento.interimResults = false;
+  reconhecimento.maxAlternatives = 1;
+  reconhecimento.lang = 'en-US';
+
+  reconhecimento.addEventListener('result', event => {
+    const transcript = getFinalTranscript(event);
+    if (!transcript) return;
+    if (listeningForCommand || awaitingNextLevel || awaitingRetry) {
+      handleVoiceCommand(transcript);
+      return;
+    }
+    const input = document.getElementById('pt');
+    if (!input) return;
+    input.value = transcript;
+    if (!bloqueado) {
+      verificarResposta();
+    }
+  });
+
+  reconhecimento.addEventListener('end', () => {
+    if (reconhecimentoAtivo) {
+      try {
+        reconhecimento.start();
+      } catch (error) {
+        console.warn('Falha ao reiniciar reconhecimento de voz:', error);
+      }
+    }
+  });
+
+  reconhecimento.addEventListener('error', event => {
+    console.warn('Erro no reconhecimento de voz:', event.error);
+    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      reconhecimentoAtivo = false;
+    }
+  });
+}
+
 function getCurrentThreshold() {
   return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
 }
@@ -1598,28 +1739,7 @@ async function initGame() {
       reconhecimento.start();
     }
   } else {
-    const screen = document.getElementById('ilife-screen');
-    if (screen) screen.style.display = 'none';
-    const menu = document.getElementById('menu');
-    if (menu) menu.style.display = 'flex';
-    listeningForCommand = false;
-    if (reconhecimento) {
-      reconhecimentoAtivo = false;
-      try { reconhecimento.stop(); } catch {}
-    }
-    points = DEFAULT_STARTING_POINTS;
-    saveTotals();
-    atualizarBarraProgresso();
-    if (!tutorialDone) {
-      startTutorial();
-    } else {
-      const logoTop = document.getElementById('logo-top');
-      const levelIcon = document.getElementById('nivel-indicador');
-      const menuLogo = document.getElementById('menu-logo');
-      if (logoTop) logoTop.style.display = 'block';
-      if (levelIcon) levelIcon.style.display = 'block';
-      if (menuLogo) menuLogo.style.display = 'block';
-    }
+    showMainMenuAfterIntro();
   }
 
   document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
@@ -1685,6 +1805,7 @@ async function initGame() {
       });
     }
     await requestPersistentMicAccess();
+    initializeSpeechRecognition();
     await initGame();
     window.addEventListener('beforeunload', () => {
       recordModeTime(selectedMode);
