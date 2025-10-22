@@ -423,6 +423,7 @@ function triggerDownPlay() {
     document.getElementById('menu').style.display = 'flex';
     const visor = document.getElementById('visor');
     if (visor) visor.style.display = 'none';
+    document.body.classList.remove('game-active');
     downPlaying = false;
   }, 4000);
 }
@@ -476,6 +477,9 @@ function updateLevelIcon() {
     }, 500);
   }
   localStorage.setItem('pastaAtual', pastaAtual);
+  document.dispatchEvent(new CustomEvent('playtalk:level-update', {
+    detail: { level: pastaAtual }
+  }));
 }
 
 function unlockMode(mode, duration = 1000) {
@@ -832,6 +836,7 @@ function startGame(modo) {
   updateModeIcons();
   listeningForCommand = false;
   document.getElementById('menu').style.display = 'none';
+  document.body.classList.add('game-active');
   document.getElementById('visor').style.display = 'none';
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
@@ -1497,6 +1502,7 @@ function goHome() {
   atualizarBarraProgresso();
   document.getElementById('visor').style.display = 'none';
   document.getElementById('menu').style.display = 'flex';
+  document.body.classList.remove('game-active');
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
   if (reconhecimento) {
@@ -1580,6 +1586,7 @@ async function initGame() {
     const menu = document.getElementById('menu');
     const screen = document.getElementById('ilife-screen');
     if (menu) menu.style.display = 'none';
+    document.body.classList.add('game-active');
     if (screen) {
       screen.style.display = 'flex';
       const text = document.getElementById('ilife-text');
@@ -1601,6 +1608,7 @@ async function initGame() {
     if (screen) screen.style.display = 'none';
     const menu = document.getElementById('menu');
     if (menu) menu.style.display = 'flex';
+    document.body.classList.remove('game-active');
     listeningForCommand = false;
     if (reconhecimento) {
       reconhecimentoAtivo = false;
