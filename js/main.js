@@ -23,9 +23,6 @@ function persistUserProgress() {
 let persistentMicStream = null;
 let micRequestInProgress = false;
 
-const SpeechRecognitionClass =
-  window.SpeechRecognition || window.webkitSpeechRecognition || null;
-
 async function requestPersistentMicAccess() {
   if (persistentMicStream || micRequestInProgress) return persistentMicStream;
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
@@ -39,118 +36,6 @@ async function requestPersistentMicAccess() {
   } finally {
     micRequestInProgress = false;
   }
-}
-
-function normalizeSpokenText(texto) {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
-function extractFinalTranscript(evento) {
-  let combinado = '';
-  for (let i = evento.resultIndex; i < evento.results.length; i++) {
-    const resultado = evento.results[i];
-    if (resultado.isFinal) {
-      const trecho = resultado[0]?.transcript?.trim();
-      if (trecho) {
-        combinado += (combinado ? ' ' : '') + trecho;
-      }
-    }
-  }
-  return combinado.trim();
-}
-
-function handleVoiceCommand(transcricao) {
-  const normalizado = normalizeSpokenText(transcricao);
-  if (!normalizado) return true;
-
-  if (listeningForCommand) {
-    if (normalizado.includes('play')) {
-      listeningForCommand = false;
-      ilifeActive = false;
-      const screen = document.getElementById('ilife-screen');
-      const menu = document.getElementById('menu');
-      if (screen) screen.style.display = 'none';
-      if (menu) menu.style.display = 'flex';
-      startGame(1);
-    }
-    return true;
-  }
-
-  if (awaitingNextLevel && typeof nextLevelCallback === 'function') {
-    if (normalizado.includes('next level') || normalizado.includes('nextlevel')) {
-      const callback = nextLevelCallback;
-      awaitingNextLevel = false;
-      nextLevelCallback = null;
-      callback();
-    }
-    return true;
-  }
-
-  if (awaitingRetry && typeof retryCallback === 'function') {
-    if (
-      normalizado.includes('try again') ||
-      normalizado.includes('tryagain') ||
-      normalizado.includes('retry')
-    ) {
-      const callback = retryCallback;
-      awaitingRetry = false;
-      retryCallback = null;
-      callback();
-    }
-    return true;
-  }
-
-  return false;
-}
-
-function handleSpeechRecognitionResult(evento) {
-  if (!reconhecimentoAtivo) return;
-  const transcricao = extractFinalTranscript(evento);
-  if (!transcricao) return;
-
-  if (handleVoiceCommand(transcricao)) return;
-
-  if (bloqueado || paused || downPlaying || transitioning) return;
-  const input = document.getElementById('pt');
-  if (!input || input.disabled) return;
-
-  input.value = transcricao;
-  verificarResposta();
-}
-
-function handleSpeechRecognitionEnd() {
-  if (!reconhecimentoAtivo || !reconhecimento) return;
-  try {
-    reconhecimento.start();
-  } catch (error) {
-    console.warn('Falha ao reiniciar reconhecimento de voz:', error);
-    reconhecimentoAtivo = false;
-  }
-}
-
-function handleSpeechRecognitionError(evento) {
-  console.warn('Erro no reconhecimento de voz:', evento.error || evento);
-}
-
-function setupSpeechRecognition() {
-  if (!SpeechRecognitionClass) {
-    console.warn('SpeechRecognition API não disponível neste navegador.');
-    return;
-  }
-  reconhecimento = new SpeechRecognitionClass();
-  reconhecimento.continuous = true;
-  reconhecimento.interimResults = false;
-  reconhecimento.maxAlternatives = 1;
-  reconhecimento.lang = 'en-US';
-  reconhecimento.addEventListener('result', handleSpeechRecognitionResult);
-  reconhecimento.addEventListener('end', handleSpeechRecognitionEnd);
-  reconhecimento.addEventListener('error', handleSpeechRecognitionError);
 }
 
 const settingsAPI = window.playtalkSettings || {};
@@ -171,7 +56,6 @@ function refreshUserSettings() {
 }
 
 refreshUserSettings();
-setupSpeechRecognition();
 
 function parsePastas(raw) {
   const result = {};
