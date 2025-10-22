@@ -9,9 +9,12 @@
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body class="page-fun">
+<body class="page-fun dark-mode">
   <header class="site-header" id="global-header">
-    <div class="site-header__info" id="auth-status" aria-live="polite">Nenhum usuário conectado</div>
+    <div class="site-header__profile">
+      <img id="nivel-indicador" class="site-header__level-icon" src="selos_niveis/level%201.png" alt="Nível atual">
+      <div class="site-header__info" id="auth-status" aria-live="polite">Convidado</div>
+    </div>
     <div class="site-header__actions">
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
       <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
@@ -24,7 +27,7 @@
         <h2>Tema</h2>
         <div class="theme-options">
           <label><input type="radio" name="theme" value="light"> Branco</label>
-          <label><input type="radio" name="theme" value="dark"> Preto</label>
+          <label><input type="radio" name="theme" value="black"> Preto</label>
           <label><input type="radio" name="theme" value="blue"> Azul</label>
         </div>
       </section>
@@ -59,7 +62,7 @@
 
       function load() {
         const settings = api ? api.loadSettings() : {};
-        const theme = settings.theme || 'light';
+        const theme = (settings.theme === 'dark' ? 'black' : settings.theme) || 'black';
         radios.forEach(r => { r.checked = r.value === theme; });
         pointsPerHit.value = settings.pointsPerHit ?? api.DEFAULT_SETTINGS.pointsPerHit;
         pointsLossPerSecond.value = settings.pointsLossPerSecond ?? api.DEFAULT_SETTINGS.pointsLossPerSecond;
@@ -68,7 +71,7 @@
 
       function save(event) {
         event.preventDefault();
-        const theme = (radios.find(r => r.checked) || {}).value || 'light';
+        const theme = (radios.find(r => r.checked) || {}).value || 'black';
         const settings = {
           theme,
           pointsPerHit: Number(pointsPerHit.value) || 0,
@@ -94,33 +97,5 @@
       });
     });
   </script>
-  <footer class="page-footer">
-    <nav id="main-nav">
-      <a href="index.html" class="nav-item" aria-label="Home">
-        <span aria-hidden="true">▶</span>
-        <span class="sr-only">Home</span>
-      </a>
-      <a href="fun.html" class="nav-item active" aria-label="Fun">
-        <span aria-hidden="true">🌐</span>
-        <span class="sr-only">Fun</span>
-      </a>
-      <a href="play.html" class="nav-item" aria-label="Play">
-        <span aria-hidden="true">📊</span>
-        <span class="sr-only">Play</span>
-      </a>
-      <a href="custom.html" class="nav-item" aria-label="Custom">
-        <span aria-hidden="true">💠</span>
-        <span class="sr-only">Custom</span>
-      </a>
-      <a href="ranking.html" class="nav-item" aria-label="Ranking">
-        <span aria-hidden="true">🏆</span>
-        <span class="sr-only">Ranking</span>
-      </a>
-      <a href="perfil.html" class="nav-item" aria-label="Usuário">
-        <span aria-hidden="true">👨🏻</span>
-        <span class="sr-only">Usuário</span>
-      </a>
-    </nav>
-  </footer>
 </body>
 </html>
