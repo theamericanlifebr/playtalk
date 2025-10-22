@@ -21,6 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class MicrophoneCapture implements AutoCloseable {
 
+    private static final Object LOCK = new Object();
+    private static volatile MicrophoneCapture instance;
+
     /**
      * Default audio format tuned for voice capture on mobile devices.
      */
@@ -39,7 +42,7 @@ public final class MicrophoneCapture implements AutoCloseable {
     private final AtomicBoolean active;
     private final Thread captureThread;
 
-    public MicrophoneCapture() {
+    private MicrophoneCapture() {
         try {
             DataLine.Info info = new DataLine.Info(TargetDataLine.class, VOICE_FORMAT);
             microphoneLine = (TargetDataLine) AudioSystem.getLine(info);
@@ -55,6 +58,27 @@ public final class MicrophoneCapture implements AutoCloseable {
         captureThread = new Thread(this::captureLoop, "microphone-capture-thread");
         captureThread.setDaemon(true);
         captureThread.start();
+    }
+
+    /**
+     * Returns the singleton instance of the microphone capture utility. The
+     * microphone stream is lazily initialized and kept alive across the
+     * application lifecycle until {@link #shutdown()} is invoked.
+     */
+    public static MicrophoneCapture getInstance() {
+        MicrophoneCapture current = instance;
+        if (current != null && current.active.get()) {
+            return current;
+        }
+
+        synchronized (LOCK) {
+            current = instance;
+            if (current == null || !current.active.get()) {
+                current = new MicrophoneCapture();
+                instance = current;
+            }
+            return current;
+        }
     }
 
     private void captureLoop() {
@@ -102,6 +126,12 @@ public final class MicrophoneCapture implements AutoCloseable {
                 captureThread.join();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            }
+
+            synchronized (LOCK) {
+                if (instance == this) {
+                    instance = null;
+                }
             }
         }
     }

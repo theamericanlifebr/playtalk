@@ -1,0 +1,602 @@
+[
+  {
+    "position": 1,
+    "name": "Luna Rivers",
+    "level": 10,
+    "avatar": "https://i.pravatar.cc/150?img=2"
+  },
+  {
+    "position": 2,
+    "name": "Kai Storm",
+    "level": 9,
+    "avatar": "https://i.pravatar.cc/150?img=3"
+  },
+  {
+    "position": 3,
+    "name": "Maya Voss",
+    "level": 9,
+    "avatar": "https://i.pravatar.cc/150?img=4"
+  },
+  {
+    "position": 4,
+    "name": "Theo Walker",
+    "level": 9,
+    "avatar": "https://i.pravatar.cc/150?img=5"
+  },
+  {
+    "position": 5,
+    "name": "Ivy Calder",
+    "level": 9,
+    "avatar": "https://i.pravatar.cc/150?img=6"
+  },
+  {
+    "position": 6,
+    "name": "Noah Pierce",
+    "level": 8,
+    "avatar": "https://i.pravatar.cc/150?img=7"
+  },
+  {
+    "position": 7,
+    "name": "Zara Quinn",
+    "level": 8,
+    "avatar": "https://i.pravatar.cc/150?img=8"
+  },
+  {
+    "position": 8,
+    "name": "Eli Navarro",
+    "level": 8,
+    "avatar": "https://i.pravatar.cc/150?img=9"
+  },
+  {
+    "position": 9,
+    "name": "Aurora Vale",
+    "level": 8,
+    "avatar": "https://i.pravatar.cc/150?img=10"
+  },
+  {
+    "position": 10,
+    "name": "Leo Saito",
+    "level": 8,
+    "avatar": "https://i.pravatar.cc/150?img=11"
+  },
+  {
+    "position": 11,
+    "name": "Nina Brooks",
+    "level": 8,
+    "avatar": "https://i.pravatar.cc/150?img=12"
+  },
+  {
+    "position": 12,
+    "name": "Felix Archer",
+    "level": 8,
+    "avatar": "https://i.pravatar.cc/150?img=13"
+  },
+  {
+    "position": 13,
+    "name": "Isla Monroe",
+    "level": 8,
+    "avatar": "https://i.pravatar.cc/150?img=14"
+  },
+  {
+    "position": 14,
+    "name": "Rafael Costa",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=15"
+  },
+  {
+    "position": 15,
+    "name": "Siena Blake",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=16"
+  },
+  {
+    "position": 16,
+    "name": "Dante Hughes",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=17"
+  },
+  {
+    "position": 17,
+    "name": "Livia Stone",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=18"
+  },
+  {
+    "position": 18,
+    "name": "Milo Hart",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=19"
+  },
+  {
+    "position": 19,
+    "name": "Olivia Reyes",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=20"
+  },
+  {
+    "position": 20,
+    "name": "Victor Hale",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=21"
+  },
+  {
+    "position": 21,
+    "name": "Jade Sinclair",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=22"
+  },
+  {
+    "position": 22,
+    "name": "Santiago Vega",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=23"
+  },
+  {
+    "position": 23,
+    "name": "Mira Lowell",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=24"
+  },
+  {
+    "position": 24,
+    "name": "Caleb Frost",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=25"
+  },
+  {
+    "position": 25,
+    "name": "Elena Duarte",
+    "level": 7,
+    "avatar": "https://i.pravatar.cc/150?img=26"
+  },
+  {
+    "position": 26,
+    "name": "Jonah Reed",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=27"
+  },
+  {
+    "position": 27,
+    "name": "Amara Flynn",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=28"
+  },
+  {
+    "position": 28,
+    "name": "Mateo Cruz",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=29"
+  },
+  {
+    "position": 29,
+    "name": "Clara West",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=30"
+  },
+  {
+    "position": 30,
+    "name": "Hudson Lee",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=31"
+  },
+  {
+    "position": 31,
+    "name": "Bianca Torres",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=32"
+  },
+  {
+    "position": 32,
+    "name": "Axel Knight",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=33"
+  },
+  {
+    "position": 33,
+    "name": "Helena Brooks",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=34"
+  },
+  {
+    "position": 34,
+    "name": "Diego Marin",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=35"
+  },
+  {
+    "position": 35,
+    "name": "Aria Bennett",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=36"
+  },
+  {
+    "position": 36,
+    "name": "Lucas Meyer",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=37"
+  },
+  {
+    "position": 37,
+    "name": "Valentina Rocha",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=38"
+  },
+  {
+    "position": 38,
+    "name": "Emmett Cole",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=39"
+  },
+  {
+    "position": 39,
+    "name": "Lara Winters",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=40"
+  },
+  {
+    "position": 40,
+    "name": "Gael Navarro",
+    "level": 6,
+    "avatar": "https://i.pravatar.cc/150?img=41"
+  },
+  {
+    "position": 41,
+    "name": "Camila Rivers",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=42"
+  },
+  {
+    "position": 42,
+    "name": "Ezra Holt",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=43"
+  },
+  {
+    "position": 43,
+    "name": "Sofia Mendes",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=44"
+  },
+  {
+    "position": 44,
+    "name": "Nolan Hayes",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=45"
+  },
+  {
+    "position": 45,
+    "name": "Gabriela Nunes",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=46"
+  },
+  {
+    "position": 46,
+    "name": "Riley Shaw",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=47"
+  },
+  {
+    "position": 47,
+    "name": "Isabel Ortiz",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=48"
+  },
+  {
+    "position": 48,
+    "name": "Owen Carter",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=49"
+  },
+  {
+    "position": 49,
+    "name": "Marina Silva",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=50"
+  },
+  {
+    "position": 50,
+    "name": "Beckett Lane",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=51"
+  },
+  {
+    "position": 51,
+    "name": "Luana Prado",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=52"
+  },
+  {
+    "position": 52,
+    "name": "Declan Moore",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=53"
+  },
+  {
+    "position": 53,
+    "name": "Yasmin Araujo",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=54"
+  },
+  {
+    "position": 54,
+    "name": "Parker Wells",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=55"
+  },
+  {
+    "position": 55,
+    "name": "Ana Luiza",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=56"
+  },
+  {
+    "position": 56,
+    "name": "Sawyer Flynn",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=57"
+  },
+  {
+    "position": 57,
+    "name": "Carolina Dias",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=58"
+  },
+  {
+    "position": 58,
+    "name": "Gideon Price",
+    "level": 5,
+    "avatar": "https://i.pravatar.cc/150?img=59"
+  },
+  {
+    "position": 59,
+    "name": "Fernanda Brito",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=60"
+  },
+  {
+    "position": 60,
+    "name": "Rowan Tate",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=61"
+  },
+  {
+    "position": 61,
+    "name": "Giovana Pires",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=62"
+  },
+  {
+    "position": 62,
+    "name": "Holden Cruz",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=63"
+  },
+  {
+    "position": 63,
+    "name": "Beatriz Lopes",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=64"
+  },
+  {
+    "position": 64,
+    "name": "Xavier Briggs",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=65"
+  },
+  {
+    "position": 65,
+    "name": "Claudia Mota",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=66"
+  },
+  {
+    "position": 66,
+    "name": "Spencer Hale",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=67"
+  },
+  {
+    "position": 67,
+    "name": "Daniela Freitas",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=68"
+  },
+  {
+    "position": 68,
+    "name": "Finley Rhodes",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=69"
+  },
+  {
+    "position": 69,
+    "name": "Larissa Amaral",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=70"
+  },
+  {
+    "position": 70,
+    "name": "Grayson Hale",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=1"
+  },
+  {
+    "position": 71,
+    "name": "Patricia Lima",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=2"
+  },
+  {
+    "position": 72,
+    "name": "Jasper Quinn",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=3"
+  },
+  {
+    "position": 73,
+    "name": "Mariana Prado",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=4"
+  },
+  {
+    "position": 74,
+    "name": "Zander Fox",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=5"
+  },
+  {
+    "position": 75,
+    "name": "Aline Martins",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=6"
+  },
+  {
+    "position": 76,
+    "name": "Callum Boyd",
+    "level": 4,
+    "avatar": "https://i.pravatar.cc/150?img=7"
+  },
+  {
+    "position": 77,
+    "name": "Rebeca Moura",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=8"
+  },
+  {
+    "position": 78,
+    "name": "Tucker Shaw",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=9"
+  },
+  {
+    "position": 79,
+    "name": "Leticia Farias",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=10"
+  },
+  {
+    "position": 80,
+    "name": "Lachlan Pierce",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=11"
+  },
+  {
+    "position": 81,
+    "name": "Ariana Lopes",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=12"
+  },
+  {
+    "position": 82,
+    "name": "Micah Fields",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=13"
+  },
+  {
+    "position": 83,
+    "name": "Helena Antunes",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=14"
+  },
+  {
+    "position": 84,
+    "name": "Porter Blake",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=15"
+  },
+  {
+    "position": 85,
+    "name": "Bruna Carvalho",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=16"
+  },
+  {
+    "position": 86,
+    "name": "Silas Reed",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=17"
+  },
+  {
+    "position": 87,
+    "name": "Renata Ramos",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=18"
+  },
+  {
+    "position": 88,
+    "name": "Enzo Martins",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=19"
+  },
+  {
+    "position": 89,
+    "name": "Tatiana Luz",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=20"
+  },
+  {
+    "position": 90,
+    "name": "Corbin Ellis",
+    "level": 3,
+    "avatar": "https://i.pravatar.cc/150?img=21"
+  },
+  {
+    "position": 91,
+    "name": "Vivian Duarte",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=22"
+  },
+  {
+    "position": 92,
+    "name": "Ronan West",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=23"
+  },
+  {
+    "position": 93,
+    "name": "Priscila Neri",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=24"
+  },
+  {
+    "position": 94,
+    "name": "Arthur Braga",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=25"
+  },
+  {
+    "position": 95,
+    "name": "Milena Soares",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=26"
+  },
+  {
+    "position": 96,
+    "name": "Kyler Brooks",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=27"
+  },
+  {
+    "position": 97,
+    "name": "Fabiana Freire",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=28"
+  },
+  {
+    "position": 98,
+    "name": "Weston Price",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=29"
+  },
+  {
+    "position": 99,
+    "name": "Carla Nascimento",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=30"
+  },
+  {
+    "position": 100,
+    "name": "Levi Santos",
+    "level": 2,
+    "avatar": "https://i.pravatar.cc/150?img=31"
+  }
+]
