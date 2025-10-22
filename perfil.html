@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/settings.js"></script>
+  <script src="js/auth.js"></script>
+</head>
+<body class="page-profile">
+  <main id="profile-container">
+    <h1>Informações do perfil</h1>
+    <form class="profile-form" autocomplete="on">
+      <div class="profile-field">
+        <label for="profile-name">Nome</label>
+        <input type="text" id="profile-name" name="profile-name" placeholder="Digite seu nome">
+      </div>
+      <div class="profile-photo">
+        <div id="profile-photo-preview" class="profile-photo-preview">Adicione uma foto</div>
+        <label for="profile-photo" class="profile-upload-label">
+          <span aria-hidden="true">📷</span>
+          <span>Carregar foto</span>
+          <input type="file" id="profile-photo" name="profile-photo" accept="image/*">
+        </label>
+      </div>
+      <div class="profile-field">
+        <label for="profile-username">Nome de usuário</label>
+        <input type="text" id="profile-username" name="profile-username" readonly>
+      </div>
+    </form>
+  </main>
+  <footer class="page-footer">
+    <nav id="main-nav">
+      <a href="index.html" class="nav-item" aria-label="Home">
+        <span aria-hidden="true">▶</span>
+        <span class="sr-only">Home</span>
+      </a>
+      <a href="fun.html" class="nav-item" aria-label="Fun">
+        <span aria-hidden="true">🌐</span>
+        <span class="sr-only">Fun</span>
+      </a>
+      <a href="play.html" class="nav-item" aria-label="Play">
+        <span aria-hidden="true">📊</span>
+        <span class="sr-only">Play</span>
+      </a>
+      <a href="custom.html" class="nav-item" aria-label="Custom">
+        <span aria-hidden="true">💠</span>
+        <span class="sr-only">Custom</span>
+      </a>
+      <a href="perfil.html" class="nav-item active" aria-label="Perfil">
+        <span aria-hidden="true">👨🏻</span>
+        <span class="sr-only">Perfil</span>
+      </a>
+    </nav>
+  </footer>
+  <script src="js/profile.js"></script>
+</body>
+</html>

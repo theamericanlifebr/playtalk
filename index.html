@@ -9,15 +9,7 @@
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
-  <body>
-    <nav id="top-nav">
-      <div class="nav-links">
-        <a href="#" id="home-link">home</a>
-        <a href="fun.html">fun</a>
-        <a href="play.html">play</a>
-        <a href="custom.html">custom</a>
-      </div>
-    </nav>
+  <body class="page-home">
     <div id="ilife-screen" style="display:none">
       <img id="ilife-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk">
       <div id="ilife-text">diga play para começar</div>
@@ -67,6 +59,31 @@
       <div id="intro-progress-filled"></div>
     </div>
   </div>
+
+  <footer class="page-footer">
+    <nav id="main-nav">
+      <a href="index.html" id="home-link" class="nav-item active" aria-label="Home">
+        <span aria-hidden="true">▶</span>
+        <span class="sr-only">Home</span>
+      </a>
+      <a href="fun.html" class="nav-item" aria-label="Fun">
+        <span aria-hidden="true">🌐</span>
+        <span class="sr-only">Fun</span>
+      </a>
+      <a href="play.html" class="nav-item" aria-label="Play">
+        <span aria-hidden="true">📊</span>
+        <span class="sr-only">Play</span>
+      </a>
+      <a href="custom.html" class="nav-item" aria-label="Custom">
+        <span aria-hidden="true">💠</span>
+        <span class="sr-only">Custom</span>
+      </a>
+      <a href="perfil.html" class="nav-item" aria-label="Perfil">
+        <span aria-hidden="true">👨🏻</span>
+        <span class="sr-only">Perfil</span>
+      </a>
+    </nav>
+  </footer>
 
   <audio id="somModo1Intro" src="gamesounds/mode1first.mp3"></audio>
   <audio id="somModo2Intro" src="gamesounds/mode2first.mp3"></audio>

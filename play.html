@@ -9,13 +9,7 @@
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body>
-  <nav id="top-nav">
-    <a href="index.html">home</a>
-    <a href="fun.html">fun</a>
-    <a href="play.html">play</a>
-    <a href="custom.html">custom</a>
-  </nav>
+<body class="page-play">
   <div id="auth-controls">
     <div class="auth-controls-left">
       <button id="login-btn" class="login-button" type="button">Entrar</button>
@@ -23,15 +17,17 @@
     </div>
     <div id="auth-status" class="auth-status">Nenhum usuário conectado</div>
   </div>
-  <div id="play-content" style="text-align:center;margin-top:50px;"></div>
-  <div id="mode-buttons">
-    <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
-    <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
-    <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
-    <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
-    <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
-    <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
-  </div>
+  <main id="play-container">
+    <div id="play-content" class="stats-wrapper"></div>
+    <div id="mode-buttons" class="stats-mode-icons">
+      <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
+      <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
+      <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
+      <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
+      <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
+      <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
+    </div>
+  </main>
   <div id="auth-modal" class="auth-modal hidden">
     <div class="auth-modal-content">
       <button id="auth-close" class="auth-close" type="button" aria-label="Fechar">&times;</button>
@@ -63,6 +59,30 @@
       <div id="auth-message" class="auth-message" role="alert"></div>
     </div>
   </div>
+  <footer class="page-footer">
+    <nav id="main-nav">
+      <a href="index.html" class="nav-item" aria-label="Home">
+        <span aria-hidden="true">▶</span>
+        <span class="sr-only">Home</span>
+      </a>
+      <a href="fun.html" class="nav-item" aria-label="Fun">
+        <span aria-hidden="true">🌐</span>
+        <span class="sr-only">Fun</span>
+      </a>
+      <a href="play.html" class="nav-item active" aria-label="Play">
+        <span aria-hidden="true">📊</span>
+        <span class="sr-only">Play</span>
+      </a>
+      <a href="custom.html" class="nav-item" aria-label="Custom">
+        <span aria-hidden="true">💠</span>
+        <span class="sr-only">Custom</span>
+      </a>
+      <a href="perfil.html" class="nav-item" aria-label="Perfil">
+        <span aria-hidden="true">👨🏻</span>
+        <span class="sr-only">Perfil</span>
+      </a>
+    </nav>
+  </footer>
   <script src="js/play.js"></script>
 </body>
 </html>
