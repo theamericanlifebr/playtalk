@@ -31,9 +31,23 @@ document.addEventListener('DOMContentLoaded', () => {
     profileData = {};
   }
 
+  const storedAvatar = localStorage.getItem('avatar');
+  if (!profileData.photo && storedAvatar) {
+    profileData.photo = storedAvatar;
+  }
+
+  function persistAvatarValue(photoData) {
+    if (photoData && typeof photoData === 'string' && photoData.length) {
+      localStorage.setItem('avatar', photoData);
+    } else {
+      localStorage.removeItem('avatar');
+    }
+  }
+
   function saveProfile() {
     try {
       localStorage.setItem(storageKey, JSON.stringify(profileData));
+      persistAvatarValue(profileData.photo);
     } catch (error) {
       console.warn('Não foi possível salvar o perfil.', error);
     }
@@ -59,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     photoPreview.style.backgroundImage = `url(${profileData.photo})`;
     photoPreview.classList.add('has-photo');
   }
+
+  persistAvatarValue(profileData.photo);
 
   const storedShare = localStorage.getItem('shareResults');
   const shareEnabled = storedShare !== null
@@ -135,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
           photoPreview.classList.add('has-photo');
         }
         saveProfile();
+        schedulePersist();
       };
       reader.readAsDataURL(file);
     });

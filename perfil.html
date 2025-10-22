@@ -20,7 +20,6 @@
     </div>
     <div class="site-header__actions">
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
-      <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
     </div>
   </header>
   <main id="profile-container">
@@ -99,10 +98,16 @@
         <span aria-hidden="true">🏆</span>
         <span class="sr-only">Ranking</span>
       </a>
-      <a href="perfil.html" class="nav-item active" aria-label="Usuário">
-        <span aria-hidden="true">👨🏻</span>
-        <span class="sr-only">Usuário</span>
-      </a>
+      <div class="nav-item--user nav-item--user-active">
+        <button class="nav-item nav-item__trigger" type="button" aria-expanded="false" aria-controls="user-menu">
+          <span aria-hidden="true">👨🏻</span>
+          <span class="sr-only">Usuário</span>
+        </button>
+        <div id="user-menu" class="nav-item__menu" hidden>
+          <a href="perfil.html" class="nav-item__menu-link" aria-current="page">Perfil</a>
+          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
+        </div>
+      </div>
     </nav>
   </footer>
   <script src="js/profile.js"></script>

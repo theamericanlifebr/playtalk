@@ -66,7 +66,7 @@
           if (player.level > baseLevel) {
             base.level = player.level;
           }
-          if (!base.avatar && player.avatar) {
+          if (player.avatar) {
             base.avatar = player.avatar;
           }
         } else {
@@ -126,11 +126,14 @@
         .map(entry => {
           const level = Number(entry.data.pastaAtual) || 1;
           const displayName = (entry.data.displayName && entry.data.displayName.trim()) || entry.username || 'Jogador';
+          const avatar = typeof entry.data.avatar === 'string' && entry.data.avatar.trim()
+            ? entry.data.avatar
+            : '';
           return {
             username: entry.username,
             name: displayName,
             level,
-            avatar: entry.data.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(entry.username || displayName)}`
+            avatar: avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(entry.username || displayName)}`
           };
         });
     } catch (error) {

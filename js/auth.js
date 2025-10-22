@@ -16,12 +16,15 @@
     ilifeDone: { type: 'boolean', default: false },
     levelDetails: { type: 'json', default: [] },
     totalTime: { type: 'number', default: 0 },
-    shareResults: { type: 'boolean', default: false }
+    shareResults: { type: 'boolean', default: false },
+    avatar: { type: 'string', default: '' }
   };
 
   let cachedCurrentUser = null;
   let openLoginFlowHandler = null;
   let closeLoginFlowHandler = null;
+  let closeUserMenu = null;
+  let teardownUserMenu = null;
 
   function apiUrl(path) {
     if (!API_BASE_URL) {
@@ -265,11 +268,14 @@
       const raw = localStorage.getItem(key);
       if (!raw) return null;
       const data = JSON.parse(raw);
-      return data && typeof data.photo === 'string' ? data.photo : null;
+      if (data && typeof data.photo === 'string' && data.photo) {
+        return data.photo;
+      }
     } catch (error) {
       console.warn('Não foi possível carregar a foto de perfil armazenada.', error);
-      return null;
     }
+    const storedAvatar = localStorage.getItem('avatar');
+    return storedAvatar && storedAvatar.length ? storedAvatar : null;
   }
 
   function createAvatarGradient(seed) {
@@ -331,7 +337,10 @@
       loginBtn.style.display = user ? 'none' : 'inline-flex';
     }
     if (logoutBtn) {
-      logoutBtn.style.display = user ? 'inline-flex' : 'none';
+      logoutBtn.style.display = user ? 'flex' : 'none';
+    }
+    if (!user && typeof closeUserMenu === 'function') {
+      closeUserMenu();
     }
     if (user && typeof closeLoginFlowHandler === 'function') {
       closeLoginFlowHandler();
@@ -416,6 +425,95 @@
       }
       throw err;
     }
+  }
+
+  function setupUserMenu() {
+    if (typeof teardownUserMenu === 'function') {
+      teardownUserMenu();
+      teardownUserMenu = null;
+    }
+
+    const container = document.querySelector('.nav-item--user');
+    if (!container) {
+      return;
+    }
+
+    const trigger = container.querySelector('.nav-item__trigger');
+    const menu = container.querySelector('.nav-item__menu');
+    if (!trigger || !menu) {
+      return;
+    }
+
+    const closeMenu = () => {
+      if (!container.classList.contains('nav-item--open')) {
+        menu.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+        return;
+      }
+      container.classList.remove('nav-item--open');
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    };
+
+    const openMenu = () => {
+      container.classList.add('nav-item--open');
+      menu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+    };
+
+    const toggleMenu = event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (container.classList.contains('nav-item--open')) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    };
+
+    const handleDocumentClick = event => {
+      if (!container.contains(event.target)) {
+        closeMenu();
+      }
+    };
+
+    const handleKeydown = event => {
+      if (event.key === 'Escape') {
+        closeMenu();
+        trigger.focus();
+      }
+    };
+
+    const handleTriggerKeydown = event => {
+      if (event.key === 'Escape') {
+        closeMenu();
+      }
+    };
+
+    const handleMenuClick = event => {
+      event.stopPropagation();
+    };
+
+    trigger.addEventListener('click', toggleMenu);
+    trigger.addEventListener('keydown', handleTriggerKeydown);
+    menu.addEventListener('click', handleMenuClick);
+
+    document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('keydown', handleKeydown);
+
+    teardownUserMenu = () => {
+      closeMenu();
+      trigger.removeEventListener('click', toggleMenu);
+      trigger.removeEventListener('keydown', handleTriggerKeydown);
+      menu.removeEventListener('click', handleMenuClick);
+      document.removeEventListener('click', handleDocumentClick);
+      document.removeEventListener('keydown', handleKeydown);
+      closeUserMenu = null;
+      teardownUserMenu = null;
+    };
+
+    closeUserMenu = closeMenu;
+    closeMenu();
   }
 
   function setupLoginFlow() {
@@ -572,6 +670,7 @@
       applyUserDataToStorage(user);
     }
 
+    setupUserMenu();
     setupLoginFlow();
     updateAuthStatus();
     if (!cachedCurrentUser && typeof openLoginFlowHandler === 'function') {
