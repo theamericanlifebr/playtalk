@@ -1,5 +1,43 @@
 let pastas = {};
 
+const authAPI = window.playtalkAuth || null;
+let currentUser = authAPI && typeof authAPI.getCurrentUser === 'function'
+  ? authAPI.getCurrentUser()
+  : null;
+
+function refreshCurrentUser() {
+  if (authAPI && typeof authAPI.getCurrentUser === 'function') {
+    currentUser = authAPI.getCurrentUser();
+  } else {
+    currentUser = null;
+  }
+}
+
+function persistUserProgress() {
+  if (authAPI && typeof authAPI.persistProgress === 'function') {
+    authAPI.persistProgress();
+    refreshCurrentUser();
+  }
+}
+
+let persistentMicStream = null;
+let micRequestInProgress = false;
+
+async function requestPersistentMicAccess() {
+  if (persistentMicStream || micRequestInProgress) return persistentMicStream;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
+  micRequestInProgress = true;
+  try {
+    persistentMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return persistentMicStream;
+  } catch (error) {
+    console.warn('Permissão de microfone negada ou indisponível:', error);
+    return null;
+  } finally {
+    micRequestInProgress = false;
+  }
+}
+
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   theme: 'light',
@@ -132,6 +170,7 @@ if (legacyStats && !modeStats[1]) {
   modeStats[1] = legacyStats;
   localStorage.removeItem('mode1Stats');
   localStorage.setItem('modeStats', JSON.stringify(modeStats));
+  persistUserProgress();
 }
 let modeStartTimes = {};
 let lastWasError = false;
@@ -198,11 +237,11 @@ function saveModeStats() {
   localStorage.setItem('modeStats', JSON.stringify(modeStats));
   if (typeof currentUser === 'object' && currentUser) {
     currentUser.stats = modeStats;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
   }
   if (typeof saveUserPerformance === 'function') {
     saveUserPerformance(modeStats);
   }
+  persistUserProgress();
   updateGeneralCircles();
 }
 
@@ -211,6 +250,7 @@ function saveTotals() {
   localStorage.setItem('errosTotais', errosTotais);
   localStorage.setItem('tentativasTotais', tentativasTotais);
   localStorage.setItem('points', points);
+  persistUserProgress();
   const limite = getCurrentThreshold();
   if (!paused && points >= limite) {
     pauseGame();
@@ -375,11 +415,13 @@ function updateLevelIcon() {
     }, 500);
   }
   localStorage.setItem('pastaAtual', pastaAtual);
+  persistUserProgress();
 }
 
 function unlockMode(mode, duration = 1000) {
   unlockedModes[mode] = true;
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+  persistUserProgress();
   document.querySelectorAll(`#menu-modes img[data-mode="${mode}"], #mode-buttons img[data-mode="${mode}"]`).forEach(img => {
     img.style.transition = `opacity ${duration}ms linear`;
     img.style.opacity = '1';
@@ -420,6 +462,7 @@ function performMenuLevelUp() {
     unlockedModes = { 1: true };
     localStorage.setItem('completedModes', JSON.stringify(completedModes));
     localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+    persistUserProgress();
     document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = modeImages[6];
     });
@@ -451,6 +494,7 @@ function startStatsSequence() {
   const audio = new Audio('gamesounds/nivel2.mp3');
   audio.addEventListener('ended', () => {
     localStorage.setItem('statsSequence', 'true');
+    persistUserProgress();
     window.location.href = 'play.html';
   });
   audio.play();
@@ -744,6 +788,7 @@ function startGame(modo) {
       showMode1Intro(() => {
         modeIntroShown[1] = true;
         localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
+        persistUserProgress();
         start();
       });
     } else {
@@ -752,6 +797,7 @@ function startGame(modo) {
         showModeIntro(info, () => {
           modeIntroShown[modo] = true;
           localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
+          persistUserProgress();
           start();
         });
       } else {
@@ -1304,6 +1350,7 @@ function finishMode() {
   stopCurrentGame();
   completedModes[selectedMode] = true;
   localStorage.setItem('completedModes', JSON.stringify(completedModes));
+  persistUserProgress();
   const next = selectedMode + 1;
   if (next <= 6) {
     unlockMode(next, 500);
@@ -1336,6 +1383,7 @@ function finishMode() {
     const details = JSON.parse(localStorage.getItem('levelDetails') || '[]');
     details.push({ level: pastaAtual + 1, accuracy: acc, speed: speed.toFixed(2), reports: reportPerc });
     localStorage.setItem('levelDetails', JSON.stringify(details));
+    persistUserProgress();
     document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = 'selos%20modos%20de%20jogo/modostar.png';
     });
@@ -1388,6 +1436,7 @@ function goHome() {
   if (sessionStart) {
     const total = parseInt(localStorage.getItem('totalTime') || '0', 10);
     localStorage.setItem('totalTime', total + (Date.now() - sessionStart));
+    persistUserProgress();
     sessionStart = null;
   }
   recordModeTime(selectedMode);
@@ -1416,6 +1465,7 @@ function updateClock() {
 function startTutorial() {
   tutorialInProgress = true;
   localStorage.setItem('tutorialDone', 'true');
+  persistUserProgress();
   const welcome = document.getElementById('somWelcome');
   if (welcome) setTimeout(() => { welcome.currentTime = 0; welcome.play(); }, 1);
 
@@ -1571,6 +1621,7 @@ async function initGame() {
 }
 
   window.onload = async () => {
+    refreshCurrentUser();
     document.querySelectorAll('#top-nav a').forEach(a => {
       a.addEventListener('click', stopCurrentGame);
     });
@@ -1581,6 +1632,7 @@ async function initGame() {
         goHome();
       });
     }
+    await requestPersistentMicAccess();
     await initGame();
     window.addEventListener('beforeunload', () => {
       recordModeTime(selectedMode);
