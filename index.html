@@ -20,11 +20,9 @@
       </div>
       <div class="site-header__actions">
         <button id="login-btn" class="site-header__button" type="button">Entrar</button>
-        <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
       </div>
     </header>
-  <img id="nivel-indicador" alt="Indicador de nível" />
-  <div id="menu" style="display:flex">
+  <div id="menu">
     <div id="menu-modes">
       <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
       <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" alt="Modo 2">
@@ -108,10 +106,16 @@
         <span aria-hidden="true">🏆</span>
         <span class="sr-only">Ranking</span>
       </a>
-      <a href="perfil.html" class="nav-item" aria-label="Usuário">
-        <span aria-hidden="true">👨🏻</span>
-        <span class="sr-only">Usuário</span>
-      </a>
+      <div class="nav-item--user">
+        <button class="nav-item nav-item__trigger" type="button" aria-expanded="false" aria-controls="user-menu">
+          <span aria-hidden="true">👨🏻</span>
+          <span class="sr-only">Usuário</span>
+        </button>
+        <div id="user-menu" class="nav-item__menu" hidden>
+          <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
+          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
+        </div>
+      </div>
     </nav>
   </footer>
 

@@ -80,6 +80,7 @@ let reconhecimento;
 let reconhecimentoAtivo = false;
 let reconhecimentoRodando = false;
 let listeningForCommand = false;
+let microphonePaused = false;
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -93,6 +94,9 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   };
 
   reconhecimento.onresult = (event) => {
+    if (microphonePaused) {
+      return;
+    }
     const transcript = event.results[event.results.length - 1][0].transcript.trim();
     const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (awaitingRetry && (normCmd.includes('try again') || normCmd.includes('tentar de novo'))) {
@@ -965,19 +969,30 @@ function flashSuccess(callback) {
 
 function flashError(expected, callback) {
   const texto = document.getElementById('texto-exibicao');
-  const previous = texto.textContent;
+  if (!texto) {
+    callback();
+    return;
+  }
+  const previousText = texto.textContent;
+  const previousColor = window.getComputedStyle(texto).color;
+  const resultadoEl = document.getElementById('resultado');
   texto.textContent = expected;
-  texto.style.transition = 'color 500ms linear';
-  texto.style.color = 'red';
+  texto.style.transition = 'color 280ms ease';
+  texto.style.color = '#ff4d4f';
+  const HIGHLIGHT_DURATION = 2100;
+  const RESET_DURATION = 500;
   setTimeout(() => {
-    texto.style.transition = 'color 500ms linear';
-    texto.style.color = '#333';
+    texto.style.transition = 'color 240ms ease';
+    texto.style.color = previousColor;
     setTimeout(() => {
-      texto.textContent = previous;
-      document.getElementById('resultado').textContent = '';
+      texto.textContent = previousText;
+      texto.style.transition = '';
+      if (resultadoEl) {
+        resultadoEl.textContent = '';
+      }
       callback();
-    }, 500);
-  }, 1500);
+    }, RESET_DURATION);
+  }, HIGHLIGHT_DURATION);
 }
 
 function handleNoInput() {
@@ -1101,6 +1116,7 @@ function verificarResposta() {
       input.value = '';
       input.disabled = true;
       bloqueado = true;
+      microphonePaused = true;
       falar(esperado, esperadoLang);
       consecutiveErrors++;
       flashError(esperado, () => {
@@ -1108,6 +1124,7 @@ function verificarResposta() {
         bloqueado = false;
         points = Math.max(0, points - penalty);
         saveTotals();
+        microphonePaused = false;
         if (consecutiveErrors >= 3) {
           triggerDownPlay();
         } else {
