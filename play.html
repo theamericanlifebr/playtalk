@@ -10,13 +10,13 @@
   <script src="js/auth.js"></script>
 </head>
 <body class="page-play">
-  <div id="auth-controls">
-    <div class="auth-controls-left">
-      <button id="login-btn" class="login-button" type="button">Entrar</button>
-      <button id="logout-btn" class="logout-button" type="button">Sair</button>
+  <header class="site-header" id="global-header">
+    <div class="site-header__info" id="auth-status" aria-live="polite">Nenhum usuário conectado</div>
+    <div class="site-header__actions">
+      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+      <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
     </div>
-    <div id="auth-status" class="auth-status">Nenhum usuário conectado</div>
-  </div>
+  </header>
   <main id="play-container">
     <div id="play-content" class="stats-wrapper"></div>
     <div id="mode-buttons" class="stats-mode-icons">
@@ -81,9 +81,9 @@
         <span aria-hidden="true">🏆</span>
         <span class="sr-only">Ranking</span>
       </a>
-      <a href="perfil.html" class="nav-item" aria-label="Perfil">
+      <a href="perfil.html" class="nav-item" aria-label="Usuário">
         <span aria-hidden="true">👨🏻</span>
-        <span class="sr-only">Perfil</span>
+        <span class="sr-only">Usuário</span>
       </a>
     </nav>
   </footer>

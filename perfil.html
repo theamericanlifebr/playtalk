@@ -3,15 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Perfil</title>
+  <title>Usuário</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
 <body class="page-profile">
+  <header class="site-header" id="global-header">
+    <div class="site-header__info" id="auth-status" aria-live="polite">Nenhum usuário conectado</div>
+    <div class="site-header__actions">
+      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+      <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
+    </div>
+  </header>
   <main id="profile-container">
-    <h1>Informações do perfil</h1>
+    <h1>Usuário</h1>
     <form class="profile-form" autocomplete="on">
       <div class="profile-field">
         <label for="profile-name">Nome</label>
@@ -28,6 +35,13 @@
       <div class="profile-field">
         <label for="profile-username">Nome de usuário</label>
         <input type="text" id="profile-username" name="profile-username" readonly>
+      </div>
+      <div class="profile-share">
+        <label class="profile-share-toggle" for="profile-share-results">
+          <input type="checkbox" id="profile-share-results" name="profile-share-results">
+          Compartilhar resultados
+        </label>
+        <p class="profile-share-description">Ao compartilhar, seu nível atual pode aparecer publicamente no ranking Top 100 quando estiver entre os melhores.</p>
       </div>
     </form>
   </main>
@@ -53,9 +67,9 @@
         <span aria-hidden="true">🏆</span>
         <span class="sr-only">Ranking</span>
       </a>
-      <a href="perfil.html" class="nav-item active" aria-label="Perfil">
+      <a href="perfil.html" class="nav-item active" aria-label="Usuário">
         <span aria-hidden="true">👨🏻</span>
-        <span class="sr-only">Perfil</span>
+        <span class="sr-only">Usuário</span>
       </a>
     </nav>
   </footer>

@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameField = document.getElementById('profile-name');
   const photoInput = document.getElementById('profile-photo');
   const photoPreview = document.getElementById('profile-photo-preview');
+  const shareCheckbox = document.getElementById('profile-share-results');
 
   const username = (currentUser && currentUser.username) || 'convidado';
   if (usernameField) {
@@ -38,8 +39,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  if (profileData.name && nameField) {
-    nameField.value = profileData.name;
+  const storedDisplayName = (() => {
+    const saved = localStorage.getItem('displayName');
+    if (saved && saved.trim()) {
+      return saved.trim();
+    }
+    if (profileData.name && profileData.name.trim()) {
+      return profileData.name.trim();
+    }
+    return '';
+  })();
+
+  if (nameField && storedDisplayName) {
+    nameField.value = storedDisplayName;
+    profileData.name = storedDisplayName;
   }
 
   if (profileData.photo && photoPreview) {
@@ -47,10 +60,66 @@ document.addEventListener('DOMContentLoaded', () => {
     photoPreview.classList.add('has-photo');
   }
 
+  const storedShare = localStorage.getItem('shareResults');
+  const shareEnabled = storedShare !== null
+    ? storedShare === 'true'
+    : Boolean(profileData.shareResults);
+
+  profileData.shareResults = shareEnabled;
+  if (shareCheckbox) {
+    shareCheckbox.checked = shareEnabled;
+  }
+  if (storedShare === null) {
+    localStorage.setItem('shareResults', shareEnabled ? 'true' : 'false');
+  }
+  if (storedDisplayName && !localStorage.getItem('displayName')) {
+    localStorage.setItem('displayName', storedDisplayName);
+  }
+
+  let persistTimeout = null;
+
+  function triggerUserChange() {
+    document.dispatchEvent(new CustomEvent('playtalk:user-change', {
+      detail: { user: currentUser }
+    }));
+  }
+
+  function persistProfileChanges({ emitEvent = true } = {}) {
+    saveProfile();
+    if (authAPI && typeof authAPI.persistProgress === 'function') {
+      authAPI.persistProgress();
+    }
+    if (emitEvent) {
+      triggerUserChange();
+    }
+  }
+
+  function schedulePersist() {
+    if (persistTimeout) {
+      clearTimeout(persistTimeout);
+    }
+    triggerUserChange();
+    persistTimeout = setTimeout(() => {
+      persistTimeout = null;
+      persistProfileChanges();
+    }, 400);
+  }
+
   if (nameField) {
     nameField.addEventListener('input', () => {
-      profileData.name = nameField.value.trim();
-      saveProfile();
+      const value = nameField.value.trim();
+      profileData.name = value;
+      localStorage.setItem('displayName', value);
+      schedulePersist();
+    });
+  }
+
+  if (shareCheckbox) {
+    shareCheckbox.addEventListener('change', () => {
+      const enabled = shareCheckbox.checked;
+      profileData.shareResults = enabled;
+      localStorage.setItem('shareResults', enabled ? 'true' : 'false');
+      persistProfileChanges();
     });
   }
 

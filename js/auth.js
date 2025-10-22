@@ -6,6 +6,7 @@
     errosTotais: { type: 'number', default: 0 },
     tentativasTotais: { type: 'number', default: 0 },
     points: { type: 'number', default: 0 },
+    displayName: { type: 'string', default: '' },
     modeStats: { type: 'json', default: {} },
     completedModes: { type: 'json', default: {} },
     unlockedModes: { type: 'json', default: {} },
@@ -14,7 +15,8 @@
     tutorialDone: { type: 'boolean', default: false },
     ilifeDone: { type: 'boolean', default: false },
     levelDetails: { type: 'json', default: [] },
-    totalTime: { type: 'number', default: 0 }
+    totalTime: { type: 'number', default: 0 },
+    shareResults: { type: 'boolean', default: false }
   };
 
   let cachedCurrentUser = null;
@@ -246,6 +248,22 @@
     }
   }
 
+  function getStoredLevel() {
+    const stored = parseInt(localStorage.getItem('pastaAtual'), 10);
+    return Number.isFinite(stored) && stored > 0 ? stored : 1;
+  }
+
+  function getDisplayName(user) {
+    const stored = localStorage.getItem('displayName');
+    if (stored && stored.trim()) {
+      return stored.trim();
+    }
+    if (user && user.data && user.data.displayName) {
+      return user.data.displayName;
+    }
+    return (user && user.username) || '';
+  }
+
   function updateAuthStatus() {
     const statusEl = document.getElementById('auth-status');
     const loginBtn = document.getElementById('login-btn');
@@ -253,16 +271,18 @@
     const user = readStoredCurrentUser();
     if (statusEl) {
       if (user) {
-        statusEl.textContent = `Olá, ${user.username}`;
+        const name = getDisplayName(user) || user.username || 'Jogador';
+        statusEl.textContent = `${name} + Nível atual = ${getStoredLevel()}`;
       } else {
         statusEl.textContent = 'Nenhum usuário conectado';
       }
     }
     if (loginBtn) {
-      loginBtn.textContent = user ? 'Trocar usuário' : 'Entrar';
+      loginBtn.textContent = 'Entrar';
+      loginBtn.style.display = user ? 'none' : 'inline-flex';
     }
     if (logoutBtn) {
-      logoutBtn.style.display = user ? 'inline-block' : 'none';
+      logoutBtn.style.display = user ? 'inline-flex' : 'none';
     }
   }
 
@@ -391,8 +411,14 @@
     const modal = document.getElementById('auth-modal');
     const closeBtn = document.getElementById('auth-close');
 
-    if (loginBtn && modal) {
-      loginBtn.addEventListener('click', () => openModal(modal));
+    if (loginBtn) {
+      if (modal) {
+        loginBtn.addEventListener('click', () => openModal(modal));
+      } else {
+        loginBtn.addEventListener('click', () => {
+          window.location.href = 'play.html#login';
+        });
+      }
     }
     if (closeBtn) {
       closeBtn.addEventListener('click', () => closeModal(modal));
@@ -419,6 +445,13 @@
     }
 
     setupTabs();
+
+    if (modal && window.location.hash === '#login') {
+      openModal(modal);
+      if (window.history && typeof window.history.replaceState === 'function') {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    }
   }
 
   async function init() {
@@ -448,6 +481,20 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     init();
+  });
+
+  document.addEventListener('playtalk:user-change', () => {
+    updateAuthStatus();
+  });
+
+  document.addEventListener('playtalk:level-update', () => {
+    updateAuthStatus();
+  });
+
+  window.addEventListener('storage', (event) => {
+    if (['pastaAtual', 'displayName'].includes(event.key)) {
+      updateAuthStatus();
+    }
   });
 
   window.playtalkAuth = {

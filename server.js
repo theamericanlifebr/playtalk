@@ -13,6 +13,7 @@ const PROGRESS_SCHEMA = {
   errosTotais: { type: 'number', default: 0 },
   tentativasTotais: { type: 'number', default: 0 },
   points: { type: 'number', default: 0 },
+  displayName: { type: 'string', default: '' },
   modeStats: { type: 'json', default: {} },
   completedModes: { type: 'json', default: {} },
   unlockedModes: { type: 'json', default: {} },
@@ -21,7 +22,8 @@ const PROGRESS_SCHEMA = {
   tutorialDone: { type: 'boolean', default: false },
   ilifeDone: { type: 'boolean', default: false },
   levelDetails: { type: 'json', default: [] },
-  totalTime: { type: 'number', default: 0 }
+  totalTime: { type: 'number', default: 0 },
+  shareResults: { type: 'boolean', default: false }
 };
 
 const staticDir = (() => {

@@ -10,6 +10,13 @@
   <script src="js/auth.js"></script>
 </head>
   <body class="page-home">
+    <header class="site-header" id="global-header">
+      <div class="site-header__info" id="auth-status" aria-live="polite">Nenhum usuário conectado</div>
+      <div class="site-header__actions">
+        <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+        <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
+      </div>
+    </header>
     <div id="ilife-screen" style="display:none">
       <img id="ilife-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk">
       <div id="ilife-text">diga play para começar</div>
@@ -82,9 +89,9 @@
         <span aria-hidden="true">🏆</span>
         <span class="sr-only">Ranking</span>
       </a>
-      <a href="perfil.html" class="nav-item" aria-label="Perfil">
+      <a href="perfil.html" class="nav-item" aria-label="Usuário">
         <span aria-hidden="true">👨🏻</span>
-        <span class="sr-only">Perfil</span>
+        <span class="sr-only">Usuário</span>
       </a>
     </nav>
   </footer>
