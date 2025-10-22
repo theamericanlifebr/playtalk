@@ -2,7 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const rootDir = __dirname;
-const distDir = path.join(rootDir, 'dist');
+const outputDir = path.join(rootDir, 'public');
 
 const filesToCopy = ['index.html', 'play.html', 'custom.html'];
 const directoriesToCopy = [
@@ -39,14 +39,14 @@ async function copyRecursive(source, destination) {
 }
 
 async function build() {
-  console.log('Cleaning dist directory...');
-  await removeDir(distDir);
-  await ensureDir(distDir);
+  console.log('Cleaning public directory...');
+  await removeDir(outputDir);
+  await ensureDir(outputDir);
 
   for (const file of filesToCopy) {
     const source = path.join(rootDir, file);
     try {
-      await copyRecursive(source, path.join(distDir, file));
+      await copyRecursive(source, path.join(outputDir, file));
       console.log(`Copied ${file}`);
     } catch (error) {
       if (error.code === 'ENOENT') {
@@ -60,7 +60,7 @@ async function build() {
   for (const directory of directoriesToCopy) {
     const source = path.join(rootDir, directory);
     try {
-      await copyRecursive(source, path.join(distDir, directory));
+      await copyRecursive(source, path.join(outputDir, directory));
       console.log(`Copied ${directory}/`);
     } catch (error) {
       if (error.code === 'ENOENT') {
@@ -71,7 +71,7 @@ async function build() {
     }
   }
 
-  console.log('Static build created at dist/.');
+  console.log('Static build created at public/.');
 }
 
 build().catch((error) => {

@@ -12,8 +12,15 @@ const staticDir = (() => {
     return path.resolve(__dirname, customDir);
   }
 
-  const distPath = path.join(__dirname, 'dist');
-  return fs.existsSync(distPath) ? distPath : __dirname;
+  const candidateDirs = ['public', 'dist'];
+  for (const dir of candidateDirs) {
+    const candidatePath = path.join(__dirname, dir);
+    if (fs.existsSync(candidatePath)) {
+      return candidatePath;
+    }
+  }
+
+  return __dirname;
 })();
 
 const USERS_DIR = path.join(__dirname, 'data', 'users');
@@ -336,7 +343,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.listen(PORT, () => {
-  console.log(`Serving static content from ${staticDir}`);
-  console.log(`Server running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Serving static content from ${staticDir}`);
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
