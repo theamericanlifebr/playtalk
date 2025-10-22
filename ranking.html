@@ -3,34 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Perfil</title>
+  <title>Ranking Global</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body class="page-profile">
-  <main id="profile-container">
-    <h1>Informações do perfil</h1>
-    <form class="profile-form" autocomplete="on">
-      <div class="profile-field">
-        <label for="profile-name">Nome</label>
-        <input type="text" id="profile-name" name="profile-name" placeholder="Digite seu nome">
-      </div>
-      <div class="profile-photo">
-        <div id="profile-photo-preview" class="profile-photo-preview">Adicione uma foto</div>
-        <label for="profile-photo" class="profile-upload-label">
-          <span aria-hidden="true">📷</span>
-          <span>Carregar foto</span>
-          <input type="file" id="profile-photo" name="profile-photo" accept="image/*">
-        </label>
-      </div>
-      <div class="profile-field">
-        <label for="profile-username">Nome de usuário</label>
-        <input type="text" id="profile-username" name="profile-username" readonly>
-      </div>
-    </form>
+<body class="page-ranking">
+  <main class="ranking-main">
+    <header class="ranking-header">
+      <h1>Ranking Global</h1>
+      <p>Top 100 jogadores com base no nível atual. Quem chega mais longe conquista o troféu!</p>
+    </header>
+
+    <section id="ranking-status" class="ranking-status" role="status" aria-live="polite">
+      Carregando ranking...
+    </section>
+
+    <section id="ranking-list" class="ranking-list" aria-label="Ranking global de jogadores"></section>
   </main>
+
   <footer class="page-footer">
     <nav id="main-nav">
       <a href="index.html" class="nav-item" aria-label="Home">
@@ -49,16 +41,17 @@
         <span aria-hidden="true">💠</span>
         <span class="sr-only">Custom</span>
       </a>
-      <a href="ranking.html" class="nav-item" aria-label="Ranking">
+      <a href="ranking.html" class="nav-item active" aria-label="Ranking">
         <span aria-hidden="true">🏆</span>
         <span class="sr-only">Ranking</span>
       </a>
-      <a href="perfil.html" class="nav-item active" aria-label="Perfil">
+      <a href="perfil.html" class="nav-item" aria-label="Perfil">
         <span aria-hidden="true">👨🏻</span>
         <span class="sr-only">Perfil</span>
       </a>
     </nav>
   </footer>
-  <script src="js/profile.js"></script>
+
+  <script src="js/ranking.js" defer></script>
 </body>
 </html>
