@@ -20,6 +20,8 @@
   };
 
   let cachedCurrentUser = null;
+  let openLoginFlowHandler = null;
+  let closeLoginFlowHandler = null;
 
   function apiUrl(path) {
     if (!API_BASE_URL) {
@@ -236,18 +238,6 @@
     }));
   }
 
-  function closeModal(modal) {
-    if (modal) {
-      modal.classList.add('hidden');
-    }
-  }
-
-  function openModal(modal) {
-    if (modal) {
-      modal.classList.remove('hidden');
-    }
-  }
-
   function getStoredLevel() {
     const stored = parseInt(localStorage.getItem('pastaAtual'), 10);
     return Number.isFinite(stored) && stored > 0 ? stored : 1;
@@ -264,25 +254,87 @@
     return (user && user.username) || '';
   }
 
+  function getProfileStorageKey(username) {
+    return username ? `profile:${username}` : null;
+  }
+
+  function getStoredProfilePhoto(username) {
+    const key = getProfileStorageKey(username);
+    if (!key) return null;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      return data && typeof data.photo === 'string' ? data.photo : null;
+    } catch (error) {
+      console.warn('Não foi possível carregar a foto de perfil armazenada.', error);
+      return null;
+    }
+  }
+
+  function createAvatarGradient(seed) {
+    const base = seed
+      ? Array.from(seed).reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+      : 0;
+    const hue = base % 360;
+    const secondaryHue = (hue + 35) % 360;
+    return {
+      primary: `hsl(${hue}, 70%, 45%)`,
+      secondary: `hsl(${secondaryHue}, 70%, 60%)`
+    };
+  }
+
+  function updateHeaderAvatar(avatarEl, displayName, username) {
+    if (!avatarEl) return;
+    const photo = getStoredProfilePhoto(username);
+    if (photo) {
+      avatarEl.classList.add('site-header__avatar--image');
+      avatarEl.style.backgroundImage = `url(${photo})`;
+      avatarEl.style.background = 'none';
+      avatarEl.style.backgroundSize = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.textContent = '';
+      return;
+    }
+
+    const seed = (displayName && displayName.trim()) || username || 'Jogador';
+    const gradient = createAvatarGradient(seed);
+    avatarEl.classList.remove('site-header__avatar--image');
+    avatarEl.style.backgroundImage = 'none';
+    avatarEl.style.background = `linear-gradient(135deg, ${gradient.primary}, ${gradient.secondary})`;
+    avatarEl.textContent = seed.charAt(0).toUpperCase();
+  }
+
   function updateAuthStatus() {
-    const statusEl = document.getElementById('auth-status');
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
+    const nameEl = document.getElementById('header-username');
+    const levelEl = document.getElementById('header-level');
+    const avatarEl = document.getElementById('header-avatar');
     const user = readStoredCurrentUser();
-    if (statusEl) {
-      if (user) {
-        const name = getDisplayName(user) || user.username || 'Jogador';
-        statusEl.textContent = `${name} + Nível atual = ${getStoredLevel()}`;
-      } else {
-        statusEl.textContent = 'Nenhum usuário conectado';
-      }
+    const displayName = user
+      ? (getDisplayName(user) || user.username || 'Jogador')
+      : 'Visitante';
+    const username = user && user.username ? user.username : '';
+    const level = user ? getStoredLevel() : 1;
+
+    if (nameEl) {
+      nameEl.textContent = displayName;
+      nameEl.title = displayName;
     }
+    if (levelEl) {
+      levelEl.textContent = `Nível ${level}`;
+    }
+    updateHeaderAvatar(avatarEl, displayName, username);
+
     if (loginBtn) {
-      loginBtn.textContent = 'Entrar';
       loginBtn.style.display = user ? 'none' : 'inline-flex';
     }
     if (logoutBtn) {
       logoutBtn.style.display = user ? 'inline-flex' : 'none';
+    }
+    if (user && typeof closeLoginFlowHandler === 'function') {
+      closeLoginFlowHandler();
     }
   }
 
@@ -319,48 +371,24 @@
     }
   }
 
-  async function handleLoginSubmit(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const username = form.querySelector('input[name="login-username"]').value.trim();
-    const password = form.querySelector('input[name="login-password"]').value;
-    const messageEl = document.getElementById('auth-message');
-
-    if (!username || !password) {
-      if (messageEl) messageEl.textContent = 'Informe usuário e senha.';
-      return;
-    }
-
-    try {
-      const user = await loginRequest(username, password);
-      setCurrentUser(user);
-      applyUserDataToStorage(user);
-      updateAuthStatus();
-      closeModal(document.getElementById('auth-modal'));
-      if (messageEl) messageEl.textContent = '';
-      dispatchUserChange();
-    } catch (err) {
-      console.error('Erro ao realizar login:', err);
-      if (messageEl) messageEl.textContent = err.message || 'Não foi possível realizar login.';
+  async function handleLogout() {
+    await updateUserSnapshot();
+    setCurrentUser(null);
+    clearProgressStorage();
+    updateAuthStatus();
+    dispatchUserChange();
+    if (typeof openLoginFlowHandler === 'function') {
+      openLoginFlowHandler();
     }
   }
-
-  async function handleRegisterSubmit(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const username = form.querySelector('input[name="register-username"]').value.trim();
-    const password = form.querySelector('input[name="register-password"]').value;
-    const confirm = form.querySelector('input[name="register-confirm"]').value;
-    const messageEl = document.getElementById('auth-message');
-
+  async function completeLoginFlow({ username, password, confirm }) {
     if (!username || !password || !confirm) {
-      if (messageEl) messageEl.textContent = 'Preencha todos os campos.';
-      return;
+      throw new Error('Preencha todos os campos.');
     }
-
     if (password !== confirm) {
-      if (messageEl) messageEl.textContent = 'As senhas não conferem.';
-      return;
+      const error = new Error('As senhas não coincidem.');
+      error.step = 'password';
+      throw error;
     }
 
     try {
@@ -368,75 +396,38 @@
       setCurrentUser(user);
       applyUserDataToStorage(user);
       updateAuthStatus();
-      closeModal(document.getElementById('auth-modal'));
-      if (messageEl) messageEl.textContent = '';
       dispatchUserChange();
     } catch (err) {
-      console.error('Erro ao registrar usuário:', err);
-      if (messageEl) messageEl.textContent = err.message || 'Não foi possível registrar usuário.';
-    }
-  }
-
-  async function handleLogout() {
-    await updateUserSnapshot();
-    setCurrentUser(null);
-    clearProgressStorage();
-    updateAuthStatus();
-    closeModal(document.getElementById('auth-modal'));
-    dispatchUserChange();
-  }
-
-  function setupTabs() {
-    const tabButtons = document.querySelectorAll('.auth-tab');
-    const forms = document.querySelectorAll('.auth-form');
-
-    function activateTab(tab) {
-      tabButtons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
-      });
-      forms.forEach(form => {
-        form.classList.toggle('active', form.dataset.tab === tab);
-      });
-    }
-
-    tabButtons.forEach(btn => {
-      btn.addEventListener('click', () => activateTab(btn.dataset.tab));
-    });
-
-    activateTab('login');
-  }
-
-  function setupModal() {
-    const loginBtn = document.getElementById('login-btn');
-    const modal = document.getElementById('auth-modal');
-    const closeBtn = document.getElementById('auth-close');
-
-    if (loginBtn) {
-      if (modal) {
-        loginBtn.addEventListener('click', () => openModal(modal));
-      } else {
-        loginBtn.addEventListener('click', () => {
-          window.location.href = 'play.html#login';
-        });
-      }
-    }
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => closeModal(modal));
-    }
-    if (modal) {
-      modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
-          closeModal(modal);
+      if (err && err.message && /existe|cadastr/i.test(err.message)) {
+        try {
+          const user = await loginRequest(username, password);
+          setCurrentUser(user);
+          applyUserDataToStorage(user);
+          updateAuthStatus();
+          dispatchUserChange();
+          return;
+        } catch (loginErr) {
+          loginErr.step = 'password';
+          throw loginErr;
         }
-      });
+      }
+      if (err) {
+        err.step = err.step || 'confirm';
+      }
+      throw err;
     }
+  }
 
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    if (loginForm) loginForm.addEventListener('submit', handleLoginSubmit);
-    if (registerForm) registerForm.addEventListener('submit', handleRegisterSubmit);
-
+  function setupLoginFlow() {
+    const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
+    const flow = document.getElementById('login-flow');
+    const form = document.getElementById('login-flow-form');
+    const errorEl = document.getElementById('login-flow-error');
+    const usernameInput = document.getElementById('login-flow-username');
+    const passwordInput = document.getElementById('login-flow-password');
+    const confirmInput = document.getElementById('login-flow-confirm');
+
     if (logoutBtn) {
       logoutBtn.addEventListener('click', (event) => {
         event.preventDefault();
@@ -444,14 +435,124 @@
       });
     }
 
-    setupTabs();
+    if (!flow || !form || !usernameInput || !passwordInput || !confirmInput) {
+      openLoginFlowHandler = null;
+      closeLoginFlowHandler = null;
+      return;
+    }
 
-    if (modal && window.location.hash === '#login') {
-      openModal(modal);
-      if (window.history && typeof window.history.replaceState === 'function') {
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    if (flow.classList.contains('hidden')) {
+      flow.setAttribute('aria-hidden', 'true');
+    }
+
+    const steps = Array.from(form.querySelectorAll('.login-flow__step'));
+    let activeStep = 'username';
+
+    function setError(message) {
+      if (errorEl) {
+        errorEl.textContent = message || '';
       }
     }
+
+    function showStep(stepName) {
+      activeStep = stepName;
+      steps.forEach(step => {
+        step.classList.toggle('login-flow__step--active', step.dataset.step === stepName);
+      });
+      if (stepName === 'username') {
+        usernameInput.focus();
+      } else if (stepName === 'password') {
+        passwordInput.focus();
+      } else {
+        confirmInput.focus();
+      }
+    }
+
+    function resetFlow() {
+      form.reset();
+      setError('');
+      showStep('username');
+    }
+
+    function openFlow() {
+      resetFlow();
+      flow.classList.remove('hidden');
+      flow.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('login-flow-open');
+    }
+
+    function closeFlow() {
+      flow.classList.add('hidden');
+      flow.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('login-flow-open');
+      setError('');
+    }
+
+    openLoginFlowHandler = openFlow;
+    closeLoginFlowHandler = closeFlow;
+
+    if (loginBtn) {
+      loginBtn.addEventListener('click', () => openFlow());
+    }
+
+    form.querySelectorAll('.login-flow__submit[data-action="next"]').forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        const step = button.closest('.login-flow__step');
+        if (!step) return;
+        const stepName = step.dataset.step;
+        if (stepName === 'username') {
+          const value = usernameInput.value.trim();
+          if (!value) {
+            setError('Informe um nome de usuário.');
+            usernameInput.focus();
+            return;
+          }
+          setError('');
+          showStep('password');
+        } else if (stepName === 'password') {
+          const value = passwordInput.value;
+          if (!value || value.length < 4) {
+            setError('Informe uma senha com pelo menos 4 caracteres.');
+            passwordInput.focus();
+            return;
+          }
+          setError('');
+          showStep('confirm');
+        }
+      });
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      const confirm = confirmInput.value;
+
+      try {
+        await completeLoginFlow({ username, password, confirm });
+        setError('');
+        closeFlow();
+      } catch (err) {
+        console.error('Erro ao concluir fluxo de acesso:', err);
+        const message = err && err.message ? err.message : 'Não foi possível concluir o acesso.';
+        setError(message);
+        const stepName = err && err.step ? err.step : activeStep;
+        if (stepName === 'password') {
+          showStep('password');
+          passwordInput.select();
+        } else if (stepName === 'username') {
+          showStep('username');
+          usernameInput.select();
+        }
+      }
+    });
+
+    flow.addEventListener('click', (event) => {
+      if (event.target === flow && cachedCurrentUser) {
+        closeFlow();
+      }
+    });
   }
 
   async function init() {
@@ -471,8 +572,11 @@
       applyUserDataToStorage(user);
     }
 
+    setupLoginFlow();
     updateAuthStatus();
-    setupModal();
+    if (!cachedCurrentUser && typeof openLoginFlowHandler === 'function') {
+      openLoginFlowHandler();
+    }
 
     window.addEventListener('beforeunload', () => {
       updateUserSnapshot({ useBeacon: true });
@@ -501,6 +605,11 @@
     getCurrentUser: () => readStoredCurrentUser(),
     persistProgress: () => updateUserSnapshot(),
     applyUserData: applyUserDataToStorage,
-    createDefaultData
+    createDefaultData,
+    openLoginFlow: () => {
+      if (typeof openLoginFlowHandler === 'function') {
+        openLoginFlowHandler();
+      }
+    }
   };
 })();
