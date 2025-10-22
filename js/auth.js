@@ -23,13 +23,34 @@
     if (!API_BASE_URL) {
       return path;
     }
+
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    if (!path.startsWith('/')) {
-      return `${API_BASE_URL.replace(/\/$/, '')}/${path}`;
+
+    const base = API_BASE_URL.trim();
+    if (!base) {
+      return path;
     }
-    return `${API_BASE_URL.replace(/\/$/, '')}${path}`;
+
+    const hasProtocol = /^https?:\/\//.test(base);
+    const normalizedBase = hasProtocol
+      ? base
+      : `${window.location.origin.replace(/\/$/, '')}/${base.replace(/^\//, '')}`;
+
+    let baseUrl;
+    try {
+      baseUrl = new URL(normalizedBase.endsWith('/') ? normalizedBase : `${normalizedBase}/`);
+    } catch (error) {
+      console.warn('API base URL inválida, utilizando caminho original:', error);
+      return path;
+    }
+
+    if (path.startsWith('/')) {
+      return `${baseUrl.origin}${path}`;
+    }
+
+    return new URL(path, baseUrl).toString();
   }
 
   async function apiRequest(path, { method = 'GET', body, headers, signal } = {}) {
