@@ -158,9 +158,9 @@ setInterval(() => {
 }, 4000);
 
 let frasesArr = [], fraseIndex = 0;
-let acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
-let errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
-let tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
+let acertosTotais = 0;
+let errosTotais = 0;
+let tentativasTotais = 0;
 let pastaAtual = 1;
 let bloqueado = false;
 let mostrarTexto = 'pt';
@@ -182,14 +182,9 @@ function getCurrentThreshold() {
   return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
 }
 
-let completedModes = JSON.parse(localStorage.getItem('completedModes') || '{}');
-let unlockedModes = JSON.parse(localStorage.getItem('unlockedModes') || '{}');
-if (!unlockedModes || typeof unlockedModes !== 'object' || !Object.keys(unlockedModes).length) {
-  unlockedModes = { 1: true };
-  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-}
-let points = Number(localStorage.getItem('points'));
-if (!Number.isFinite(points)) points = DEFAULT_STARTING_POINTS;
+let completedModes = {};
+let unlockedModes = {};
+let points = DEFAULT_STARTING_POINTS;
 let premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
 let premioDec = 0;
 let penaltyFactor = 0.5;
@@ -200,14 +195,101 @@ let retryCallback = null;
 let tryAgainColorInterval = null;
 let levelUpReady = false;
 let sessionStart = null;
-const legacyStats = JSON.parse(localStorage.getItem('mode1Stats') || 'null');
-let modeStats = JSON.parse(localStorage.getItem('modeStats') || '{}');
-if (legacyStats && !modeStats[1]) {
-  modeStats[1] = legacyStats;
-  localStorage.removeItem('mode1Stats');
-  localStorage.setItem('modeStats', JSON.stringify(modeStats));
-}
+let modeStats = {};
 let modeStartTimes = {};
+
+function cloneFallback(value) {
+  if (Array.isArray(value)) {
+    return [...value];
+  }
+  if (value && typeof value === 'object') {
+    return { ...value };
+  }
+  return value;
+}
+
+function parseJSONStorage(key, fallback) {
+  const raw = localStorage.getItem(key);
+  if (!raw) {
+    return cloneFallback(fallback);
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed === null ? cloneFallback(fallback) : parsed;
+  } catch (err) {
+    console.warn(`Não foi possível analisar o conteúdo de ${key}:`, err);
+    return cloneFallback(fallback);
+  }
+}
+
+function ensureUnlockedModesStructure(raw) {
+  const normalized = {};
+  if (raw && typeof raw === 'object') {
+    if (Array.isArray(raw)) {
+      raw.forEach((value, index) => {
+        const key = String(index);
+        normalized[key] = Boolean(value);
+      });
+    } else {
+      Object.keys(raw).forEach(key => {
+        normalized[key] = Boolean(raw[key]);
+      });
+    }
+  }
+  if (!normalized['1']) {
+    normalized['1'] = true;
+  }
+  localStorage.setItem('unlockedModes', JSON.stringify(normalized));
+  return normalized;
+}
+
+function loadModeStatsFromStorage() {
+  const stats = parseJSONStorage('modeStats', {});
+  const legacy = parseJSONStorage('mode1Stats', null);
+  if (legacy && !stats[1]) {
+    stats[1] = legacy;
+    localStorage.removeItem('mode1Stats');
+    localStorage.setItem('modeStats', JSON.stringify(stats));
+  }
+  return stats;
+}
+
+function playMenuIntroSound() {
+  const menuSound = document.getElementById('somWoosh');
+  if (!menuSound) return;
+  menuSound.currentTime = 0;
+  const playPromise = menuSound.play();
+  if (playPromise && typeof playPromise.catch === 'function') {
+    playPromise.catch(() => {});
+  }
+}
+
+function reloadPersistentProgress(initialLoad = false) {
+  refreshUserSettings();
+  acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
+  errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
+  tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
+  const storedLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
+  pastaAtual = Number.isFinite(storedLevel) && storedLevel > 0 ? storedLevel : 1;
+  completedModes = parseJSONStorage('completedModes', {});
+  unlockedModes = ensureUnlockedModesStructure(parseJSONStorage('unlockedModes', {}));
+  points = Number(localStorage.getItem('points'));
+  if (!Number.isFinite(points)) {
+    points = DEFAULT_STARTING_POINTS;
+  }
+  premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
+  modeStats = loadModeStatsFromStorage();
+  Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
+  if (!initialLoad) {
+    updateLevelIcon();
+    updateModeIcons();
+    atualizarBarraProgresso();
+    updateGeneralCircles();
+  }
+}
+
+reloadPersistentProgress(true);
+
 let lastWasError = false;
 let lastReward = 0;
 let lastPenalty = 0;
@@ -456,6 +538,7 @@ function updateModeIcons() {
     } else {
       img.style.opacity = '0.3';
     }
+    img.style.pointerEvents = 'auto';
   });
   checkForMenuLevelUp();
 }
@@ -1257,6 +1340,7 @@ function goHome() {
   }
   listeningForCommand = false;
   updateModeIcons();
+  playMenuIntroSound();
 }
 
 function updateClock() {
@@ -1267,8 +1351,7 @@ function updateClock() {
 }
 
 async function initGame() {
-  const saved = parseInt(localStorage.getItem('pastaAtual'), 10);
-  if (saved) pastaAtual = saved;
+  reloadPersistentProgress();
   await carregarPastas();
   updateLevelIcon();
   updateModeIcons();
@@ -1296,7 +1379,13 @@ async function initGame() {
       }
       if (!unlockedModes[modo]) {
         const lock = document.getElementById('somLock');
-        if (lock) { lock.currentTime = 0; lock.play(); }
+        if (lock) {
+          lock.currentTime = 0;
+          const playPromise = lock.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {});
+          }
+        }
         return;
       }
       startGame(modo);
@@ -1330,6 +1419,12 @@ async function initGame() {
     }
   });
 }
+
+document.addEventListener('playtalk:user-change', () => {
+  reloadPersistentProgress();
+  selectedMode = 1;
+  goHome();
+});
 
   window.onload = async () => {
     document.querySelectorAll('#top-nav a').forEach(a => {
