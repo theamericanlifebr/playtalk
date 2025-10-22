@@ -26,6 +26,8 @@ const staticDir = (() => {
 const USERS_DIR = path.join(__dirname, 'data', 'users');
 const SESSION_COOKIE_NAME = 'session_token';
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+const PASSWORD_PATTERN = /^\d{8}$/;
+const SECURITY_CODE_PATTERN = /^\d{4}$/;
 
 fs.mkdirSync(USERS_DIR, { recursive: true });
 
@@ -139,6 +141,29 @@ function saveUser(user) {
   fs.writeFileSync(filePath, JSON.stringify(user, null, 2), 'utf-8');
 }
 
+function findUserByUsername(username) {
+  if (!username) {
+    return null;
+  }
+
+  const normalized = username.trim().toLowerCase();
+  const files = fs.readdirSync(USERS_DIR);
+  for (const file of files) {
+    if (!file.endsWith('.json')) continue;
+    const raw = fs.readFileSync(path.join(USERS_DIR, file), 'utf-8');
+    try {
+      const data = JSON.parse(raw);
+      if (data?.username && typeof data.username === 'string' && data.username.trim().toLowerCase() === normalized) {
+        return data;
+      }
+    } catch (error) {
+      console.error('Erro ao analisar arquivo de usuário durante a busca por username:', error);
+    }
+  }
+
+  return null;
+}
+
 /**
  * Create a new session token and attach it to the response.
  * @param {express.Response} res
@@ -216,7 +241,7 @@ function validateEmail(email) {
 function requireAuth(req, res, next) {
   if (!req.userEmail) {
     if (req.accepts('html')) {
-      return res.redirect('/login');
+      return res.redirect('/');
     }
     return res.status(401).json({ message: 'Autenticação necessária.' });
   }
@@ -224,26 +249,51 @@ function requireAuth(req, res, next) {
 }
 
 app.post('/api/register', (req, res) => {
-  const { email, password } = req.body || {};
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Informe um e-mail e uma senha.' });
+  const { name, username, email, password, securityCode } = req.body || {};
+
+  if (!name || !username || !email || !password || !securityCode) {
+    return res.status(400).json({ message: 'Preencha todas as informações obrigatórias.' });
+  }
+
+  const trimmedName = String(name).trim();
+  const trimmedUsername = String(username).trim();
+  const sanitizedPassword = String(password).trim();
+  const sanitizedCode = String(securityCode).trim();
+
+  if (!trimmedName) {
+    return res.status(400).json({ message: 'Informe um nome válido.' });
+  }
+
+  if (trimmedUsername.length < 3) {
+    return res.status(400).json({ message: 'O nome de usuário deve ter pelo menos 3 caracteres.' });
   }
 
   if (!validateEmail(email)) {
     return res.status(400).json({ message: 'Informe um e-mail válido.' });
   }
 
-  if (password.length < 6) {
-    return res.status(400).json({ message: 'A senha deve conter pelo menos 6 caracteres.' });
+  if (!PASSWORD_PATTERN.test(sanitizedPassword)) {
+    return res.status(400).json({ message: 'A senha deve conter exatamente 8 dígitos numéricos.' });
+  }
+
+  if (!SECURITY_CODE_PATTERN.test(sanitizedCode)) {
+    return res.status(400).json({ message: 'O código de confirmação deve conter 4 dígitos.' });
   }
 
   if (loadUser(email)) {
     return res.status(409).json({ message: 'Já existe um usuário com este e-mail.' });
   }
 
+  if (findUserByUsername(trimmedUsername)) {
+    return res.status(409).json({ message: 'Já existe um usuário com este nome de usuário.' });
+  }
+
   const user = {
+    name: trimmedName,
+    username: trimmedUsername,
     email: email.trim().toLowerCase(),
-    passwordHash: hashPassword(password),
+    passwordHash: hashPassword(sanitizedPassword),
+    securityCode: sanitizedCode,
     createdAt: new Date().toISOString(),
     progress: {},
   };
@@ -251,22 +301,38 @@ app.post('/api/register', (req, res) => {
   saveUser(user);
   createSession(res, user.email);
 
-  return res.status(201).json({ message: 'Usuário criado com sucesso.', email: user.email });
+  return res.status(201).json({
+    message: 'Conta criada com sucesso.',
+    email: user.email,
+    name: user.name,
+    username: user.username,
+  });
 });
 
 app.post('/api/login', (req, res) => {
-  const { email, password } = req.body || {};
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Informe um e-mail e uma senha.' });
+  const { email, password, securityCode } = req.body || {};
+  if (!email || !password || !securityCode) {
+    return res.status(400).json({ message: 'Informe e-mail, senha e código de confirmação.' });
   }
 
   const user = loadUser(email);
-  if (!user || !verifyPassword(password, user.passwordHash)) {
+  const sanitizedPassword = String(password).trim();
+  if (!user || !verifyPassword(sanitizedPassword, user.passwordHash)) {
     return res.status(401).json({ message: 'E-mail ou senha inválidos.' });
   }
 
+  const sanitizedCode = String(securityCode).trim();
+  if (!user.securityCode || user.securityCode !== sanitizedCode) {
+    return res.status(401).json({ message: 'Código de confirmação inválido.' });
+  }
+
   createSession(res, user.email);
-  return res.json({ message: 'Login realizado com sucesso.', email: user.email });
+  return res.json({
+    message: 'Login realizado com sucesso.',
+    email: user.email,
+    name: user.name,
+    username: user.username,
+  });
 });
 
 app.post('/api/logout', requireAuth, (req, res) => {
@@ -278,7 +344,18 @@ app.get('/api/session', (req, res) => {
   if (!req.userEmail) {
     return res.json({ authenticated: false });
   }
-  res.json({ authenticated: true, email: req.userEmail });
+
+  const user = loadUser(req.userEmail);
+  if (!user) {
+    return res.json({ authenticated: false });
+  }
+
+  res.json({
+    authenticated: true,
+    email: user.email,
+    name: user.name,
+    username: user.username,
+  });
 });
 
 app.get('/api/progress', requireAuth, (req, res) => {
@@ -305,18 +382,19 @@ app.post('/api/progress', requireAuth, (req, res) => {
   res.json({ message: 'Progresso salvo com sucesso.' });
 });
 
-app.get('/login', (req, res) => {
-  if (req.userEmail) {
-    return res.redirect('/');
-  }
-
-  res.sendFile(path.join(staticDir, 'login.html'));
-});
-
 app.use((req, res, next) => {
   if (req.method === 'GET' && !req.userEmail) {
-    const allowedPaths = ['/login', '/favicon.ico'];
-    const allowedPrefixes = ['/api/', '/css/login', '/js/auth', '/images/login'];
+    const allowedPaths = ['/', '/favicon.ico'];
+    const allowedPrefixes = [
+      '/api/',
+      '/css/',
+      '/js/',
+      '/images/',
+      '/audio/',
+      '/gamesounds/',
+      '/selos',
+      '/data/',
+    ];
 
     if (allowedPaths.includes(req.path)) {
       return next();
@@ -326,8 +404,8 @@ app.use((req, res, next) => {
       return next();
     }
 
-    if (req.path === '/' || req.path.endsWith('.html')) {
-      return res.redirect('/login');
+    if (req.path.endsWith('.html')) {
+      return res.redirect('/');
     }
   }
   next();
@@ -335,8 +413,12 @@ app.use((req, res, next) => {
 
 app.use(express.static(staticDir));
 
+app.get('/login', (req, res) => {
+  res.redirect('/');
+});
+
 app.use((req, res, next) => {
-  if (req.method === 'GET' && (req.path === '/' || req.path.endsWith('.html'))) {
+  if (req.method === 'GET' && req.path.endsWith('.html')) {
     res.status(404).send('Página não encontrada.');
     return;
   }
