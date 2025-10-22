@@ -9,12 +9,9 @@
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body class="page-profile dark-mode">
+<body class="page-profile">
   <header class="site-header" id="global-header">
-    <div class="site-header__profile">
-      <img id="nivel-indicador" class="site-header__level-icon" src="selos_niveis/level%201.png" alt="Nível atual">
-      <div class="site-header__info" id="auth-status" aria-live="polite">Convidado</div>
-    </div>
+    <div class="site-header__info" id="auth-status" aria-live="polite">Nenhum usuário conectado</div>
     <div class="site-header__actions">
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
       <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
@@ -48,6 +45,34 @@
       </div>
     </form>
   </main>
+  <footer class="page-footer">
+    <nav id="main-nav">
+      <a href="index.html" class="nav-item" aria-label="Home">
+        <span aria-hidden="true">▶</span>
+        <span class="sr-only">Home</span>
+      </a>
+      <a href="fun.html" class="nav-item" aria-label="Fun">
+        <span aria-hidden="true">🌐</span>
+        <span class="sr-only">Fun</span>
+      </a>
+      <a href="play.html" class="nav-item" aria-label="Play">
+        <span aria-hidden="true">📊</span>
+        <span class="sr-only">Play</span>
+      </a>
+      <a href="custom.html" class="nav-item" aria-label="Custom">
+        <span aria-hidden="true">💠</span>
+        <span class="sr-only">Custom</span>
+      </a>
+      <a href="ranking.html" class="nav-item" aria-label="Ranking">
+        <span aria-hidden="true">🏆</span>
+        <span class="sr-only">Ranking</span>
+      </a>
+      <a href="perfil.html" class="nav-item active" aria-label="Usuário">
+        <span aria-hidden="true">👨🏻</span>
+        <span class="sr-only">Usuário</span>
+      </a>
+    </nav>
+  </footer>
   <script src="js/profile.js"></script>
 </body>
 </html>
