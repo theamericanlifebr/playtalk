@@ -9,20 +9,17 @@
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
-  <body class="page-home">
+  <body class="page-home dark-mode">
     <header class="site-header" id="global-header">
-      <div class="site-header__info" id="auth-status" aria-live="polite">Nenhum usuário conectado</div>
+      <div class="site-header__profile">
+        <img id="nivel-indicador" class="site-header__level-icon" src="selos_niveis/level%201.png" alt="Nível atual">
+        <div class="site-header__info" id="auth-status" aria-live="polite">Convidado</div>
+      </div>
       <div class="site-header__actions">
         <button id="login-btn" class="site-header__button" type="button">Entrar</button>
         <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
       </div>
     </header>
-    <div id="ilife-screen" style="display:none">
-      <img id="ilife-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk">
-      <div id="ilife-text">diga play para começar</div>
-    </div>
-  <img id="nivel-indicador" alt="Level" />
-  <img id="tutorial-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk" style="display:none" />
   <div id="menu" style="display:flex">
     <div id="menu-modes">
       <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
@@ -60,41 +57,38 @@
     </div>
   </div>
 
-  <div id="intro-overlay" style="display:none">
-    <img id="intro-image" src="selos%20modos%20de%20jogo/modo1.png" alt="Modo 1">
-    <div id="intro-progress">
-      <div id="intro-progress-filled"></div>
+  <div id="login-wizard" class="login-wizard hidden" aria-hidden="true">
+    <div class="login-wizard__panel" data-step="1">
+      <img class="login-wizard__logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life">
+      <label class="login-wizard__field">Nome do usuário
+        <input type="text" id="wizard-username" autocomplete="username" />
+      </label>
+      <button type="button" class="login-wizard__action" data-action="next">Continuar</button>
+      <p class="login-wizard__error" role="alert"></p>
+    </div>
+    <div class="login-wizard__panel" data-step="2">
+      <img class="login-wizard__logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life">
+      <label class="login-wizard__field">Senha
+        <input type="password" id="wizard-password" autocomplete="new-password" />
+      </label>
+      <div class="login-wizard__controls">
+        <button type="button" class="login-wizard__secondary" data-action="back">Voltar</button>
+        <button type="button" class="login-wizard__action" data-action="next">Continuar</button>
+      </div>
+      <p class="login-wizard__error" role="alert"></p>
+    </div>
+    <div class="login-wizard__panel" data-step="3">
+      <img class="login-wizard__logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life">
+      <label class="login-wizard__field">Confirmar senha
+        <input type="password" id="wizard-confirm" autocomplete="new-password" />
+      </label>
+      <div class="login-wizard__controls">
+        <button type="button" class="login-wizard__secondary" data-action="back">Voltar</button>
+        <button type="button" class="login-wizard__action" data-action="finish">Criar conta</button>
+      </div>
+      <p class="login-wizard__error" role="alert"></p>
     </div>
   </div>
-
-  <footer class="page-footer">
-    <nav id="main-nav">
-      <a href="index.html" id="home-link" class="nav-item active" aria-label="Home">
-        <span aria-hidden="true">▶</span>
-        <span class="sr-only">Home</span>
-      </a>
-      <a href="fun.html" class="nav-item" aria-label="Fun">
-        <span aria-hidden="true">🌐</span>
-        <span class="sr-only">Fun</span>
-      </a>
-      <a href="play.html" class="nav-item" aria-label="Play">
-        <span aria-hidden="true">📊</span>
-        <span class="sr-only">Play</span>
-      </a>
-      <a href="custom.html" class="nav-item" aria-label="Custom">
-        <span aria-hidden="true">💠</span>
-        <span class="sr-only">Custom</span>
-      </a>
-      <a href="ranking.html" class="nav-item" aria-label="Ranking">
-        <span aria-hidden="true">🏆</span>
-        <span class="sr-only">Ranking</span>
-      </a>
-      <a href="perfil.html" class="nav-item" aria-label="Usuário">
-        <span aria-hidden="true">👨🏻</span>
-        <span class="sr-only">Usuário</span>
-      </a>
-    </nav>
-  </footer>
 
   <audio id="somModo1Intro" src="gamesounds/mode1first.mp3"></audio>
   <audio id="somModo2Intro" src="gamesounds/mode2first.mp3"></audio>

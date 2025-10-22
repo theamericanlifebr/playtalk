@@ -268,13 +268,16 @@
     const statusEl = document.getElementById('auth-status');
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
+    const levelIcon = document.getElementById('nivel-indicador');
     const user = readStoredCurrentUser();
     if (statusEl) {
       if (user) {
         const name = getDisplayName(user) || user.username || 'Jogador';
-        statusEl.textContent = `${name} + Nível atual = ${getStoredLevel()}`;
+        statusEl.textContent = name;
+        statusEl.dataset.authenticated = 'true';
       } else {
-        statusEl.textContent = 'Nenhum usuário conectado';
+        statusEl.textContent = 'Convidado';
+        statusEl.dataset.authenticated = 'false';
       }
     }
     if (loginBtn) {
@@ -283,6 +286,12 @@
     }
     if (logoutBtn) {
       logoutBtn.style.display = user ? 'inline-flex' : 'none';
+    }
+    if (levelIcon) {
+      levelIcon.style.opacity = user ? '1' : '0.35';
+      levelIcon.style.filter = user ? 'none' : 'grayscale(0.4)';
+      levelIcon.setAttribute('aria-hidden', user ? 'false' : 'true');
+      levelIcon.setAttribute('title', user ? `Nível ${getStoredLevel()}` : 'Nível bloqueado');
     }
   }
 
@@ -454,6 +463,154 @@
     }
   }
 
+  function setupOnboardingWizard() {
+    const wizard = document.getElementById('login-wizard');
+    if (!wizard) return;
+
+    const panels = Array.from(wizard.querySelectorAll('.login-wizard__panel'));
+    if (!panels.length) return;
+
+    const errors = panels.map(panel => panel.querySelector('.login-wizard__error'));
+    const usernameInput = wizard.querySelector('#wizard-username');
+    const passwordInput = wizard.querySelector('#wizard-password');
+    const confirmInput = wizard.querySelector('#wizard-confirm');
+    const finishButton = wizard.querySelector('[data-action="finish"]');
+    const state = { username: '', password: '' };
+    let busy = false;
+
+    function clearErrors() {
+      errors.forEach(error => { if (error) error.textContent = ''; });
+    }
+
+    function showStep(index) {
+      panels.forEach((panel, idx) => {
+        const active = idx === index;
+        panel.classList.toggle('active', active);
+        panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+        if (active && errors[idx]) errors[idx].textContent = '';
+      });
+      const focusInput = panels[index].querySelector('input');
+      if (focusInput) {
+        setTimeout(() => focusInput.focus(), 60);
+      }
+    }
+
+    function showWizard() {
+      wizard.classList.remove('hidden');
+      wizard.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('onboarding-active');
+      showStep(0);
+      if (usernameInput) usernameInput.focus();
+    }
+
+    function hideWizard() {
+      wizard.classList.add('hidden');
+      wizard.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('onboarding-active');
+    }
+
+    const hasUser = !!readStoredCurrentUser();
+    const onboardingDone = localStorage.getItem('onboardingComplete') === 'true';
+    if (hasUser || onboardingDone) {
+      hideWizard();
+      return;
+    }
+
+    showWizard();
+
+    panels.forEach((panel, idx) => {
+      const nextBtn = panel.querySelector('[data-action="next"]');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          if (busy) return;
+          if (idx === 0) {
+            const value = (usernameInput ? usernameInput.value.trim() : '');
+            if (!value) {
+              if (errors[idx]) errors[idx].textContent = 'Informe um nome de usuário.';
+              return;
+            }
+            if (value.length < 3) {
+              if (errors[idx]) errors[idx].textContent = 'Use pelo menos 3 caracteres.';
+              return;
+            }
+            state.username = value;
+            showStep(1);
+            return;
+          }
+          if (idx === 1) {
+            const value = passwordInput ? passwordInput.value : '';
+            if (!value || value.length < 4) {
+              if (errors[idx]) errors[idx].textContent = 'A senha deve ter pelo menos 4 caracteres.';
+              return;
+            }
+            state.password = value;
+            showStep(2);
+          }
+        });
+      }
+      const backBtn = panel.querySelector('[data-action="back"]');
+      if (backBtn) {
+        backBtn.addEventListener('click', () => {
+          if (busy) return;
+          const target = Math.max(0, idx - 1);
+          showStep(target);
+        });
+      }
+    });
+
+    async function completeOnboarding() {
+      if (busy) return;
+      const confirmation = confirmInput ? confirmInput.value : '';
+      if (confirmation !== state.password) {
+        if (errors[1]) errors[1].textContent = 'As senhas não coincidem.';
+        if (passwordInput) {
+          passwordInput.focus();
+          passwordInput.select();
+        }
+        showStep(1);
+        return;
+      }
+
+      busy = true;
+      clearErrors();
+      if (finishButton) {
+        finishButton.disabled = true;
+        finishButton.textContent = 'Criando...';
+      }
+
+      try {
+        await registerRequest(state.username, state.password);
+        const loggedUser = await loginRequest(state.username, state.password);
+        setCurrentUser(loggedUser);
+        applyUserDataToStorage(loggedUser);
+        localStorage.setItem('unlockedModes', JSON.stringify({ 1: true }));
+        localStorage.setItem('completedModes', JSON.stringify({}));
+        localStorage.setItem('onboardingComplete', 'true');
+        updateAuthStatus();
+        dispatchUserChange();
+        hideWizard();
+      } catch (err) {
+        console.error('Erro ao criar usuário inicial:', err);
+        const message = (err && err.message) ? err.message : 'Não foi possível criar sua conta.';
+        if (errors[0]) errors[0].textContent = message;
+        showStep(0);
+      } finally {
+        busy = false;
+        if (finishButton) {
+          finishButton.disabled = false;
+          finishButton.textContent = 'Criar conta';
+        }
+        if (passwordInput) passwordInput.value = '';
+        if (confirmInput) confirmInput.value = '';
+        state.password = '';
+      }
+    }
+
+    if (finishButton) {
+      finishButton.addEventListener('click', completeOnboarding);
+    }
+  }
+
   async function init() {
     readStoredCurrentUser();
     const user = cachedCurrentUser;
@@ -473,6 +630,7 @@
 
     updateAuthStatus();
     setupModal();
+    setupOnboardingWizard();
 
     window.addEventListener('beforeunload', () => {
       updateUserSnapshot({ useBeacon: true });

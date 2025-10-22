@@ -1,6 +1,6 @@
 (function() {
   const DEFAULT_SETTINGS = {
-    theme: 'light',
+    theme: 'black',
     pointsPerHit: 4000,
     pointsLossPerSecond: 0,
     startingPoints: 0
@@ -25,13 +25,17 @@
   function applyTheme(theme) {
     const body = document.body;
     if (!body) return;
-    body.classList.remove('dark-mode', 'theme-blue');
+    body.classList.remove('dark-mode', 'theme-blue', 'theme-light');
     switch (theme) {
       case 'dark':
+      case 'black':
         body.classList.add('dark-mode');
         break;
       case 'blue':
         body.classList.add('theme-blue');
+        break;
+      case 'light':
+        body.classList.add('theme-light');
         break;
       default:
         break;
