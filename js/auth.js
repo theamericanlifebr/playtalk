@@ -1,5 +1,5 @@
 (function () {
-  const USERS_KEY = 'playtalkUsers';
+  const API_BASE_URL = window.playtalkAuthApiBase || '';
   const CURRENT_USER_KEY = 'currentUser';
   const PROGRESS_SCHEMA = {
     acertosTotais: { type: 'number', default: 0 },
@@ -17,47 +17,62 @@
     totalTime: { type: 'number', default: 0 }
   };
 
-  let cachedUsers = null;
   let cachedCurrentUser = null;
 
-  function loadUsers() {
-    if (cachedUsers) return cachedUsers;
+  function apiUrl(path) {
+    if (!API_BASE_URL) {
+      return path;
+    }
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    if (!path.startsWith('/')) {
+      return `${API_BASE_URL.replace(/\/$/, '')}/${path}`;
+    }
+    return `${API_BASE_URL.replace(/\/$/, '')}${path}`;
+  }
+
+  async function apiRequest(path, { method = 'GET', body, headers, signal } = {}) {
+    const url = apiUrl(path);
+    const options = { method, signal, headers: { ...(headers || {}) } };
+
+    if (body !== undefined && body !== null) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, options);
+    let data = null;
     try {
-      const stored = localStorage.getItem(USERS_KEY);
-      cachedUsers = stored ? JSON.parse(stored) : {};
+      data = await response.json();
     } catch (err) {
-      console.error('Erro ao carregar usuários:', err);
-      cachedUsers = {};
+      data = null;
     }
-    return cachedUsers;
+
+    if (!response.ok || (data && data.success === false)) {
+      const message = (data && data.message) || `Erro na requisição (${response.status})`;
+      const error = new Error(message);
+      error.response = response;
+      error.data = data;
+      throw error;
+    }
+
+    return data;
   }
 
-  function saveUsers(users) {
-    cachedUsers = users;
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  }
-
-  function readStoredCurrentUser() {
-    if (cachedCurrentUser) return cachedCurrentUser;
+  function apiSendBeacon(path, body) {
+    if (!navigator.sendBeacon) {
+      return false;
+    }
     try {
-      const stored = localStorage.getItem(CURRENT_USER_KEY);
-      cachedCurrentUser = stored ? JSON.parse(stored) : null;
+      const url = apiUrl(path);
+      const payload = JSON.stringify(body);
+      const blob = new Blob([payload], { type: 'application/json' });
+      return navigator.sendBeacon(url, blob);
     } catch (err) {
-      console.error('Erro ao carregar usuário atual:', err);
-      cachedCurrentUser = null;
+      console.warn('Não foi possível enviar beacon:', err);
+      return false;
     }
-    window.currentUser = cachedCurrentUser;
-    return cachedCurrentUser;
-  }
-
-  function setCurrentUser(user) {
-    cachedCurrentUser = user;
-    if (user) {
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(CURRENT_USER_KEY);
-    }
-    window.currentUser = cachedCurrentUser;
   }
 
   function getDefaultValue(schema) {
@@ -74,10 +89,6 @@
       data[key] = getDefaultValue(schema);
     }
     return data;
-  }
-
-  function normalizeKey(username) {
-    return username.trim().toLowerCase();
   }
 
   function parseValue(raw, schema) {
@@ -139,27 +150,60 @@
     return snapshot;
   }
 
-  function updateUserSnapshot() {
-    const user = readStoredCurrentUser();
-    if (!user) return;
-    const users = loadUsers();
-    const entryKey = user.key || normalizeKey(user.username || '');
-    if (!entryKey) return;
-    const snapshot = collectProgressFromStorage();
-    user.data = { ...user.data, ...snapshot };
-    if (!users[entryKey]) {
-      users[entryKey] = {
-        username: user.username,
-        password: user.password || '',
-        data: createDefaultData()
-      };
+  function readStoredCurrentUser() {
+    if (cachedCurrentUser) return cachedCurrentUser;
+    try {
+      const stored = localStorage.getItem(CURRENT_USER_KEY);
+      cachedCurrentUser = stored ? JSON.parse(stored) : null;
+    } catch (err) {
+      console.error('Erro ao carregar usuário atual:', err);
+      cachedCurrentUser = null;
     }
-    users[entryKey].data = { ...users[entryKey].data, ...snapshot };
-    if (users[entryKey].password && !user.password) {
-      user.password = users[entryKey].password;
+    window.currentUser = cachedCurrentUser;
+    return cachedCurrentUser;
+  }
+
+  function setCurrentUser(user) {
+    cachedCurrentUser = user ? { ...user } : null;
+    if (cachedCurrentUser) {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cachedCurrentUser));
+    } else {
+      localStorage.removeItem(CURRENT_USER_KEY);
     }
-    saveUsers(users);
-    setCurrentUser(user);
+    window.currentUser = cachedCurrentUser;
+  }
+
+  async function loginRequest(username, password) {
+    const response = await apiRequest('/api/users/login', {
+      method: 'POST',
+      body: { username, password }
+    });
+    if (!response || !response.success || !response.user) {
+      throw new Error((response && response.message) || 'Não foi possível entrar.');
+    }
+    return response.user;
+  }
+
+  async function registerRequest(username, password) {
+    const response = await apiRequest('/api/users/register', {
+      method: 'POST',
+      body: { username, password }
+    });
+    if (!response || !response.success || !response.user) {
+      throw new Error((response && response.message) || 'Não foi possível registrar.');
+    }
+    return response.user;
+  }
+
+  async function updateUserRequest(payload) {
+    const response = await apiRequest('/api/users/update', {
+      method: 'POST',
+      body: payload
+    });
+    if (!response || !response.success) {
+      throw new Error((response && response.message) || 'Não foi possível atualizar o usuário.');
+    }
+    return response.user;
   }
 
   function dispatchUserChange() {
@@ -201,73 +245,101 @@
     }
   }
 
-  function handleLoginSubmit(event) {
+  function clearProgressStorage() {
+    for (const key of Object.keys(PROGRESS_SCHEMA)) {
+      localStorage.removeItem(key);
+    }
+  }
+
+  async function updateUserSnapshot({ useBeacon = false } = {}) {
+    const user = readStoredCurrentUser();
+    if (!user || !user.key) return;
+
+    const snapshot = collectProgressFromStorage();
+    const payload = {
+      key: user.key,
+      data: snapshot,
+      username: user.username,
+      password: user.password
+    };
+
+    if (useBeacon && apiSendBeacon('/api/users/update', payload)) {
+      setCurrentUser({ ...user, data: { ...user.data, ...snapshot } });
+      return;
+    }
+
+    try {
+      const updatedUser = await updateUserRequest(payload);
+      if (updatedUser) {
+        setCurrentUser({ ...user, ...updatedUser });
+      }
+    } catch (err) {
+      console.error('Erro ao sincronizar progresso do usuário:', err);
+    }
+  }
+
+  async function handleLoginSubmit(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const username = form.querySelector('input[name="login-username"]').value.trim();
     const password = form.querySelector('input[name="login-password"]').value;
     const messageEl = document.getElementById('auth-message');
+
     if (!username || !password) {
       if (messageEl) messageEl.textContent = 'Informe usuário e senha.';
       return;
     }
-    const key = normalizeKey(username);
-    const users = loadUsers();
-    const entry = users[key];
-    if (!entry || entry.password !== password) {
-      if (messageEl) messageEl.textContent = 'Usuário ou senha inválidos.';
-      return;
+
+    try {
+      const user = await loginRequest(username, password);
+      setCurrentUser(user);
+      applyUserDataToStorage(user);
+      updateAuthStatus();
+      closeModal(document.getElementById('auth-modal'));
+      if (messageEl) messageEl.textContent = '';
+      dispatchUserChange();
+    } catch (err) {
+      console.error('Erro ao realizar login:', err);
+      if (messageEl) messageEl.textContent = err.message || 'Não foi possível realizar login.';
     }
-    const user = { username: entry.username || username, key, password: entry.password, data: entry.data || createDefaultData() };
-    setCurrentUser(user);
-    applyUserDataToStorage(user);
-    updateAuthStatus();
-    closeModal(document.getElementById('auth-modal'));
-    if (messageEl) messageEl.textContent = '';
-    dispatchUserChange();
   }
 
-  function handleRegisterSubmit(event) {
+  async function handleRegisterSubmit(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const username = form.querySelector('input[name="register-username"]').value.trim();
     const password = form.querySelector('input[name="register-password"]').value;
     const confirm = form.querySelector('input[name="register-confirm"]').value;
     const messageEl = document.getElementById('auth-message');
+
     if (!username || !password || !confirm) {
       if (messageEl) messageEl.textContent = 'Preencha todos os campos.';
       return;
     }
+
     if (password !== confirm) {
       if (messageEl) messageEl.textContent = 'As senhas não conferem.';
       return;
     }
-    const key = normalizeKey(username);
-    const users = loadUsers();
-    if (users[key]) {
-      if (messageEl) messageEl.textContent = 'Usuário já existe.';
-      return;
+
+    try {
+      const user = await registerRequest(username, password);
+      setCurrentUser(user);
+      applyUserDataToStorage(user);
+      updateAuthStatus();
+      closeModal(document.getElementById('auth-modal'));
+      if (messageEl) messageEl.textContent = '';
+      dispatchUserChange();
+    } catch (err) {
+      console.error('Erro ao registrar usuário:', err);
+      if (messageEl) messageEl.textContent = err.message || 'Não foi possível registrar usuário.';
     }
-    const data = createDefaultData();
-    users[key] = { username, password, data };
-    saveUsers(users);
-    const user = { username, key, password, data: { ...data } };
-    setCurrentUser(user);
-    applyUserDataToStorage(user);
-    updateAuthStatus();
-    closeModal(document.getElementById('auth-modal'));
-    if (messageEl) messageEl.textContent = '';
-    dispatchUserChange();
   }
 
-  function handleLogout() {
-    const users = loadUsers();
-    updateUserSnapshot();
+  async function handleLogout() {
+    await updateUserSnapshot();
     setCurrentUser(null);
-    for (const key of Object.keys(PROGRESS_SCHEMA)) {
-      localStorage.removeItem(key);
-    }
-    saveUsers(users);
+    clearProgressStorage();
     updateAuthStatus();
     closeModal(document.getElementById('auth-modal'));
     dispatchUserChange();
@@ -276,6 +348,7 @@
   function setupTabs() {
     const tabButtons = document.querySelectorAll('.auth-tab');
     const forms = document.querySelectorAll('.auth-form');
+
     function activateTab(tab) {
       tabButtons.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tab);
@@ -284,9 +357,11 @@
         form.classList.toggle('active', form.dataset.tab === tab);
       });
     }
+
     tabButtons.forEach(btn => {
       btn.addEventListener('click', () => activateTab(btn.dataset.tab));
     });
+
     activateTab('login');
   }
 
@@ -294,6 +369,7 @@
     const loginBtn = document.getElementById('login-btn');
     const modal = document.getElementById('auth-modal');
     const closeBtn = document.getElementById('auth-close');
+
     if (loginBtn && modal) {
       loginBtn.addEventListener('click', () => openModal(modal));
     }
@@ -307,34 +383,56 @@
         }
       });
     }
+
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
     if (loginForm) loginForm.addEventListener('submit', handleLoginSubmit);
     if (registerForm) registerForm.addEventListener('submit', handleRegisterSubmit);
+
     const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        handleLogout();
+      });
+    }
+
     setupTabs();
   }
 
-  function init() {
+  async function init() {
     readStoredCurrentUser();
     const user = cachedCurrentUser;
-    if (user) {
+
+    if (user && user.username && user.password) {
+      try {
+        const refreshedUser = await loginRequest(user.username, user.password);
+        setCurrentUser(refreshedUser);
+        applyUserDataToStorage(refreshedUser);
+      } catch (err) {
+        console.warn('Não foi possível sincronizar usuário atual:', err);
+        applyUserDataToStorage(user);
+      }
+    } else if (user) {
       applyUserDataToStorage(user);
     }
+
     updateAuthStatus();
     setupModal();
-    window.addEventListener('beforeunload', updateUserSnapshot);
+
+    window.addEventListener('beforeunload', () => {
+      updateUserSnapshot({ useBeacon: true });
+    });
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+  });
 
   window.playtalkAuth = {
     getCurrentUser: () => readStoredCurrentUser(),
-    persistProgress: () => {
-      updateUserSnapshot();
-      updateAuthStatus();
-    },
-    applyUserData: applyUserDataToStorage
+    persistProgress: () => updateUserSnapshot(),
+    applyUserData: applyUserDataToStorage,
+    createDefaultData
   };
 })();
