@@ -15,11 +15,17 @@
 </head>
   <body>
     <nav id="top-nav">
-    <a href="#" id="home-link">home</a>
-    <a href="fun.html">fun</a>
-    <a href="play.html">play</a>
-    <a href="custom.html">custom</a>
-  </nav>
+      <div class="nav-links">
+        <a href="#" id="home-link">home</a>
+        <a href="fun.html">fun</a>
+        <a href="play.html">play</a>
+        <a href="custom.html">custom</a>
+      </div>
+      <div class="nav-user" id="user-info" hidden>
+        <span id="user-greeting" aria-live="polite"></span>
+        <button type="button" id="logout-button" class="logout-button">Sair</button>
+      </div>
+    </nav>
     <div id="ilife-screen">
       <img id="ilife-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk">
       <div id="ilife-text">toque para<br>desbloquear sua fluência</div>
@@ -88,6 +94,69 @@
   <audio id="somLock" src="gamesounds/lock.wav"></audio>
   <audio id="somLevelStar" src="gamesounds/levelstar.mp3"></audio>
 
-  <script src="js/main.js"></script>
+  <div class="auth-overlay" id="auth-overlay" aria-hidden="true">
+    <div class="auth-backdrop"></div>
+    <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <header class="auth-header">
+        <h1 id="auth-title">PlayTalk</h1>
+        <p>Entre com sua conta para continuar sua jornada no jogo.</p>
+      </header>
+      <nav class="auth-tabs" aria-label="Selecione uma opção">
+        <button type="button" class="auth-tab-button active" data-target="login">Entrar</button>
+        <button type="button" class="auth-tab-button" data-target="register">Criar conta</button>
+      </nav>
+      <section class="auth-panel active" id="auth-login-panel">
+        <form id="overlay-login-form" autocomplete="on">
+          <label class="auth-field">
+            <span>E-mail</span>
+            <input type="email" name="email" required autocomplete="email" />
+          </label>
+          <label class="auth-field">
+            <span>Senha (8 dígitos)</span>
+            <input type="password" name="password" inputmode="numeric" pattern="\d{8}" minlength="8" maxlength="8" required autocomplete="current-password" />
+          </label>
+          <label class="auth-field">
+            <span>Código de confirmação (4 dígitos)</span>
+            <input type="text" name="securityCode" inputmode="numeric" pattern="\d{4}" minlength="4" maxlength="4" required autocomplete="one-time-code" />
+          </label>
+          <button type="submit" class="auth-primary">Entrar</button>
+        </form>
+      </section>
+      <section class="auth-panel" id="auth-register-panel">
+        <form id="overlay-register-form" autocomplete="on">
+          <label class="auth-field">
+            <span>Nome completo</span>
+            <input type="text" name="name" required autocomplete="name" />
+          </label>
+          <label class="auth-field">
+            <span>Nome de usuário</span>
+            <input type="text" name="username" required autocomplete="username" minlength="3" />
+          </label>
+          <label class="auth-field">
+            <span>E-mail</span>
+            <input type="email" name="email" required autocomplete="email" />
+          </label>
+          <label class="auth-field">
+            <span>Senha (8 dígitos)</span>
+            <input type="password" name="password" inputmode="numeric" pattern="\d{8}" minlength="8" maxlength="8" required autocomplete="new-password" />
+          </label>
+          <label class="auth-field">
+            <span>Confirme a senha</span>
+            <input type="password" name="confirmPassword" inputmode="numeric" pattern="\d{8}" minlength="8" maxlength="8" required autocomplete="new-password" />
+          </label>
+          <label class="auth-field">
+            <span>Crie seu código de confirmação (4 dígitos)</span>
+            <input type="text" name="securityCode" inputmode="numeric" pattern="\d{4}" minlength="4" maxlength="4" required />
+          </label>
+          <p class="auth-hint">Guarde este código! Ele será solicitado sempre que fizer login.</p>
+          <button type="submit" class="auth-primary">Criar conta</button>
+        </form>
+      </section>
+      <p class="auth-feedback" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <script src="js/auth-overlay.js" defer></script>
+  <script src="js/app-loader.js" defer></script>
 </body>
 </html>
