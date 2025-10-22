@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
   <title>American Life</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
@@ -11,18 +11,19 @@
 </head>
   <body class="page-home">
     <header class="site-header" id="global-header">
-      <div class="site-header__info" id="auth-status" aria-live="polite">Nenhum usuário conectado</div>
+      <div class="site-header__profile">
+        <div class="site-header__avatar" id="header-avatar" aria-hidden="true"></div>
+        <div class="site-header__text">
+          <span class="site-header__name" id="header-username">Jogador</span>
+          <span class="site-header__level" id="header-level">Nível 1</span>
+        </div>
+      </div>
       <div class="site-header__actions">
         <button id="login-btn" class="site-header__button" type="button">Entrar</button>
         <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
       </div>
     </header>
-    <div id="ilife-screen" style="display:none">
-      <img id="ilife-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk">
-      <div id="ilife-text">diga play para começar</div>
-    </div>
-  <img id="nivel-indicador" alt="Level" />
-  <img id="tutorial-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk" style="display:none" />
+  <img id="nivel-indicador" alt="Indicador de nível" />
   <div id="menu" style="display:flex">
     <div id="menu-modes">
       <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
@@ -60,10 +61,28 @@
     </div>
   </div>
 
-  <div id="intro-overlay" style="display:none">
-    <img id="intro-image" src="selos%20modos%20de%20jogo/modo1.png" alt="Modo 1">
-    <div id="intro-progress">
-      <div id="intro-progress-filled"></div>
+  <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
+    <div class="login-flow__panel">
+      <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life" class="login-flow__logo" width="70" height="70">
+      <h1 id="login-flow-title" class="login-flow__title">Bem-vindo</h1>
+      <form id="login-flow-form" class="login-flow__form" autocomplete="off" novalidate>
+        <div class="login-flow__step login-flow__step--active" data-step="username">
+          <label for="login-flow-username">Nome de usuário</label>
+          <input type="text" id="login-flow-username" name="login-flow-username" maxlength="40" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
+        </div>
+        <div class="login-flow__step" data-step="password">
+          <label for="login-flow-password">Senha</label>
+          <input type="password" id="login-flow-password" name="login-flow-password" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
+        </div>
+        <div class="login-flow__step" data-step="confirm">
+          <label for="login-flow-confirm">Confirmar senha</label>
+          <input type="password" id="login-flow-confirm" name="login-flow-confirm" required>
+          <button type="submit" class="login-flow__submit">Criar conta</button>
+        </div>
+        <p id="login-flow-error" class="login-flow__error" role="alert"></p>
+      </form>
     </div>
   </div>
 
@@ -96,15 +115,7 @@
     </nav>
   </footer>
 
-  <audio id="somModo1Intro" src="gamesounds/mode1first.mp3"></audio>
-  <audio id="somModo2Intro" src="gamesounds/mode2first.mp3"></audio>
-  <audio id="somModo3Intro" src="gamesounds/mode3first.mp3"></audio>
-  <audio id="somModo4Intro" src="gamesounds/mode4first.m4a"></audio>
-  <audio id="somModo5Intro" src="gamesounds/mode5first.mp3"></audio>
-  <audio id="somModo6Intro" src="gamesounds/mode6first.mp3"></audio>
   <audio id="somWoosh" src="gamesounds/woosh.mp3"></audio>
-
-  <audio id="somWelcome" src="gamesounds/welcome.mp3"></audio>
   <audio id="somModoDesbloqueado" src="gamesounds/mododesbloqueado.mp3"></audio>
   <audio id="somNivelDesbloqueado" src="gamesounds/niveldesbloqueado.mp3"></audio>
 

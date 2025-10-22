@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
   <title>Play</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
@@ -11,7 +11,13 @@
 </head>
 <body class="page-play">
   <header class="site-header" id="global-header">
-    <div class="site-header__info" id="auth-status" aria-live="polite">Nenhum usuário conectado</div>
+    <div class="site-header__profile">
+      <div class="site-header__avatar" id="header-avatar" aria-hidden="true"></div>
+      <div class="site-header__text">
+        <span class="site-header__name" id="header-username">Jogador</span>
+        <span class="site-header__level" id="header-level">Nível 1</span>
+      </div>
+    </div>
     <div class="site-header__actions">
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
       <button id="logout-btn" class="site-header__button site-header__button--logout" type="button">Sair</button>
@@ -28,35 +34,28 @@
       <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
     </div>
   </main>
-  <div id="auth-modal" class="auth-modal hidden">
-    <div class="auth-modal-content">
-      <button id="auth-close" class="auth-close" type="button" aria-label="Fechar">&times;</button>
-      <div class="auth-tabs" role="tablist">
-        <button class="auth-tab active" data-tab="login" type="button" role="tab">Entrar</button>
-        <button class="auth-tab" data-tab="register" type="button" role="tab">Criar conta</button>
-      </div>
-      <form id="login-form" class="auth-form active" data-tab="login">
-        <label>Usuário
-          <input type="text" name="login-username" autocomplete="username">
-        </label>
-        <label>Senha
-          <input type="password" name="login-password" autocomplete="current-password">
-        </label>
-        <button type="submit" class="auth-submit">Entrar</button>
+  <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
+    <div class="login-flow__panel">
+      <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life" class="login-flow__logo" width="70" height="70">
+      <h1 id="login-flow-title" class="login-flow__title">Bem-vindo</h1>
+      <form id="login-flow-form" class="login-flow__form" autocomplete="off" novalidate>
+        <div class="login-flow__step login-flow__step--active" data-step="username">
+          <label for="login-flow-username">Nome de usuário</label>
+          <input type="text" id="login-flow-username" name="login-flow-username" maxlength="40" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
+        </div>
+        <div class="login-flow__step" data-step="password">
+          <label for="login-flow-password">Senha</label>
+          <input type="password" id="login-flow-password" name="login-flow-password" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
+        </div>
+        <div class="login-flow__step" data-step="confirm">
+          <label for="login-flow-confirm">Confirmar senha</label>
+          <input type="password" id="login-flow-confirm" name="login-flow-confirm" required>
+          <button type="submit" class="login-flow__submit">Criar conta</button>
+        </div>
+        <p id="login-flow-error" class="login-flow__error" role="alert"></p>
       </form>
-      <form id="register-form" class="auth-form" data-tab="register">
-        <label>Usuário
-          <input type="text" name="register-username" autocomplete="username">
-        </label>
-        <label>Senha
-          <input type="password" name="register-password" autocomplete="new-password">
-        </label>
-        <label>Confirme a senha
-          <input type="password" name="register-confirm" autocomplete="new-password">
-        </label>
-        <button type="submit" class="auth-submit">Criar conta</button>
-      </form>
-      <div id="auth-message" class="auth-message" role="alert"></div>
     </div>
   </div>
   <footer class="page-footer">
