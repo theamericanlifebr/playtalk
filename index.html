@@ -8,11 +8,6 @@
   <link rel="stylesheet" href="css/style.css">
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
-  <script>
-    if (localStorage.getItem('ilifeDone') === 'true') {
-      document.write('<style>#ilife-screen{display:none;}#menu{display:flex;}</style>');
-    }
-  </script>
 </head>
   <body>
     <nav id="top-nav">
@@ -23,13 +18,13 @@
         <a href="custom.html">custom</a>
       </div>
     </nav>
-    <div id="ilife-screen">
+    <div id="ilife-screen" style="display:none">
       <img id="ilife-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk">
-      <div id="ilife-text">toque para<br>desbloquear sua fluência</div>
+      <div id="ilife-text">diga play para começar</div>
     </div>
   <img id="nivel-indicador" alt="Level" />
   <img id="tutorial-logo" src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo Italk" style="display:none" />
-  <div id="menu" style="display:none">
+  <div id="menu" style="display:flex">
     <div id="menu-modes">
       <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
       <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" alt="Modo 2">
