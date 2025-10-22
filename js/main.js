@@ -66,15 +66,33 @@ function parsePastas(raw) {
 }
 
 async function carregarPastas() {
-  const resp = await fetch('data/pastas.json');
-  const text = await resp.text();
-  const obj = {};
-  const regex = /(\d+):\s*`([\s\S]*?)`/g;
-  let m;
-  while ((m = regex.exec(text))) {
-    obj[m[1]] = m[2];
+  try {
+    const resp = await fetch('/api/pastas');
+    if (!resp.ok) {
+      throw new Error(`Erro ao carregar pastas: ${resp.status}`);
+    }
+    const data = await resp.json();
+    if (!data || !data.pastas) {
+      throw new Error('Resposta inválida da API de pastas.');
+    }
+    pastas = parsePastas(data.pastas);
+  } catch (error) {
+    console.error('Não foi possível carregar pastas da API, utilizando fallback estático.', error);
+    try {
+      const resp = await fetch('data/pastas.json');
+      const text = await resp.text();
+      const obj = {};
+      const regex = /(\d+):\s*`([\s\S]*?)`/g;
+      let m;
+      while ((m = regex.exec(text))) {
+        obj[m[1]] = m[2];
+      }
+      pastas = parsePastas(obj);
+    } catch (fallbackError) {
+      console.error('Erro ao carregar pastas do fallback estático.', fallbackError);
+      pastas = {};
+    }
   }
-  pastas = parsePastas(obj);
 }
 
 function ehQuaseCorreto(res, esp) {
