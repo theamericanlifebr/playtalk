@@ -123,6 +123,7 @@ let acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
 let errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
 let tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
 let pastaAtual = 1;
+const MODE_IDS = [1, 2, 3, 4, 5, 6];
 let bloqueado = false;
 let mostrarTexto = 'pt';
 let voz = 'en';
@@ -198,6 +199,48 @@ const modeImages = {
   5: 'selos%20modos%20de%20jogo/modo5.png',
   6: 'selos%20modos%20de%20jogo/modo6.png'
 };
+
+if (!tutorialDone) {
+  tutorialDone = true;
+  localStorage.setItem('tutorialDone', 'true');
+  persistUserProgress();
+}
+
+if (!ilifeDone) {
+  ilifeDone = true;
+  localStorage.setItem('ilifeDone', 'true');
+  persistUserProgress();
+}
+
+if (!unlockedModes || typeof unlockedModes !== 'object') {
+  unlockedModes = {};
+}
+let unlocksUpdated = false;
+if (!unlockedModes[1]) {
+  unlockedModes[1] = true;
+  unlocksUpdated = true;
+}
+if (unlocksUpdated) {
+  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+  persistUserProgress();
+}
+
+if (!modeIntroShown || typeof modeIntroShown !== 'object') {
+  modeIntroShown = {};
+}
+let introsUpdated = false;
+MODE_IDS.forEach(mode => {
+  if (!modeIntroShown[mode]) {
+    modeIntroShown[mode] = true;
+    introsUpdated = true;
+  }
+});
+if (introsUpdated) {
+  localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
+  persistUserProgress();
+}
+
+const SKIP_MODE_INTROS = true;
 
 const modeTransitions = {
   1: { duration: 7500, img: modeImages[2], audio: 'somModo2Intro' },
@@ -783,6 +826,15 @@ function startGame(modo) {
     reconhecimento.stop();
   }
   const start = () => beginGame();
+  if (SKIP_MODE_INTROS) {
+    if (!modeIntroShown[modo]) {
+      modeIntroShown[modo] = true;
+      localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
+      persistUserProgress();
+    }
+    start();
+    return;
+  }
   if (!modeIntroShown[modo]) {
     if (modo === 1) {
       showMode1Intro(() => {
