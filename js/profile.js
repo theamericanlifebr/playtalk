@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameField = document.getElementById('profile-name');
   const photoInput = document.getElementById('profile-photo');
   const photoPreview = document.getElementById('profile-photo-preview');
+  const publishButton = document.getElementById('profile-photo-publish');
   const shareCheckbox = document.getElementById('profile-share-results');
 
   const username = (currentUser && currentUser.username) || 'convidado';
@@ -34,6 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const storedAvatar = localStorage.getItem('avatar');
   if (!profileData.photo && storedAvatar) {
     profileData.photo = storedAvatar;
+  }
+
+  let pendingPhotoData = null;
+
+  function updatePublishButtonState() {
+    if (!publishButton) return;
+    const hasPendingPhoto = pendingPhotoData && pendingPhotoData !== profileData.photo;
+    publishButton.disabled = !hasPendingPhoto;
   }
 
   function persistAvatarValue(photoData) {
@@ -75,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   persistAvatarValue(profileData.photo);
+  updatePublishButtonState();
 
   const storedShare = localStorage.getItem('shareResults');
   const shareEnabled = storedShare !== null
@@ -141,19 +151,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (photoInput) {
     photoInput.addEventListener('change', event => {
-      const file = event.target.files && event.target.files[0];
+      const inputEl = event.target;
+      const file = inputEl.files && inputEl.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
-        profileData.photo = reader.result;
+        pendingPhotoData = reader.result;
         if (photoPreview) {
           photoPreview.style.backgroundImage = `url(${reader.result})`;
           photoPreview.classList.add('has-photo');
         }
-        saveProfile();
-        schedulePersist();
+        updatePublishButtonState();
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
       };
       reader.readAsDataURL(file);
+    });
+  }
+
+  if (publishButton) {
+    publishButton.addEventListener('click', () => {
+      if (!pendingPhotoData || pendingPhotoData === profileData.photo) {
+        return;
+      }
+      if (persistTimeout) {
+        clearTimeout(persistTimeout);
+        persistTimeout = null;
+      }
+      profileData.photo = pendingPhotoData;
+      pendingPhotoData = null;
+      if (photoPreview) {
+        photoPreview.style.backgroundImage = `url(${profileData.photo})`;
+        photoPreview.classList.add('has-photo');
+      }
+      persistProfileChanges();
+      updatePublishButtonState();
     });
   }
 });
