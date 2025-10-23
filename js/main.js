@@ -177,6 +177,7 @@ const COMPLETION_THRESHOLD = 25000;
 const MODE6_THRESHOLD = 25115;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
+const ALL_MODES = [1, 2, 3, 4, 5, 6];
 
 function getCurrentThreshold() {
   return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
@@ -222,22 +223,30 @@ function parseJSONStorage(key, fallback) {
   }
 }
 
+function getAllModesUnlockedState() {
+  return ALL_MODES.reduce((acc, mode) => {
+    acc[String(mode)] = true;
+    return acc;
+  }, {});
+}
+
 function ensureUnlockedModesStructure(raw) {
-  const normalized = {};
+  const normalized = getAllModesUnlockedState();
   if (raw && typeof raw === 'object') {
     if (Array.isArray(raw)) {
       raw.forEach((value, index) => {
         const key = String(index);
-        normalized[key] = Boolean(value);
+        if (!normalized.hasOwnProperty(key)) {
+          normalized[key] = Boolean(value);
+        }
       });
     } else {
       Object.keys(raw).forEach(key => {
-        normalized[key] = Boolean(raw[key]);
+        if (!normalized.hasOwnProperty(key)) {
+          normalized[key] = Boolean(raw[key]);
+        }
       });
     }
-  }
-  if (!normalized['1']) {
-    normalized['1'] = true;
   }
   localStorage.setItem('unlockedModes', JSON.stringify(normalized));
   return normalized;
@@ -532,12 +541,7 @@ function unlockMode(mode, duration = 1000) {
 
 function updateModeIcons() {
   document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
-    const mode = parseInt(img.dataset.mode, 10);
-    if (unlockedModes[mode]) {
-      img.style.opacity = '1';
-    } else {
-      img.style.opacity = '0.3';
-    }
+    img.style.opacity = '1';
     img.style.pointerEvents = 'auto';
   });
   checkForMenuLevelUp();
@@ -555,14 +559,13 @@ function checkForMenuLevelUp() {
 function performMenuLevelUp() {
   const icons = document.querySelectorAll('#menu-modes img, #mode-buttons img');
   icons.forEach(img => {
-    const modo = parseInt(img.dataset.mode, 10);
     img.style.transition = 'opacity 500ms linear';
-    img.style.opacity = modo === 1 ? '1' : '0.3';
+    img.style.opacity = '1';
   });
   setTimeout(() => {
     pastaAtual++;
     completedModes = {};
-    unlockedModes = { 1: true };
+    unlockedModes = getAllModesUnlockedState();
     localStorage.setItem('completedModes', JSON.stringify(completedModes));
     localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
     document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
@@ -607,7 +610,7 @@ function menuLevelUpSequence() {
   const icons = menu.querySelectorAll('#menu-modes img');
   icons.forEach(img => {
     img.style.transition = 'opacity 1ms linear';
-    img.style.opacity = '0.3';
+    img.style.opacity = '1';
   });
   const audio = document.getElementById('somNivelDesbloqueado');
   if (audio) { audio.currentTime = 0; audio.play(); }
