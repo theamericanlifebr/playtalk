@@ -1245,6 +1245,12 @@ body.theme-blue .profile-photo-preview {
 
 .profile-photo-preview.has-photo {
   color: transparent;
+  background-color: transparent;
+}
+
+body.dark-mode .profile-photo-preview.has-photo,
+body.theme-blue .profile-photo-preview.has-photo {
+  background-color: transparent;
 }
 
 .profile-upload-label {

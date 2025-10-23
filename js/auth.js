@@ -695,7 +695,22 @@
   });
 
   window.addEventListener('storage', (event) => {
-    if (['pastaAtual', 'displayName'].includes(event.key)) {
+    if (!event) {
+      return;
+    }
+
+    const watchedKeys = ['pastaAtual', 'displayName', 'avatar'];
+    if (event.key && watchedKeys.includes(event.key)) {
+      updateAuthStatus();
+      return;
+    }
+
+    if (event.key && event.key.startsWith('profile:')) {
+      updateAuthStatus();
+      return;
+    }
+
+    if (event.key === null) {
       updateAuthStatus();
     }
   });
