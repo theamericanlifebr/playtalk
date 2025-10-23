@@ -262,8 +262,11 @@
   }
 
   function getStoredProfilePhoto(username) {
+    const storedAvatar = localStorage.getItem('avatar');
     const key = getProfileStorageKey(username);
-    if (!key) return null;
+    if (!key) {
+      return storedAvatar && storedAvatar.length ? storedAvatar : null;
+    }
     try {
       const raw = localStorage.getItem(key);
       if (!raw) return null;
@@ -274,7 +277,6 @@
     } catch (error) {
       console.warn('Não foi possível carregar a foto de perfil armazenada.', error);
     }
-    const storedAvatar = localStorage.getItem('avatar');
     return storedAvatar && storedAvatar.length ? storedAvatar : null;
   }
 

@@ -582,13 +582,13 @@ function enforceStarClick() {
   const all = document.querySelectorAll('#menu-modes img, #mode-buttons img, #top-nav a');
   all.forEach(el => { el.style.pointerEvents = 'none'; });
   const stars = document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]');
+  if (!stars.length) {
+    all.forEach(el => { el.style.pointerEvents = ''; });
+    return;
+  }
   stars.forEach(st => { st.style.pointerEvents = 'auto'; });
-  let timeout = setTimeout(() => {
-    if (stars[0]) stars[0].click();
-  }, 5000);
   stars.forEach(st => {
     st.addEventListener('click', () => {
-      clearTimeout(timeout);
       all.forEach(el => { el.style.pointerEvents = ''; });
       startStatsSequence();
     }, { once: true });
