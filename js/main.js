@@ -854,6 +854,8 @@ function startGame(modo) {
     reconhecimento.stop();
   }
   beginGame();
+}
+
 function beginGame() {
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
