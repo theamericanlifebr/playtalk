@@ -263,16 +263,6 @@ function loadModeStatsFromStorage() {
   return stats;
 }
 
-function playMenuIntroSound() {
-  const menuSound = document.getElementById('somWoosh');
-  if (!menuSound) return;
-  menuSound.currentTime = 0;
-  const playPromise = menuSound.play();
-  if (playPromise && typeof playPromise.catch === 'function') {
-    playPromise.catch(() => {});
-  }
-}
-
 function reloadPersistentProgress(initialLoad = false) {
   refreshUserSettings();
   acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
@@ -1345,7 +1335,6 @@ function goHome() {
   }
   listeningForCommand = false;
   updateModeIcons();
-  playMenuIntroSound();
 }
 
 function updateClock() {

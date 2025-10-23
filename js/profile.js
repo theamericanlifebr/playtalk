@@ -17,6 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const publishButton = document.getElementById('profile-photo-publish');
   const shareCheckbox = document.getElementById('profile-share-results');
 
+  const HEADER_ICON_BACKGROUND = 'linear-gradient(135deg, rgb(61, 195, 34), rgb(82, 224, 141))';
+  const HEADER_ICON_TEXT = '7';
+
+  if (photoPreview) {
+    photoPreview.classList.remove('profile-photo-preview--icon');
+  }
+
   const username = (currentUser && currentUser.username) || 'convidado';
   if (usernameField) {
     usernameField.value = username;
@@ -38,6 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let pendingPhotoData = null;
+
+  function applyPreviewIcon() {
+    if (!photoPreview) return;
+    photoPreview.classList.remove('has-photo');
+    photoPreview.classList.add('profile-photo-preview--icon');
+    photoPreview.style.backgroundImage = 'none';
+    photoPreview.style.background = HEADER_ICON_BACKGROUND;
+    photoPreview.textContent = HEADER_ICON_TEXT;
+  }
 
   function updatePublishButtonState() {
     if (!publishButton) return;
@@ -79,8 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (profileData.photo && photoPreview) {
-    photoPreview.style.backgroundImage = `url(${profileData.photo})`;
-    photoPreview.classList.add('has-photo');
+    applyPreviewIcon();
   }
 
   persistAvatarValue(profileData.photo);
@@ -160,6 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (photoPreview) {
           photoPreview.style.backgroundImage = `url(${reader.result})`;
           photoPreview.classList.add('has-photo');
+          photoPreview.classList.remove('profile-photo-preview--icon');
+          photoPreview.style.background = '';
+          photoPreview.textContent = '';
         }
         updatePublishButtonState();
         if (inputEl && typeof inputEl.value === 'string') {
@@ -182,8 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
       profileData.photo = pendingPhotoData;
       pendingPhotoData = null;
       if (photoPreview) {
-        photoPreview.style.backgroundImage = `url(${profileData.photo})`;
-        photoPreview.classList.add('has-photo');
+        applyPreviewIcon();
       }
       persistProfileChanges();
       updatePublishButtonState();
