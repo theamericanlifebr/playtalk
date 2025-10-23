@@ -23,7 +23,8 @@ const PROGRESS_SCHEMA = {
   ilifeDone: { type: 'boolean', default: false },
   levelDetails: { type: 'json', default: [] },
   totalTime: { type: 'number', default: 0 },
-  shareResults: { type: 'boolean', default: false }
+  shareResults: { type: 'boolean', default: false },
+  avatar: { type: 'string', default: '' }
 };
 
 const staticDir = (() => {
