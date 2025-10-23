@@ -1237,6 +1237,13 @@ body.theme-blue .profile-share-description {
   padding: 12px;
 }
 
+.profile-photo-preview--icon {
+  background: linear-gradient(135deg, rgb(61, 195, 34), rgb(82, 224, 141));
+  color: #fff;
+  font-size: 56px;
+  font-weight: 700;
+}
+
 body.dark-mode .profile-photo-preview,
 body.theme-blue .profile-photo-preview {
   background: rgba(255, 255, 255, 0.1);
