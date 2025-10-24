@@ -12,6 +12,7 @@
     unlockedModes: { type: 'json', default: {} },
     modeIntroShown: { type: 'json', default: {} },
     pastaAtual: { type: 'number', default: 1 },
+    levelProgress: { type: 'json', default: { level: 1, count: 0 } },
     tutorialDone: { type: 'boolean', default: false },
     ilifeDone: { type: 'boolean', default: false },
     levelDetails: { type: 'json', default: [] },
@@ -246,6 +247,45 @@
     return Number.isFinite(stored) && stored > 0 ? stored : 1;
   }
 
+  function getStoredLevelProgress() {
+    try {
+      const raw = localStorage.getItem('levelProgress');
+      if (!raw) {
+        return null;
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') {
+        return null;
+      }
+      return parsed;
+    } catch (err) {
+      console.warn('Não foi possível carregar levelProgress:', err);
+      return null;
+    }
+  }
+
+  function computeLevelGoal(level) {
+    const numeric = Number.isFinite(level) ? Number(level) : 1;
+    return numeric + 9;
+  }
+
+  function applyLevelProgressStyles() {
+    const container = document.querySelector('.site-header__avatar-container');
+    if (!container) {
+      return;
+    }
+    const level = getStoredLevel();
+    const snapshot = getStoredLevelProgress();
+    let count = 0;
+    if (snapshot && Number(snapshot.level) === level) {
+      const parsed = Number(snapshot.count);
+      count = Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    }
+    const goal = computeLevelGoal(level);
+    const percent = goal > 0 ? Math.min(100, Math.max(0, (count / goal) * 100)) : 0;
+    container.style.setProperty('--level-progress', `${percent}%`);
+  }
+
   function getDisplayName(user) {
     const stored = localStorage.getItem('displayName');
     if (stored && stored.trim()) {
@@ -310,6 +350,8 @@
     if (user && typeof closeLoginFlowHandler === 'function') {
       closeLoginFlowHandler();
     }
+
+    applyLevelProgressStyles();
   }
 
   function clearProgressStorage() {
@@ -659,12 +701,16 @@
     updateAuthStatus();
   });
 
+  document.addEventListener('playtalk:level-progress', () => {
+    applyLevelProgressStyles();
+  });
+
   window.addEventListener('storage', (event) => {
     if (!event) {
       return;
     }
 
-    const watchedKeys = ['pastaAtual', 'displayName', 'avatar'];
+    const watchedKeys = ['pastaAtual', 'displayName', 'avatar', 'levelProgress'];
     if (event.key && watchedKeys.includes(event.key)) {
       updateAuthStatus();
       return;

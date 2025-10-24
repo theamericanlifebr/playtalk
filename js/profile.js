@@ -21,6 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const photoProgressValue = document.getElementById('profile-photo-progress-value');
   const photoProgressText = document.getElementById('profile-photo-progress-text');
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+  const MAX_PHOTO_SIZE = 3 * 1024 * 1024;
+
   const previewDefaultText = photoPreview ? photoPreview.textContent : '';
 
   if (photoPreview) {
@@ -79,23 +83,109 @@ document.addEventListener('DOMContentLoaded', () => {
     }, hideDelay);
   }
 
-  function updatePhotoPreview(photoData) {
+  function updatePhotoPreview(photoData, options = {}) {
     if (!photoPreview) {
       return;
     }
+    const animate = Boolean(options.animate);
     if (photoData && typeof photoData === 'string' && photoData.trim()) {
       photoPreview.style.backgroundImage = `url(${photoData})`;
       photoPreview.style.background = '';
       photoPreview.classList.add('has-photo');
       photoPreview.classList.remove('profile-photo-preview--icon');
       photoPreview.textContent = '';
+      if (animate) {
+        photoPreview.classList.remove('profile-photo-preview--fading');
+        void photoPreview.offsetWidth;
+        photoPreview.classList.add('profile-photo-preview--fading');
+        photoPreview.addEventListener('animationend', () => {
+          photoPreview.classList.remove('profile-photo-preview--fading');
+        }, { once: true });
+      }
     } else {
       photoPreview.style.backgroundImage = '';
       photoPreview.classList.remove('has-photo');
       photoPreview.classList.remove('profile-photo-preview--icon');
+      photoPreview.classList.remove('profile-photo-preview--fading');
       photoPreview.style.background = '';
       photoPreview.textContent = previewDefaultText || 'Adicione uma foto';
     }
+  }
+
+  function notifyPhotoIssue(message) {
+    const info = typeof message === 'string' && message.trim()
+      ? message.trim()
+      : 'Não foi possível usar esta imagem.';
+    if (photoProgress) {
+      showPhotoProgress();
+      if (photoProgressText) {
+        photoProgressText.textContent = info;
+      }
+      hidePhotoProgress(1600, { message: info });
+    }
+    if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+      window.alert(info);
+    }
+  }
+
+  function isAllowedImageFile(file) {
+    if (!file) {
+      return false;
+    }
+    const type = (file.type || '').toLowerCase();
+    if (ALLOWED_IMAGE_TYPES.includes(type)) {
+      return true;
+    }
+    const name = typeof file.name === 'string' ? file.name.toLowerCase() : '';
+    const ext = name.includes('.') ? name.split('.').pop() : '';
+    return ALLOWED_IMAGE_EXTENSIONS.includes(ext);
+  }
+
+  function compressImageFile(file, targetSize = 180) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => {
+        reject(new Error('read-error'));
+      };
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('canvas-unavailable'));
+            return;
+          }
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, targetSize, targetSize);
+          const scale = Math.min(targetSize / img.width, targetSize / img.height);
+          const drawWidth = Math.max(1, Math.round(img.width * scale));
+          const drawHeight = Math.max(1, Math.round(img.height * scale));
+          const offsetX = Math.round((targetSize - drawWidth) / 2);
+          const offsetY = Math.round((targetSize - drawHeight) / 2);
+          ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+          canvas.toBlob(blob => {
+            if (!blob) {
+              reject(new Error('blob-error'));
+              return;
+            }
+            const resultReader = new FileReader();
+            resultReader.onerror = () => reject(new Error('encode-error'));
+            resultReader.onload = () => {
+              resolve(resultReader.result);
+            };
+            resultReader.readAsDataURL(blob);
+          }, 'image/jpeg', 0.82);
+        };
+        img.onerror = () => {
+          reject(new Error('image-error'));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   const username = (currentUser && currentUser.username) || 'convidado';
@@ -237,42 +327,45 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const reader = new FileReader();
-
-      reader.onloadstart = () => {
-        showPhotoProgress();
-        setPhotoProgress(0);
-      };
-
-      reader.onprogress = eventProgress => {
-        if (eventProgress && eventProgress.lengthComputable) {
-          const percent = (eventProgress.loaded / eventProgress.total) * 100;
-          setPhotoProgress(percent);
-        }
-      };
-
-      reader.onload = () => {
-        pendingPhotoData = reader.result;
-        updatePhotoPreview(pendingPhotoData);
-        updatePublishButtonState();
-        setPhotoProgress(100);
-        hidePhotoProgress(120);
+      if (!isAllowedImageFile(file)) {
+        notifyPhotoIssue('Formato não suportado. Use JPG, JPEG, PNG, GIF ou WEBP.');
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
-      };
+        return;
+      }
 
-      reader.onerror = () => {
-        console.warn('Não foi possível carregar a foto selecionada.');
-        hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
-      };
-
-      reader.onabort = () => {
-        hidePhotoProgress(0, { message: 'Envio cancelado' });
-      };
+      if (file.size > MAX_PHOTO_SIZE) {
+        notifyPhotoIssue('O arquivo excede o limite de 3 MB.');
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
+        return;
+      }
 
       showPhotoProgress();
-      reader.readAsDataURL(file);
+      setPhotoProgress(10);
+
+      compressImageFile(file)
+        .then(dataUrl => {
+          setPhotoProgress(80);
+          pendingPhotoData = dataUrl;
+          updatePhotoPreview(pendingPhotoData, { animate: true });
+          updatePublishButtonState();
+          setPhotoProgress(100);
+          hidePhotoProgress(220);
+        })
+        .catch(error => {
+          console.warn('Não foi possível processar a foto selecionada.', error);
+          pendingPhotoData = null;
+          notifyPhotoIssue('Falha ao processar a imagem selecionada.');
+          updatePublishButtonState();
+        })
+        .finally(() => {
+          if (inputEl && typeof inputEl.value === 'string') {
+            inputEl.value = '';
+          }
+        });
     });
   }
 

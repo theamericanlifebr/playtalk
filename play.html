@@ -67,29 +67,66 @@
   <footer class="page-footer">
     <nav id="main-nav">
       <a href="index.html" class="nav-item" aria-label="Home">
-        <span aria-hidden="true">▶</span>
+        <span aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M4.5 11.5 L12 5 L19.5 11.5 V19 A1 1 0 0 1 18.5 20 H14 V15 H10 V20 H5.5 A1 1 0 0 1 4.5 19 Z" fill="currentColor"/>
+          </svg>
+        </span>
         <span class="sr-only">Home</span>
       </a>
-      <a href="fun.html" class="nav-item" aria-label="Fun">
-        <span aria-hidden="true">🌐</span>
-        <span class="sr-only">Fun</span>
+      <a href="fun.html" class="nav-item" aria-label="Opções de jogo">
+        <span aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="4" y="5" width="16" height="2" rx="1" fill="currentColor" opacity="0.6"/>
+            <rect x="4" y="11" width="16" height="2" rx="1" fill="currentColor" opacity="0.6"/>
+            <rect x="4" y="17" width="16" height="2" rx="1" fill="currentColor" opacity="0.6"/>
+            <circle cx="9" cy="6" r="2" fill="currentColor"/>
+            <circle cx="15" cy="12" r="2" fill="currentColor"/>
+            <circle cx="12" cy="18" r="2" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="sr-only">Opções de jogo</span>
       </a>
-      <a href="play.html" class="nav-item active" aria-label="Play">
-        <span aria-hidden="true">📊</span>
-        <span class="sr-only">Play</span>
+      <a href="play.html" class="nav-item active" aria-label="Estatísticas">
+        <span aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="5" y="12" width="3" height="7" rx="1.2" fill="currentColor"/>
+            <rect x="10.5" y="8" width="3" height="11" rx="1.2" fill="currentColor"/>
+            <rect x="16" y="4" width="3" height="15" rx="1.2" fill="currentColor"/>
+            <path d="M4 21 H20 V22 H4 Z" fill="currentColor" opacity="0.45"/>
+          </svg>
+        </span>
+        <span class="sr-only">Estatísticas</span>
       </a>
-      <a href="custom.html" class="nav-item" aria-label="Custom">
-        <span aria-hidden="true">💠</span>
-        <span class="sr-only">Custom</span>
+      <a href="custom.html" class="nav-item" aria-label="Social">
+        <span aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 4 H19 A2 2 0 0 1 21 6 V14 A2 2 0 0 1 19 16 H14.6 L12 20 L9.4 16 H5 A2 2 0 0 1 3 14 V6 A2 2 0 0 1 5 4 Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="sr-only">Social</span>
       </a>
       <a href="ranking.html" class="nav-item" aria-label="Ranking">
-        <span aria-hidden="true">🏆</span>
+        <span aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 5 H3 V8 A4 4 0 0 0 7 12 V10 A2 2 0 0 1 5 8 Z" fill="currentColor"/>
+            <path d="M19 5 H21 V8 A4 4 0 0 1 17 12 V10 A2 2 0 0 0 19 8 Z" fill="currentColor"/>
+            <path d="M7 4 H17 A1 1 0 0 1 18 5 V8 A5 5 0 0 1 13 13 H12 A5 5 0 0 1 7 8 V5 A1 1 0 0 1 7 4 Z" fill="currentColor"/>
+            <path d="M9 18 H15 V22 H9 Z" fill="currentColor" opacity="0.85"/>
+            <path d="M11 13 H13 V18 H11 Z" fill="currentColor"/>
+          </svg>
+        </span>
         <span class="sr-only">Ranking</span>
       </a>
       <div class="nav-item--user">
-        <button class="nav-item nav-item__trigger" type="button" aria-expanded="false" aria-controls="user-menu">
-          <span aria-hidden="true">👨🏻</span>
-          <span class="sr-only">Usuário</span>
+        <button class="nav-item nav-item__trigger" type="button" aria-expanded="false" aria-controls="user-menu" aria-label="Perfil">
+          <span aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="4" fill="currentColor"/>
+              <path d="M5 20 A7 7 0 0 1 19 20 Z" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="sr-only">Perfil</span>
         </button>
         <div id="user-menu" class="nav-item__menu" hidden>
           <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
@@ -98,6 +135,8 @@
       </div>
     </nav>
   </footer>
+
+  <script src="js/navigation.js" defer></script>
   <script src="js/play.js"></script>
 </body>
 </html>
