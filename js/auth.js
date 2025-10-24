@@ -262,11 +262,23 @@
     const logoutBtn = document.getElementById('logout-btn');
     const nameEl = document.getElementById('header-username');
     const levelEl = document.getElementById('header-level');
+    const avatarEl = document.getElementById('header-avatar');
     const user = readStoredCurrentUser();
     const displayName = user
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
     const level = user ? getStoredLevel() : 1;
+    const storedAvatar = (() => {
+      const local = localStorage.getItem('avatar');
+      if (local && local.trim()) {
+        return local.trim();
+      }
+      const dataAvatar = user && user.data && typeof user.data.avatar === 'string'
+        ? user.data.avatar.trim()
+        : '';
+      return dataAvatar || '';
+    })();
+    const avatarInitial = displayName.trim().charAt(0).toUpperCase() || 'J';
 
     if (nameEl) {
       nameEl.textContent = displayName;
@@ -274,6 +286,19 @@
     }
     if (levelEl) {
       levelEl.textContent = `Nível ${level}`;
+    }
+    if (avatarEl) {
+      avatarEl.dataset.initial = avatarInitial;
+      const hasAvatar = Boolean(storedAvatar);
+      if (hasAvatar) {
+        avatarEl.style.backgroundImage = `url(${storedAvatar})`;
+        avatarEl.classList.add('site-header__avatar--has-image');
+        avatarEl.setAttribute('aria-label', `Foto de ${displayName}`);
+      } else {
+        avatarEl.style.backgroundImage = '';
+        avatarEl.classList.remove('site-header__avatar--has-image');
+        avatarEl.setAttribute('aria-label', `Avatar de ${displayName}`);
+      }
     }
 
     if (loginBtn) {
