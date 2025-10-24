@@ -16,12 +16,86 @@ document.addEventListener('DOMContentLoaded', () => {
   const photoPreview = document.getElementById('profile-photo-preview');
   const publishButton = document.getElementById('profile-photo-publish');
   const shareCheckbox = document.getElementById('profile-share-results');
+  const photoProgress = document.getElementById('profile-photo-progress');
+  const photoProgressCircle = document.getElementById('profile-photo-progress-circle');
+  const photoProgressValue = document.getElementById('profile-photo-progress-value');
+  const photoProgressText = document.getElementById('profile-photo-progress-text');
 
-  const HEADER_ICON_BACKGROUND = 'linear-gradient(135deg, rgb(61, 195, 34), rgb(82, 224, 141))';
-  const HEADER_ICON_TEXT = '7';
+  const previewDefaultText = photoPreview ? photoPreview.textContent : '';
 
   if (photoPreview) {
     photoPreview.classList.remove('profile-photo-preview--icon');
+  }
+
+  let progressHideTimeout = null;
+
+  function setPhotoProgress(value) {
+    if (!photoProgressCircle || !photoProgressValue) {
+      return;
+    }
+    const normalized = Math.max(0, Math.min(100, Math.round(value)));
+    photoProgressCircle.style.setProperty('--progress', normalized);
+    photoProgressValue.textContent = `${normalized}%`;
+  }
+
+  function showPhotoProgress() {
+    if (!photoProgress) {
+      return;
+    }
+    if (progressHideTimeout) {
+      clearTimeout(progressHideTimeout);
+      progressHideTimeout = null;
+    }
+    photoProgress.hidden = false;
+    if (photoProgressText) {
+      photoProgressText.textContent = 'Carregando foto...';
+    }
+    setPhotoProgress(0);
+  }
+
+  function hidePhotoProgress(delay = 0, options = {}) {
+    if (!photoProgress) {
+      return;
+    }
+    if (progressHideTimeout) {
+      clearTimeout(progressHideTimeout);
+      progressHideTimeout = null;
+    }
+    const hideDelay = Math.max(0, delay);
+    const message = options && typeof options.message === 'string' && options.message.trim()
+      ? options.message.trim()
+      : 'Foto pronta!';
+    progressHideTimeout = setTimeout(() => {
+      if (photoProgressText) {
+        photoProgressText.textContent = message;
+      }
+      progressHideTimeout = setTimeout(() => {
+        photoProgress.hidden = true;
+        if (photoProgressText) {
+          photoProgressText.textContent = 'Carregando foto...';
+        }
+        progressHideTimeout = null;
+      }, 360);
+    }, hideDelay);
+  }
+
+  function updatePhotoPreview(photoData) {
+    if (!photoPreview) {
+      return;
+    }
+    if (photoData && typeof photoData === 'string' && photoData.trim()) {
+      photoPreview.style.backgroundImage = `url(${photoData})`;
+      photoPreview.style.background = '';
+      photoPreview.classList.add('has-photo');
+      photoPreview.classList.remove('profile-photo-preview--icon');
+      photoPreview.textContent = '';
+    } else {
+      photoPreview.style.backgroundImage = '';
+      photoPreview.classList.remove('has-photo');
+      photoPreview.classList.remove('profile-photo-preview--icon');
+      photoPreview.style.background = '';
+      photoPreview.textContent = previewDefaultText || 'Adicione uma foto';
+    }
   }
 
   const username = (currentUser && currentUser.username) || 'convidado';
@@ -45,15 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let pendingPhotoData = null;
-
-  function applyPreviewIcon() {
-    if (!photoPreview) return;
-    photoPreview.classList.remove('has-photo');
-    photoPreview.classList.add('profile-photo-preview--icon');
-    photoPreview.style.backgroundImage = 'none';
-    photoPreview.style.background = HEADER_ICON_BACKGROUND;
-    photoPreview.textContent = HEADER_ICON_TEXT;
-  }
 
   function updatePublishButtonState() {
     if (!publishButton) return;
@@ -94,8 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
     profileData.name = storedDisplayName;
   }
 
-  if (profileData.photo && photoPreview) {
-    applyPreviewIcon();
+  if (photoPreview) {
+    updatePhotoPreview(profileData.photo);
   }
 
   persistAvatarValue(profileData.photo);
@@ -168,22 +233,45 @@ document.addEventListener('DOMContentLoaded', () => {
     photoInput.addEventListener('change', event => {
       const inputEl = event.target;
       const file = inputEl.files && inputEl.files[0];
-      if (!file) return;
+      if (!file) {
+        return;
+      }
+
       const reader = new FileReader();
+
+      reader.onloadstart = () => {
+        showPhotoProgress();
+        setPhotoProgress(0);
+      };
+
+      reader.onprogress = eventProgress => {
+        if (eventProgress && eventProgress.lengthComputable) {
+          const percent = (eventProgress.loaded / eventProgress.total) * 100;
+          setPhotoProgress(percent);
+        }
+      };
+
       reader.onload = () => {
         pendingPhotoData = reader.result;
-        if (photoPreview) {
-          photoPreview.style.backgroundImage = `url(${reader.result})`;
-          photoPreview.classList.add('has-photo');
-          photoPreview.classList.remove('profile-photo-preview--icon');
-          photoPreview.style.background = '';
-          photoPreview.textContent = '';
-        }
+        updatePhotoPreview(pendingPhotoData);
         updatePublishButtonState();
+        setPhotoProgress(100);
+        hidePhotoProgress(120);
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
       };
+
+      reader.onerror = () => {
+        console.warn('Não foi possível carregar a foto selecionada.');
+        hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
+      };
+
+      reader.onabort = () => {
+        hidePhotoProgress(0, { message: 'Envio cancelado' });
+      };
+
+      showPhotoProgress();
       reader.readAsDataURL(file);
     });
   }
@@ -199,9 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       profileData.photo = pendingPhotoData;
       pendingPhotoData = null;
-      if (photoPreview) {
-        applyPreviewIcon();
-      }
+      updatePhotoPreview(profileData.photo);
       persistProfileChanges();
       updatePublishButtonState();
     });

@@ -18,16 +18,31 @@
       card.classList.add('ranking-card--top');
     }
 
-    const position = document.createElement('span');
-    position.className = 'ranking-position';
-    position.textContent = `#${entry.position}`;
-    card.appendChild(position);
+    const media = document.createElement('div');
+    media.className = 'ranking-card__media';
+
+    const avatarWrapper = document.createElement('div');
+    avatarWrapper.className = 'ranking-avatar-wrapper';
 
     const avatar = document.createElement('img');
     avatar.className = 'ranking-avatar';
     avatar.src = entry.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(entry.name)}`;
     avatar.alt = `Foto de perfil de ${entry.name}`;
-    card.appendChild(avatar);
+    avatar.loading = 'lazy';
+    avatar.decoding = 'async';
+    avatarWrapper.appendChild(avatar);
+
+    const badge = document.createElement('span');
+    badge.className = 'ranking-position-badge';
+    badge.textContent = `${entry.position}º`;
+    avatarWrapper.appendChild(badge);
+
+    const levelIndicator = document.createElement('p');
+    levelIndicator.className = 'ranking-level-indicator';
+    levelIndicator.textContent = `Nível ${entry.level}`;
+
+    media.appendChild(avatarWrapper);
+    media.appendChild(levelIndicator);
 
     const info = document.createElement('div');
     info.className = 'ranking-info';
@@ -37,11 +52,12 @@
     name.textContent = entry.name;
     info.appendChild(name);
 
-    const level = document.createElement('p');
-    level.className = 'ranking-level';
-    level.textContent = `Nível ${entry.level}`;
-    info.appendChild(level);
+    const placement = document.createElement('p');
+    placement.className = 'ranking-level';
+    placement.textContent = `Ranking ${entry.position}º`;
+    info.appendChild(placement);
 
+    card.appendChild(media);
     card.appendChild(info);
     return card;
   }
