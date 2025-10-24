@@ -20,6 +20,8 @@
     avatar: { type: 'string', default: '' }
   };
 
+  const DEFAULT_AVATAR = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"%3E%3Cdefs%3E%3ClinearGradient id="g" x1="0" y1="0" x2="1" y2="1"%3E%3Cstop offset="0%25" stop-color="%232e8bff"/%3E%3Cstop offset="100%25" stop-color="%230b3d91"/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width="120" height="120" rx="60" fill="url(%23g)"/%3E%3Cpath fill="%23ffffff" fill-opacity=".9" d="M60 64c13.8 0 25-11.2 25-25S73.8 14 60 14 35 25.2 35 39s11.2 25 25 25zm0 12c-17.7 0-32 10.4-32 23.2V106h64v-6.8C92 86.4 77.7 76 60 76z"/%3E%3C/svg%3E';
+
   let cachedCurrentUser = null;
   let openLoginFlowHandler = null;
   let closeLoginFlowHandler = null;
@@ -267,6 +269,19 @@
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
     const level = user ? getStoredLevel() : 1;
+    const avatarEl = document.getElementById('header-avatar');
+    const storedAvatar = (localStorage.getItem('avatar') || '').trim();
+    const userDataAvatar = user && user.data && typeof user.data.avatar === 'string'
+      ? user.data.avatar.trim()
+      : '';
+    const fallbackKey = user ? (user.username || displayName) : '';
+    const fallbackAvatar = fallbackKey
+      ? `https://i.pravatar.cc/150?u=${encodeURIComponent(fallbackKey)}`
+      : '';
+    let avatarSource = storedAvatar || userDataAvatar || fallbackAvatar;
+    if (!avatarSource) {
+      avatarSource = DEFAULT_AVATAR;
+    }
 
     if (nameEl) {
       nameEl.textContent = displayName;
@@ -274,6 +289,14 @@
     }
     if (levelEl) {
       levelEl.textContent = `Nível ${level}`;
+    }
+    if (avatarEl) {
+      const isPlaceholder = avatarSource === DEFAULT_AVATAR;
+      if (avatarEl.src !== avatarSource) {
+        avatarEl.src = avatarSource;
+      }
+      avatarEl.alt = user ? `Foto do perfil de ${displayName}` : 'Foto do usuário visitante';
+      avatarEl.classList.toggle('site-header__avatar--placeholder', isPlaceholder);
     }
 
     if (loginBtn) {
