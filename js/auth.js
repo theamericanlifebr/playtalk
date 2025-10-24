@@ -12,7 +12,6 @@
     unlockedModes: { type: 'json', default: {} },
     modeIntroShown: { type: 'json', default: {} },
     pastaAtual: { type: 'number', default: 1 },
-    levelProgress: { type: 'json', default: { level: 1, correct: 0 } },
     tutorialDone: { type: 'boolean', default: false },
     ilifeDone: { type: 'boolean', default: false },
     levelDetails: { type: 'json', default: [] },
@@ -242,33 +241,9 @@
     }));
   }
 
-  function getLevelRequirement(level) {
-    const normalized = Number.isFinite(level) ? Math.max(1, Math.floor(level)) : 1;
-    return 9 + normalized;
-  }
-
-  function readLevelProgress() {
-    const raw = localStorage.getItem('levelProgress');
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        const level = Number.isFinite(parsed.level) && parsed.level > 0 ? Math.floor(parsed.level) : 1;
-        const correct = Number.isFinite(parsed.correct) && parsed.correct >= 0 ? Math.floor(parsed.correct) : 0;
-        return { level, correct };
-      } catch (err) {
-        console.warn('Não foi possível ler o progresso de nível.', err);
-      }
-    }
-    const fallbackLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
-    return {
-      level: Number.isFinite(fallbackLevel) && fallbackLevel > 0 ? fallbackLevel : 1,
-      correct: 0
-    };
-  }
-
   function getStoredLevel() {
-    const progress = readLevelProgress();
-    return progress.level;
+    const stored = parseInt(localStorage.getItem('pastaAtual'), 10);
+    return Number.isFinite(stored) && stored > 0 ? stored : 1;
   }
 
   function getDisplayName(user) {
@@ -288,16 +263,11 @@
     const nameEl = document.getElementById('header-username');
     const levelEl = document.getElementById('header-level');
     const avatarEl = document.getElementById('header-avatar');
-    const avatarContainer = document.getElementById('header-avatar-container');
     const user = readStoredCurrentUser();
     const displayName = user
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
-    const levelProgress = readLevelProgress();
-    const level = levelProgress.level;
-    const requirement = getLevelRequirement(level);
-    const normalizedCorrect = Math.max(0, Math.min(levelProgress.correct, requirement));
-    const ratio = requirement > 0 ? Math.max(0, Math.min(1, normalizedCorrect / requirement)) : 0;
+    const level = user ? getStoredLevel() : 1;
     const identifier = user && (user.username || displayName) ? (user.username || displayName) : displayName;
 
     let avatarUrl = '';
@@ -319,11 +289,6 @@
     }
     if (levelEl) {
       levelEl.textContent = `Nível ${level}`;
-    }
-
-    if (avatarContainer) {
-      avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
-      avatarContainer.title = `Progresso de nível: ${normalizedCorrect}/${requirement}`;
     }
 
     if (avatarEl) {
@@ -682,155 +647,16 @@
     });
   }
 
-  function setupPageTransitions() {
-    const body = document.body;
-    if (!body) {
-      return;
-    }
-
-    body.classList.remove('page-transition-leave');
-
-    const navLinks = Array.from(document.querySelectorAll('#main-nav a.nav-item[data-nav-index]'))
-      .sort((a, b) => {
-        const aIndex = Number(a.dataset.navIndex || 0);
-        const bIndex = Number(b.dataset.navIndex || 0);
-        return aIndex - bIndex;
-      });
-    if (!navLinks.length) {
-      requestAnimationFrame(() => {
-        body.classList.add('page-transition-ready');
-      });
-      return;
-    }
-
-    let navigating = false;
-
-    const navigateTo = (href) => {
-      if (!href || navigating) {
-        return;
-      }
-      const targetUrl = new URL(href, window.location.href);
-      if (targetUrl.href === window.location.href) {
-        return;
-      }
-      navigating = true;
-      body.classList.add('page-transition-leave');
-      setTimeout(() => {
-        window.location.href = targetUrl.href;
-      }, 350);
-    };
-
-    navLinks.forEach(link => {
-      link.addEventListener('click', event => {
-        if (event.defaultPrevented) {
-          return;
-        }
-        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-          return;
-        }
-        if (link.target && link.target.toLowerCase() !== '_self') {
-          return;
-        }
-        event.preventDefault();
-        navigateTo(link.getAttribute('href'));
-      });
-    });
-
-    const getCurrentNavIndex = () => {
-      const currentPath = window.location.pathname.replace(/\/+$/, '');
-      const matchedIndex = navLinks.findIndex(link => {
-        const linkPath = new URL(link.getAttribute('href') || '', window.location.href).pathname.replace(/\/+$/, '');
-        return linkPath === currentPath;
-      });
-      if (matchedIndex !== -1) {
-        return matchedIndex;
-      }
-      const activeLink = navLinks.find(link => link.classList.contains('active'));
-      return activeLink ? navLinks.indexOf(activeLink) : -1;
-    };
-
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchActive = false;
-
-    document.addEventListener('touchstart', event => {
-      if (window.innerWidth > 720 || event.touches.length !== 1) {
-        return;
-      }
-      touchActive = true;
-      touchStartX = event.touches[0].clientX;
-      touchStartY = event.touches[0].clientY;
-    }, { passive: true });
-
-    document.addEventListener('touchend', event => {
-      if (!touchActive || window.innerWidth > 720) {
-        touchActive = false;
-        return;
-      }
-      touchActive = false;
-      const touch = event.changedTouches && event.changedTouches[0];
-      if (!touch) {
-        return;
-      }
-      const deltaX = touch.clientX - touchStartX;
-      const deltaY = touch.clientY - touchStartY;
-      const horizontalThreshold = 60;
-      const verticalAllowance = 80;
-      if (Math.abs(deltaX) < horizontalThreshold || Math.abs(deltaY) > verticalAllowance) {
-        return;
-      }
-      const currentIndex = getCurrentNavIndex();
-      if (currentIndex === -1) {
-        return;
-      }
-      let targetIndex = currentIndex;
-      if (deltaX < 0 && currentIndex < navLinks.length - 1) {
-        targetIndex = currentIndex + 1;
-      } else if (deltaX > 0 && currentIndex > 0) {
-        targetIndex = currentIndex - 1;
-      }
-      if (targetIndex !== currentIndex) {
-        navigateTo(navLinks[targetIndex].getAttribute('href'));
-      }
-    }, { passive: true });
-
-    requestAnimationFrame(() => {
-      body.classList.add('page-transition-ready');
-    });
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     init();
-    setupPageTransitions();
   });
 
   document.addEventListener('playtalk:user-change', () => {
     updateAuthStatus();
   });
 
-  document.addEventListener('playtalk:level-progress', event => {
-    const detail = event && event.detail ? event.detail : null;
-    if (detail) {
-      const levelValue = Number.isFinite(detail.level) && detail.level > 0 ? Math.floor(detail.level) : getStoredLevel();
-      const requirement = Number.isFinite(detail.required) && detail.required > 0
-        ? Math.floor(detail.required)
-        : getLevelRequirement(levelValue);
-      const correct = Number.isFinite(detail.correct) && detail.correct >= 0
-        ? Math.floor(detail.correct)
-        : Math.max(0, Math.min(readLevelProgress().correct, requirement));
-      const ratio = requirement > 0 ? Math.max(0, Math.min(1, (detail.ratio ?? (correct / requirement)))) : 0;
-      const levelEl = document.getElementById('header-level');
-      if (levelEl) {
-        levelEl.textContent = `Nível ${levelValue}`;
-      }
-      const avatarContainer = document.getElementById('header-avatar-container');
-      if (avatarContainer) {
-        avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
-        avatarContainer.title = `Progresso de nível: ${Math.min(correct, requirement)}/${requirement}`;
-      }
-    } else {
-      updateAuthStatus();
-    }
+  document.addEventListener('playtalk:level-update', () => {
+    updateAuthStatus();
   });
 
   window.addEventListener('storage', (event) => {
@@ -838,7 +664,7 @@
       return;
     }
 
-    const watchedKeys = ['pastaAtual', 'displayName', 'avatar', 'levelProgress'];
+    const watchedKeys = ['pastaAtual', 'displayName', 'avatar'];
     if (event.key && watchedKeys.includes(event.key)) {
       updateAuthStatus();
       return;
