@@ -17,8 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const publishButton = document.getElementById('profile-photo-publish');
   const shareCheckbox = document.getElementById('profile-share-results');
 
-  const HEADER_ICON_BACKGROUND = 'linear-gradient(135deg, rgb(61, 195, 34), rgb(82, 224, 141))';
-  const HEADER_ICON_TEXT = '7';
+  const photoProgress = document.getElementById('profile-photo-progress');
+  const photoProgressRing = photoProgress ? photoProgress.querySelector('.profile-photo-progress__ring') : null;
+  const photoProgressValue = document.getElementById('profile-photo-progress-value');
 
   if (photoPreview) {
     photoPreview.classList.remove('profile-photo-preview--icon');
@@ -46,13 +47,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let pendingPhotoData = null;
 
-  function applyPreviewIcon() {
+  function applyPreviewPhoto(photoData) {
     if (!photoPreview) return;
-    photoPreview.classList.remove('has-photo');
-    photoPreview.classList.add('profile-photo-preview--icon');
-    photoPreview.style.backgroundImage = 'none';
-    photoPreview.style.background = HEADER_ICON_BACKGROUND;
-    photoPreview.textContent = HEADER_ICON_TEXT;
+
+    if (photoData) {
+      photoPreview.style.backgroundImage = `url(${photoData})`;
+      photoPreview.style.background = '';
+      photoPreview.classList.add('has-photo');
+      photoPreview.classList.remove('profile-photo-preview--icon');
+      photoPreview.textContent = '';
+    } else {
+      photoPreview.style.backgroundImage = 'none';
+      photoPreview.classList.remove('has-photo');
+      photoPreview.textContent = 'Adicione uma foto';
+    }
+  }
+
+  function setPhotoProgress(percent) {
+    if (!photoProgress || !photoProgressRing || !photoProgressValue) return;
+    const normalized = Math.max(0, Math.min(100, Number(percent) || 0));
+    photoProgress.hidden = false;
+    photoProgressRing.style.setProperty('--progress', `${normalized * 3.6}deg`);
+    photoProgressValue.textContent = `${Math.round(normalized)}%`;
+  }
+
+  function hidePhotoProgress() {
+    if (!photoProgress) return;
+    photoProgress.hidden = true;
   }
 
   function updatePublishButtonState() {
@@ -94,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
     profileData.name = storedDisplayName;
   }
 
-  if (profileData.photo && photoPreview) {
-    applyPreviewIcon();
+  if (profileData.photo) {
+    applyPreviewPhoto(profileData.photo);
   }
 
   persistAvatarValue(profileData.photo);
@@ -172,18 +193,33 @@ document.addEventListener('DOMContentLoaded', () => {
       const reader = new FileReader();
       reader.onload = () => {
         pendingPhotoData = reader.result;
-        if (photoPreview) {
-          photoPreview.style.backgroundImage = `url(${reader.result})`;
-          photoPreview.classList.add('has-photo');
-          photoPreview.classList.remove('profile-photo-preview--icon');
-          photoPreview.style.background = '';
-          photoPreview.textContent = '';
-        }
+        applyPreviewPhoto(pendingPhotoData);
         updatePublishButtonState();
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
       };
+      reader.addEventListener('loadstart', () => {
+        setPhotoProgress(0);
+      });
+      reader.addEventListener('progress', event => {
+        if (event.lengthComputable) {
+          const percent = (event.loaded / event.total) * 100;
+          setPhotoProgress(percent);
+        }
+      });
+      reader.addEventListener('loadend', () => {
+        setPhotoProgress(100);
+        setTimeout(() => {
+          hidePhotoProgress();
+        }, 350);
+      });
+      reader.addEventListener('error', () => {
+        hidePhotoProgress();
+      });
+      reader.addEventListener('abort', () => {
+        hidePhotoProgress();
+      });
       reader.readAsDataURL(file);
     });
   }
@@ -199,9 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       profileData.photo = pendingPhotoData;
       pendingPhotoData = null;
-      if (photoPreview) {
-        applyPreviewIcon();
-      }
+      applyPreviewPhoto(profileData.photo);
       persistProfileChanges();
       updatePublishButtonState();
     });

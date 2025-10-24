@@ -12,6 +12,7 @@
 <body class="page-profile">
   <header class="site-header" id="global-header">
     <div class="site-header__profile">
+      <div class="site-header__avatar" id="header-avatar" role="img" aria-label="Foto do jogador" data-initial="J"></div>
       <div class="site-header__text">
         <span class="site-header__name" id="header-username">Jogador</span>
         <span class="site-header__level" id="header-level">Nível 1</span>
@@ -30,6 +31,12 @@
       </div>
       <div class="profile-photo">
         <div id="profile-photo-preview" class="profile-photo-preview">Adicione uma foto</div>
+        <div id="profile-photo-progress" class="profile-photo-progress" hidden>
+          <div class="profile-photo-progress__ring" role="status" aria-live="polite">
+            <div class="profile-photo-progress__ring-inner" id="profile-photo-progress-value">0%</div>
+          </div>
+          <p class="profile-photo-progress__label">Carregando foto...</p>
+        </div>
         <label for="profile-photo" class="profile-upload-label">
           <span aria-hidden="true">📷</span>
           <span>Carregar foto</span>
