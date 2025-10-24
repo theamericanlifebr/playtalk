@@ -262,11 +262,26 @@
     const logoutBtn = document.getElementById('logout-btn');
     const nameEl = document.getElementById('header-username');
     const levelEl = document.getElementById('header-level');
+    const avatarEl = document.getElementById('header-avatar');
     const user = readStoredCurrentUser();
     const displayName = user
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
     const level = user ? getStoredLevel() : 1;
+    const identifier = user && (user.username || displayName) ? (user.username || displayName) : displayName;
+
+    let avatarUrl = '';
+    const storedAvatar = localStorage.getItem('avatar');
+    if (storedAvatar && storedAvatar.trim()) {
+      avatarUrl = storedAvatar.trim();
+    } else if (user && user.data && typeof user.data.avatar === 'string' && user.data.avatar.trim()) {
+      avatarUrl = user.data.avatar.trim();
+    }
+
+    if (!avatarUrl) {
+      const fallbackSeed = identifier || 'visitante';
+      avatarUrl = `https://i.pravatar.cc/150?u=${encodeURIComponent(fallbackSeed)}`;
+    }
 
     if (nameEl) {
       nameEl.textContent = displayName;
@@ -274,6 +289,13 @@
     }
     if (levelEl) {
       levelEl.textContent = `Nível ${level}`;
+    }
+
+    if (avatarEl) {
+      if (avatarEl.getAttribute('src') !== avatarUrl) {
+        avatarEl.src = avatarUrl;
+      }
+      avatarEl.alt = `Foto de ${displayName}`;
     }
 
     if (loginBtn) {
