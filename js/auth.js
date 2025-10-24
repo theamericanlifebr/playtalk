@@ -257,80 +257,15 @@
     return (user && user.username) || '';
   }
 
-  function getProfileStorageKey(username) {
-    return username ? `profile:${username}` : null;
-  }
-
-  function getStoredProfilePhoto(username) {
-    const storedAvatar = localStorage.getItem('avatar');
-    const key = getProfileStorageKey(username);
-    if (!key) {
-      return storedAvatar && storedAvatar.length ? storedAvatar : null;
-    }
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return null;
-      const data = JSON.parse(raw);
-      if (data && typeof data.photo === 'string' && data.photo) {
-        return data.photo;
-      }
-    } catch (error) {
-      console.warn('Não foi possível carregar a foto de perfil armazenada.', error);
-    }
-    return storedAvatar && storedAvatar.length ? storedAvatar : null;
-  }
-
-  function createAvatarGradient(seed) {
-    const base = seed
-      ? Array.from(seed).reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
-      : 0;
-    const hue = base % 360;
-    const secondaryHue = (hue + 35) % 360;
-    return {
-      primary: `hsl(${hue}, 70%, 45%)`,
-      secondary: `hsl(${secondaryHue}, 70%, 60%)`
-    };
-  }
-
-  function applyProfilePhoto(avatarEl, photo) {
-    if (!avatarEl) return;
-    avatarEl.classList.add('site-header__avatar--image');
-    avatarEl.style.backgroundImage = `url(${photo})`;
-    avatarEl.style.background = 'none';
-    avatarEl.style.backgroundSize = 'cover';
-    avatarEl.style.backgroundPosition = 'center';
-    avatarEl.textContent = '';
-  }
-
-  function updateHeaderAvatar(avatarEl, displayName, username) {
-    if (!avatarEl) return;
-    const photo = getStoredProfilePhoto(username);
-    if (photo) {
-      applyProfilePhoto(avatarEl, photo);
-      return;
-    }
-
-    const seed = (displayName && displayName.trim()) || username || 'Jogador';
-    const gradient = createAvatarGradient(seed);
-    avatarEl.classList.remove('site-header__avatar--image');
-    avatarEl.style.backgroundImage = 'none';
-    avatarEl.style.background = `linear-gradient(135deg, ${gradient.primary}, ${gradient.secondary})`;
-    avatarEl.style.backgroundSize = '';
-    avatarEl.style.backgroundPosition = '';
-    avatarEl.textContent = seed.charAt(0).toUpperCase();
-  }
-
   function updateAuthStatus() {
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const nameEl = document.getElementById('header-username');
     const levelEl = document.getElementById('header-level');
-    const avatarEl = document.getElementById('header-avatar');
     const user = readStoredCurrentUser();
     const displayName = user
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
-    const username = user && user.username ? user.username : '';
     const level = user ? getStoredLevel() : 1;
 
     if (nameEl) {
@@ -340,7 +275,6 @@
     if (levelEl) {
       levelEl.textContent = `Nível ${level}`;
     }
-    updateHeaderAvatar(avatarEl, displayName, username);
 
     if (loginBtn) {
       loginBtn.style.display = user ? 'none' : 'inline-flex';
