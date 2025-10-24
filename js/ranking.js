@@ -20,24 +20,14 @@
 
     const position = document.createElement('span');
     position.className = 'ranking-position';
-    position.textContent = `${entry.position}º`;
+    position.textContent = `#${entry.position}`;
     card.appendChild(position);
-
-    const avatarGroup = document.createElement('div');
-    avatarGroup.className = 'ranking-avatar-group';
 
     const avatar = document.createElement('img');
     avatar.className = 'ranking-avatar';
     avatar.src = entry.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(entry.name)}`;
     avatar.alt = `Foto de perfil de ${entry.name}`;
-    avatarGroup.appendChild(avatar);
-
-    const avatarLevel = document.createElement('span');
-    avatarLevel.className = 'ranking-avatar-level';
-    avatarLevel.textContent = `Nível ${entry.level}`;
-    avatarGroup.appendChild(avatarLevel);
-
-    card.appendChild(avatarGroup);
+    card.appendChild(avatar);
 
     const info = document.createElement('div');
     info.className = 'ranking-info';
@@ -49,7 +39,7 @@
 
     const level = document.createElement('p');
     level.className = 'ranking-level';
-    level.textContent = `Ranking ${entry.position}º`;
+    level.textContent = `Nível ${entry.level}`;
     info.appendChild(level);
 
     card.appendChild(info);
