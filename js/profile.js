@@ -28,74 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let progressHideTimeout = null;
-  const MAX_UPLOAD_SIZE = 3 * 1024 * 1024;
-  const ACCEPTED_TYPES = new Set([
-    'image/jpeg',
-    'image/jpg',
-    'image/pjpeg',
-    'image/png',
-    'image/x-png',
-    'image/gif',
-    'image/webp'
-  ]);
-  const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-
-  function getFileExtension(filename) {
-    if (typeof filename !== 'string') {
-      return '';
-    }
-    const lastDot = filename.lastIndexOf('.');
-    return lastDot === -1 ? '' : filename.slice(lastDot).toLowerCase();
-  }
-
-  function isAllowedFileType(file) {
-    if (!file) {
-      return false;
-    }
-    if (file.type && ACCEPTED_TYPES.has(file.type.toLowerCase())) {
-      return true;
-    }
-    return ACCEPTED_EXTENSIONS.includes(getFileExtension(file.name || ''));
-  }
-
-  function compressImage(file) {
-    return new Promise((resolve, reject) => {
-      const objectUrl = URL.createObjectURL(file);
-      const image = new Image();
-      image.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          const size = 180;
-          canvas.width = size;
-          canvas.height = size;
-          const context = canvas.getContext('2d');
-          if (!context) {
-            URL.revokeObjectURL(objectUrl);
-            reject(new Error('Canvas não disponível.'));
-            return;
-          }
-          const scale = Math.max(size / image.width, size / image.height);
-          const drawWidth = image.width * scale;
-          const drawHeight = image.height * scale;
-          const offsetX = (size - drawWidth) / 2;
-          const offsetY = (size - drawHeight) / 2;
-          context.clearRect(0, 0, size, size);
-          context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
-          const dataUrl = canvas.toDataURL('image/webp', 0.82);
-          URL.revokeObjectURL(objectUrl);
-          resolve(dataUrl);
-        } catch (error) {
-          URL.revokeObjectURL(objectUrl);
-          reject(error);
-        }
-      };
-      image.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error('Não foi possível carregar a imagem.'));
-      };
-      image.src = objectUrl;
-    });
-  }
 
   function setPhotoProgress(value) {
     if (!photoProgressCircle || !photoProgressValue) {
@@ -157,19 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
       photoPreview.classList.add('has-photo');
       photoPreview.classList.remove('profile-photo-preview--icon');
       photoPreview.textContent = '';
-      photoPreview.classList.remove('profile-photo-preview--fade-in');
-      void photoPreview.offsetWidth;
-      photoPreview.classList.add('profile-photo-preview--fade-in');
-      photoPreview.addEventListener('animationend', () => {
-        photoPreview.classList.remove('profile-photo-preview--fade-in');
-      }, { once: true });
     } else {
       photoPreview.style.backgroundImage = '';
       photoPreview.classList.remove('has-photo');
       photoPreview.classList.remove('profile-photo-preview--icon');
       photoPreview.style.background = '';
       photoPreview.textContent = previewDefaultText || 'Adicione uma foto';
-      photoPreview.classList.remove('profile-photo-preview--fade-in');
     }
   }
 
@@ -305,53 +230,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (photoInput) {
-    photoInput.addEventListener('change', async event => {
+    photoInput.addEventListener('change', event => {
       const inputEl = event.target;
       const file = inputEl.files && inputEl.files[0];
       if (!file) {
         return;
       }
 
-      if (!isAllowedFileType(file)) {
-        alert('Formato de arquivo não suportado. Utilize JPG, JPEG, PNG, GIF ou WEBP.');
-        if (inputEl && typeof inputEl.value === 'string') {
-          inputEl.value = '';
+      const reader = new FileReader();
+
+      reader.onloadstart = () => {
+        showPhotoProgress();
+        setPhotoProgress(0);
+      };
+
+      reader.onprogress = eventProgress => {
+        if (eventProgress && eventProgress.lengthComputable) {
+          const percent = (eventProgress.loaded / eventProgress.total) * 100;
+          setPhotoProgress(percent);
         }
-        return;
-      }
+      };
 
-      if (file.size > MAX_UPLOAD_SIZE) {
-        alert('A foto deve ter no máximo 3 MB.');
-        if (inputEl && typeof inputEl.value === 'string') {
-          inputEl.value = '';
-        }
-        return;
-      }
-
-      showPhotoProgress();
-      setPhotoProgress(10);
-      if (photoProgressText) {
-        photoProgressText.textContent = 'Processando foto...';
-      }
-
-      try {
-        setPhotoProgress(35);
-        const compressedData = await compressImage(file);
-        setPhotoProgress(85);
-        pendingPhotoData = compressedData;
+      reader.onload = () => {
+        pendingPhotoData = reader.result;
         updatePhotoPreview(pendingPhotoData);
         updatePublishButtonState();
         setPhotoProgress(100);
-        hidePhotoProgress(200);
-      } catch (error) {
-        console.warn('Não foi possível processar a foto selecionada.', error);
-        hidePhotoProgress(0, { message: 'Falha ao processar foto' });
-        alert('Não foi possível processar sua imagem. Tente novamente com outro arquivo.');
-      } finally {
+        hidePhotoProgress(120);
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
-      }
+      };
+
+      reader.onerror = () => {
+        console.warn('Não foi possível carregar a foto selecionada.');
+        hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
+      };
+
+      reader.onabort = () => {
+        hidePhotoProgress(0, { message: 'Envio cancelado' });
+      };
+
+      showPhotoProgress();
+      reader.readAsDataURL(file);
     });
   }
 
