@@ -1,5 +1,6 @@
 :root {
   --nav-height: 72px;
+  --header-height: 72px;
   --footer-bg-light: #ffffff;
   --footer-bg-dark: #000000;
   --footer-bg-blue: #0b3d91;
@@ -17,6 +18,7 @@ body {
 }
 
 body {
+  padding-top: var(--header-height);
   padding-bottom: var(--nav-height);
   background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
   font-family: 'Open Sans', sans-serif;
@@ -56,15 +58,18 @@ body.page-play {
   justify-content: space-between;
   gap: 20px;
   padding: 18px 24px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   color: inherit;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1250;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
   flex-wrap: wrap;
   box-sizing: border-box;
+  min-height: var(--header-height);
 }
 
 body.dark-mode .site-header {
@@ -96,6 +101,23 @@ body.theme-blue .site-header {
   background: linear-gradient(135deg, rgba(197, 215, 255, 0.6), rgba(127, 168, 255, 0.55));
   flex-shrink: 0;
   order: 1;
+  position: relative;
+  --level-progress: 0%;
+}
+
+.site-header__avatar-container::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background:
+    conic-gradient(#2ecc71 var(--level-progress), rgba(11, 61, 145, 0.15) var(--level-progress));
+  -webkit-mask:
+    radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+  mask:
+    radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+  pointer-events: none;
+  opacity: 0.9;
 }
 
 .site-header__avatar {
@@ -198,9 +220,14 @@ body.game-active #global-header {
 }
 
 @media (max-width: 720px) {
+  :root {
+    --header-height: 52px;
+  }
+
   .site-header {
     justify-content: flex-start;
     gap: 16px;
+    padding: 12px 18px;
   }
 
   .site-header__avatar-container {
@@ -290,6 +317,7 @@ body.theme-blue #main-nav {
   height: 56px;
   border-radius: 18px;
   transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+  position: relative;
 }
 
 body.dark-mode #main-nav .nav-item {
@@ -303,6 +331,14 @@ body.theme-blue #main-nav .nav-item {
 #main-nav .nav-item span[aria-hidden="true"] {
   display: block;
   line-height: 1;
+}
+
+#main-nav .nav-item svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+  fill: currentColor;
+  pointer-events: none;
 }
 
 #main-nav .nav-item:hover,
@@ -352,6 +388,14 @@ body.theme-blue .nav-item--user.nav-item--open .nav-item__trigger {
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+.nav-item__trigger svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+  fill: currentColor;
+  pointer-events: none;
 }
 
 .nav-item__trigger:focus {
@@ -1296,6 +1340,9 @@ body.theme-blue .profile-share-description {
   padding: 12px;
   border: 3px solid rgba(11, 61, 145, 0.1);
   box-shadow: 0 14px 26px rgba(11, 61, 145, 0.12);
+  opacity: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  position: relative;
 }
 
 .profile-photo-preview--icon {
@@ -1313,11 +1360,26 @@ body.theme-blue .profile-photo-preview {
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.38);
 }
 
+.profile-photo-preview.profile-photo-preview--fading {
+  animation: profilePreviewFade 1s ease forwards;
+}
+
 .profile-photo-preview.has-photo {
   color: transparent;
   background-color: transparent;
   border-color: rgba(11, 61, 145, 0.3);
   box-shadow: 0 18px 32px rgba(11, 61, 145, 0.18);
+}
+
+@keyframes profilePreviewFade {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 body.dark-mode .profile-photo-preview.has-photo,
@@ -1354,6 +1416,48 @@ body.theme-blue .profile-photo-progress {
   background: rgba(7, 30, 68, 0.88);
   border-color: rgba(135, 206, 255, 0.32);
   box-shadow: 0 22px 36px rgba(2, 21, 51, 0.6);
+}
+
+body.page-transition-ready {
+  transition: transform 0.45s ease, opacity 0.45s ease;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+body.page-transition-ready.page-transition-from-right {
+  opacity: 0;
+  transform: translateX(32px);
+}
+
+body.page-transition-ready.page-transition-from-left {
+  opacity: 0;
+  transform: translateX(-32px);
+}
+
+body.page-transition-ready.page-exit-forward {
+  opacity: 0;
+  transform: translateX(-32px);
+}
+
+body.page-transition-ready.page-exit-backward {
+  opacity: 0;
+  transform: translateX(32px);
+}
+
+body.page-transitioning {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-transition-ready,
+  body.page-transition-ready.page-transition-from-right,
+  body.page-transition-ready.page-transition-from-left,
+  body.page-transition-ready.page-exit-forward,
+  body.page-transition-ready.page-exit-backward {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 
 .profile-photo-progress__circle {

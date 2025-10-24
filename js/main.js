@@ -170,6 +170,7 @@ let timerInterval = null;
 let inputTimeout = null;
 let lastExpected = '', lastInput = '', lastFolder = 1;
 const TOTAL_FRASES = 25;
+const LEVEL_PROGRESS_KEY = 'levelProgress';
 let selectedMode = 1;
 // Removed difficulty selection; game always starts on easy mode
 const DEFAULT_STARTING_POINTS = userSettings.startingPoints ?? SETTINGS_FALLBACK.startingPoints;
@@ -198,6 +199,119 @@ let levelUpReady = false;
 let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
+let levelCorrectCount = 0;
+
+function getLevelGoal(level = pastaAtual) {
+  const numericLevel = Number.isFinite(level) ? Number(level) : 1;
+  return numericLevel + 9;
+}
+
+function saveLevelProgress() {
+  try {
+    localStorage.setItem(LEVEL_PROGRESS_KEY, JSON.stringify({
+      level: pastaAtual,
+      count: levelCorrectCount
+    }));
+  } catch (err) {
+    console.warn('Não foi possível salvar o progresso de nível.', err);
+  }
+}
+
+function dispatchLevelProgressChange() {
+  document.dispatchEvent(new CustomEvent('playtalk:level-progress', {
+    detail: {
+      level: pastaAtual,
+      count: levelCorrectCount,
+      goal: getLevelGoal()
+    }
+  }));
+}
+
+function updateLevelProgressUI() {
+  const container = document.querySelector('.site-header__avatar-container');
+  if (!container) {
+    return;
+  }
+  const goal = getLevelGoal();
+  const percent = goal > 0 ? Math.min(100, Math.max(0, (levelCorrectCount / goal) * 100)) : 0;
+  container.style.setProperty('--level-progress', `${percent}%`);
+}
+
+function updateLevelProgressMessage() {
+  const msg = document.getElementById('nivel-mensagem');
+  if (!msg) {
+    return;
+  }
+  const goal = getLevelGoal();
+  const remaining = Math.max(0, goal - levelCorrectCount);
+  msg.style.color = '';
+  if (remaining === 0) {
+    msg.textContent = 'Nível pronto para avançar!';
+  } else if (remaining === 1) {
+    msg.textContent = 'Falta 1 frase para avançar de nível';
+  } else {
+    msg.textContent = `Faltam ${remaining} frases para avançar de nível`;
+  }
+}
+
+function loadLevelProgress() {
+  let stored = null;
+  try {
+    const raw = localStorage.getItem(LEVEL_PROGRESS_KEY);
+    stored = raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    console.warn('Não foi possível carregar o progresso de nível.', err);
+    stored = null;
+  }
+  if (!stored || typeof stored !== 'object') {
+    levelCorrectCount = 0;
+    saveLevelProgress();
+    updateLevelProgressUI();
+    dispatchLevelProgressChange();
+    updateLevelProgressMessage();
+    return;
+  }
+  if (Number(stored.level) !== pastaAtual) {
+    levelCorrectCount = 0;
+    saveLevelProgress();
+  } else {
+    const value = Number(stored.count);
+    levelCorrectCount = Number.isFinite(value) && value > 0 ? value : 0;
+  }
+  updateLevelProgressUI();
+  dispatchLevelProgressChange();
+  updateLevelProgressMessage();
+}
+
+function advanceLevel() {
+  levelCorrectCount = 0;
+  pastaAtual += 1;
+  saveLevelProgress();
+  localStorage.setItem('pastaAtual', pastaAtual);
+  updateLevelIcon();
+  updateModeIcons();
+  const msg = document.getElementById('nivel-mensagem');
+  if (msg) {
+    msg.textContent = `Nível ${pastaAtual} alcançado!`;
+    msg.style.color = '';
+  }
+}
+
+function registerCorrectPhrase() {
+  levelCorrectCount += 1;
+  const goal = getLevelGoal();
+  if (levelCorrectCount > goal) {
+    levelCorrectCount = goal;
+  }
+  saveLevelProgress();
+  updateLevelProgressUI();
+  dispatchLevelProgressChange();
+  if (levelCorrectCount >= goal) {
+    advanceLevel();
+  } else {
+    updateLevelProgressMessage();
+  }
+}
 
 function cloneFallback(value) {
   if (Array.isArray(value)) {
@@ -279,6 +393,7 @@ function reloadPersistentProgress(initialLoad = false) {
   premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
+  loadLevelProgress();
   if (!initialLoad) {
     updateLevelIcon();
     updateModeIcons();
@@ -515,6 +630,9 @@ function updateLevelIcon() {
     }, 500);
   }
   localStorage.setItem('pastaAtual', pastaAtual);
+  updateLevelProgressUI();
+  updateLevelProgressMessage();
+  dispatchLevelProgressChange();
   document.dispatchEvent(new CustomEvent('playtalk:level-update', {
     detail: { level: pastaAtual }
   }));
@@ -554,6 +672,8 @@ function performMenuLevelUp() {
   });
   setTimeout(() => {
     pastaAtual++;
+    levelCorrectCount = 0;
+    saveLevelProgress();
     completedModes = {};
     unlockedModes = getAllModesUnlockedState();
     localStorage.setItem('completedModes', JSON.stringify(completedModes));
@@ -586,12 +706,13 @@ function enforceStarClick() {
 }
 
 function startStatsSequence() {
-  const audio = new Audio('gamesounds/nivel2.mp3');
-  audio.addEventListener('ended', () => {
-    localStorage.setItem('statsSequence', 'true');
-    window.location.href = 'play.html';
-  });
-  audio.play();
+  try {
+    sessionStorage.setItem('playtalk:lastTransitionDirection', 'forward');
+  } catch (err) {
+    // storage might be unavailable; ignore
+  }
+  localStorage.setItem('statsSequence', 'true');
+  window.location.href = 'play.html';
 }
 
 function menuLevelUpSequence() {
@@ -602,46 +723,36 @@ function menuLevelUpSequence() {
     img.style.transition = 'opacity 1ms linear';
     img.style.opacity = '1';
   });
-  const audio = document.getElementById('somNivelDesbloqueado');
-  if (audio) { audio.currentTime = 0; audio.play(); }
-
   const msg = document.createElement('div');
   msg.id = 'next-level-msg';
   msg.textContent = 'diga next level para avançar';
   msg.style.display = 'none';
   menu.appendChild(msg);
-
-  let idx = 0;
-  const interval = setInterval(() => {
-    if (idx < icons.length) {
-      icons[idx].style.opacity = '1';
-      idx++;
-    } else {
-      clearInterval(interval);
-      msg.textContent = 'toque para avançar para o próximo nível';
-      msg.style.display = 'block';
-      msg.style.cursor = 'pointer';
-      msg.setAttribute('role', 'button');
-      msg.setAttribute('tabindex', '0');
-      setTimeout(() => { msg.style.opacity = '1'; msg.focus(); }, 10);
-      awaitingNextLevel = false;
-      nextLevelCallback = null;
-      function advance() {
-        msg.removeEventListener('click', advance);
-        msg.removeEventListener('keydown', handleKey);
-        msg.remove();
-        performMenuLevelUp();
-      }
-      function handleKey(event) {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          advance();
-        }
-      }
-      msg.addEventListener('click', advance);
-      msg.addEventListener('keydown', handleKey);
+  icons.forEach(icon => {
+    icon.style.opacity = '1';
+  });
+  msg.textContent = 'toque para avançar para o próximo nível';
+  msg.style.display = 'block';
+  msg.style.cursor = 'pointer';
+  msg.setAttribute('role', 'button');
+  msg.setAttribute('tabindex', '0');
+  setTimeout(() => { msg.style.opacity = '1'; msg.focus(); }, 10);
+  awaitingNextLevel = false;
+  nextLevelCallback = null;
+  function advance() {
+    msg.removeEventListener('click', advance);
+    msg.removeEventListener('keydown', handleKey);
+    msg.remove();
+    performMenuLevelUp();
+  }
+  function handleKey(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      advance();
     }
-  }, 500);
+  }
+  msg.addEventListener('click', advance);
+  msg.addEventListener('keydown', handleKey);
 }
 
 let transitioning = false;
@@ -1091,6 +1202,11 @@ function verificarResposta() {
     const nivel = parseInt(cheat[1], 10);
     if (pastas[nivel]) {
       pastaAtual = nivel;
+      levelCorrectCount = 0;
+      saveLevelProgress();
+      updateLevelProgressUI();
+      dispatchLevelProgressChange();
+      updateLevelProgressMessage();
       updateLevelIcon();
       carregarFrases();
     }
@@ -1127,6 +1243,7 @@ function verificarResposta() {
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
+    registerCorrectPhrase();
     points += premioAtual;
     saveTotals();
     resultado.textContent = '';
@@ -1161,6 +1278,7 @@ function verificarResposta() {
       saveModeStats();
       document.getElementById("somAcerto").play();
       acertosTotais++;
+      registerCorrectPhrase();
       points += premioAtual;
       if (selectedMode === 5) {
         points += 1000;
@@ -1280,8 +1398,6 @@ function finishMode() {
     document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = 'selos%20modos%20de%20jogo/modostar.png';
     });
-    const star = document.getElementById('somLevelStar');
-    if (star) { star.currentTime = 0; star.play(); }
     levelUpReady = true;
     goHome();
     enforceStarClick();
@@ -1302,6 +1418,8 @@ function nextMode() {
   } else {
     recordModeTime(selectedMode);
     pastaAtual++;
+    levelCorrectCount = 0;
+    saveLevelProgress();
     selectedMode = 1;
     updateLevelIcon();
     startGame(1);
