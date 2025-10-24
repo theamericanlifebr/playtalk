@@ -292,24 +292,21 @@
     };
   }
 
-  const HEADER_ICON_BACKGROUND = 'linear-gradient(135deg, rgb(61, 195, 34), rgb(82, 224, 141))';
-  const HEADER_ICON_TEXT = '7';
-
-  function applyStaticHeaderIcon(avatarEl) {
+  function applyProfilePhoto(avatarEl, photo) {
     if (!avatarEl) return;
-    avatarEl.classList.remove('site-header__avatar--image');
-    avatarEl.style.backgroundImage = 'none';
-    avatarEl.style.background = HEADER_ICON_BACKGROUND;
-    avatarEl.style.backgroundSize = '';
-    avatarEl.style.backgroundPosition = '';
-    avatarEl.textContent = HEADER_ICON_TEXT;
+    avatarEl.classList.add('site-header__avatar--image');
+    avatarEl.style.backgroundImage = `url(${photo})`;
+    avatarEl.style.background = 'none';
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
   }
 
   function updateHeaderAvatar(avatarEl, displayName, username) {
     if (!avatarEl) return;
     const photo = getStoredProfilePhoto(username);
     if (photo) {
-      applyStaticHeaderIcon(avatarEl);
+      applyProfilePhoto(avatarEl, photo);
       return;
     }
 
@@ -318,6 +315,8 @@
     avatarEl.classList.remove('site-header__avatar--image');
     avatarEl.style.backgroundImage = 'none';
     avatarEl.style.background = `linear-gradient(135deg, ${gradient.primary}, ${gradient.secondary})`;
+    avatarEl.style.backgroundSize = '';
+    avatarEl.style.backgroundPosition = '';
     avatarEl.textContent = seed.charAt(0).toUpperCase();
   }
 
