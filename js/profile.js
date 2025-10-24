@@ -16,9 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const photoPreview = document.getElementById('profile-photo-preview');
   const publishButton = document.getElementById('profile-photo-publish');
   const shareCheckbox = document.getElementById('profile-share-results');
-  const uploadProgress = document.getElementById('profile-upload-progress');
-  const progressCircle = document.getElementById('profile-upload-progress-circle');
-  const progressValue = document.getElementById('profile-upload-progress-value');
+
+  const HEADER_ICON_BACKGROUND = 'linear-gradient(135deg, rgb(61, 195, 34), rgb(82, 224, 141))';
+  const HEADER_ICON_TEXT = '7';
+
+  if (photoPreview) {
+    photoPreview.classList.remove('profile-photo-preview--icon');
+  }
 
   const username = (currentUser && currentUser.username) || 'convidado';
   if (usernameField) {
@@ -42,57 +46,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let pendingPhotoData = null;
 
-  function renderPhotoPreview(source = null) {
+  function applyPreviewIcon() {
     if (!photoPreview) return;
-    const photoSource = source !== null ? source : (profileData.photo || '');
-    if (photoSource) {
-      photoPreview.classList.add('has-photo');
-      photoPreview.style.backgroundImage = `url(${photoSource})`;
-      photoPreview.style.background = '';
-      photoPreview.textContent = '';
-    } else {
-      photoPreview.classList.remove('has-photo');
-      photoPreview.style.backgroundImage = 'none';
-      photoPreview.style.background = '';
-      photoPreview.textContent = 'Adicione uma foto';
-    }
+    photoPreview.classList.remove('has-photo');
+    photoPreview.classList.add('profile-photo-preview--icon');
+    photoPreview.style.backgroundImage = 'none';
+    photoPreview.style.background = HEADER_ICON_BACKGROUND;
+    photoPreview.textContent = HEADER_ICON_TEXT;
   }
 
   function updatePublishButtonState() {
     if (!publishButton) return;
     const hasPendingPhoto = pendingPhotoData && pendingPhotoData !== profileData.photo;
     publishButton.disabled = !hasPendingPhoto;
-  }
-
-  let hideProgressTimeout = null;
-
-  function setUploadProgress(value) {
-    if (!progressCircle || !progressValue) return;
-    const safeValue = Math.max(0, Math.min(100, Math.round(value)));
-    progressCircle.style.setProperty('--progress', `${safeValue * 3.6}deg`);
-    progressValue.textContent = `${safeValue}%`;
-  }
-
-  function showUploadProgress() {
-    if (!uploadProgress) return;
-    if (hideProgressTimeout) {
-      clearTimeout(hideProgressTimeout);
-      hideProgressTimeout = null;
-    }
-    uploadProgress.hidden = false;
-    setUploadProgress(0);
-  }
-
-  function hideUploadProgress(delay = 0) {
-    if (!uploadProgress) return;
-    if (hideProgressTimeout) {
-      clearTimeout(hideProgressTimeout);
-      hideProgressTimeout = null;
-    }
-    hideProgressTimeout = setTimeout(() => {
-      uploadProgress.hidden = true;
-      hideProgressTimeout = null;
-    }, Math.max(0, delay));
   }
 
   function persistAvatarValue(photoData) {
@@ -128,7 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
     profileData.name = storedDisplayName;
   }
 
-  renderPhotoPreview();
+  if (profileData.photo && photoPreview) {
+    applyPreviewIcon();
+  }
 
   persistAvatarValue(profileData.photo);
   updatePublishButtonState();
@@ -202,35 +170,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const file = inputEl.files && inputEl.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onloadstart = () => {
-        showUploadProgress();
-        setUploadProgress(0);
-      };
-      reader.onprogress = event => {
-        if (event && event.lengthComputable) {
-          const percent = (event.loaded / event.total) * 100;
-          setUploadProgress(percent);
-        }
-      };
       reader.onload = () => {
         pendingPhotoData = reader.result;
-        renderPhotoPreview(pendingPhotoData);
-        setUploadProgress(100);
-        hideUploadProgress(350);
+        if (photoPreview) {
+          photoPreview.style.backgroundImage = `url(${reader.result})`;
+          photoPreview.classList.add('has-photo');
+          photoPreview.classList.remove('profile-photo-preview--icon');
+          photoPreview.style.background = '';
+          photoPreview.textContent = '';
+        }
         updatePublishButtonState();
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
-        }
-      };
-      reader.onerror = () => {
-        pendingPhotoData = null;
-        renderPhotoPreview();
-        updatePublishButtonState();
-        hideUploadProgress();
-      };
-      reader.onloadend = () => {
-        if (!pendingPhotoData) {
-          hideUploadProgress();
         }
       };
       reader.readAsDataURL(file);
@@ -248,8 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       profileData.photo = pendingPhotoData;
       pendingPhotoData = null;
-      renderPhotoPreview();
-      hideUploadProgress();
+      if (photoPreview) {
+        applyPreviewIcon();
+      }
       persistProfileChanges();
       updatePublishButtonState();
     });

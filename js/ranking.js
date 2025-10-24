@@ -18,21 +18,16 @@
       card.classList.add('ranking-card--top');
     }
 
-    const avatarWrapper = document.createElement('div');
-    avatarWrapper.className = 'ranking-avatar-wrapper';
+    const position = document.createElement('span');
+    position.className = 'ranking-position';
+    position.textContent = `#${entry.position}`;
+    card.appendChild(position);
 
     const avatar = document.createElement('img');
     avatar.className = 'ranking-avatar';
     avatar.src = entry.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(entry.name)}`;
     avatar.alt = `Foto de perfil de ${entry.name}`;
-    avatarWrapper.appendChild(avatar);
-
-    const badge = document.createElement('span');
-    badge.className = 'ranking-badge';
-    badge.textContent = `${entry.position}º`;
-    avatarWrapper.appendChild(badge);
-
-    card.appendChild(avatarWrapper);
+    card.appendChild(avatar);
 
     const info = document.createElement('div');
     info.className = 'ranking-info';
