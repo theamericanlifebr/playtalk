@@ -12,6 +12,12 @@
   <body class="page-home">
     <header class="site-header" id="global-header">
       <div class="site-header__profile">
+        <img
+          id="header-avatar"
+          class="site-header__avatar"
+          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+          alt="Foto do usuário"
+        />
         <div class="site-header__text">
           <span class="site-header__name" id="header-username">Jogador</span>
           <span class="site-header__level" id="header-level">Nível 1</span>
@@ -21,42 +27,43 @@
         <button id="login-btn" class="site-header__button" type="button">Entrar</button>
       </div>
     </header>
-  <div id="menu">
-    <div id="menu-modes">
-      <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
-      <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" alt="Modo 2">
-      <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" alt="Modo 3">
-      <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" alt="Modo 4">
-      <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" alt="Modo 5">
-      <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" alt="Modo 6">
-    </div>
-  </div>
+    <main class="home-main">
+      <div id="menu">
+        <div id="menu-modes">
+          <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
+          <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" alt="Modo 2">
+          <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" alt="Modo 3">
+          <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" alt="Modo 4">
+          <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" alt="Modo 5">
+          <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" alt="Modo 6">
+        </div>
+      </div>
 
-
-  <div id="visor">
-    <!-- conteúdo visual aqui -->
-    <div id="score"></div>
-    <img id="mode-icon" alt="Mode Icon" style="display:none" />
-    <div id="texto-exibicao"></div>
-    <div id="pt-container">
-      <textarea id="pt" rows="1" readonly></textarea>
-    </div>
-    <div id="barra-progresso">
-      <div id="barra-preenchida"></div>
-    </div>
-    <div id="nivel-mensagem"></div>
-    <div id="timer"></div>
-    <div id="resultado"></div>
-    <div id="acertos"></div>
-    <div id="mode-buttons">
-      <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
-      <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
-      <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
-      <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
-      <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
-      <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
-    </div>
-  </div>
+      <div id="visor">
+        <!-- conteúdo visual aqui -->
+        <div id="score"></div>
+        <img id="mode-icon" alt="Mode Icon" style="display:none" />
+        <div id="texto-exibicao"></div>
+        <div id="pt-container">
+          <textarea id="pt" rows="1" readonly></textarea>
+        </div>
+        <div id="barra-progresso">
+          <div id="barra-preenchida"></div>
+        </div>
+        <div id="nivel-mensagem"></div>
+        <div id="timer"></div>
+        <div id="resultado"></div>
+        <div id="acertos"></div>
+        <div id="mode-buttons">
+          <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
+          <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
+          <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
+          <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
+          <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
+          <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
+        </div>
+      </div>
+    </main>
 
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
     <div class="login-flow__panel">

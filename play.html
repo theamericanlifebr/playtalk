@@ -12,6 +12,12 @@
 <body class="page-play">
   <header class="site-header" id="global-header">
     <div class="site-header__profile">
+      <img
+        id="header-avatar"
+        class="site-header__avatar"
+        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+        alt="Foto do usuário"
+      />
       <div class="site-header__text">
         <span class="site-header__name" id="header-username">Jogador</span>
         <span class="site-header__level" id="header-level">Nível 1</span>
@@ -22,14 +28,16 @@
     </div>
   </header>
   <main id="play-container">
-    <div id="play-content" class="stats-wrapper"></div>
-    <div id="mode-buttons" class="stats-mode-icons">
-      <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
-      <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
-      <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
-      <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
-      <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
-      <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
+    <div class="stats-layout">
+      <div id="mode-buttons" class="stats-mode-icons">
+        <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
+        <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
+        <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
+        <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
+        <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
+        <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
+      </div>
+      <div id="play-content" class="stats-wrapper"></div>
     </div>
   </main>
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
