@@ -246,6 +246,21 @@
     return Number.isFinite(stored) && stored > 0 ? stored : 1;
   }
 
+  function getLevelRequirement(level) {
+    return Math.max(10, 9 + level);
+  }
+
+  function getLevelProgressRatio(level) {
+    const storedProgress = parseInt(localStorage.getItem('levelProgress'), 10);
+    const progress = Number.isFinite(storedProgress) && storedProgress > 0 ? storedProgress : 0;
+    const requirement = getLevelRequirement(level);
+    if (requirement <= 0) {
+      return 0;
+    }
+    const ratio = progress / requirement;
+    return Math.max(0, Math.min(1, ratio));
+  }
+
   function getDisplayName(user) {
     const stored = localStorage.getItem('displayName');
     if (stored && stored.trim()) {
@@ -296,6 +311,12 @@
         avatarEl.src = avatarUrl;
       }
       avatarEl.alt = `Foto de ${displayName}`;
+      const avatarContainer = avatarEl.closest('.site-header__avatar-container');
+      if (avatarContainer) {
+        const ratio = getLevelProgressRatio(level);
+        avatarContainer.style.setProperty('--avatar-progress', ratio);
+        avatarContainer.setAttribute('data-level-progress', `${Math.round(ratio * 100)}%`);
+      }
     }
 
     if (loginBtn) {
