@@ -238,11 +238,81 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const ALLOWED_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']);
+  const ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+  const MAX_FILE_SIZE = 3 * 1024 * 1024;
+
+  function isAllowedFile(file) {
+    if (!file) return false;
+    const type = (file.type || '').toLowerCase();
+    if (ALLOWED_TYPES.has(type)) {
+      return true;
+    }
+    const name = (file.name || '').toLowerCase();
+    const extension = name.includes('.') ? name.split('.').pop() : '';
+    return ALLOWED_EXTENSIONS.has(extension);
+  }
+
+  function processImageSource(src, mimeType) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const size = 180;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Contexto não disponível.'));
+            return;
+          }
+          ctx.clearRect(0, 0, size, size);
+          const scale = Math.max(size / image.width, size / image.height);
+          const width = image.width * scale;
+          const height = image.height * scale;
+          const dx = (size - width) / 2;
+          const dy = (size - height) / 2;
+          ctx.drawImage(image, dx, dy, width, height);
+          const outputType = mimeType === 'image/png' || mimeType === 'image/gif'
+            ? 'image/png'
+            : 'image/jpeg';
+          const quality = outputType === 'image/jpeg' ? 0.82 : undefined;
+          resolve(canvas.toDataURL(outputType, quality));
+        } catch (error) {
+          reject(error);
+        }
+      };
+      image.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+      image.src = src;
+    });
+  }
+
   if (photoInput) {
     photoInput.addEventListener('change', event => {
       const inputEl = event.target;
       const file = inputEl.files && inputEl.files[0];
       if (!file) {
+        return;
+      }
+
+      if (!isAllowedFile(file)) {
+        alert('Formato de arquivo não suportado. Use jpg, jpeg, png, gif ou webp.');
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
+        pendingPhotoData = null;
+        updatePublishButtonState();
+        return;
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        alert('O arquivo deve ter no máximo 3 MB.');
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
+        pendingPhotoData = null;
+        updatePublishButtonState();
         return;
       }
 
@@ -260,12 +330,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
 
-      reader.onload = () => {
-        pendingPhotoData = reader.result;
-        updatePhotoPreview(pendingPhotoData, { animate: true });
-        updatePublishButtonState();
-        setPhotoProgress(100);
-        hidePhotoProgress(120);
+      reader.onload = async () => {
+        try {
+          const processed = await processImageSource(reader.result, (file.type || '').toLowerCase());
+          pendingPhotoData = processed;
+          updatePhotoPreview(pendingPhotoData, { animate: true });
+          updatePublishButtonState();
+          setPhotoProgress(100);
+          hidePhotoProgress(180);
+        } catch (error) {
+          console.warn('Não foi possível processar a imagem selecionada.', error);
+          hidePhotoProgress(0, { message: 'Falha ao processar foto' });
+          pendingPhotoData = null;
+          updatePublishButtonState();
+        }
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
@@ -274,6 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
       reader.onerror = () => {
         console.warn('Não foi possível carregar a foto selecionada.');
         hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
       };
 
       reader.onabort = () => {

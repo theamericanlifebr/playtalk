@@ -523,14 +523,14 @@ function updateLevelIcon() {
 function unlockMode(mode, duration = 1000) {
   unlockedModes[mode] = true;
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-  document.querySelectorAll(`#menu-modes img[data-mode="${mode}"], #mode-buttons img[data-mode="${mode}"]`).forEach(img => {
+  document.querySelectorAll(`#menu-modes img[data-mode="${mode}"], #game-mode-buttons img[data-mode="${mode}"]`).forEach(img => {
     img.style.transition = `opacity ${duration}ms linear`;
     img.style.opacity = '1';
   });
 }
 
 function updateModeIcons() {
-  document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
+  document.querySelectorAll('#game-mode-buttons img, #menu-modes img').forEach(img => {
     img.style.opacity = '1';
     img.style.pointerEvents = 'auto';
   });
@@ -547,7 +547,7 @@ function checkForMenuLevelUp() {
 }
 
 function performMenuLevelUp() {
-  const icons = document.querySelectorAll('#menu-modes img, #mode-buttons img');
+  const icons = document.querySelectorAll('#menu-modes img, #game-mode-buttons img');
   icons.forEach(img => {
     img.style.transition = 'opacity 500ms linear';
     img.style.opacity = '1';
@@ -558,7 +558,7 @@ function performMenuLevelUp() {
     unlockedModes = getAllModesUnlockedState();
     localStorage.setItem('completedModes', JSON.stringify(completedModes));
     localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-    document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
+    document.querySelectorAll('#menu-modes img[data-mode="6"], #game-mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = modeImages[6];
     });
     updateLevelIcon();
@@ -569,9 +569,9 @@ function performMenuLevelUp() {
 }
 
 function enforceStarClick() {
-  const all = document.querySelectorAll('#menu-modes img, #mode-buttons img, #top-nav a');
+  const all = document.querySelectorAll('#menu-modes img, #game-mode-buttons img, #main-nav button');
   all.forEach(el => { el.style.pointerEvents = 'none'; });
-  const stars = document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]');
+  const stars = document.querySelectorAll('#menu-modes img[data-mode="6"], #game-mode-buttons img[data-mode="6"]');
   if (!stars.length) {
     all.forEach(el => { el.style.pointerEvents = ''; });
     return;
@@ -589,7 +589,9 @@ function startStatsSequence() {
   const audio = new Audio('gamesounds/nivel2.mp3');
   audio.addEventListener('ended', () => {
     localStorage.setItem('statsSequence', 'true');
-    window.location.href = 'play.html';
+    if (window.playtalkShell && typeof window.playtalkShell.navigate === 'function') {
+      window.playtalkShell.navigate('stats');
+    }
   });
   audio.play();
 }
@@ -1277,7 +1279,7 @@ function finishMode() {
     const details = JSON.parse(localStorage.getItem('levelDetails') || '[]');
     details.push({ level: pastaAtual + 1, accuracy: acc, speed: speed.toFixed(2), reports: reportPerc });
     localStorage.setItem('levelDetails', JSON.stringify(details));
-    document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
+    document.querySelectorAll('#menu-modes img[data-mode="6"], #game-mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = 'selos%20modos%20de%20jogo/modostar.png';
     });
     const star = document.getElementById('somLevelStar');
@@ -1363,7 +1365,7 @@ async function initGame() {
   const levelIcon = document.getElementById('nivel-indicador');
   if (levelIcon) levelIcon.style.display = 'block';
 
-  document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
+  document.querySelectorAll('#game-mode-buttons img, #menu-modes img').forEach(img => {
     img.addEventListener('click', () => {
       stopCurrentGame();
       const modo = parseInt(img.dataset.mode, 10);
@@ -1420,21 +1422,22 @@ document.addEventListener('playtalk:user-change', () => {
   goHome();
 });
 
-  window.onload = async () => {
-    document.querySelectorAll('#top-nav a').forEach(a => {
-      a.addEventListener('click', stopCurrentGame);
-    });
-    const homeLink = document.getElementById('home-link');
-    if (homeLink) {
-      homeLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        goHome();
-      });
-    }
-    await initGame();
-    window.addEventListener('beforeunload', () => {
-      recordModeTime(selectedMode);
-      saveModeStats();
-      stopCurrentGame();
-    });
-  };
+document.addEventListener('playtalk:view-change', event => {
+  if (!event.detail) {
+    return;
+  }
+  if (event.detail.view !== 'home') {
+    stopCurrentGame();
+  } else {
+    goHome();
+  }
+});
+
+window.addEventListener('load', async () => {
+  await initGame();
+  window.addEventListener('beforeunload', () => {
+    recordModeTime(selectedMode);
+    saveModeStats();
+    stopCurrentGame();
+  });
+});

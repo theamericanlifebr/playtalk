@@ -76,9 +76,12 @@ function createStatBar(perc, label) {
 
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('play-content');
+  if (!container) {
+    return;
+  }
   container.classList.add('stats-wrapper');
   container.style.transition = 'opacity 0.2s';
-  const buttons = document.querySelectorAll('#mode-buttons img');
+  const buttons = document.querySelectorAll('#stats-mode-buttons [data-mode]');
   const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
   let statsData = {};
   let activeMode = 1;
@@ -149,18 +152,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function selectMode(mode) {
-    buttons.forEach(img => {
-      img.style.opacity = img.dataset.mode == mode ? '1' : '0.3';
+    buttons.forEach(button => {
+      const isActive = Number(button.dataset.mode) === Number(mode);
+      button.classList.toggle('stats-mode--active', isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
     activeMode = mode;
     render(mode);
   }
 
-  buttons.forEach(img => {
-    img.addEventListener('click', () => {
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
       clickSound.currentTime = 0;
       clickSound.play();
-      selectMode(parseInt(img.dataset.mode, 10));
+      selectMode(parseInt(button.dataset.mode, 10));
     });
   });
 
@@ -179,5 +184,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('playtalk:user-change', () => {
     refreshStatsData();
     selectMode(activeMode);
+  });
+
+  document.addEventListener('playtalk:view-change', event => {
+    if (event.detail && event.detail.view === 'stats') {
+      refreshStatsData();
+      selectMode(activeMode);
+    }
   });
 });
