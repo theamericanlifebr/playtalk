@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('play-content');
   container.classList.add('stats-wrapper');
   container.style.transition = 'opacity 0.2s';
-  const buttons = document.querySelectorAll('#mode-buttons img');
+  const buttons = document.querySelectorAll('#stats-mode-buttons .stats-mode-icon');
   const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
   let statsData = {};
   let activeMode = 1;
@@ -149,18 +149,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function selectMode(mode) {
-    buttons.forEach(img => {
-      img.style.opacity = img.dataset.mode == mode ? '1' : '0.3';
+    buttons.forEach(button => {
+      const isActive = parseInt(button.dataset.mode, 10) === mode;
+      button.classList.toggle('stats-mode-icon--active', isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      if (!isActive && document.activeElement === button) {
+        button.blur();
+      }
     });
     activeMode = mode;
     render(mode);
   }
 
-  buttons.forEach(img => {
-    img.addEventListener('click', () => {
+  buttons.forEach(button => {
+    button.setAttribute('aria-pressed', 'false');
+    button.addEventListener('click', () => {
       clickSound.currentTime = 0;
       clickSound.play();
-      selectMode(parseInt(img.dataset.mode, 10));
+      selectMode(parseInt(button.dataset.mode, 10));
     });
   });
 

@@ -21,6 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const photoProgressCircle = document.getElementById('profile-photo-progress-circle');
   const photoProgressValue = document.getElementById('profile-photo-progress-value');
   const photoProgressText = document.getElementById('profile-photo-progress-text');
+  const photoFeedback = document.getElementById('profile-photo-feedback');
+
+  const ACCEPTED_FILE_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/pjpeg']);
+  const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+  const MAX_UPLOAD_SIZE = 3 * 1024 * 1024; // 3MB
+  const TARGET_SIZE = 180;
+  const OUTPUT_MIME_TYPE = 'image/jpeg';
+  const OUTPUT_QUALITY = 0.85;
 
   const defaultAvatar = photoPreviewImage
     ? (photoPreviewImage.dataset.defaultAvatar || photoPreviewImage.src || '')
@@ -35,6 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const normalized = Math.max(0, Math.min(100, Math.round(value)));
     photoProgressCircle.style.setProperty('--progress', normalized);
     photoProgressValue.textContent = `${normalized}%`;
+  }
+
+  function setPhotoFeedback(message, status = 'error') {
+    if (!photoFeedback) {
+      return;
+    }
+    if (!message) {
+      photoFeedback.textContent = '';
+      photoFeedback.removeAttribute('data-status');
+      return;
+    }
+    photoFeedback.textContent = message;
+    photoFeedback.setAttribute('data-status', status);
   }
 
   function showPhotoProgress() {
@@ -85,6 +106,37 @@ document.addEventListener('DOMContentLoaded', () => {
     photoPreviewImage.classList.remove('profile-photo-preview__image--animate');
     void photoPreviewImage.offsetWidth;
     photoPreviewImage.classList.add('profile-photo-preview__image--animate');
+  }
+
+  function isAcceptedFileType(file) {
+    if (!file) {
+      return false;
+    }
+    if (ACCEPTED_FILE_TYPES.has(file.type)) {
+      return true;
+    }
+    const name = file.name || '';
+    const lower = name.toLowerCase();
+    return ACCEPTED_EXTENSIONS.some(ext => lower.endsWith(ext));
+  }
+
+  function createOptimizedImage(image) {
+    const canvas = document.createElement('canvas');
+    canvas.width = TARGET_SIZE;
+    canvas.height = TARGET_SIZE;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Contexto do canvas indisponível.');
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, TARGET_SIZE, TARGET_SIZE);
+    const ratio = Math.max(TARGET_SIZE / image.width, TARGET_SIZE / image.height);
+    const newWidth = image.width * ratio;
+    const newHeight = image.height * ratio;
+    const dx = (TARGET_SIZE - newWidth) / 2;
+    const dy = (TARGET_SIZE - newHeight) / 2;
+    ctx.drawImage(image, dx, dy, newWidth, newHeight);
+    return canvas.toDataURL(OUTPUT_MIME_TYPE, OUTPUT_QUALITY);
   }
 
   function updatePhotoPreview(photoData, options = {}) {
@@ -243,6 +295,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const inputEl = event.target;
       const file = inputEl.files && inputEl.files[0];
       if (!file) {
+        setPhotoFeedback('', 'info');
+        return;
+      }
+
+      setPhotoFeedback('', 'info');
+
+      if (!isAcceptedFileType(file)) {
+        setPhotoFeedback('Formato não suportado. Use JPG, JPEG, PNG, GIF ou WEBP.', 'error');
+        hidePhotoProgress(0, { message: 'Formato inválido' });
+        pendingPhotoData = null;
+        updatePublishButtonState();
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
+        return;
+      }
+
+      if (file.size > MAX_UPLOAD_SIZE) {
+        setPhotoFeedback('A foto deve ter no máximo 3MB.', 'error');
+        hidePhotoProgress(0, { message: 'Arquivo muito grande' });
+        pendingPhotoData = null;
+        updatePublishButtonState();
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
         return;
       }
 
@@ -261,26 +338,71 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       reader.onload = () => {
-        pendingPhotoData = reader.result;
-        updatePhotoPreview(pendingPhotoData, { animate: true });
+        const result = reader.result;
+        if (typeof result !== 'string') {
+          setPhotoFeedback('Não foi possível processar a imagem selecionada.', 'error');
+          hidePhotoProgress(0, { message: 'Falha ao processar foto' });
+          return;
+        }
+
+        const image = new Image();
+        image.onload = () => {
+          try {
+            const optimized = createOptimizedImage(image);
+            pendingPhotoData = optimized;
+            updatePhotoPreview(pendingPhotoData, { animate: true });
+            updatePublishButtonState();
+            setPhotoProgress(100);
+            hidePhotoProgress(120);
+            setPhotoFeedback('Foto pronta para publicar!', 'success');
+          } catch (error) {
+            console.warn('Não foi possível otimizar a imagem selecionada.', error);
+            setPhotoFeedback('Não foi possível otimizar a imagem selecionada.', 'error');
+            hidePhotoProgress(0, { message: 'Falha ao processar foto' });
+            pendingPhotoData = null;
+            updatePublishButtonState();
+          } finally {
+            if (inputEl && typeof inputEl.value === 'string') {
+              inputEl.value = '';
+            }
+          }
+        };
+
+        image.onerror = () => {
+          console.warn('Não foi possível carregar a imagem selecionada.');
+          setPhotoFeedback('Não foi possível carregar a imagem selecionada.', 'error');
+          hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
+          pendingPhotoData = null;
+          updatePublishButtonState();
+          if (inputEl && typeof inputEl.value === 'string') {
+            inputEl.value = '';
+          }
+        };
+
+        image.src = result;
+      };
+
+      reader.onerror = () => {
+        console.warn('Não foi possível carregar a foto selecionada.');
+        setPhotoFeedback('Não foi possível carregar a foto selecionada.', 'error');
+        hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
+        pendingPhotoData = null;
         updatePublishButtonState();
-        setPhotoProgress(100);
-        hidePhotoProgress(120);
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
       };
 
-      reader.onerror = () => {
-        console.warn('Não foi possível carregar a foto selecionada.');
-        hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
-      };
-
       reader.onabort = () => {
         hidePhotoProgress(0, { message: 'Envio cancelado' });
+        setPhotoFeedback('Envio cancelado.', 'error');
+        pendingPhotoData = null;
+        updatePublishButtonState();
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
       };
 
-      showPhotoProgress();
       reader.readAsDataURL(file);
     });
   }
@@ -299,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updatePhotoPreview(profileData.photo, { animate: true });
       persistProfileChanges();
       updatePublishButtonState();
+      setPhotoFeedback('Foto publicada com sucesso!', 'success');
     });
   }
 });
