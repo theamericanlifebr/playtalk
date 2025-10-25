@@ -78,36 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, hideDelay);
   }
 
-  function restartAnimation(element, className) {
-    if (!element) {
-      return;
-    }
-    element.classList.remove(className);
-    void element.offsetWidth;
-    element.classList.add(className);
-  }
-
   function triggerPhotoAnimation() {
-    restartAnimation(photoPreviewImage, 'profile-photo-preview__image--animate');
-    restartAnimation(photoPreview, 'profile-photo-preview--animate');
-  }
-
-  function getLevelRequirement(level) {
-    return Math.max(10, 9 + level);
-  }
-
-  function syncProfileProgress() {
-    if (!photoPreview) {
+    if (!photoPreviewImage) {
       return;
     }
-    const storedLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
-    const level = Number.isFinite(storedLevel) && storedLevel > 0 ? storedLevel : 1;
-    const requirement = getLevelRequirement(level);
-    const storedProgress = parseInt(localStorage.getItem('levelProgress'), 10);
-    const progress = Number.isFinite(storedProgress) && storedProgress > 0 ? storedProgress : 0;
-    const ratio = requirement > 0 ? Math.min(progress / requirement, 1) : 0;
-    photoPreview.style.setProperty('--avatar-progress', ratio);
-    photoPreview.setAttribute('data-level-progress', `${Math.round(ratio * 100)}%`);
+    photoPreviewImage.classList.remove('profile-photo-preview__image--animate');
+    void photoPreviewImage.offsetWidth;
+    photoPreviewImage.classList.add('profile-photo-preview__image--animate');
   }
 
   function updatePhotoPreview(photoData, options = {}) {
@@ -120,12 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (nextSource && photoPreviewImage.src !== nextSource) {
       photoPreviewImage.src = nextSource;
+      if (animate) {
+        triggerPhotoAnimation();
+      }
+    } else if (animate) {
+      triggerPhotoAnimation();
     }
 
     photoPreview.classList.toggle('has-photo', hasCustomPhoto);
-    if (animate) {
-      triggerPhotoAnimation();
-    }
   }
 
   const username = (currentUser && currentUser.username) || 'convidado';
@@ -195,9 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   persistAvatarValue(profileData.photo);
   updatePublishButtonState();
-
-  document.addEventListener('playtalk:level-update', syncProfileProgress);
-  syncProfileProgress();
 
   const storedShare = localStorage.getItem('shareResults');
   const shareEnabled = storedShare !== null

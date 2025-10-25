@@ -162,7 +162,6 @@ let acertosTotais = 0;
 let errosTotais = 0;
 let tentativasTotais = 0;
 let pastaAtual = 1;
-let levelProgress = 0;
 let bloqueado = false;
 let mostrarTexto = 'pt';
 let voz = 'en';
@@ -179,22 +178,6 @@ const MODE6_THRESHOLD = 25115;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
-const MIN_LEVEL_REQUIREMENT = 10;
-const BASE_LEVEL_REQUIREMENT = 9;
-
-function getLevelRequirement(level = pastaAtual) {
-  const normalized = Number.isFinite(level) && level > 0 ? level : 1;
-  return Math.max(MIN_LEVEL_REQUIREMENT, BASE_LEVEL_REQUIREMENT + normalized);
-}
-
-function getLevelProgressRatio() {
-  const requirement = getLevelRequirement();
-  if (requirement <= 0) {
-    return 0;
-  }
-  const ratio = levelProgress / requirement;
-  return Math.max(0, Math.min(1, ratio));
-}
 
 function getCurrentThreshold() {
   return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
@@ -211,6 +194,7 @@ let prizeTimer = null;
 let awaitingRetry = false;
 let retryCallback = null;
 let tryAgainColorInterval = null;
+let levelUpReady = false;
 let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
@@ -279,15 +263,6 @@ function loadModeStatsFromStorage() {
   return stats;
 }
 
-function normalizeLevelProgress() {
-  let requirement = getLevelRequirement();
-  while (requirement > 0 && levelProgress >= requirement) {
-    levelProgress -= requirement;
-    pastaAtual += 1;
-    requirement = getLevelRequirement();
-  }
-}
-
 function reloadPersistentProgress(initialLoad = false) {
   refreshUserSettings();
   acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
@@ -295,9 +270,6 @@ function reloadPersistentProgress(initialLoad = false) {
   tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
   const storedLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
   pastaAtual = Number.isFinite(storedLevel) && storedLevel > 0 ? storedLevel : 1;
-  const storedProgress = parseInt(localStorage.getItem('levelProgress'), 10);
-  levelProgress = Number.isFinite(storedProgress) && storedProgress >= 0 ? storedProgress : 0;
-  normalizeLevelProgress();
   completedModes = parseJSONStorage('completedModes', {});
   unlockedModes = ensureUnlockedModesStructure(parseJSONStorage('unlockedModes', {}));
   points = Number(localStorage.getItem('points'));
@@ -307,11 +279,7 @@ function reloadPersistentProgress(initialLoad = false) {
   premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
-  localStorage.setItem('pastaAtual', pastaAtual);
-  localStorage.setItem('levelProgress', levelProgress);
-  if (initialLoad) {
-    applyAvatarProgressStyles();
-  } else {
+  if (!initialLoad) {
     updateLevelIcon();
     updateModeIcons();
     atualizarBarraProgresso();
@@ -494,7 +462,6 @@ function triggerDownPlay() {
     const visor = document.getElementById('visor');
     if (visor) visor.style.display = 'none';
     document.body.classList.remove('game-active');
-    document.dispatchEvent(new Event('playtalk:layout-change'));
     downPlaying = false;
   }, 4000);
 }
@@ -537,64 +504,20 @@ function reportLastError() {
   }
 }
 
-function applyAvatarProgressStyles() {
-  const ratio = getLevelProgressRatio();
-  const normalizedRatio = Number.isFinite(ratio) ? Math.max(0, Math.min(1, ratio)) : 0;
-  const percentLabel = `${Math.round(normalizedRatio * 100)}%`;
-  document.querySelectorAll('.site-header__avatar-container').forEach(container => {
-    container.style.setProperty('--avatar-progress', normalizedRatio);
-    container.setAttribute('data-level-progress', percentLabel);
-  });
-  document.querySelectorAll('.profile-photo-preview').forEach(container => {
-    container.style.setProperty('--avatar-progress', normalizedRatio);
-    container.setAttribute('data-level-progress', percentLabel);
-  });
-}
-
-function updateLevelIcon(options = {}) {
-  const animate = options.animate !== undefined ? Boolean(options.animate) : true;
+function updateLevelIcon() {
   const icon = document.getElementById('nivel-indicador');
   if (icon) {
-    if (animate) {
-      icon.style.transition = 'opacity 500ms linear';
-      icon.style.opacity = '0';
-      setTimeout(() => {
-        icon.src = `selos_niveis/level%20${pastaAtual}.png`;
-        icon.style.opacity = '1';
-      }, 500);
-    } else {
-      icon.style.transition = '';
+    icon.style.transition = 'opacity 500ms linear';
+    icon.style.opacity = '0';
+    setTimeout(() => {
       icon.src = `selos_niveis/level%20${pastaAtual}.png`;
       icon.style.opacity = '1';
-    }
+    }, 500);
   }
-  const requirement = getLevelRequirement();
   localStorage.setItem('pastaAtual', pastaAtual);
-  localStorage.setItem('levelProgress', levelProgress);
-  applyAvatarProgressStyles();
-  const ratio = getLevelProgressRatio();
   document.dispatchEvent(new CustomEvent('playtalk:level-update', {
-    detail: {
-      level: pastaAtual,
-      progress: levelProgress,
-      requirement,
-      ratio
-    }
+    detail: { level: pastaAtual }
   }));
-}
-
-function registerPhraseSuccess() {
-  levelProgress += 1;
-  let leveledUp = false;
-  let requirement = getLevelRequirement();
-  while (requirement > 0 && levelProgress >= requirement) {
-    levelProgress -= requirement;
-    pastaAtual += 1;
-    leveledUp = true;
-    requirement = getLevelRequirement();
-  }
-  updateLevelIcon();
-  return leveledUp;
 }
 
 function unlockMode(mode, duration = 1000) {
@@ -621,6 +544,104 @@ function getHighestUnlockedMode() {
 
 function checkForMenuLevelUp() {
   // Level advancement is triggered only after finishing mode 6
+}
+
+function performMenuLevelUp() {
+  const icons = document.querySelectorAll('#menu-modes img, #mode-buttons img');
+  icons.forEach(img => {
+    img.style.transition = 'opacity 500ms linear';
+    img.style.opacity = '1';
+  });
+  setTimeout(() => {
+    pastaAtual++;
+    completedModes = {};
+    unlockedModes = getAllModesUnlockedState();
+    localStorage.setItem('completedModes', JSON.stringify(completedModes));
+    localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+    document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
+      img.src = modeImages[6];
+    });
+    updateLevelIcon();
+    updateModeIcons();
+    atualizarBarraProgresso();
+    levelUpReady = false;
+  }, 500);
+}
+
+function enforceStarClick() {
+  const all = document.querySelectorAll('#menu-modes img, #mode-buttons img, #top-nav a');
+  all.forEach(el => { el.style.pointerEvents = 'none'; });
+  const stars = document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]');
+  if (!stars.length) {
+    all.forEach(el => { el.style.pointerEvents = ''; });
+    return;
+  }
+  stars.forEach(st => { st.style.pointerEvents = 'auto'; });
+  stars.forEach(st => {
+    st.addEventListener('click', () => {
+      all.forEach(el => { el.style.pointerEvents = ''; });
+      startStatsSequence();
+    }, { once: true });
+  });
+}
+
+function startStatsSequence() {
+  const audio = new Audio('gamesounds/nivel2.mp3');
+  audio.addEventListener('ended', () => {
+    localStorage.setItem('statsSequence', 'true');
+    window.location.href = 'play.html';
+  });
+  audio.play();
+}
+
+function menuLevelUpSequence() {
+  goHome();
+  const menu = document.getElementById('menu');
+  const icons = menu.querySelectorAll('#menu-modes img');
+  icons.forEach(img => {
+    img.style.transition = 'opacity 1ms linear';
+    img.style.opacity = '1';
+  });
+  const audio = document.getElementById('somNivelDesbloqueado');
+  if (audio) { audio.currentTime = 0; audio.play(); }
+
+  const msg = document.createElement('div');
+  msg.id = 'next-level-msg';
+  msg.textContent = 'diga next level para avançar';
+  msg.style.display = 'none';
+  menu.appendChild(msg);
+
+  let idx = 0;
+  const interval = setInterval(() => {
+    if (idx < icons.length) {
+      icons[idx].style.opacity = '1';
+      idx++;
+    } else {
+      clearInterval(interval);
+      msg.textContent = 'toque para avançar para o próximo nível';
+      msg.style.display = 'block';
+      msg.style.cursor = 'pointer';
+      msg.setAttribute('role', 'button');
+      msg.setAttribute('tabindex', '0');
+      setTimeout(() => { msg.style.opacity = '1'; msg.focus(); }, 10);
+      awaitingNextLevel = false;
+      nextLevelCallback = null;
+      function advance() {
+        msg.removeEventListener('click', advance);
+        msg.removeEventListener('keydown', handleKey);
+        msg.remove();
+        performMenuLevelUp();
+      }
+      function handleKey(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          advance();
+        }
+      }
+      msg.addEventListener('click', advance);
+      msg.addEventListener('keydown', handleKey);
+    }
+  }, 500);
 }
 
 let transitioning = false;
@@ -815,7 +836,6 @@ function startGame(modo) {
   listeningForCommand = false;
   document.getElementById('menu').style.display = 'none';
   document.body.classList.add('game-active');
-  document.dispatchEvent(new Event('playtalk:layout-change'));
   document.getElementById('visor').style.display = 'none';
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
@@ -1109,7 +1129,6 @@ function verificarResposta() {
     acertosTotais++;
     points += premioAtual;
     saveTotals();
-    registerPhraseSuccess();
     resultado.textContent = '';
     const threshold = getCurrentThreshold();
     const reached = points >= threshold && !completedModes[selectedMode];
@@ -1147,7 +1166,6 @@ function verificarResposta() {
         points += 1000;
       }
       saveTotals();
-      registerPhraseSuccess();
       consecutiveErrors = 0;
       resultado.textContent = '';
       const threshold = getCurrentThreshold();
@@ -1262,7 +1280,11 @@ function finishMode() {
     document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = 'selos%20modos%20de%20jogo/modostar.png';
     });
+    const star = document.getElementById('somLevelStar');
+    if (star) { star.currentTime = 0; star.play(); }
+    levelUpReady = true;
     goHome();
+    enforceStarClick();
   }
 }
 
@@ -1305,7 +1327,6 @@ function goHome() {
   document.getElementById('visor').style.display = 'none';
   document.getElementById('menu').style.display = 'flex';
   document.body.classList.remove('game-active');
-  document.dispatchEvent(new Event('playtalk:layout-change'));
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
   if (reconhecimento) {
@@ -1331,7 +1352,6 @@ async function initGame() {
   const menu = document.getElementById('menu');
   if (menu) menu.style.display = 'flex';
   document.body.classList.remove('game-active');
-  document.dispatchEvent(new Event('playtalk:layout-change'));
   listeningForCommand = false;
   if (reconhecimento) {
     reconhecimentoAtivo = false;
@@ -1347,6 +1367,10 @@ async function initGame() {
     img.addEventListener('click', () => {
       stopCurrentGame();
       const modo = parseInt(img.dataset.mode, 10);
+      if (modo === 6 && completedModes[6] && levelUpReady) {
+        performMenuLevelUp();
+        return;
+      }
       if (!unlockedModes[modo]) {
         const lock = document.getElementById('somLock');
         if (lock) {
