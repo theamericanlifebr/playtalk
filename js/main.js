@@ -199,6 +199,26 @@ let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
 
+function updateModeCardProgress(mode) {
+  const stats = ensureModeStats(mode);
+  const total = stats.totalPhrases || 0;
+  const correct = stats.correct || 0;
+  const percent = total > 0 ? Math.min(100, Math.round((correct / total) * 100)) : 0;
+  document.querySelectorAll(`[data-mode-progress="${mode}"]`).forEach(fill => {
+    fill.style.setProperty('--progress', `${percent}%`);
+    fill.style.width = `${percent}%`;
+    const bar = fill.closest('.mode-card__bar');
+    if (bar) {
+      bar.setAttribute('aria-valuenow', String(percent));
+      bar.setAttribute('aria-valuetext', `${percent}% concluído`);
+    }
+  });
+}
+
+function refreshModeProgressUI() {
+  ALL_MODES.forEach(updateModeCardProgress);
+}
+
 function cloneFallback(value) {
   if (Array.isArray(value)) {
     return [...value];
@@ -279,6 +299,7 @@ function reloadPersistentProgress(initialLoad = false) {
   premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
+  refreshModeProgressUI();
   if (!initialLoad) {
     updateLevelIcon();
     updateModeIcons();
@@ -343,6 +364,7 @@ function saveModeStats() {
     saveUserPerformance(modeStats);
   }
   updateGeneralCircles();
+  refreshModeProgressUI();
 }
 
 function saveTotals() {
