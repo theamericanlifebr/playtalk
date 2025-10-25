@@ -123,12 +123,6 @@ ensureDataDirectory();
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(staticDir));
 
-const terminalEntry = path.join(__dirname, 'index.html');
-
-app.get(['/terminal', '/terminal/'], (req, res) => {
-  res.sendFile(terminalEntry);
-});
-
 app.use((req, res, next) => {
   if (req.method === 'GET' && req.path.endsWith('.html')) {
     res.status(404).send('Página não encontrada.');
