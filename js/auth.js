@@ -1,4 +1,17 @@
 (function () {
+  const DESIRED_PATH = '/terminal';
+  if (typeof window !== 'undefined' && window.history && typeof window.history.replaceState === 'function') {
+    try {
+      const current = window.location.pathname;
+      if (current !== DESIRED_PATH) {
+        const suffix = `${window.location.search || ''}${window.location.hash || ''}`;
+        window.history.replaceState(null, '', `${DESIRED_PATH}${suffix}`);
+      }
+    } catch (error) {
+      console.warn('Não foi possível ajustar o caminho visível:', error);
+    }
+  }
+
   const API_BASE_URL = window.playtalkAuthApiBase || '';
   const CURRENT_USER_KEY = 'currentUser';
   const PROGRESS_SCHEMA = {
@@ -619,6 +632,10 @@
   }
 
   async function init() {
+    document.querySelectorAll('.site-header__actions').forEach((element) => {
+      element.remove();
+    });
+
     readStoredCurrentUser();
     const user = cachedCurrentUser;
 
