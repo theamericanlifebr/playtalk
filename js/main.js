@@ -343,6 +343,7 @@ function saveModeStats() {
     saveUserPerformance(modeStats);
   }
   updateGeneralCircles();
+  updateHomeProgressBars();
 }
 
 function saveTotals() {
@@ -534,6 +535,15 @@ function updateModeIcons() {
     img.style.opacity = '1';
     img.style.pointerEvents = 'auto';
   });
+  document.querySelectorAll('#menu-modes [data-mode]').forEach(card => {
+    const mode = parseInt(card.dataset.mode, 10);
+    if (!Number.isFinite(mode)) {
+      return;
+    }
+    const unlocked = unlockedModes && unlockedModes[mode];
+    card.classList.toggle('home-card--locked', !unlocked);
+  });
+  updateHomeProgressBars();
   checkForMenuLevelUp();
 }
 
@@ -589,7 +599,12 @@ function startStatsSequence() {
   const audio = new Audio('gamesounds/nivel2.mp3');
   audio.addEventListener('ended', () => {
     localStorage.setItem('statsSequence', 'true');
-    window.location.href = 'play.html';
+    if (window.playtalkNavigation && typeof window.playtalkNavigation.showEmbedded === 'function') {
+      const playLink = document.querySelector('#main-nav .nav-item[data-view="play"]');
+      window.playtalkNavigation.showEmbedded('play.html?embed=1', playLink || null);
+    } else {
+      window.location.href = 'play.html';
+    }
   });
   audio.play();
 }
@@ -802,6 +817,24 @@ function updateGeneralCircles() {
   }
 }
 
+function updateHomeProgressBars() {
+  const fills = document.querySelectorAll('[data-mode-progress]');
+  fills.forEach(fill => {
+    const mode = parseInt(fill.dataset.modeProgress, 10);
+    if (!Number.isFinite(mode)) {
+      return;
+    }
+    const stats = mode === 1 ? calcGeneralStats() : calcModeStats(mode);
+    const perc = Math.max(0, Math.min(100, stats && Number.isFinite(stats.accPerc) ? stats.accPerc : 0));
+    fill.style.width = `${perc}%`;
+    if (typeof colorFromPercent === 'function') {
+      const color = colorFromPercent(perc);
+      const accent = colorFromPercent(Math.min(perc + 15, 100));
+      fill.style.background = `linear-gradient(90deg, ${color} 0%, ${accent} 100%)`;
+    }
+  });
+}
+
 function startTryAgainAnimation() {
   const msg = document.getElementById('nivel-mensagem');
   if (!msg) return;
@@ -834,6 +867,9 @@ function startGame(modo) {
   atualizarBarraProgresso();
   updateModeIcons();
   listeningForCommand = false;
+  if (window.playtalkNavigation && typeof window.playtalkNavigation.showGame === 'function') {
+    window.playtalkNavigation.showGame();
+  }
   document.getElementById('menu').style.display = 'none';
   document.body.classList.add('game-active');
   document.getElementById('visor').style.display = 'none';
@@ -1335,6 +1371,9 @@ function goHome() {
   }
   listeningForCommand = false;
   updateModeIcons();
+  if (window.playtalkNavigation && typeof window.playtalkNavigation.showHome === 'function') {
+    window.playtalkNavigation.showHome();
+  }
 }
 
 function updateClock() {
@@ -1363,10 +1402,10 @@ async function initGame() {
   const levelIcon = document.getElementById('nivel-indicador');
   if (levelIcon) levelIcon.style.display = 'block';
 
-  document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
-    img.addEventListener('click', () => {
+  document.querySelectorAll('#mode-buttons img, #menu-modes .home-card').forEach(element => {
+    element.addEventListener('click', () => {
       stopCurrentGame();
-      const modo = parseInt(img.dataset.mode, 10);
+      const modo = parseInt(element.dataset.mode, 10);
       if (modo === 6 && completedModes[6] && levelUpReady) {
         performMenuLevelUp();
         return;
