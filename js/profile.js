@@ -14,27 +14,88 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameField = document.getElementById('profile-name');
   const photoInput = document.getElementById('profile-photo');
   const photoPreview = document.getElementById('profile-photo-preview');
-  const photoPreviewImage = document.getElementById('profile-photo-image');
   const publishButton = document.getElementById('profile-photo-publish');
   const shareCheckbox = document.getElementById('profile-share-results');
   const photoProgress = document.getElementById('profile-photo-progress');
   const photoProgressCircle = document.getElementById('profile-photo-progress-circle');
   const photoProgressValue = document.getElementById('profile-photo-progress-value');
   const photoProgressText = document.getElementById('profile-photo-progress-text');
-  const photoFeedback = document.getElementById('profile-photo-feedback');
 
-  const ACCEPTED_FILE_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/pjpeg']);
-  const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-  const MAX_UPLOAD_SIZE = 3 * 1024 * 1024; // 3MB
-  const TARGET_SIZE = 180;
-  const OUTPUT_MIME_TYPE = 'image/jpeg';
-  const OUTPUT_QUALITY = 0.85;
+  const previewDefaultText = photoPreview ? photoPreview.textContent : '';
 
-  const defaultAvatar = photoPreviewImage
-    ? (photoPreviewImage.dataset.defaultAvatar || photoPreviewImage.src || '')
-    : '';
+  if (photoPreview) {
+    photoPreview.classList.remove('profile-photo-preview--icon');
+  }
 
   let progressHideTimeout = null;
+  const MAX_UPLOAD_SIZE = 3 * 1024 * 1024;
+  const ACCEPTED_TYPES = new Set([
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/png',
+    'image/x-png',
+    'image/gif',
+    'image/webp'
+  ]);
+  const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+
+  function getFileExtension(filename) {
+    if (typeof filename !== 'string') {
+      return '';
+    }
+    const lastDot = filename.lastIndexOf('.');
+    return lastDot === -1 ? '' : filename.slice(lastDot).toLowerCase();
+  }
+
+  function isAllowedFileType(file) {
+    if (!file) {
+      return false;
+    }
+    if (file.type && ACCEPTED_TYPES.has(file.type.toLowerCase())) {
+      return true;
+    }
+    return ACCEPTED_EXTENSIONS.includes(getFileExtension(file.name || ''));
+  }
+
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const size = 180;
+          canvas.width = size;
+          canvas.height = size;
+          const context = canvas.getContext('2d');
+          if (!context) {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Canvas não disponível.'));
+            return;
+          }
+          const scale = Math.max(size / image.width, size / image.height);
+          const drawWidth = image.width * scale;
+          const drawHeight = image.height * scale;
+          const offsetX = (size - drawWidth) / 2;
+          const offsetY = (size - drawHeight) / 2;
+          context.clearRect(0, 0, size, size);
+          context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+          const dataUrl = canvas.toDataURL('image/webp', 0.82);
+          URL.revokeObjectURL(objectUrl);
+          resolve(dataUrl);
+        } catch (error) {
+          URL.revokeObjectURL(objectUrl);
+          reject(error);
+        }
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Não foi possível carregar a imagem.'));
+      };
+      image.src = objectUrl;
+    });
+  }
 
   function setPhotoProgress(value) {
     if (!photoProgressCircle || !photoProgressValue) {
@@ -43,19 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const normalized = Math.max(0, Math.min(100, Math.round(value)));
     photoProgressCircle.style.setProperty('--progress', normalized);
     photoProgressValue.textContent = `${normalized}%`;
-  }
-
-  function setPhotoFeedback(message, status = 'error') {
-    if (!photoFeedback) {
-      return;
-    }
-    if (!message) {
-      photoFeedback.textContent = '';
-      photoFeedback.removeAttribute('data-status');
-      return;
-    }
-    photoFeedback.textContent = message;
-    photoFeedback.setAttribute('data-status', status);
   }
 
   function showPhotoProgress() {
@@ -99,64 +147,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }, hideDelay);
   }
 
-  function triggerPhotoAnimation() {
-    if (!photoPreviewImage) {
+  function updatePhotoPreview(photoData) {
+    if (!photoPreview) {
       return;
     }
-    photoPreviewImage.classList.remove('profile-photo-preview__image--animate');
-    void photoPreviewImage.offsetWidth;
-    photoPreviewImage.classList.add('profile-photo-preview__image--animate');
-  }
-
-  function isAcceptedFileType(file) {
-    if (!file) {
-      return false;
+    if (photoData && typeof photoData === 'string' && photoData.trim()) {
+      photoPreview.style.backgroundImage = `url(${photoData})`;
+      photoPreview.style.background = '';
+      photoPreview.classList.add('has-photo');
+      photoPreview.classList.remove('profile-photo-preview--icon');
+      photoPreview.textContent = '';
+      photoPreview.classList.remove('profile-photo-preview--fade-in');
+      void photoPreview.offsetWidth;
+      photoPreview.classList.add('profile-photo-preview--fade-in');
+      photoPreview.addEventListener('animationend', () => {
+        photoPreview.classList.remove('profile-photo-preview--fade-in');
+      }, { once: true });
+    } else {
+      photoPreview.style.backgroundImage = '';
+      photoPreview.classList.remove('has-photo');
+      photoPreview.classList.remove('profile-photo-preview--icon');
+      photoPreview.style.background = '';
+      photoPreview.textContent = previewDefaultText || 'Adicione uma foto';
+      photoPreview.classList.remove('profile-photo-preview--fade-in');
     }
-    if (ACCEPTED_FILE_TYPES.has(file.type)) {
-      return true;
-    }
-    const name = file.name || '';
-    const lower = name.toLowerCase();
-    return ACCEPTED_EXTENSIONS.some(ext => lower.endsWith(ext));
-  }
-
-  function createOptimizedImage(image) {
-    const canvas = document.createElement('canvas');
-    canvas.width = TARGET_SIZE;
-    canvas.height = TARGET_SIZE;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('Contexto do canvas indisponível.');
-    }
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, TARGET_SIZE, TARGET_SIZE);
-    const ratio = Math.max(TARGET_SIZE / image.width, TARGET_SIZE / image.height);
-    const newWidth = image.width * ratio;
-    const newHeight = image.height * ratio;
-    const dx = (TARGET_SIZE - newWidth) / 2;
-    const dy = (TARGET_SIZE - newHeight) / 2;
-    ctx.drawImage(image, dx, dy, newWidth, newHeight);
-    return canvas.toDataURL(OUTPUT_MIME_TYPE, OUTPUT_QUALITY);
-  }
-
-  function updatePhotoPreview(photoData, options = {}) {
-    if (!photoPreview || !photoPreviewImage) {
-      return;
-    }
-    const animate = Boolean(options.animate);
-    const hasCustomPhoto = Boolean(photoData && typeof photoData === 'string' && photoData.trim());
-    const nextSource = hasCustomPhoto ? photoData : (defaultAvatar || photoPreviewImage.src);
-
-    if (nextSource && photoPreviewImage.src !== nextSource) {
-      photoPreviewImage.src = nextSource;
-      if (animate) {
-        triggerPhotoAnimation();
-      }
-    } else if (animate) {
-      triggerPhotoAnimation();
-    }
-
-    photoPreview.classList.toggle('has-photo', hasCustomPhoto);
   }
 
   const username = (currentUser && currentUser.username) || 'convidado';
@@ -291,21 +305,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (photoInput) {
-    photoInput.addEventListener('change', event => {
+    photoInput.addEventListener('change', async event => {
       const inputEl = event.target;
       const file = inputEl.files && inputEl.files[0];
       if (!file) {
-        setPhotoFeedback('', 'info');
         return;
       }
 
-      setPhotoFeedback('', 'info');
-
-      if (!isAcceptedFileType(file)) {
-        setPhotoFeedback('Formato não suportado. Use JPG, JPEG, PNG, GIF ou WEBP.', 'error');
-        hidePhotoProgress(0, { message: 'Formato inválido' });
-        pendingPhotoData = null;
-        updatePublishButtonState();
+      if (!isAllowedFileType(file)) {
+        alert('Formato de arquivo não suportado. Utilize JPG, JPEG, PNG, GIF ou WEBP.');
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
@@ -313,97 +321,37 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (file.size > MAX_UPLOAD_SIZE) {
-        setPhotoFeedback('A foto deve ter no máximo 3MB.', 'error');
-        hidePhotoProgress(0, { message: 'Arquivo muito grande' });
-        pendingPhotoData = null;
-        updatePublishButtonState();
+        alert('A foto deve ter no máximo 3 MB.');
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
         return;
       }
 
-      const reader = new FileReader();
+      showPhotoProgress();
+      setPhotoProgress(10);
+      if (photoProgressText) {
+        photoProgressText.textContent = 'Processando foto...';
+      }
 
-      reader.onloadstart = () => {
-        showPhotoProgress();
-        setPhotoProgress(0);
-      };
-
-      reader.onprogress = eventProgress => {
-        if (eventProgress && eventProgress.lengthComputable) {
-          const percent = (eventProgress.loaded / eventProgress.total) * 100;
-          setPhotoProgress(percent);
-        }
-      };
-
-      reader.onload = () => {
-        const result = reader.result;
-        if (typeof result !== 'string') {
-          setPhotoFeedback('Não foi possível processar a imagem selecionada.', 'error');
-          hidePhotoProgress(0, { message: 'Falha ao processar foto' });
-          return;
-        }
-
-        const image = new Image();
-        image.onload = () => {
-          try {
-            const optimized = createOptimizedImage(image);
-            pendingPhotoData = optimized;
-            updatePhotoPreview(pendingPhotoData, { animate: true });
-            updatePublishButtonState();
-            setPhotoProgress(100);
-            hidePhotoProgress(120);
-            setPhotoFeedback('Foto pronta para publicar!', 'success');
-          } catch (error) {
-            console.warn('Não foi possível otimizar a imagem selecionada.', error);
-            setPhotoFeedback('Não foi possível otimizar a imagem selecionada.', 'error');
-            hidePhotoProgress(0, { message: 'Falha ao processar foto' });
-            pendingPhotoData = null;
-            updatePublishButtonState();
-          } finally {
-            if (inputEl && typeof inputEl.value === 'string') {
-              inputEl.value = '';
-            }
-          }
-        };
-
-        image.onerror = () => {
-          console.warn('Não foi possível carregar a imagem selecionada.');
-          setPhotoFeedback('Não foi possível carregar a imagem selecionada.', 'error');
-          hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
-          pendingPhotoData = null;
-          updatePublishButtonState();
-          if (inputEl && typeof inputEl.value === 'string') {
-            inputEl.value = '';
-          }
-        };
-
-        image.src = result;
-      };
-
-      reader.onerror = () => {
-        console.warn('Não foi possível carregar a foto selecionada.');
-        setPhotoFeedback('Não foi possível carregar a foto selecionada.', 'error');
-        hidePhotoProgress(0, { message: 'Falha ao carregar foto' });
-        pendingPhotoData = null;
+      try {
+        setPhotoProgress(35);
+        const compressedData = await compressImage(file);
+        setPhotoProgress(85);
+        pendingPhotoData = compressedData;
+        updatePhotoPreview(pendingPhotoData);
         updatePublishButtonState();
+        setPhotoProgress(100);
+        hidePhotoProgress(200);
+      } catch (error) {
+        console.warn('Não foi possível processar a foto selecionada.', error);
+        hidePhotoProgress(0, { message: 'Falha ao processar foto' });
+        alert('Não foi possível processar sua imagem. Tente novamente com outro arquivo.');
+      } finally {
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
         }
-      };
-
-      reader.onabort = () => {
-        hidePhotoProgress(0, { message: 'Envio cancelado' });
-        setPhotoFeedback('Envio cancelado.', 'error');
-        pendingPhotoData = null;
-        updatePublishButtonState();
-        if (inputEl && typeof inputEl.value === 'string') {
-          inputEl.value = '';
-        }
-      };
-
-      reader.readAsDataURL(file);
+      }
     });
   }
 
@@ -418,10 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       profileData.photo = pendingPhotoData;
       pendingPhotoData = null;
-      updatePhotoPreview(profileData.photo, { animate: true });
+      updatePhotoPreview(profileData.photo);
       persistProfileChanges();
       updatePublishButtonState();
-      setPhotoFeedback('Foto publicada com sucesso!', 'success');
     });
   }
 });
