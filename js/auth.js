@@ -474,12 +474,10 @@
       document.removeEventListener('click', handleDocumentClick);
       document.removeEventListener('keydown', handleKeydown);
       closeUserMenu = null;
-      window.closeUserMenu = null;
       teardownUserMenu = null;
     };
 
     closeUserMenu = closeMenu;
-    window.closeUserMenu = closeMenu;
     closeMenu();
   }
 
