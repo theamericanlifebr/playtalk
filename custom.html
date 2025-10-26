@@ -43,7 +43,28 @@
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
-  <main id="custom-content" data-page-transition style="text-align:center;margin-top:50px;"></main>
+  <main id="social-container" data-page-transition>
+    <header class="social-header">
+      <h1>Social</h1>
+      <p>Compartilhe suas conquistas e acompanhe suas estatísticas pessoais.</p>
+    </header>
+
+    <section class="social-section social-section--feed">
+      <div class="social-section__header">
+        <h2>Comunidade</h2>
+        <p class="social-section__description">Convide amigos, compartilhe dicas e acompanhe os destaques da comunidade.</p>
+      </div>
+      <p class="social-section__note">As novidades da comunidade chegam em breve.</p>
+    </section>
+
+    <section class="social-section social-section--stats" aria-labelledby="social-stats-title">
+      <div class="social-section__header">
+        <h2 id="social-stats-title">Estatísticas pessoais</h2>
+        <p class="social-section__description">Veja o desempenho consolidado em cada modo de jogo.</p>
+      </div>
+      <div id="social-stats-content" class="social-stats-grid" role="list"></div>
+    </section>
+  </main>
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
     <div class="login-flow__panel">
       <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life" class="login-flow__logo" width="70" height="70">
