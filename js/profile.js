@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
+function initProfilePage(context = {}) {
+  const scope = context && context.container ? context.container : document;
   const authAPI = window.playtalkAuth || null;
   let currentUser = null;
   if (authAPI && typeof authAPI.getCurrentUser === 'function') {
@@ -10,16 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  const usernameField = document.getElementById('profile-username');
-  const nameField = document.getElementById('profile-name');
-  const photoInput = document.getElementById('profile-photo');
-  const photoPreview = document.getElementById('profile-photo-preview');
-  const publishButton = document.getElementById('profile-photo-publish');
-  const shareCheckbox = document.getElementById('profile-share-results');
-  const photoProgress = document.getElementById('profile-photo-progress');
-  const photoProgressCircle = document.getElementById('profile-photo-progress-circle');
-  const photoProgressValue = document.getElementById('profile-photo-progress-value');
-  const photoProgressText = document.getElementById('profile-photo-progress-text');
+  const usernameField = scope.querySelector('#profile-username');
+  const nameField = scope.querySelector('#profile-name');
+  const photoInput = scope.querySelector('#profile-photo');
+  const photoPreview = scope.querySelector('#profile-photo-preview');
+  const publishButton = scope.querySelector('#profile-photo-publish');
+  const shareCheckbox = scope.querySelector('#profile-share-results');
+  const photoProgress = scope.querySelector('#profile-photo-progress');
+  const photoProgressCircle = scope.querySelector('#profile-photo-progress-circle');
+  const photoProgressValue = scope.querySelector('#profile-photo-progress-value');
+  const photoProgressText = scope.querySelector('#profile-photo-progress-text');
 
   const previewDefaultText = photoPreview ? photoPreview.textContent : '';
 
@@ -371,4 +372,12 @@ document.addEventListener('DOMContentLoaded', () => {
       updatePublishButtonState();
     });
   }
-});
+}
+
+if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
+  window.registerPlaytalkPage('page-profile', initProfilePage);
+} else if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => initProfilePage(), { once: true });
+} else {
+  initProfilePage();
+}

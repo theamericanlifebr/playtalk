@@ -74,11 +74,15 @@ function createStatBar(perc, label) {
   return wrapper;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('play-content');
+function initPlayPage(context = {}) {
+  const scope = context && context.container ? context.container : document;
+  const container = scope.querySelector('#play-content');
+  if (!container) {
+    return;
+  }
   container.classList.add('stats-wrapper');
   container.style.transition = 'opacity 0.2s';
-  const buttons = document.querySelectorAll('#mode-buttons img');
+  const buttons = scope.querySelectorAll('#mode-buttons img');
   const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
   let statsData = {};
   let activeMode = 1;
@@ -180,4 +184,12 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshStatsData();
     selectMode(activeMode);
   });
-});
+}
+
+if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
+  window.registerPlaytalkPage('page-play', initPlayPage);
+} else if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => initPlayPage(), { once: true });
+} else {
+  initPlayPage();
+}

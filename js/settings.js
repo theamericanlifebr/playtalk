@@ -53,3 +53,80 @@
 
   document.addEventListener('DOMContentLoaded', applyStoredTheme, { once: true });
 })();
+
+(function() {
+  const registry = {};
+
+  function ensureArray(value) {
+    return Array.isArray(value) ? value : [value];
+  }
+
+  function normalizePageClass(pageClass) {
+    if (!pageClass) {
+      return [];
+    }
+    return ensureArray(pageClass).map(entry => String(entry).trim()).filter(Boolean);
+  }
+
+  function invokeInitializer(entry, context) {
+    if (!entry || typeof entry.init !== 'function') {
+      return;
+    }
+    if (typeof entry.cleanup === 'function') {
+      try {
+        entry.cleanup();
+      } catch (error) {
+        console.warn('Falha ao limpar página anterior:', error);
+      }
+      entry.cleanup = null;
+    }
+    try {
+      const possibleCleanup = entry.init(context || {});
+      if (typeof possibleCleanup === 'function') {
+        entry.cleanup = possibleCleanup;
+      }
+    } catch (error) {
+      console.error('Erro ao inicializar página:', error);
+    }
+  }
+
+  function bodyHasClass(pageClass) {
+    const body = document.body;
+    return Boolean(body && body.classList.contains(pageClass));
+  }
+
+  window.runPlaytalkPage = function(pageClass, context) {
+    const classes = normalizePageClass(pageClass);
+    classes.forEach(key => {
+      const entry = registry[key];
+      if (entry) {
+        invokeInitializer(entry, context);
+      }
+    });
+  };
+
+  window.registerPlaytalkPage = function(pageClass, initFn) {
+    const classes = normalizePageClass(pageClass);
+    if (!classes.length || typeof initFn !== 'function') {
+      return;
+    }
+    classes.forEach(key => {
+      registry[key] = registry[key] || { init: initFn, cleanup: null };
+      registry[key].init = initFn;
+    });
+
+    const maybeRun = () => {
+      classes.forEach(key => {
+        if (bodyHasClass(key)) {
+          window.runPlaytalkPage(key);
+        }
+      });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', maybeRun, { once: true });
+    } else {
+      maybeRun();
+    }
+  };
+})();
