@@ -23,6 +23,72 @@
     avatar: { type: 'string', default: DEFAULT_AVATAR_URL }
   };
 
+  const AVATAR_PROGRESS_STOPS = [
+    { stop: 0, color: '#ff4d4d' },
+    { stop: 33, color: '#ffb400' },
+    { stop: 66, color: '#3bd16f' },
+    { stop: 100, color: '#1A66CC' }
+  ];
+  const AVATAR_TARGET_BLUE = '#1A66CC';
+
+  function clampPercent(value) {
+    if (!Number.isFinite(value)) return 0;
+    return Math.max(0, Math.min(value, 100));
+  }
+
+  function hexToRgbArray(hex) {
+    const normalized = (hex || '').replace('#', '');
+    const int = parseInt(normalized, 16);
+    if (Number.isNaN(int)) {
+      return [0, 0, 0];
+    }
+    return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+  }
+
+  function rgbArrayToHex([r, g, b]) {
+    return `#${[r, g, b]
+      .map(value => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0'))
+      .join('')}`;
+  }
+
+  function mixHexColors(a, b, factor) {
+    const ratio = Math.max(0, Math.min(factor, 1));
+    const [r1, g1, b1] = hexToRgbArray(a);
+    const [r2, g2, b2] = hexToRgbArray(b);
+    const mixed = [
+      r1 + (r2 - r1) * ratio,
+      g1 + (g2 - g1) * ratio,
+      b1 + (b2 - b1) * ratio
+    ];
+    return rgbArrayToHex(mixed);
+  }
+
+  function interpolateAvatarColor(percent) {
+    const value = clampPercent(percent);
+    if (value <= AVATAR_PROGRESS_STOPS[0].stop) {
+      return AVATAR_PROGRESS_STOPS[0].color;
+    }
+    for (let i = 0; i < AVATAR_PROGRESS_STOPS.length - 1; i += 1) {
+      const current = AVATAR_PROGRESS_STOPS[i];
+      const next = AVATAR_PROGRESS_STOPS[i + 1];
+      if (value <= next.stop) {
+        const span = next.stop - current.stop || 1;
+        const ratio = (value - current.stop) / span;
+        return mixHexColors(current.color, next.color, ratio);
+      }
+    }
+    return AVATAR_PROGRESS_STOPS[AVATAR_PROGRESS_STOPS.length - 1].color;
+  }
+
+  function resolveAvatarRingColor(percent) {
+    const baseColor = interpolateAvatarColor(percent);
+    if (percent <= 75) {
+      return baseColor;
+    }
+    const dissolveRatio = Math.min(1, (percent - 75) / 25);
+    return mixHexColors(baseColor, AVATAR_TARGET_BLUE, dissolveRatio);
+  }
+
   let cachedCurrentUser = null;
   let openLoginFlowHandler = null;
   let closeLoginFlowHandler = null;
@@ -300,6 +366,7 @@
     const requirement = getLevelRequirement(level);
     const normalizedCorrect = Math.max(0, Math.min(levelProgress.correct, requirement));
     const ratio = requirement > 0 ? Math.max(0, Math.min(1, normalizedCorrect / requirement)) : 0;
+    const progressPercent = ratio * 100;
     let avatarUrl = DEFAULT_AVATAR_URL;
     const storedAvatar = localStorage.getItem('avatar');
     if (storedAvatar && storedAvatar.trim()) {
@@ -318,6 +385,8 @@
 
     if (avatarContainer) {
       avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
+      avatarContainer.style.setProperty('--avatar-ring-color', resolveAvatarRingColor(progressPercent));
+      avatarContainer.classList.toggle('site-header__avatar-container--dissolve', progressPercent >= 75);
       avatarContainer.title = `Progresso de nível: ${normalizedCorrect}/${requirement}`;
     }
 
