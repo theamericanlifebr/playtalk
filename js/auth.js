@@ -703,21 +703,160 @@
       return;
     }
 
-    let navigating = false;
+    const PAGE_MANIFEST = {
+      'index.html': { hash: '#home', scripts: ['js/main.js'], classes: ['page-home'] },
+      'fun.html': { hash: '#fun', scripts: ['js/fun-page.js'], classes: ['page-fun'] },
+      'play.html': { hash: '#play', scripts: ['js/play.js'], classes: ['page-play'] },
+      'custom.html': { hash: '#custom', scripts: ['js/custom-page.js'], classes: ['page-custom'] },
+      'ranking.html': { hash: '#ranking', scripts: ['js/ranking.js'], classes: ['page-ranking'] },
+      'perfil.html': { hash: '#perfil', scripts: ['js/profile.js'], classes: ['page-profile'] }
+    };
 
-    const navigateTo = (href) => {
-      if (!href || navigating) {
+    const transitionClasses = new Set(['page-transition-ready', 'page-transition-leave']);
+    const loadedScripts = new Set();
+    const pageCache = new Map();
+    const parser = new DOMParser();
+    const insertionAnchor = document.getElementById('login-flow') || document.querySelector('footer.page-footer');
+
+    const resolvePathKey = (href) => {
+      const url = new URL(href, window.location.href);
+      const path = url.pathname.replace(/\/+$/, '');
+      const segments = path.split('/').filter(Boolean);
+      const last = segments.length ? segments[segments.length - 1] : 'index.html';
+      return last || 'index.html';
+    };
+
+    const initialKey = resolvePathKey(window.location.href);
+    const initialMain = document.querySelector('main[data-page-transition]');
+    if (initialMain) {
+      pageCache.set(initialKey, {
+        main: initialMain,
+        bodyClasses: Array.from(body.classList)
+      });
+    }
+    const initialManifest = PAGE_MANIFEST[initialKey];
+    if (initialManifest && Array.isArray(initialManifest.scripts)) {
+      initialManifest.scripts.forEach(script => loadedScripts.add(script));
+    }
+
+    let currentKey = initialKey;
+
+    const baseUrl = new URL(window.location.href);
+    baseUrl.pathname = baseUrl.pathname.replace(/[^/]+$/, 'index.html');
+
+    const setActiveNav = (pathKey) => {
+      navLinks.forEach(link => {
+        const linkKey = resolvePathKey(link.getAttribute('href') || '');
+        const isActive = linkKey === pathKey;
+        link.classList.toggle('active', isActive);
+        if (isActive) {
+          link.setAttribute('aria-current', 'page');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+    };
+
+    const updateBodyClasses = (nextClasses = []) => {
+      const preserved = Array.from(body.classList).filter(cls => !cls.startsWith('page-') || transitionClasses.has(cls));
+      body.className = '';
+      preserved.forEach(cls => body.classList.add(cls));
+      nextClasses.forEach(cls => {
+        if (!transitionClasses.has(cls)) {
+          body.classList.add(cls);
+        }
+      });
+    };
+
+    const ensureScripts = async (pathKey) => {
+      const manifest = PAGE_MANIFEST[pathKey];
+      if (!manifest || !Array.isArray(manifest.scripts)) {
         return;
       }
-      const targetUrl = new URL(href, window.location.href);
-      if (targetUrl.href === window.location.href) {
+      for (const scriptPath of manifest.scripts) {
+        if (loadedScripts.has(scriptPath)) {
+          continue;
+        }
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = scriptPath;
+          script.async = false;
+          script.onload = () => {
+            loadedScripts.add(scriptPath);
+            resolve();
+          };
+          script.onerror = () => reject(new Error(`Não foi possível carregar ${scriptPath}`));
+          document.body.appendChild(script);
+        });
+      }
+    };
+
+    const fetchPage = async (pathKey) => {
+      if (pageCache.has(pathKey)) {
+        return pageCache.get(pathKey);
+      }
+      const response = await fetch(pathKey, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Falha ao carregar ${pathKey} (${response.status})`);
+      }
+      const text = await response.text();
+      const doc = parser.parseFromString(text, 'text/html');
+      const main = doc.querySelector('main[data-page-transition]');
+      if (!main) {
+        throw new Error('Conteúdo principal não encontrado.');
+      }
+      const importedMain = document.importNode(main, true);
+      importedMain.setAttribute('hidden', 'hidden');
+      if (insertionAnchor && insertionAnchor.parentNode) {
+        insertionAnchor.parentNode.insertBefore(importedMain, insertionAnchor);
+      } else {
+        body.appendChild(importedMain);
+      }
+      const entry = {
+        main: importedMain,
+        bodyClasses: Array.from(doc.body.classList)
+      };
+      pageCache.set(pathKey, entry);
+      return entry;
+    };
+
+    const showPage = async (pathKey, { pushState = false } = {}) => {
+      const manifest = PAGE_MANIFEST[pathKey] || null;
+      try {
+        const entry = await fetchPage(pathKey);
+        await ensureScripts(pathKey);
+        const classes = manifest && manifest.classes ? manifest.classes : entry.bodyClasses || [];
+        const currentEntry = pageCache.get(currentKey);
+        if (currentEntry && currentEntry.main) {
+          currentEntry.main.setAttribute('hidden', 'hidden');
+        }
+        entry.main.removeAttribute('hidden');
+        updateBodyClasses(classes);
+        if (typeof window.runPlaytalkPage === 'function' && classes.length) {
+          window.runPlaytalkPage(classes, { container: entry.main });
+        }
+        currentKey = pathKey;
+        setActiveNav(pathKey);
+        if (pushState) {
+          const nextUrl = new URL(baseUrl.href);
+          nextUrl.hash = manifest && manifest.hash ? manifest.hash : `#${pathKey.replace(/\.html$/, '')}`;
+          history.pushState({ path: pathKey }, '', nextUrl.href);
+        }
+      } catch (error) {
+        console.error('Não foi possível trocar de página:', error);
+      } finally {
+        body.classList.remove('page-transition-leave');
+        body.classList.add('page-transition-ready');
+      }
+    };
+
+    const navigateTo = (targetPath, options = {}) => {
+      const pathKey = resolvePathKey(targetPath || '');
+      if (!pathKey || pathKey === currentKey) {
         return;
       }
-      navigating = true;
       body.classList.add('page-transition-leave');
-      setTimeout(() => {
-        window.location.href = targetUrl.href;
-      }, 350);
+      showPage(pathKey, { pushState: options.pushState !== false });
     };
 
     navLinks.forEach(link => {
@@ -732,21 +871,13 @@
           return;
         }
         event.preventDefault();
-        navigateTo(link.getAttribute('href'));
+        navigateTo(link.getAttribute('href'), { pushState: true });
       });
     });
 
     const getCurrentNavIndex = () => {
-      const currentPath = window.location.pathname.replace(/\/+$/, '');
-      const matchedIndex = navLinks.findIndex(link => {
-        const linkPath = new URL(link.getAttribute('href') || '', window.location.href).pathname.replace(/\/+$/, '');
-        return linkPath === currentPath;
-      });
-      if (matchedIndex !== -1) {
-        return matchedIndex;
-      }
-      const activeLink = navLinks.find(link => link.classList.contains('active'));
-      return activeLink ? navLinks.indexOf(activeLink) : -1;
+      const matchedIndex = navLinks.findIndex(link => resolvePathKey(link.getAttribute('href') || '') === currentKey);
+      return matchedIndex === -1 ? 0 : matchedIndex;
     };
 
     let touchStartX = 0;
@@ -790,9 +921,19 @@
         targetIndex = currentIndex - 1;
       }
       if (targetIndex !== currentIndex) {
-        navigateTo(navLinks[targetIndex].getAttribute('href'));
+        navigateTo(navLinks[targetIndex].getAttribute('href'), { pushState: true });
       }
     }, { passive: true });
+
+    window.addEventListener('popstate', event => {
+      const state = event.state && event.state.path ? event.state.path : initialKey;
+      navigateTo(state, { pushState: false });
+    });
+
+    const initialUrl = new URL(baseUrl.href);
+    initialUrl.hash = initialManifest && initialManifest.hash ? initialManifest.hash : window.location.hash;
+    history.replaceState({ path: currentKey }, '', initialUrl.href);
+    setActiveNav(currentKey);
 
     requestAnimationFrame(() => {
       body.classList.add('page-transition-ready');

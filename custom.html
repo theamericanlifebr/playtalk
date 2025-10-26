@@ -28,6 +28,18 @@
       </div>
     </div>
     <div class="site-header__actions">
+      <div class="site-header__user nav-item--user">
+        <button class="nav-item__trigger site-header__user-trigger" type="button" aria-expanded="false" aria-controls="user-menu">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
+          </span>
+          <span class="sr-only">Usuário</span>
+        </button>
+        <div id="user-menu" class="nav-item__menu" hidden>
+          <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
+          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
+        </div>
+      </div>
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
@@ -56,102 +68,7 @@
       </form>
     </div>
   </div>
-  <script>
-    function formatTime(ms) {
-      const sec = Math.floor(ms / 1000);
-      const min = Math.floor(sec / 60);
-      const s = sec % 60;
-      return `${min}m ${s}s`;
-    }
-    function createRankingTable(data, color, columns) {
-      const table = document.createElement('table');
-      table.className = `ranking-table ${color}`;
-      const header = document.createElement('tr');
-      header.innerHTML = columns.map(c => `<th>${c.label}</th>`).join('');
-      table.appendChild(header);
-      data.forEach(item => {
-        const row = document.createElement('tr');
-        columns.forEach(c => {
-          const td = document.createElement('td');
-          td.textContent = item[c.field];
-          row.appendChild(td);
-        });
-        table.appendChild(row);
-      });
-      return table;
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('custom-content');
-      const statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
-      for (let i = 1; i <= 6; i++) {
-        const stats = statsData[i] || {};
-        const totalTime = stats.totalTime || 0;
-        const total = stats.totalPhrases || 0;
-        const correct = stats.correct || 0;
-        const wrong = stats.wrong || 0;
-        const report = stats.report || 0;
-        const acc = total ? ((correct / total) * 100).toFixed(2) : '0';
-        const avg = total ? formatTime(totalTime / total) : '0s';
-        const reportPerc = total ? ((report / total) * 100).toFixed(2) : '0';
-        const section = document.createElement('div');
-        section.innerHTML = `
-          <h1 class="custom-title">Modo ${i} - Resultados</h1>
-          <div class="custom-info">Frases totais: ${total}</div>
-          <div class="custom-info">Tempo de jogo: ${formatTime(totalTime)}</div>
-          <div class="custom-info">Frases acertadas: ${correct}</div>
-          <div class="custom-info">Frases erradas: ${wrong}</div>
-          <div class="custom-info">Porcentagem de acertos: ${acc}%</div>
-          <div class="custom-info">Média de tempo por frase: ${avg}</div>
-          <div class="custom-info">Uso de reportar: ${reportPerc}%</div>
-        `;
-        const red = stats.wrongRanking || [];
-        const green = stats.reportRanking || [];
-        if (red.length) {
-          const title = document.createElement('h2');
-          title.textContent = 'Ranking vermelho';
-          title.className = 'ranking-title-red';
-          section.appendChild(title);
-          section.appendChild(createRankingTable([...red].sort((a,b) => b.count - a.count), 'red', [
-            { field: 'expected', label: 'Esperado' },
-            { field: 'input', label: 'Entrada' },
-            { field: 'folder', label: 'Pasta' },
-            { field: 'count', label: 'Erros' }
-          ]));
-        }
-        if (green.length) {
-          const title = document.createElement('h2');
-          title.textContent = 'Ranking verde limão';
-          title.className = 'ranking-title-lime';
-          section.appendChild(title);
-          section.appendChild(createRankingTable(green, 'lime', [
-            { field: 'expected', label: 'Esperado' },
-            { field: 'input', label: 'Entrada' },
-            { field: 'folder', label: 'Pasta' },
-            { field: 'level', label: 'Nível de reports' }
-          ]));
-        }
-        container.appendChild(section);
-      }
-      const levelTitle = document.createElement('h1');
-      levelTitle.className = 'custom-title';
-      levelTitle.textContent = 'Detalhe dos níveis';
-      container.appendChild(levelTitle);
-      const details = JSON.parse(localStorage.getItem('levelDetails') || '[]');
-      if (details.length) {
-        const table = document.createElement('table');
-        table.className = 'ranking-table';
-        const header = document.createElement('tr');
-        header.innerHTML = '<th>Nível</th><th>Precisão</th><th>Velocidade</th><th>Reports</th>';
-        table.appendChild(header);
-        details.forEach(d => {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${d.level}</td><td>${d.accuracy}%</td><td>${d.speed}%</td><td>${d.reports}%</td>`;
-          table.appendChild(row);
-        });
-        container.appendChild(table);
-      }
-    });
-  </script>
+  <script src="js/custom-page.js" defer></script>
   <footer class="page-footer">
     <nav id="main-nav">
       <a href="index.html" class="nav-item" aria-label="Home" data-nav-index="0">
@@ -190,18 +107,6 @@
         </span>
         <span class="sr-only">Perfil</span>
       </a>
-      <div class="nav-item--user">
-        <button class="nav-item nav-item__trigger" type="button" aria-expanded="false" aria-controls="user-menu">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
-          </span>
-          <span class="sr-only">Usuário</span>
-        </button>
-        <div id="user-menu" class="nav-item__menu" hidden>
-          <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
-          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
-        </div>
-      </div>
     </nav>
   </footer>
 </body>

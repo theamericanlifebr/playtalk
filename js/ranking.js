@@ -1,6 +1,13 @@
 (function() {
-  const listElement = document.getElementById('ranking-list');
-  const statusElement = document.getElementById('ranking-status');
+  let listElement = null;
+  let statusElement = null;
+
+  function assignElements(context) {
+    const root = context && context.root ? context.root : document;
+    const scope = context && context.container ? context.container : root;
+    listElement = scope.querySelector('#ranking-list');
+    statusElement = scope.querySelector('#ranking-status');
+  }
 
   function showStatus(message, isError = false) {
     if (!statusElement) {
@@ -51,11 +58,6 @@
     name.className = 'ranking-name';
     name.textContent = entry.name;
     info.appendChild(name);
-
-    const placement = document.createElement('p');
-    placement.className = 'ranking-level';
-    placement.textContent = `Ranking ${entry.position}º`;
-    info.appendChild(placement);
 
     card.appendChild(media);
     card.appendChild(info);
@@ -184,10 +186,26 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function init(context = {}) {
+    assignElements(context);
     if (statusElement) {
       statusElement.hidden = false;
+      statusElement.textContent = 'Carregando ranking...';
+      statusElement.classList.remove('ranking-status--error');
+    }
+    if (listElement) {
+      listElement.innerHTML = '';
     }
     loadRanking();
-  });
+  }
+
+  if (window && typeof window.registerPlaytalkPage === 'function') {
+    window.registerPlaytalkPage('page-ranking', init);
+  } else {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => init(), { once: true });
+    } else {
+      init();
+    }
+  }
 })();

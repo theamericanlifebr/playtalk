@@ -1420,21 +1420,37 @@ document.addEventListener('playtalk:user-change', () => {
   goHome();
 });
 
-  window.onload = async () => {
-    document.querySelectorAll('#top-nav a').forEach(a => {
-      a.addEventListener('click', stopCurrentGame);
+let homePageInitialized = false;
+
+async function bootstrapHomePage() {
+  if (homePageInitialized) {
+    return;
+  }
+  homePageInitialized = true;
+  document.querySelectorAll('#top-nav a').forEach(a => {
+    a.addEventListener('click', stopCurrentGame);
+  });
+  const homeLink = document.getElementById('home-link');
+  if (homeLink) {
+    homeLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      goHome();
     });
-    const homeLink = document.getElementById('home-link');
-    if (homeLink) {
-      homeLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        goHome();
-      });
-    }
-    await initGame();
-    window.addEventListener('beforeunload', () => {
-      recordModeTime(selectedMode);
-      saveModeStats();
-      stopCurrentGame();
-    });
-  };
+  }
+  await initGame();
+  window.addEventListener('beforeunload', () => {
+    recordModeTime(selectedMode);
+    saveModeStats();
+    stopCurrentGame();
+  });
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  bootstrapHomePage();
+} else {
+  window.addEventListener('load', bootstrapHomePage, { once: true });
+}
+
+if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
+  window.registerPlaytalkPage('page-home', bootstrapHomePage);
+}

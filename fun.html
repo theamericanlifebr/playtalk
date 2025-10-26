@@ -28,6 +28,18 @@
       </div>
     </div>
     <div class="site-header__actions">
+      <div class="site-header__user nav-item--user">
+        <button class="nav-item__trigger site-header__user-trigger" type="button" aria-expanded="false" aria-controls="user-menu">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
+          </span>
+          <span class="sr-only">Usuário</span>
+        </button>
+        <div id="user-menu" class="nav-item__menu" hidden>
+          <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
+          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
+        </div>
+      </div>
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
@@ -85,53 +97,7 @@
       </form>
     </div>
   </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const api = window.playtalkSettings;
-      const form = document.getElementById('fun-form');
-      const radios = [...form.querySelectorAll('input[name="theme"]')];
-      const pointsPerHit = document.getElementById('pointsPerHit');
-      const pointsLossPerSecond = document.getElementById('pointsLossPerSecond');
-      const startingPoints = document.getElementById('startingPoints');
-      const feedback = document.getElementById('fun-feedback');
-
-      function load() {
-        const settings = api ? api.loadSettings() : {};
-        const theme = settings.theme || 'light';
-        radios.forEach(r => { r.checked = r.value === theme; });
-        pointsPerHit.value = settings.pointsPerHit ?? api.DEFAULT_SETTINGS.pointsPerHit;
-        pointsLossPerSecond.value = settings.pointsLossPerSecond ?? api.DEFAULT_SETTINGS.pointsLossPerSecond;
-        startingPoints.value = settings.startingPoints ?? api.DEFAULT_SETTINGS.startingPoints;
-      }
-
-      function save(event) {
-        event.preventDefault();
-        const theme = (radios.find(r => r.checked) || {}).value || 'light';
-        const settings = {
-          theme,
-          pointsPerHit: Number(pointsPerHit.value) || 0,
-          pointsLossPerSecond: Number(pointsLossPerSecond.value) || 0,
-          startingPoints: Number(startingPoints.value) || 0
-        };
-        if (api) {
-          api.saveSettings(settings);
-          api.applyTheme(settings.theme);
-        }
-        feedback.textContent = 'Configurações salvas!';
-        setTimeout(() => { feedback.textContent = ''; }, 2000);
-      }
-
-      load();
-      form.addEventListener('submit', save);
-      radios.forEach(radio => {
-        radio.addEventListener('change', () => {
-          if (radio.checked && api) {
-            api.applyTheme(radio.value);
-          }
-        });
-      });
-    });
-  </script>
+  <script src="js/fun-page.js" defer></script>
   <footer class="page-footer">
     <nav id="main-nav">
       <a href="index.html" class="nav-item" aria-label="Home" data-nav-index="0">
@@ -170,18 +136,6 @@
         </span>
         <span class="sr-only">Perfil</span>
       </a>
-      <div class="nav-item--user">
-        <button class="nav-item nav-item__trigger" type="button" aria-expanded="false" aria-controls="user-menu">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
-          </span>
-          <span class="sr-only">Usuário</span>
-        </button>
-        <div id="user-menu" class="nav-item__menu" hidden>
-          <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
-          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
-        </div>
-      </div>
     </nav>
   </footer>
 </body>

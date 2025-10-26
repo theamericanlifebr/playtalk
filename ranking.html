@@ -28,13 +28,24 @@
       </div>
     </div>
     <div class="site-header__actions">
+      <div class="site-header__user nav-item--user">
+        <button class="nav-item__trigger site-header__user-trigger" type="button" aria-expanded="false" aria-controls="user-menu">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
+          </span>
+          <span class="sr-only">Usuário</span>
+        </button>
+        <div id="user-menu" class="nav-item__menu" hidden>
+          <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
+          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
+        </div>
+      </div>
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
   <main class="ranking-main" data-page-transition>
     <header class="ranking-header">
-      <h1>Ranking Global</h1>
-      <p>Top 100 jogadores com base no nível atual. Quem chega mais longe conquista o troféu!</p>
+      <h1>Ranking Global Centralizado</h1>
     </header>
 
     <section id="ranking-status" class="ranking-status" role="status" aria-live="polite">
@@ -107,18 +118,6 @@
         </span>
         <span class="sr-only">Perfil</span>
       </a>
-      <div class="nav-item--user">
-        <button class="nav-item nav-item__trigger" type="button" aria-expanded="false" aria-controls="user-menu">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
-          </span>
-          <span class="sr-only">Usuário</span>
-        </button>
-        <div id="user-menu" class="nav-item__menu" hidden>
-          <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
-          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
-        </div>
-      </div>
     </nav>
   </footer>
 
