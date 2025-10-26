@@ -52,11 +52,6 @@
     name.textContent = entry.name;
     info.appendChild(name);
 
-    const placement = document.createElement('p');
-    placement.className = 'ranking-level';
-    placement.textContent = `Ranking ${entry.position}º`;
-    info.appendChild(placement);
-
     card.appendChild(media);
     card.appendChild(info);
     return card;
