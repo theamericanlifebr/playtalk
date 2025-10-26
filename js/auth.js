@@ -707,7 +707,7 @@
       'index.html': { hash: '#home', scripts: ['js/main.js'], classes: ['page-home'] },
       'fun.html': { hash: '#fun', scripts: ['js/fun-page.js'], classes: ['page-fun'] },
       'play.html': { hash: '#play', scripts: ['js/play.js'], classes: ['page-play'] },
-      'custom.html': { hash: '#custom', scripts: ['js/custom-page.js'], classes: ['page-social', 'page-custom'] },
+      'custom.html': { hash: '#custom', scripts: ['js/custom-page.js'], classes: ['page-custom'] },
       'ranking.html': { hash: '#ranking', scripts: ['js/ranking.js'], classes: ['page-ranking'] },
       'perfil.html': { hash: '#perfil', scripts: ['js/profile.js'], classes: ['page-profile'] }
     };
