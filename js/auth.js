@@ -334,6 +334,11 @@
     if (logoutBtn) {
       logoutBtn.style.display = user ? 'flex' : 'none';
     }
+    const triggerLabel = document.querySelector('.nav-item__trigger-label');
+    if (triggerLabel) {
+      triggerLabel.textContent = displayName;
+    }
+
     if (!user && typeof closeUserMenu === 'function') {
       closeUserMenu();
     }
@@ -433,11 +438,26 @@
       return;
     }
 
+    const headerActions = document.querySelector('.site-header__actions');
+    if (headerActions && container.parentElement !== headerActions) {
+      headerActions.appendChild(container);
+    }
+
     const trigger = container.querySelector('.nav-item__trigger');
     const menu = container.querySelector('.nav-item__menu');
     if (!trigger || !menu) {
       return;
     }
+
+    let triggerLabel = trigger.querySelector('.nav-item__trigger-label');
+    if (!triggerLabel) {
+      triggerLabel = document.createElement('span');
+      triggerLabel.className = 'nav-item__trigger-label';
+      trigger.appendChild(triggerLabel);
+    }
+
+    const headerName = document.getElementById('header-username');
+    triggerLabel.textContent = headerName ? headerName.textContent.trim() || 'Conta' : 'Conta';
 
     const closeMenu = () => {
       if (!container.classList.contains('nav-item--open')) {
