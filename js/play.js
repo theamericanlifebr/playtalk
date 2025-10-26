@@ -48,59 +48,29 @@ function colorFromPercent(perc) {
   return calcularCor((perc / 100) * max);
 }
 
-const PROGRESS_MILESTONES = [0, 25, 50, 75, 100];
-
-const STATS_ICONS = {
-  tempo:
-    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8Zm.5-13h-1a1 1 0 0 0-1 1v5.586l-1.707 1.707a1 1 0 1 0 1.414 1.414l2-2A1 1 0 0 0 12.5 14V8a1 1 0 0 0-1-1Z"/></svg>',
-  precisao:
-    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8Zm0-13a5 5 0 1 0 5 5 5.006 5.006 0 0 0-5-5Zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3Z"/></svg>',
-  report:
-    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a1 1 0 0 0-.894.553l-7 14A1 1 0 0 0 5 18h14a1 1 0 0 0 .894-1.447l-7-14A1 1 0 0 0 12 2Zm0 4.764L16.382 16H7.618ZM11 10v4h2v-4Zm0 6v2h2v-2Z"/></svg>',
-};
-
-function buildProgressGradient(perc) {
-  const progress = Math.max(0, Math.min(Number.isFinite(perc) ? perc : 0, 100));
-  if (progress <= 0) {
-    return 'conic-gradient(from -90deg, rgba(26, 102, 204, 0.14) 0deg, rgba(26, 102, 204, 0.14) 360deg)';
-  }
-  const stops = PROGRESS_MILESTONES.filter((stop) => stop <= progress);
-  if (!stops.includes(progress)) {
-    stops.push(progress);
-  }
-  const segments = stops
-    .map((stop) => {
-      const angle = ((stop / 100) * 360).toFixed(2);
-      return `${colorFromPercent(stop)} ${angle}deg`;
-    })
-    .join(', ');
-  const angle = ((progress / 100) * 360).toFixed(2);
-  return `conic-gradient(from -90deg, ${segments}, rgba(26, 102, 204, 0.18) ${angle}deg, rgba(26, 102, 204, 0.18) 360deg)`;
-}
-
-function createStatsMeter(perc, label, iconKey) {
+function createStatBar(perc, label) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'stat-bar';
   const safePerc = Number.isFinite(perc) ? perc : 0;
   const clamped = Math.max(0, Math.min(safePerc, 100));
-  const wrapper = document.createElement('div');
-  wrapper.className = 'stats-meter';
-  wrapper.setAttribute('role', 'presentation');
-  wrapper.setAttribute('aria-label', `${label} ${Math.round(clamped)}%`);
-
-  const ring = document.createElement('div');
-  ring.className = 'stats-meter__ring';
-  ring.style.setProperty('--stats-meter-gradient', buildProgressGradient(clamped));
-
-  const icon = document.createElement('span');
-  icon.className = 'stats-meter__icon';
-  icon.innerHTML = STATS_ICONS[iconKey] || STATS_ICONS.tempo;
-  ring.appendChild(icon);
-
-  const labelEl = document.createElement('span');
-  labelEl.className = 'stats-meter__label';
-  labelEl.textContent = label;
-
-  wrapper.appendChild(ring);
-  wrapper.appendChild(labelEl);
+  const rounded = Math.round(clamped);
+  const title = document.createElement('div');
+  title.className = 'stat-bar-label';
+  title.textContent = `${label} ${rounded}%`;
+  const track = document.createElement('div');
+  track.className = 'stat-bar-track';
+  const fill = document.createElement('div');
+  fill.className = 'stat-bar-fill';
+  fill.style.backgroundColor = colorFromPercent(clamped);
+  fill.style.width = '0%';
+  track.appendChild(fill);
+  wrapper.appendChild(title);
+  wrapper.appendChild(track);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      fill.style.width = `${clamped}%`;
+    });
+  });
   return wrapper;
 }
 
@@ -162,40 +132,18 @@ document.addEventListener('DOMContentLoaded', () => {
     container.style.opacity = 0;
     setTimeout(() => {
       container.innerHTML = '';
-      const panel = document.createElement('section');
-      panel.className = 'stats-panel';
-
-      const title = document.createElement('h2');
-      title.className = 'stats-title';
-      title.textContent = 'Estatísticas';
-      panel.appendChild(title);
-
-      const meters = document.createElement('div');
-      meters.className = 'stats-meter-group';
-
       if (mode === 1) {
         const { accPerc, timePerc, notReportPerc } = calcGeneralStats();
-        [
-          { value: timePerc, label: 'Tempo', icon: 'tempo' },
-          { value: accPerc, label: 'Precisão', icon: 'precisao' },
-          { value: notReportPerc, label: 'Report', icon: 'report' },
-        ].forEach(({ value, label, icon }) => {
-          meters.appendChild(createStatsMeter(value, label, icon));
-        });
+        container.appendChild(createStatBar(timePerc, 'Tempo'));
+        container.appendChild(createStatBar(accPerc, 'Precisão'));
+        container.appendChild(createStatBar(notReportPerc, 'Report'));
       } else {
         const { accPerc, timePerc, notReportPerc } = calcModeStats(mode);
         const displayTime = mode === 5 ? timePerc * 1.75 : timePerc;
-        [
-          { value: displayTime, label: 'Tempo', icon: 'tempo' },
-          { value: accPerc, label: 'Precisão', icon: 'precisao' },
-          { value: notReportPerc, label: 'Report', icon: 'report' },
-        ].forEach(({ value, label, icon }) => {
-          meters.appendChild(createStatsMeter(value, label, icon));
-        });
+        container.appendChild(createStatBar(displayTime, 'Tempo'));
+        container.appendChild(createStatBar(accPerc, 'Precisão'));
+        container.appendChild(createStatBar(notReportPerc, 'Report'));
       }
-
-      panel.appendChild(meters);
-      container.appendChild(panel);
       container.style.opacity = 1;
     }, 150);
   }
