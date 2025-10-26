@@ -9,7 +9,7 @@
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body class="page-social page-custom">
+<body class="page-custom">
   <header class="site-header" id="global-header">
     <div class="site-header__profile">
       <div class="site-header__avatar-container" id="header-avatar-container">
@@ -43,20 +43,7 @@
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
-  <main id="social-content" class="social-page" data-page-transition>
-    <section class="social-page__intro">
-      <h1 class="social-page__title">Social</h1>
-      <p class="social-page__description">Compartilhe o seu progresso e acompanhe o desempenho em cada modo de jogo.</p>
-    </section>
-    <section class="social-stats" aria-labelledby="social-stats-title">
-      <header class="social-stats__header">
-        <h2 id="social-stats-title" class="social-stats__title">Estatísticas dos modos de jogo</h2>
-        <p class="social-stats__subtitle">Veja como você tem evoluído e quais modos precisam de atenção.</p>
-      </header>
-      <div id="social-stats-grid" class="social-stats__grid" role="list"></div>
-      <p id="social-stats-empty" class="social-stats__empty" hidden>Nenhuma estatística disponível no momento. Jogue alguns modos para gerar seus dados.</p>
-    </section>
-  </main>
+  <main id="custom-content" data-page-transition style="text-align:center;margin-top:50px;"></main>
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
     <div class="login-flow__panel">
       <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life" class="login-flow__logo" width="70" height="70">
