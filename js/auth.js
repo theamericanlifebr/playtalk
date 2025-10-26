@@ -122,34 +122,6 @@
     return data;
   }
 
-  function hexToChannels(hex) {
-    const normalized = hex.replace('#', '').trim();
-    const full = normalized.length === 3
-      ? normalized.split('').map(ch => ch + ch).join('')
-      : normalized.padStart(6, '0');
-    const int = parseInt(full, 16);
-    return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
-  }
-
-  function blendHex(from, to, ratio) {
-    const amount = Math.min(1, Math.max(0, ratio));
-    const [fr, fg, fb] = hexToChannels(from);
-    const [tr, tg, tb] = hexToChannels(to);
-    const mix = (start, end) => Math.round(start + (end - start) * amount);
-    const [r, g, b] = [mix(fr, tr), mix(fg, tg), mix(fb, tb)];
-    return `#${[r, g, b].map(channel => channel.toString(16).padStart(2, '0')).join('')}`;
-  }
-
-  function computeAvatarRingColor(ratio) {
-    const baseColor = '#27ae60';
-    const targetColor = '#1A66CC';
-    if (!Number.isFinite(ratio) || ratio <= 0.75) {
-      return baseColor;
-    }
-    const progress = Math.min(1, Math.max(0, (ratio - 0.75) / 0.25));
-    return blendHex(baseColor, targetColor, progress);
-  }
-
   function parseValue(raw, schema) {
     if (raw === null || raw === undefined) return undefined;
     switch (schema.type) {
@@ -345,7 +317,6 @@
     }
 
     if (avatarContainer) {
-      avatarContainer.style.setProperty('--avatar-ring-color', computeAvatarRingColor(ratio));
       avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
       avatarContainer.title = `Progresso de nível: ${normalizedCorrect}/${requirement}`;
     }
@@ -854,7 +825,6 @@
       }
       const avatarContainer = document.getElementById('header-avatar-container');
       if (avatarContainer) {
-        avatarContainer.style.setProperty('--avatar-ring-color', computeAvatarRingColor(ratio));
         avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
         avatarContainer.title = `Progresso de nível: ${Math.min(correct, requirement)}/${requirement}`;
       }
