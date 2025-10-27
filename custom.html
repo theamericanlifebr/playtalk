@@ -27,19 +27,19 @@
         <span class="site-header__level" id="header-level">Nível 1</span>
       </div>
     </div>
-    <div class="site-header__actions">
-      <div class="site-header__user nav-item--user">
-        <button class="nav-item__trigger site-header__user-trigger" type="button" aria-expanded="false" aria-controls="user-menu">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
-          </span>
-          <span class="sr-only">Usuário</span>
-        </button>
-        <div id="user-menu" class="nav-item__menu" hidden>
-          <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
-          <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
-        </div>
+    <div class="site-header__user nav-item--user">
+      <button class="nav-item__trigger site-header__user-trigger" type="button" aria-expanded="false" aria-controls="user-menu">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
+        </span>
+        <span class="sr-only">Usuário</span>
+      </button>
+      <div id="user-menu" class="nav-item__menu" hidden>
+        <a href="perfil.html" class="nav-item__menu-link">Perfil</a>
+        <button id="logout-btn" class="nav-item__menu-link nav-item__menu-link--button" type="button">Sair</button>
       </div>
+    </div>
+    <div class="site-header__actions">
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
@@ -71,7 +71,7 @@
   <script src="js/custom-page.js" defer></script>
   <footer class="page-footer">
     <nav id="main-nav">
-      <a href="index.html" class="nav-item" aria-label="Home" data-nav-index="0">
+      <a href="index.html" id="home-link" class="nav-item" aria-label="Home" data-nav-index="0">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
         </span>
