@@ -178,8 +178,6 @@ body.theme-blue .site-header__avatar-ring {
 .site-header__user {
   display: flex;
   align-items: center;
-  justify-content: center;
-  align-self: center;
 }
 
 .site-header__button {
@@ -223,45 +221,17 @@ body.theme-blue .site-header__button--logout {
 
 @media (max-width: 720px) {
   .site-header {
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
-  }
-
-  .site-header__profile {
-    flex: 1 1 auto;
-    min-width: 0;
-    align-items: center;
-    gap: 16px;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 10px 16px;
   }
 
   .site-header__avatar-container {
-    width: 90px;
-    height: 90px;
-    padding: 5px;
-    margin-right: 0;
-    order: 0;
-  }
-
-  .site-header__text {
-    align-items: flex-start;
-    text-align: left;
-  }
-
-  .site-header__name {
-    font-size: clamp(32px, 12vw, 48px);
-    white-space: normal;
-  }
-
-  .site-header__level {
-    font-size: clamp(22px, 7.5vw, 32px);
-    white-space: normal;
-  }
-
-  .site-header__user {
-    width: 100%;
-    justify-content: center;
+    order: -1;
+    width: 58px;
+    height: 58px;
+    padding: 3px;
+    margin-right: 4px;
   }
 
   .site-header__actions {
@@ -273,7 +243,7 @@ body.theme-blue .site-header__button--logout {
 
 @media (max-width: 720px) {
   :root {
-    --header-height: 132px;
+    --header-height: 92px;
   }
 }
 
@@ -1084,7 +1054,8 @@ body.page-play #play-content.stats-wrapper {
   margin: 0 auto;
 }
 
-body.page-play #mode-buttons {
+body.page-play #mode-buttons,
+.stats-mode-icons {
   position: static;
   transform: none;
   width: 100%;
@@ -1093,22 +1064,6 @@ body.page-play #mode-buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   justify-items: center;
-  align-items: center;
-  gap: 14px;
-  padding: 0 8px;
-  box-sizing: border-box;
-  order: -1;
-}
-
-.stats-mode-icons {
-  position: static;
-  transform: none;
-  width: 100%;
-  max-width: 380px;
-  margin: 0 auto 20px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
   align-items: center;
   gap: 14px;
   padding: 0 8px;
@@ -1122,6 +1077,10 @@ body.page-play #mode-buttons img,
   cursor: pointer;
   opacity: 1;
   transition: opacity 0.2s ease;
+}
+
+body.page-play #mode-buttons {
+  order: -1;
 }
 
 .stats-wrapper {
@@ -1190,15 +1149,10 @@ body.theme-blue .stat-bar-track {
     width: min(280px, 90vw);
   }
 
-  body.page-play #mode-buttons {
-    max-width: 344px;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    padding: 0 2px;
-  }
-
+  body.page-play #mode-buttons,
   .stats-mode-icons {
     max-width: 344px;
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     padding: 0 2px;
   }
