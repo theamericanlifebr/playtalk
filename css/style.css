@@ -784,12 +784,15 @@ body.dark-mode #clock {
   color: #fff;
   font-size: 14px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .logout-button {
   background: linear-gradient(90deg, #ff5a5a, #ff7a7a);
-  display: none;
 }
 
 .login-button:hover,
@@ -1280,7 +1283,6 @@ body.theme-blue #profile-container {
 }
 
 .profile-actions .logout-button {
-  display: none;
   font-size: 15px;
   padding: 10px 22px;
   border-radius: 999px;

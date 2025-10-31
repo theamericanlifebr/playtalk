@@ -15,6 +15,15 @@ const colorStops = [
   [25000, '#0099ff']
 ];
 
+const MODE_THRESHOLDS = {
+  1: 25000,
+  2: 25000,
+  3: 25000,
+  4: 25000,
+  5: 25000,
+  6: 25115
+};
+
 function hexToRgb(hex) {
   const int = parseInt(hex.slice(1), 16);
   return [int >> 16 & 255, int >> 8 & 255, int & 255];
@@ -48,7 +57,7 @@ function colorFromPercent(perc) {
   return calcularCor((perc / 100) * max);
 }
 
-function createStatBar(perc, label) {
+function createStatBar(perc, label, options = {}) {
   const wrapper = document.createElement('div');
   wrapper.className = 'stat-bar';
   const safePerc = Number.isFinite(perc) ? perc : 0;
@@ -56,7 +65,15 @@ function createStatBar(perc, label) {
   const rounded = Math.round(clamped);
   const title = document.createElement('div');
   title.className = 'stat-bar-label';
-  title.textContent = `${label} ${rounded}%`;
+  const valueText = options && typeof options.valueText === 'string'
+    ? options.valueText
+    : null;
+  const suffix = options && typeof options.suffix === 'string'
+    ? options.suffix
+    : '%';
+  title.textContent = valueText !== null
+    ? `${label} ${valueText}`
+    : `${label} ${rounded}${suffix}`;
   const track = document.createElement('div');
   track.className = 'stat-bar-track';
   const fill = document.createElement('div');
@@ -97,57 +114,31 @@ function initPlayPage(context = {}) {
     const stats = statsData[mode] || {};
     const total = stats.totalPhrases || 0;
     const correct = stats.correct || 0;
-    const report = stats.report || 0;
     const totalTime = stats.totalTime || 0;
+    const points = stats.points || 0;
     const accPerc = total ? (correct / total * 100) : 0;
     const avg = total ? (totalTime / total / 1000) : 0;
     const goal = timeGoals[mode] || MAX_TIME;
     let timePerc = total ? ((MAX_TIME - avg) / (MAX_TIME - goal) * 100) : 0;
     if (avg >= MAX_TIME) timePerc = 0;
     if ([2, 3, 6].includes(mode) && total) timePerc += 20;
-    const notReportPerc = total ? (100 - (report / total * 100)) : 100;
-    return { accPerc, timePerc, avg, notReportPerc };
-  }
-
-  function calcGeneralStats() {
-    const modes = [2, 3, 4, 5, 6];
-    let totalPhrases = 0, totalCorrect = 0, totalTime = 0, totalReport = 0;
-    let timePercSum = 0, timePercCount = 0;
-    modes.forEach(m => {
-      const s = statsData[m] || {};
-      totalPhrases += s.totalPhrases || 0;
-      totalCorrect += s.correct || 0;
-      totalTime += s.totalTime || 0;
-      totalReport += s.report || 0;
-      const tp = calcModeStats(m).timePerc;
-      if (tp >= 1) {
-        timePercSum += tp;
-        timePercCount++;
-      }
-    });
-    const accPerc = totalPhrases ? (totalCorrect / totalPhrases * 100) : 0;
-    const avg = totalPhrases ? (totalTime / totalPhrases / 1000) : 0;
-    const timePerc = timePercCount ? (timePercSum / timePercCount) : 0;
-    const notReportPerc = totalPhrases ? (100 - (totalReport / totalPhrases * 100)) : 100;
-    return { accPerc, timePerc, avg, notReportPerc };
+    return { accPerc, timePerc, avg, points };
   }
 
   function render(mode) {
     container.style.opacity = 0;
     setTimeout(() => {
       container.innerHTML = '';
-      if (mode === 1) {
-        const { accPerc, timePerc, notReportPerc } = calcGeneralStats();
-        container.appendChild(createStatBar(timePerc, 'Tempo'));
-        container.appendChild(createStatBar(accPerc, 'Precisão'));
-        container.appendChild(createStatBar(notReportPerc, 'Report'));
-      } else {
-        const { accPerc, timePerc, notReportPerc } = calcModeStats(mode);
-        const displayTime = mode === 5 ? timePerc * 1.75 : timePerc;
-        container.appendChild(createStatBar(displayTime, 'Tempo'));
-        container.appendChild(createStatBar(accPerc, 'Precisão'));
-        container.appendChild(createStatBar(notReportPerc, 'Report'));
-      }
+      const targetMode = Number.isFinite(mode) ? mode : 1;
+      const { accPerc, timePerc, points } = calcModeStats(targetMode);
+      const displayTime = targetMode === 5 ? timePerc * 1.75 : timePerc;
+      const threshold = MODE_THRESHOLDS[targetMode] || 25000;
+      const safePoints = Math.max(0, Math.floor(points || 0));
+      const pointsPerc = threshold > 0 ? (safePoints / threshold) * 100 : 0;
+      const formattedPoints = `${safePoints.toLocaleString('pt-BR')} pts`;
+      container.appendChild(createStatBar(displayTime, 'Tempo'));
+      container.appendChild(createStatBar(accPerc, 'Precisão'));
+      container.appendChild(createStatBar(pointsPerc, 'Pontos', { valueText: formattedPoints }));
       container.style.opacity = 1;
     }, 150);
   }

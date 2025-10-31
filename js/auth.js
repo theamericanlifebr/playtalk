@@ -428,7 +428,9 @@
       loginBtn.style.display = user ? 'none' : 'inline-flex';
     }
     logoutButtons.forEach(button => {
-      button.style.display = user ? 'inline-flex' : 'none';
+      button.disabled = false;
+      button.removeAttribute('hidden');
+      button.setAttribute('aria-hidden', 'false');
     });
     applyBalanceToUI(readStoredBalance());
     if (!user && typeof closeUserMenu === 'function') {
@@ -622,7 +624,14 @@
     logoutButtons.forEach(button => {
       button.addEventListener('click', (event) => {
         event.preventDefault();
-        handleLogout();
+        const user = readStoredCurrentUser();
+        if (user) {
+          handleLogout();
+        } else if (typeof openLoginFlowHandler === 'function') {
+          openLoginFlowHandler();
+        } else {
+          handleLogout();
+        }
       });
     });
 
