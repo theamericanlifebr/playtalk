@@ -728,7 +728,7 @@ function reloadPersistentProgress(initialLoad = false) {
 reloadPersistentProgress(true);
 
 let lastWasError = false;
-let lastReward = 0;
+let lastProgressReward = 0;
 let lastPenalty = 0;
 let paused = false;
 let consecutiveErrors = 0;
@@ -761,12 +761,14 @@ function ensureModeStats(mode) {
       correct: 0,
       wrong: 0,
       report: 0,
+      points: 0,
       wrongRanking: [],
       reportRanking: []
     };
   } else {
     if (!Array.isArray(modeStats[mode].wrongRanking)) modeStats[mode].wrongRanking = [];
     if (!Array.isArray(modeStats[mode].reportRanking)) modeStats[mode].reportRanking = [];
+    if (!Number.isFinite(modeStats[mode].points)) modeStats[mode].points = 0;
   }
   return modeStats[mode];
 }
@@ -919,13 +921,14 @@ function reportLastError() {
   const reward = rewardBalanceForPhrase(lastExpected || '', selectedMode);
   grantExperience(reward, selectedMode);
   errosTotais = Math.max(0, errosTotais - 1);
-  points += lastReward + lastPenalty;
+  points += lastProgressReward + lastPenalty;
   saveTotals();
   atualizarBarraProgresso();
   const stats = ensureModeStats(selectedMode);
   stats.correct++;
   stats.wrong = Math.max(0, stats.wrong - 1);
   stats.report++;
+  stats.points = Math.max(0, (stats.points || 0) + lastProgressReward + lastPenalty);
   const totals = Object.values(modeStats).reduce((acc, s) => {
     acc.report += s.report || 0;
     acc.total += s.totalPhrases || 0;
@@ -1083,28 +1086,27 @@ function calcModeStats(mode) {
   const stats = modeStats[mode] || {};
   const total = stats.totalPhrases || 0;
   const correct = stats.correct || 0;
-  const report = stats.report || 0;
   const totalTime = stats.totalTime || 0;
+  const points = stats.points || 0;
   const accPerc = total ? (correct / total * 100) : 0;
   const avg = total ? (totalTime / total / 1000) : 0;
   const goal = timeGoals[mode] || MAX_TIME;
   let timePerc = total ? ((MAX_TIME - avg) / (MAX_TIME - goal) * 100) : 0;
   if (avg >= MAX_TIME) timePerc = 0;
   if ([2, 3, 6].includes(mode) && total) timePerc += 20;
-  const notReportPerc = total ? (100 - (report / total * 100)) : 100;
-  return { accPerc, timePerc, avg, notReportPerc };
+  return { accPerc, timePerc, avg, points };
 }
 
 function calcGeneralStats() {
   const modes = [2, 3, 4, 5, 6];
-  let totalPhrases = 0, totalCorrect = 0, totalTime = 0, totalReport = 0;
+  let totalPhrases = 0, totalCorrect = 0, totalTime = 0, totalPoints = 0;
   let timePercSum = 0, timePercCount = 0;
   modes.forEach(m => {
     const s = modeStats[m] || {};
     totalPhrases += s.totalPhrases || 0;
     totalCorrect += s.correct || 0;
     totalTime += s.totalTime || 0;
-    totalReport += s.report || 0;
+    totalPoints += s.points || 0;
     const tp = calcModeStats(m).timePerc;
     if (tp >= 1) {
       timePercSum += tp;
@@ -1114,8 +1116,7 @@ function calcGeneralStats() {
   const accPerc = totalPhrases ? (totalCorrect / totalPhrases * 100) : 0;
   const avg = totalPhrases ? (totalTime / totalPhrases / 1000) : 0;
   const timePerc = timePercCount ? (timePercSum / timePercCount) : 0;
-  const notReportPerc = totalPhrases ? (100 - (totalReport / totalPhrases * 100)) : 100;
-  return { accPerc, timePerc, avg, notReportPerc };
+  return { accPerc, timePerc, avg, points: totalPoints };
 }
 
 function updateGeneralCircles() {
@@ -1472,8 +1473,8 @@ function verificarResposta() {
   const penalty = Math.max(0, Math.round(elapsed * penaltyFactor));
   const bonus = selectedMode === 5 ? 1000 : 0;
   const baseReward = rawPremio + bonus;
-  const finalReward = applyScoreMultiplier(baseReward, selectedMode);
-  lastReward = finalReward;
+  const progressReward = Math.max(0, Math.round(baseReward));
+  lastProgressReward = progressReward;
   lastPenalty = penalty;
   lastWasError = false;
 
@@ -1497,10 +1498,11 @@ function verificarResposta() {
 
   if (correto) {
     stats.correct++;
+    stats.points = Math.max(0, (stats.points || 0) + progressReward);
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
-    points += finalReward;
+    points += progressReward;
     saveTotals();
     const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
     grantExperience(reward, selectedMode);
@@ -1518,6 +1520,7 @@ function verificarResposta() {
     const existing = wr.find(e => e.expected === expectedPhrase && e.input === resposta && e.folder === pastaAtual);
     if (existing) existing.count++;
     else wr.push({ expected: expectedPhrase, input: resposta, folder: pastaAtual, count: 1 });
+    stats.points = Math.max(0, (stats.points || 0) - penalty);
     saveModeStats();
     document.getElementById("somErro").play();
     errosTotais++;
