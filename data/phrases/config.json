@@ -1,0 +1,88 @@
+{
+  "modes": {
+    "1": {
+      "levels": [
+        "data/phrases/mode1/level01.json",
+        "data/phrases/mode1/level02.json",
+        "data/phrases/mode1/level03.json",
+        "data/phrases/mode1/level04.json",
+        "data/phrases/mode1/level05.json",
+        "data/phrases/mode1/level06.json",
+        "data/phrases/mode1/level07.json",
+        "data/phrases/mode1/level08.json",
+        "data/phrases/mode1/level09.json",
+        "data/phrases/mode1/level10.json"
+      ]
+    },
+    "2": {
+      "levels": [
+        "data/phrases/mode2/level01.json",
+        "data/phrases/mode2/level02.json",
+        "data/phrases/mode2/level03.json",
+        "data/phrases/mode2/level04.json",
+        "data/phrases/mode2/level05.json",
+        "data/phrases/mode2/level06.json",
+        "data/phrases/mode2/level07.json",
+        "data/phrases/mode2/level08.json",
+        "data/phrases/mode2/level09.json",
+        "data/phrases/mode2/level10.json"
+      ]
+    },
+    "3": {
+      "levels": [
+        "data/phrases/mode3/level01.json",
+        "data/phrases/mode3/level02.json",
+        "data/phrases/mode3/level03.json",
+        "data/phrases/mode3/level04.json",
+        "data/phrases/mode3/level05.json",
+        "data/phrases/mode3/level06.json",
+        "data/phrases/mode3/level07.json",
+        "data/phrases/mode3/level08.json",
+        "data/phrases/mode3/level09.json",
+        "data/phrases/mode3/level10.json"
+      ]
+    },
+    "4": {
+      "levels": [
+        "data/phrases/mode4/level01.json",
+        "data/phrases/mode4/level02.json",
+        "data/phrases/mode4/level03.json",
+        "data/phrases/mode4/level04.json",
+        "data/phrases/mode4/level05.json",
+        "data/phrases/mode4/level06.json",
+        "data/phrases/mode4/level07.json",
+        "data/phrases/mode4/level08.json",
+        "data/phrases/mode4/level09.json",
+        "data/phrases/mode4/level10.json"
+      ]
+    },
+    "5": {
+      "levels": [
+        "data/phrases/mode5/level01.json",
+        "data/phrases/mode5/level02.json",
+        "data/phrases/mode5/level03.json",
+        "data/phrases/mode5/level04.json",
+        "data/phrases/mode5/level05.json",
+        "data/phrases/mode5/level06.json",
+        "data/phrases/mode5/level07.json",
+        "data/phrases/mode5/level08.json",
+        "data/phrases/mode5/level09.json",
+        "data/phrases/mode5/level10.json"
+      ]
+    },
+    "6": {
+      "levels": [
+        "data/phrases/mode6/level01.json",
+        "data/phrases/mode6/level02.json",
+        "data/phrases/mode6/level03.json",
+        "data/phrases/mode6/level04.json",
+        "data/phrases/mode6/level05.json",
+        "data/phrases/mode6/level06.json",
+        "data/phrases/mode6/level07.json",
+        "data/phrases/mode6/level08.json",
+        "data/phrases/mode6/level09.json",
+        "data/phrases/mode6/level10.json"
+      ]
+    }
+  }
+}

@@ -1,5 +1,3 @@
-let pastas = {};
-
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   theme: 'light',
@@ -7,7 +5,37 @@ const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   pointsLossPerSecond: 0,
   startingPoints: 0
 };
+
+const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
+const MODE_PROGRESS_KEY = 'modeProgress';
+const GENERAL_PROGRESS_KEY = 'generalProgress';
+const XP_BASE_VALUE = 15;
+
+const COLOR_STOPS = [
+  [0, '#ff0000'],
+  [2000, '#ff3b00'],
+  [4000, '#ff7f00'],
+  [6000, '#ffb300'],
+  [8000, '#ffe000'],
+  [10000, '#ffff66'],
+  [12000, '#ccff66'],
+  [14000, '#99ff99'],
+  [16000, '#00cc66'],
+  [18000, '#00994d'],
+  [20000, '#00ffff'],
+  [22000, '#66ccff'],
+  [24000, '#0099ff'],
+  [25000, '#0099ff']
+];
+
 let userSettings = { ...SETTINGS_FALLBACK };
+
+const phraseLibrary = {
+  config: {},
+  modes: {},
+  maxLevels: {},
+  loaded: false
+};
 
 function refreshUserSettings() {
   if (typeof settingsAPI.loadSettings === 'function') {
@@ -18,6 +46,39 @@ function refreshUserSettings() {
 }
 
 refreshUserSettings();
+
+function hexToRgb(hex) {
+  const int = parseInt(hex.slice(1), 16);
+  return [int >> 16 & 255, int >> 8 & 255, int & 255];
+}
+
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+function calcularCor(pontos) {
+  const max = COLOR_STOPS[COLOR_STOPS.length - 1][0];
+  const p = Math.max(0, Math.min(pontos, max));
+  for (let i = 0; i < COLOR_STOPS.length - 1; i++) {
+    const [p1, c1] = COLOR_STOPS[i];
+    const [p2, c2] = COLOR_STOPS[i + 1];
+    if (p >= p1 && p <= p2) {
+      const ratio = (p - p1) / (p2 - p1);
+      const [r1, g1, b1] = hexToRgb(c1);
+      const [r2, g2, b2] = hexToRgb(c2);
+      const r = Math.round(r1 + ratio * (r2 - r1));
+      const g = Math.round(g1 + ratio * (g2 - g1));
+      const b = Math.round(b1 + ratio * (b2 - b1));
+      return rgbToHex(r, g, b);
+    }
+  }
+  return COLOR_STOPS[COLOR_STOPS.length - 1][1];
+}
+
+function colorFromPercent(perc) {
+  const max = COLOR_STOPS[COLOR_STOPS.length - 1][0];
+  return calcularCor((perc / 100) * max);
+}
 
 function sanitizePhraseForBalance(text) {
   if (typeof text !== 'string') {
@@ -50,17 +111,18 @@ function updateGameBalanceDisplay(balanceValue) {
 }
 
 function rewardBalanceForPhrase(phrase) {
-  if (!phrase || !window.playtalkBalance || typeof window.playtalkBalance.add !== 'function') {
-    updateGameBalanceDisplay();
-    return;
-  }
   const reward = calculateBalanceReward(phrase);
-  if (reward <= 0) {
+  if (!phrase || reward <= 0) {
     updateGameBalanceDisplay();
-    return;
+    return 0;
   }
-  const total = window.playtalkBalance.add(reward);
-  updateGameBalanceDisplay(total);
+  if (window.playtalkBalance && typeof window.playtalkBalance.add === 'function') {
+    const total = window.playtalkBalance.add(reward);
+    updateGameBalanceDisplay(total);
+  } else {
+    updateGameBalanceDisplay();
+  }
+  return reward;
 }
 
 document.addEventListener('playtalk:balance-change', (event) => {
@@ -72,24 +134,66 @@ document.addEventListener('playtalk:balance-change', (event) => {
   }
 });
 
-function parsePastas(raw) {
-  const result = {};
-  for (const [key, texto] of Object.entries(raw)) {
-    result[key] = texto.trim().split(/\n+/).filter(Boolean).map(l => l.split('#').map(s => s.trim()));
-  }
-  return result;
-}
-
 async function carregarPastas() {
-  const resp = await fetch('data/pastas.json');
-  const text = await resp.text();
-  const obj = {};
-  const regex = /(\d+):\s*`([\s\S]*?)`/g;
-  let m;
-  while ((m = regex.exec(text))) {
-    obj[m[1]] = m[2];
+  if (phraseLibrary.loaded) {
+    return phraseLibrary;
   }
-  pastas = parsePastas(obj);
+
+  try {
+    const response = await fetch(PHRASE_CONFIG_PATH);
+    if (!response.ok) {
+      throw new Error(`Configuração de frases não encontrada (${response.status})`);
+    }
+    const config = await response.json();
+    const modesConfig = config && config.modes ? config.modes : {};
+    const modeEntries = Object.entries(modesConfig);
+    phraseLibrary.config = modesConfig;
+    phraseLibrary.modes = {};
+    phraseLibrary.maxLevels = {};
+
+    const fetches = [];
+    modeEntries.forEach(([modeKey, modeConfig]) => {
+      const levelPaths = Array.isArray(modeConfig.levels) ? modeConfig.levels : [];
+      phraseLibrary.modes[modeKey] = {};
+      phraseLibrary.maxLevels[modeKey] = levelPaths.length;
+      levelPaths.forEach((levelPath, index) => {
+        fetches.push(
+          fetch(levelPath)
+            .then(levelResponse => {
+              if (!levelResponse.ok) {
+                throw new Error(`Falha ao carregar ${levelPath}`);
+              }
+              return levelResponse.json();
+            })
+            .then(levelData => {
+              const levelNumber = Number.isFinite(levelData.level)
+                ? Math.max(1, Math.floor(levelData.level))
+                : index + 1;
+              const entries = Array.isArray(levelData.entries) ? levelData.entries : [];
+              phraseLibrary.modes[modeKey][levelNumber] = entries.map(entry => [
+                typeof entry.pt === 'string' ? entry.pt : '',
+                typeof entry.en === 'string' ? entry.en : ''
+              ]);
+            })
+            .catch(err => {
+              console.error('Erro ao carregar nível de frases:', err);
+              phraseLibrary.modes[modeKey][index + 1] = [];
+            })
+        );
+      });
+    });
+
+    await Promise.all(fetches);
+    phraseLibrary.loaded = true;
+  } catch (error) {
+    console.error('Erro ao carregar frases do jogo:', error);
+    phraseLibrary.loaded = false;
+    phraseLibrary.modes = {};
+    phraseLibrary.maxLevels = {};
+    throw error;
+  }
+
+  return phraseLibrary;
 }
 
 function ehQuaseCorreto(res, esp) {
@@ -231,71 +335,210 @@ const MODE6_THRESHOLD = 25115;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
-const LEVEL_PROGRESS_KEY = 'levelProgress';
 
-let levelProgress = { level: 1, correct: 0 };
+let generalProgress = { level: 1, xp: 0 };
+let modeProgress = {};
 
 function getCurrentThreshold() {
   return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
 }
 
-function getLevelRequirement(level) {
+function getXPRequirement(level) {
   const normalized = Number.isFinite(level) ? Math.max(1, Math.floor(level)) : 1;
-  return 9 + normalized;
+  return Math.round(XP_BASE_VALUE * Math.pow(normalized, 1.5));
 }
 
-function loadLevelProgressFromStorage() {
-  const stored = parseJSONStorage(LEVEL_PROGRESS_KEY, null);
-  if (stored && Number.isFinite(stored.level)) {
-    levelProgress.level = Math.max(1, Math.floor(stored.level));
-    levelProgress.correct = Math.max(0, Math.floor(stored.correct || 0));
-  } else {
-    const legacyLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
-    levelProgress.level = Number.isFinite(legacyLevel) && legacyLevel > 0 ? legacyLevel : 1;
-    levelProgress.correct = 0;
+function ensureModeProgressStructure(mode) {
+  const key = String(mode);
+  if (!modeProgress[key] || typeof modeProgress[key] !== 'object') {
+    modeProgress[key] = { level: 1, xp: 0 };
   }
-  pastaAtual = levelProgress.level;
+  const entry = modeProgress[key];
+  entry.level = Number.isFinite(entry.level) && entry.level > 0 ? Math.floor(entry.level) : 1;
+  entry.xp = Number.isFinite(entry.xp) && entry.xp >= 0 ? Math.floor(entry.xp) : 0;
+  return entry;
 }
 
-function notifyLevelProgress() {
-  const required = getLevelRequirement(levelProgress.level);
-  const ratio = required > 0 ? Math.max(0, Math.min(1, levelProgress.correct / required)) : 0;
+function getModeProgress(mode) {
+  return ensureModeProgressStructure(mode);
+}
+
+function getModeLevel(mode) {
+  return getModeProgress(mode).level;
+}
+
+function getMaxLevelForMode(mode) {
+  const key = String(mode);
+  const stored = phraseLibrary.maxLevels[key];
+  return Number.isFinite(stored) && stored > 0 ? stored : 1;
+}
+
+function getLibraryLevelForMode(mode) {
+  const progressLevel = getModeLevel(mode);
+  const maxLevel = getMaxLevelForMode(mode);
+  return Math.min(progressLevel, maxLevel);
+}
+
+function dispatchGeneralProgressUpdate() {
+  const required = getXPRequirement(generalProgress.level);
+  const ratio = required > 0 ? Math.max(0, Math.min(1, generalProgress.xp / required)) : 0;
   const detail = {
-    level: levelProgress.level,
-    correct: levelProgress.correct,
+    level: generalProgress.level,
+    xp: generalProgress.xp,
     required,
     ratio
   };
   document.dispatchEvent(new CustomEvent('playtalk:level-progress', { detail }));
-  document.dispatchEvent(new CustomEvent('playtalk:level-update', { detail }));
+  document.dispatchEvent(new CustomEvent('playtalk:general-progress', { detail }));
 }
 
-function saveLevelProgress(options = {}) {
-  levelProgress.level = Math.max(1, Math.floor(levelProgress.level));
-  levelProgress.correct = Math.max(0, Math.floor(levelProgress.correct));
-  pastaAtual = levelProgress.level;
-  localStorage.setItem(LEVEL_PROGRESS_KEY, JSON.stringify(levelProgress));
-  localStorage.setItem('pastaAtual', String(levelProgress.level));
+function dispatchModeProgressUpdate(mode) {
+  const entry = getModeProgress(mode);
+  const required = getXPRequirement(entry.level);
+  const ratio = required > 0 ? Math.max(0, Math.min(1, entry.xp / required)) : 0;
+  const detail = {
+    mode,
+    level: entry.level,
+    xp: entry.xp,
+    required,
+    ratio
+  };
+  document.dispatchEvent(new CustomEvent('playtalk:mode-progress', { detail }));
+}
+
+function saveGeneralProgress(options = {}) {
+  generalProgress.level = Math.max(1, Math.floor(generalProgress.level));
+  generalProgress.xp = Math.max(0, Math.floor(generalProgress.xp));
+  localStorage.setItem(GENERAL_PROGRESS_KEY, JSON.stringify(generalProgress));
   if (!options || options.emit !== false) {
-    notifyLevelProgress();
+    dispatchGeneralProgressUpdate();
   }
 }
 
-function handleLevelAdvancement(increment = 1) {
-  if (!Number.isFinite(increment) || increment <= 0) {
-    return;
+function saveModeProgress(options = {}) {
+  const normalized = {};
+  Object.keys(modeProgress).forEach(key => {
+    const entry = ensureModeProgressStructure(key);
+    normalized[key] = { level: entry.level, xp: entry.xp };
+  });
+  localStorage.setItem(MODE_PROGRESS_KEY, JSON.stringify(normalized));
+  if (!options || options.emit !== false) {
+    Object.keys(normalized).forEach(modeKey => dispatchModeProgressUpdate(Number(modeKey)));
   }
-  levelProgress.correct += Math.floor(increment);
+}
+
+function addGeneralExperience(amount) {
+  const xp = Math.max(0, Math.floor(amount));
+  if (xp <= 0) {
+    return false;
+  }
+  generalProgress.xp += xp;
   let leveledUp = false;
-  while (levelProgress.correct >= getLevelRequirement(levelProgress.level)) {
-    levelProgress.correct -= getLevelRequirement(levelProgress.level);
-    levelProgress.level += 1;
+  while (generalProgress.xp >= getXPRequirement(generalProgress.level)) {
+    generalProgress.xp -= getXPRequirement(generalProgress.level);
+    generalProgress.level += 1;
     leveledUp = true;
   }
-  if (leveledUp) {
-    updateModeIcons();
+  saveGeneralProgress({ emit: true });
+  return leveledUp;
+}
+
+function addModeExperience(mode, amount) {
+  const xp = Math.max(0, Math.floor(amount));
+  if (xp <= 0) {
+    return false;
   }
-  updateLevelIcon();
+  const entry = getModeProgress(mode);
+  entry.xp += xp;
+  let leveledUp = false;
+  while (entry.xp >= getXPRequirement(entry.level)) {
+    entry.xp -= getXPRequirement(entry.level);
+    entry.level += 1;
+    leveledUp = true;
+  }
+  modeProgress[String(mode)] = entry;
+  saveModeProgress({ emit: true });
+  return leveledUp;
+}
+
+function grantExperience(amount, mode) {
+  const leveledGeneral = addGeneralExperience(amount);
+  const leveledMode = Number.isFinite(mode) ? addModeExperience(mode, amount) : false;
+  if (leveledGeneral || leveledMode) {
+    updateLevelIcon();
+  }
+}
+
+function loadProgressFromStorage() {
+  const storedGeneral = parseJSONStorage(GENERAL_PROGRESS_KEY, null);
+  if (storedGeneral && Number.isFinite(storedGeneral.level)) {
+    generalProgress.level = Math.max(1, Math.floor(storedGeneral.level));
+    generalProgress.xp = Math.max(0, Math.floor(storedGeneral.xp || 0));
+  } else {
+    const legacyLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
+    const fallbackLevel = Number.isFinite(legacyLevel) && legacyLevel > 0 ? legacyLevel : 1;
+    const legacyProgress = parseJSONStorage('levelProgress', null);
+    if (legacyProgress && Number.isFinite(legacyProgress.level)) {
+      generalProgress.level = Math.max(1, Math.floor(legacyProgress.level));
+    } else {
+      generalProgress.level = fallbackLevel;
+    }
+    generalProgress.xp = 0;
+  }
+
+  const storedModes = parseJSONStorage(MODE_PROGRESS_KEY, null);
+  modeProgress = {};
+  if (storedModes && typeof storedModes === 'object') {
+    Object.entries(storedModes).forEach(([modeKey, entry]) => {
+      const level = entry && Number.isFinite(entry.level) && entry.level > 0 ? Math.floor(entry.level) : 1;
+      const xp = entry && Number.isFinite(entry.xp) && entry.xp >= 0 ? Math.floor(entry.xp) : 0;
+      modeProgress[String(modeKey)] = { level, xp };
+    });
+  }
+
+  ALL_MODES.forEach(mode => ensureModeProgressStructure(mode));
+  pastaAtual = getLibraryLevelForMode(selectedMode);
+
+  saveGeneralProgress({ emit: false });
+  saveModeProgress({ emit: false });
+  dispatchGeneralProgressUpdate();
+  ALL_MODES.forEach(mode => dispatchModeProgressUpdate(mode));
+}
+
+function getModeLibrary(mode) {
+  const key = String(mode);
+  return phraseLibrary.modes[key] || {};
+}
+
+function getModeLevels(mode) {
+  return Object.keys(getModeLibrary(mode))
+    .map(Number)
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
+}
+
+function resolveModeLevel(mode) {
+  const levels = getModeLevels(mode);
+  if (!levels.length) {
+    return 1;
+  }
+  const target = getModeLevel(mode);
+  const maxAvailable = levels[levels.length - 1];
+  if (target <= levels[0]) {
+    return levels[0];
+  }
+  if (target >= maxAvailable) {
+    return maxAvailable;
+  }
+  if (levels.includes(target)) {
+    return target;
+  }
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (levels[i] <= target) {
+      return levels[i];
+    }
+  }
+  return levels[0];
 }
 
 let completedModes = {};
@@ -383,7 +626,7 @@ function reloadPersistentProgress(initialLoad = false) {
   acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
   errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
   tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
-  loadLevelProgressFromStorage();
+  loadProgressFromStorage();
   completedModes = parseJSONStorage('completedModes', {});
   unlockedModes = ensureUnlockedModesStructure(parseJSONStorage('unlockedModes', {}));
   points = Number(localStorage.getItem('points'));
@@ -393,9 +636,12 @@ function reloadPersistentProgress(initialLoad = false) {
   premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
-  saveLevelProgress({ emit: !initialLoad });
+  if (initialLoad) {
+    updateLevelIcon({ scope: 'general' });
+  } else {
+    updateLevelIcon({ scope: 'general' });
+  }
   if (!initialLoad) {
-    updateLevelIcon({ emitEvent: false });
     updateModeIcons();
     atualizarBarraProgresso();
     updateGeneralCircles();
@@ -593,7 +839,8 @@ function reportLastError() {
   const audio = new Audio('gamesounds/report.wav');
   audio.play();
   acertosTotais++;
-  handleLevelAdvancement();
+  const reward = rewardBalanceForPhrase(lastExpected || '');
+  grantExperience(reward, selectedMode);
   errosTotais = Math.max(0, errosTotais - 1);
   points += lastReward + lastPenalty;
   saveTotals();
@@ -621,13 +868,17 @@ function reportLastError() {
 }
 
 function updateLevelIcon(options = {}) {
-  saveLevelProgress({ emit: options.emitEvent !== false });
   const icon = document.getElementById('nivel-indicador');
-  if (icon) {
-    icon.style.transition = '';
-    icon.style.opacity = '1';
-    icon.src = `selos_niveis/level%20${levelProgress.level}.png`;
+  if (!icon) {
+    return;
   }
+  const scope = options.scope || (document.body.classList.contains('game-active') ? 'mode' : 'general');
+  const levelValue = scope === 'mode' ? getModeLevel(selectedMode) : generalProgress.level;
+  const normalizedLevel = Math.max(1, Math.floor(levelValue));
+  icon.style.transition = '';
+  icon.style.opacity = '1';
+  icon.src = `selos_niveis/level%20${normalizedLevel}.png`;
+  icon.dataset.levelScope = scope;
 }
 
 function unlockMode(mode, duration = 1000) {
@@ -657,8 +908,9 @@ function checkForMenuLevelUp() {
 }
 
 function performMenuLevelUp() {
-  levelProgress.level += 1;
-  levelProgress.correct = 0;
+  generalProgress.level += 1;
+  generalProgress.xp = 0;
+  saveGeneralProgress();
   completedModes = {};
   unlockedModes = getAllModesUnlockedState();
   localStorage.setItem('completedModes', JSON.stringify(completedModes));
@@ -700,56 +952,6 @@ function menuLevelUpSequence() {
 }
 
 let transitioning = false;
-
-const colorStops = [
-  [0, '#ff0000'],
-  [2000, '#ff3b00'],
-  [4000, '#ff7f00'],
-  [6000, '#ffb300'],
-  [8000, '#ffe000'],
-  [10000, '#ffff66'],
-  [12000, '#ccff66'],
-  [14000, '#99ff99'],
-  [16000, '#00cc66'],
-  [18000, '#00994d'],
-  [20000, '#00ffff'],
-  [22000, '#66ccff'],
-  [24000, '#0099ff'],
-  [25000, '#0099ff']
-];
-
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [int >> 16 & 255, int >> 8 & 255, int & 255];
-}
-
-function rgbToHex(r, g, b) {
-  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
-function calcularCor(pontos) {
-  const max = colorStops[colorStops.length - 1][0];
-  const p = Math.max(0, Math.min(pontos, max));
-  for (let i = 0; i < colorStops.length - 1; i++) {
-    const [p1, c1] = colorStops[i];
-    const [p2, c2] = colorStops[i + 1];
-    if (p >= p1 && p <= p2) {
-      const ratio = (p - p1) / (p2 - p1);
-      const [r1, g1, b1] = hexToRgb(c1);
-      const [r2, g2, b2] = hexToRgb(c2);
-      const r = Math.round(r1 + ratio * (r2 - r1));
-      const g = Math.round(g1 + ratio * (g2 - g1));
-      const b = Math.round(b1 + ratio * (b2 - b1));
-      return rgbToHex(r, g, b);
-    }
-  }
-  return colorStops[colorStops.length - 1][1];
-}
-
-function colorFromPercent(perc) {
-  const max = colorStops[colorStops.length - 1][0];
-  return calcularCor((perc / 100) * max);
-}
 
 function createStatCircle(perc, label, iconSrc, extraText) {
   const wrapper = document.createElement('div');
@@ -888,6 +1090,7 @@ function startGame(modo) {
   saveTotals();
   atualizarBarraProgresso();
   updateModeIcons();
+  updateLevelIcon({ scope: 'mode' });
   listeningForCommand = false;
   document.getElementById('menu').style.display = 'none';
   document.body.classList.add('game-active');
@@ -920,7 +1123,7 @@ function beginGame() {
     updateGeneralCircles();
     const texto = document.getElementById('texto-exibicao');
     if (texto) texto.style.opacity = '1';
-    updateLevelIcon();
+    updateLevelIcon({ scope: 'mode' });
     updateModeIcons();
     switch (selectedMode) {
       case 1:
@@ -1013,30 +1216,39 @@ function embaralhar(array) {
 }
 
 function carregarFrases() {
-  let principais = [], anteriores = [];
-  if (pastas[pastaAtual]) {
-	principais = pastas[pastaAtual];
-
-  }
-  if (pastaAtual > 1) {
-    for (let i = 1; i < pastaAtual; i++) {
-      if (pastas[i]) {
-		const frases = pastas[i];
-
-        anteriores = anteriores.concat(frases);
+  const library = getModeLibrary(selectedMode);
+  const levelToUse = resolveModeLevel(selectedMode);
+  pastaAtual = levelToUse;
+  const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
+  let anteriores = [];
+  getModeLevels(selectedMode)
+    .filter(level => level < levelToUse)
+    .forEach(level => {
+      if (Array.isArray(library[level])) {
+        anteriores = anteriores.concat(library[level]);
       }
-    }
-  }
-  const qtdPrincipais = pastaAtual === 1 ? TOTAL_FRASES : Math.round(TOTAL_FRASES * 0.8);
+    });
+
+  const qtdPrincipais = levelToUse === 1 ? TOTAL_FRASES : Math.round(TOTAL_FRASES * 0.8);
   const qtdAnteriores = TOTAL_FRASES - qtdPrincipais;
-  frasesArr = [].concat(
+  let selecionadas = [].concat(
     embaralhar(principais).slice(0, qtdPrincipais),
     embaralhar(anteriores).slice(0, qtdAnteriores)
   );
-  frasesArr = embaralhar(frasesArr);
+
+  if (!selecionadas.length && principais.length) {
+    selecionadas = [...principais];
+  }
+
+  if (!selecionadas.length) {
+    selecionadas = [['', '']];
+  }
+
+  frasesArr = embaralhar(selecionadas);
   fraseIndex = 0;
   setTimeout(() => mostrarFrase(), 300);
   atualizarBarraProgresso();
+  dispatchModeProgressUpdate(selectedMode);
 }
 
 function mostrarFrase() {
@@ -1149,11 +1361,15 @@ function verificarResposta() {
   const resposta = input.value.trim();
   const cheat = /^GOTO(\d+)$/i.exec(resposta);
   if (cheat) {
-    const nivel = parseInt(cheat[1], 10);
-    if (pastas[nivel]) {
-      levelProgress.level = Math.max(1, nivel);
-      levelProgress.correct = 0;
-      updateLevelIcon();
+    const nivel = Math.max(1, parseInt(cheat[1], 10));
+    const modeKey = String(selectedMode);
+    if (phraseLibrary.modes[modeKey] && phraseLibrary.modes[modeKey][nivel]) {
+      const progress = getModeProgress(selectedMode);
+      progress.level = nivel;
+      progress.xp = 0;
+      modeProgress[modeKey] = progress;
+      saveModeProgress({ emit: true });
+      updateLevelIcon({ scope: 'mode' });
       carregarFrases();
     }
     input.value = "";
@@ -1189,14 +1405,14 @@ function verificarResposta() {
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
-    handleLevelAdvancement();
     points += premioAtual;
     saveTotals();
     const display = document.getElementById('texto-exibicao');
     const balancePhrase = display && display.dataset
       ? (display.dataset.expectedPhrase || display.textContent)
       : (display ? display.textContent : '');
-    rewardBalanceForPhrase(balancePhrase || '');
+    const reward = rewardBalanceForPhrase(balancePhrase || '');
+    grantExperience(reward, selectedMode);
     resultado.textContent = '';
     const threshold = getCurrentThreshold();
     const reached = points >= threshold && !completedModes[selectedMode];
@@ -1229,13 +1445,13 @@ function verificarResposta() {
       saveModeStats();
       document.getElementById("somAcerto").play();
       acertosTotais++;
-      handleLevelAdvancement();
       points += premioAtual;
       if (selectedMode === 5) {
         points += 1000;
       }
       saveTotals();
-      rewardBalanceForPhrase(expectedPhrase);
+      const reward = rewardBalanceForPhrase(expectedPhrase);
+      grantExperience(reward, selectedMode);
       consecutiveErrors = 0;
       resultado.textContent = '';
       const threshold = getCurrentThreshold();
@@ -1398,6 +1614,7 @@ function goHome() {
   }
   listeningForCommand = false;
   updateModeIcons();
+  updateLevelIcon({ scope: 'general' });
 }
 
 function updateClock() {
@@ -1409,8 +1626,12 @@ function updateClock() {
 
 async function initGame() {
   reloadPersistentProgress();
-  await carregarPastas();
-  updateLevelIcon();
+  try {
+    await carregarPastas();
+  } catch (error) {
+    console.error('Não foi possível carregar as frases do jogo.', error);
+  }
+  updateLevelIcon({ scope: 'general' });
   updateModeIcons();
   const menu = document.getElementById('menu');
   if (menu) menu.style.display = 'flex';
@@ -1470,9 +1691,12 @@ async function initGame() {
       }
       clearInterval(timerInterval);
       clearInterval(prizeTimer);
-      levelProgress.level += 1;
-      levelProgress.correct = 0;
-      updateLevelIcon();
+      const progress = getModeProgress(selectedMode);
+      progress.level += 1;
+      progress.xp = 0;
+      modeProgress[String(selectedMode)] = progress;
+      saveModeProgress({ emit: true });
+      updateLevelIcon({ scope: 'mode' });
       beginGame();
     }
   });

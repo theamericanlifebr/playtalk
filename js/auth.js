@@ -15,8 +15,8 @@
     completedModes: { type: 'json', default: {} },
     unlockedModes: { type: 'json', default: {} },
     modeIntroShown: { type: 'json', default: {} },
-    pastaAtual: { type: 'number', default: 1 },
-    levelProgress: { type: 'json', default: { level: 1, correct: 0 } },
+    generalProgress: { type: 'json', default: { level: 1, xp: 0 } },
+    modeProgress: { type: 'json', default: {} },
     tutorialDone: { type: 'boolean', default: false },
     ilifeDone: { type: 'boolean', default: false },
     levelDetails: { type: 'json', default: [] },
@@ -331,25 +331,36 @@
 
   function getLevelRequirement(level) {
     const normalized = Number.isFinite(level) ? Math.max(1, Math.floor(level)) : 1;
-    return 9 + normalized;
+    return Math.round(15 * Math.pow(normalized, 1.5));
   }
 
   function readLevelProgress() {
-    const raw = localStorage.getItem('levelProgress');
+    const raw = localStorage.getItem('generalProgress');
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
         const level = Number.isFinite(parsed.level) && parsed.level > 0 ? Math.floor(parsed.level) : 1;
-        const correct = Number.isFinite(parsed.correct) && parsed.correct >= 0 ? Math.floor(parsed.correct) : 0;
-        return { level, correct };
+        const xp = Number.isFinite(parsed.xp) && parsed.xp >= 0 ? Math.floor(parsed.xp) : 0;
+        return { level, xp };
       } catch (err) {
         console.warn('Não foi possível ler o progresso de nível.', err);
       }
     }
-    const fallbackLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
+    const legacyRaw = localStorage.getItem('levelProgress');
+    if (legacyRaw) {
+      try {
+        const parsedLegacy = JSON.parse(legacyRaw);
+        const level = Number.isFinite(parsedLegacy.level) && parsedLegacy.level > 0
+          ? Math.floor(parsedLegacy.level)
+          : 1;
+        return { level, xp: 0 };
+      } catch (err) {
+        console.warn('Não foi possível migrar o progresso antigo de nível.', err);
+      }
+    }
     return {
-      level: Number.isFinite(fallbackLevel) && fallbackLevel > 0 ? fallbackLevel : 1,
-      correct: 0
+      level: 1,
+      xp: 0
     };
   }
 
@@ -383,8 +394,8 @@
     const levelProgress = readLevelProgress();
     const level = levelProgress.level;
     const requirement = getLevelRequirement(level);
-    const normalizedCorrect = Math.max(0, Math.min(levelProgress.correct, requirement));
-    const ratio = requirement > 0 ? Math.max(0, Math.min(1, normalizedCorrect / requirement)) : 0;
+    const normalizedXp = Math.max(0, Math.min(levelProgress.xp, requirement));
+    const ratio = requirement > 0 ? Math.max(0, Math.min(1, normalizedXp / requirement)) : 0;
     let avatarUrl = DEFAULT_AVATAR_URL;
     const storedAvatar = localStorage.getItem('avatar');
     if (storedAvatar && storedAvatar.trim()) {
@@ -403,7 +414,7 @@
 
     if (avatarContainer) {
       avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
-      avatarContainer.title = `Progresso de nível: ${normalizedCorrect}/${requirement}`;
+      avatarContainer.title = `Progresso de nível: ${normalizedXp}/${requirement}`;
     }
 
     if (avatarEl) {
@@ -1043,10 +1054,10 @@
       const requirement = Number.isFinite(detail.required) && detail.required > 0
         ? Math.floor(detail.required)
         : getLevelRequirement(levelValue);
-      const correct = Number.isFinite(detail.correct) && detail.correct >= 0
-        ? Math.floor(detail.correct)
-        : Math.max(0, Math.min(readLevelProgress().correct, requirement));
-      const ratio = requirement > 0 ? Math.max(0, Math.min(1, (detail.ratio ?? (correct / requirement)))) : 0;
+      const xpValue = Number.isFinite(detail.xp) && detail.xp >= 0
+        ? Math.floor(detail.xp)
+        : Math.max(0, Math.min(readLevelProgress().xp, requirement));
+      const ratio = requirement > 0 ? Math.max(0, Math.min(1, (detail.ratio ?? (xpValue / requirement)))) : 0;
       const levelEl = document.getElementById('header-level');
       if (levelEl) {
         levelEl.textContent = `Nível ${levelValue}`;
@@ -1054,7 +1065,7 @@
       const avatarContainer = document.getElementById('header-avatar-container');
       if (avatarContainer) {
         avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
-        avatarContainer.title = `Progresso de nível: ${Math.min(correct, requirement)}/${requirement}`;
+        avatarContainer.title = `Progresso de nível: ${Math.min(xpValue, requirement)}/${requirement}`;
       }
     } else {
       updateAuthStatus();
@@ -1066,7 +1077,7 @@
       return;
     }
 
-    const watchedKeys = ['pastaAtual', 'displayName', 'avatar', 'levelProgress'];
+    const watchedKeys = ['generalProgress', 'modeProgress', 'displayName', 'avatar'];
     if (event.key && watchedKeys.includes(event.key)) {
       updateAuthStatus();
       return;

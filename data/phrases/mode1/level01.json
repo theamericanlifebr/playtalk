@@ -1,0 +1,54 @@
+{
+  "mode": 1,
+  "level": 1,
+  "entries": [
+    {
+      "pt": "gato",
+      "en": "cat"
+    },
+    {
+      "pt": "cachorro",
+      "en": "dog"
+    },
+    {
+      "pt": "sol",
+      "en": "sun"
+    },
+    {
+      "pt": "lua",
+      "en": "moon"
+    },
+    {
+      "pt": "livro",
+      "en": "book"
+    },
+    {
+      "pt": "caneta",
+      "en": "pen"
+    },
+    {
+      "pt": "ônibus",
+      "en": "bus"
+    },
+    {
+      "pt": "carro",
+      "en": "car"
+    },
+    {
+      "pt": "árvore",
+      "en": "tree"
+    },
+    {
+      "pt": "peixe",
+      "en": "fish"
+    },
+    {
+      "pt": "pássaro",
+      "en": "bird"
+    },
+    {
+      "pt": "porta",
+      "en": "door"
+    }
+  ]
+}

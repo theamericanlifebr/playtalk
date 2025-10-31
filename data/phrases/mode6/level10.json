@@ -1,0 +1,54 @@
+{
+  "mode": 6,
+  "level": 10,
+  "entries": [
+    {
+      "pt": "eu coordeno a missão",
+      "en": "I coordinate the mission"
+    },
+    {
+      "pt": "você protege a equipe",
+      "en": "You protect the crew"
+    },
+    {
+      "pt": "ele guia a nave",
+      "en": "He pilots the ship"
+    },
+    {
+      "pt": "ela equilibra a carga",
+      "en": "She balances the load"
+    },
+    {
+      "pt": "nós monitoramos os sinais",
+      "en": "We monitor the signals"
+    },
+    {
+      "pt": "eles ajustam a rota",
+      "en": "They adjust the route"
+    },
+    {
+      "pt": "eu controlo a energia",
+      "en": "I control the power"
+    },
+    {
+      "pt": "você garante a segurança",
+      "en": "You ensure the safety"
+    },
+    {
+      "pt": "ele verifica o casco",
+      "en": "He checks the hull"
+    },
+    {
+      "pt": "ela calcula a órbita",
+      "en": "She calculates the orbit"
+    },
+    {
+      "pt": "nós preparamos a aterrissagem",
+      "en": "We prepare the landing"
+    },
+    {
+      "pt": "eles registram a descoberta",
+      "en": "They record the discovery"
+    }
+  ]
+}
