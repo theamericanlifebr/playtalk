@@ -10,6 +10,16 @@ const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
 const MODE_PROGRESS_KEY = 'modeProgress';
 const GENERAL_PROGRESS_KEY = 'generalProgress';
 const XP_BASE_VALUE = 15;
+const MAX_LEVEL_CAP = 1000;
+const LEVEL_SCORE_INCREMENT = 0.05;
+const MODE_SCORE_FACTORS = {
+  1: 0,
+  2: 0.25,
+  3: 0.5,
+  4: 0.75,
+  5: 1,
+  6: 1.25
+};
 
 const COLOR_STOPS = [
   [0, '#ff0000'],
@@ -37,6 +47,9 @@ const phraseLibrary = {
   loaded: false
 };
 
+let generalProgress = { level: 1, xp: 0 };
+let modeProgress = {};
+
 function refreshUserSettings() {
   if (typeof settingsAPI.loadSettings === 'function') {
     userSettings = settingsAPI.loadSettings();
@@ -46,6 +59,37 @@ function refreshUserSettings() {
 }
 
 refreshUserSettings();
+
+function getNormalizedLevelValue(level) {
+  if (!Number.isFinite(level)) {
+    return 1;
+  }
+  return Math.min(MAX_LEVEL_CAP, Math.max(1, Math.floor(level)));
+}
+
+function getLevelScoreFactor(level) {
+  const normalized = getNormalizedLevelValue(level);
+  return (normalized - 1) * LEVEL_SCORE_INCREMENT;
+}
+
+function getModeScoreFactor(mode) {
+  return MODE_SCORE_FACTORS[mode] ?? 0;
+}
+
+function getScoreMultiplierFor(mode) {
+  const levelFactor = getLevelScoreFactor(generalProgress.level);
+  const modeFactor = getModeScoreFactor(mode);
+  return 1 + levelFactor + modeFactor;
+}
+
+function applyScoreMultiplier(baseValue, mode) {
+  const numeric = Number(baseValue);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return 0;
+  }
+  const multiplier = getScoreMultiplierFor(mode);
+  return Math.max(0, Math.round(numeric * multiplier));
+}
 
 function hexToRgb(hex) {
   const int = parseInt(hex.slice(1), 16);
@@ -110,19 +154,21 @@ function updateGameBalanceDisplay(balanceValue) {
   scoreEl.textContent = `Saldo: ${Math.max(0, Math.floor(value)).toLocaleString('pt-BR')}`;
 }
 
-function rewardBalanceForPhrase(phrase) {
+function rewardBalanceForPhrase(phrase, mode) {
   const reward = calculateBalanceReward(phrase);
   if (!phrase || reward <= 0) {
     updateGameBalanceDisplay();
     return 0;
   }
+  const targetMode = Number.isFinite(mode) ? mode : 1;
+  const finalReward = applyScoreMultiplier(reward, targetMode);
   if (window.playtalkBalance && typeof window.playtalkBalance.add === 'function') {
-    const total = window.playtalkBalance.add(reward);
+    const total = window.playtalkBalance.add(finalReward);
     updateGameBalanceDisplay(total);
   } else {
     updateGameBalanceDisplay();
   }
-  return reward;
+  return finalReward;
 }
 
 document.addEventListener('playtalk:balance-change', (event) => {
@@ -336,15 +382,12 @@ const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
 
-let generalProgress = { level: 1, xp: 0 };
-let modeProgress = {};
-
 function getCurrentThreshold() {
   return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
 }
 
 function getXPRequirement(level) {
-  const normalized = Number.isFinite(level) ? Math.max(1, Math.floor(level)) : 1;
+  const normalized = getNormalizedLevelValue(level);
   return Math.round(XP_BASE_VALUE * Math.pow(normalized, 1.5));
 }
 
@@ -354,8 +397,15 @@ function ensureModeProgressStructure(mode) {
     modeProgress[key] = { level: 1, xp: 0 };
   }
   const entry = modeProgress[key];
-  entry.level = Number.isFinite(entry.level) && entry.level > 0 ? Math.floor(entry.level) : 1;
+  entry.level = Number.isFinite(entry.level) && entry.level > 0
+    ? Math.min(MAX_LEVEL_CAP, Math.floor(entry.level))
+    : 1;
   entry.xp = Number.isFinite(entry.xp) && entry.xp >= 0 ? Math.floor(entry.xp) : 0;
+  if (entry.level >= MAX_LEVEL_CAP) {
+    entry.level = MAX_LEVEL_CAP;
+    const capRequirement = getXPRequirement(MAX_LEVEL_CAP);
+    entry.xp = Math.min(entry.xp, capRequirement);
+  }
   return entry;
 }
 
@@ -407,8 +457,13 @@ function dispatchModeProgressUpdate(mode) {
 }
 
 function saveGeneralProgress(options = {}) {
-  generalProgress.level = Math.max(1, Math.floor(generalProgress.level));
-  generalProgress.xp = Math.max(0, Math.floor(generalProgress.xp));
+  generalProgress.level = getNormalizedLevelValue(generalProgress.level);
+  const normalizedXp = Math.max(0, Math.floor(generalProgress.xp));
+  if (generalProgress.level >= MAX_LEVEL_CAP) {
+    generalProgress.xp = Math.min(normalizedXp, getXPRequirement(MAX_LEVEL_CAP));
+  } else {
+    generalProgress.xp = normalizedXp;
+  }
   localStorage.setItem(GENERAL_PROGRESS_KEY, JSON.stringify(generalProgress));
   if (!options || options.emit !== false) {
     dispatchGeneralProgressUpdate();
@@ -419,7 +474,11 @@ function saveModeProgress(options = {}) {
   const normalized = {};
   Object.keys(modeProgress).forEach(key => {
     const entry = ensureModeProgressStructure(key);
-    normalized[key] = { level: entry.level, xp: entry.xp };
+    const cappedLevel = entry.level;
+    const cappedXp = entry.level >= MAX_LEVEL_CAP
+      ? Math.min(entry.xp, getXPRequirement(MAX_LEVEL_CAP))
+      : Math.max(0, Math.floor(entry.xp));
+    normalized[key] = { level: cappedLevel, xp: cappedXp };
   });
   localStorage.setItem(MODE_PROGRESS_KEY, JSON.stringify(normalized));
   if (!options || options.emit !== false) {
@@ -434,10 +493,14 @@ function addGeneralExperience(amount) {
   }
   generalProgress.xp += xp;
   let leveledUp = false;
-  while (generalProgress.xp >= getXPRequirement(generalProgress.level)) {
+  while (generalProgress.level < MAX_LEVEL_CAP && generalProgress.xp >= getXPRequirement(generalProgress.level)) {
     generalProgress.xp -= getXPRequirement(generalProgress.level);
     generalProgress.level += 1;
     leveledUp = true;
+  }
+  if (generalProgress.level >= MAX_LEVEL_CAP) {
+    generalProgress.level = MAX_LEVEL_CAP;
+    generalProgress.xp = Math.min(generalProgress.xp, getXPRequirement(MAX_LEVEL_CAP));
   }
   saveGeneralProgress({ emit: true });
   return leveledUp;
@@ -451,10 +514,14 @@ function addModeExperience(mode, amount) {
   const entry = getModeProgress(mode);
   entry.xp += xp;
   let leveledUp = false;
-  while (entry.xp >= getXPRequirement(entry.level)) {
+  while (entry.level < MAX_LEVEL_CAP && entry.xp >= getXPRequirement(entry.level)) {
     entry.xp -= getXPRequirement(entry.level);
     entry.level += 1;
     leveledUp = true;
+  }
+  if (entry.level >= MAX_LEVEL_CAP) {
+    entry.level = MAX_LEVEL_CAP;
+    entry.xp = Math.min(entry.xp, getXPRequirement(MAX_LEVEL_CAP));
   }
   modeProgress[String(mode)] = entry;
   saveModeProgress({ emit: true });
@@ -472,16 +539,21 @@ function grantExperience(amount, mode) {
 function loadProgressFromStorage() {
   const storedGeneral = parseJSONStorage(GENERAL_PROGRESS_KEY, null);
   if (storedGeneral && Number.isFinite(storedGeneral.level)) {
-    generalProgress.level = Math.max(1, Math.floor(storedGeneral.level));
-    generalProgress.xp = Math.max(0, Math.floor(storedGeneral.xp || 0));
+    generalProgress.level = getNormalizedLevelValue(storedGeneral.level);
+    const normalizedXp = Math.max(0, Math.floor(storedGeneral.xp || 0));
+    if (generalProgress.level >= MAX_LEVEL_CAP) {
+      generalProgress.xp = Math.min(normalizedXp, getXPRequirement(MAX_LEVEL_CAP));
+    } else {
+      generalProgress.xp = normalizedXp;
+    }
   } else {
     const legacyLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
     const fallbackLevel = Number.isFinite(legacyLevel) && legacyLevel > 0 ? legacyLevel : 1;
     const legacyProgress = parseJSONStorage('levelProgress', null);
     if (legacyProgress && Number.isFinite(legacyProgress.level)) {
-      generalProgress.level = Math.max(1, Math.floor(legacyProgress.level));
+      generalProgress.level = getNormalizedLevelValue(legacyProgress.level);
     } else {
-      generalProgress.level = fallbackLevel;
+      generalProgress.level = getNormalizedLevelValue(fallbackLevel);
     }
     generalProgress.xp = 0;
   }
@@ -490,8 +562,13 @@ function loadProgressFromStorage() {
   modeProgress = {};
   if (storedModes && typeof storedModes === 'object') {
     Object.entries(storedModes).forEach(([modeKey, entry]) => {
-      const level = entry && Number.isFinite(entry.level) && entry.level > 0 ? Math.floor(entry.level) : 1;
-      const xp = entry && Number.isFinite(entry.xp) && entry.xp >= 0 ? Math.floor(entry.xp) : 0;
+      const level = entry && Number.isFinite(entry.level) && entry.level > 0
+        ? Math.min(MAX_LEVEL_CAP, Math.floor(entry.level))
+        : 1;
+      let xp = entry && Number.isFinite(entry.xp) && entry.xp >= 0 ? Math.floor(entry.xp) : 0;
+      if (level >= MAX_LEVEL_CAP) {
+        xp = Math.min(xp, getXPRequirement(MAX_LEVEL_CAP));
+      }
       modeProgress[String(modeKey)] = { level, xp };
     });
   }
@@ -710,7 +787,7 @@ function saveTotals() {
   localStorage.setItem('acertosTotais', acertosTotais);
   localStorage.setItem('errosTotais', errosTotais);
   localStorage.setItem('tentativasTotais', tentativasTotais);
-  localStorage.setItem('points', points);
+  localStorage.setItem('points', Math.max(0, Math.floor(points)));
   const limite = getCurrentThreshold();
   if (!paused && points >= limite) {
     pauseGame();
@@ -839,7 +916,7 @@ function reportLastError() {
   const audio = new Audio('gamesounds/report.wav');
   audio.play();
   acertosTotais++;
-  const reward = rewardBalanceForPhrase(lastExpected || '');
+  const reward = rewardBalanceForPhrase(lastExpected || '', selectedMode);
   grantExperience(reward, selectedMode);
   errosTotais = Math.max(0, errosTotais - 1);
   points += lastReward + lastPenalty;
@@ -1285,7 +1362,7 @@ function mostrarFrase() {
     const secs = Math.floor((Date.now() - start) / 1000);
     timerEl.textContent = `Tempo: ${secs}s`;
     if (lossPerSecond > 0 && secs > lastTimerSecond) {
-      const dec = lossPerSecond * (secs - lastTimerSecond);
+      const dec = Math.max(0, Math.round(lossPerSecond * (secs - lastTimerSecond)));
       if (dec > 0) {
         points = Math.max(0, points - dec);
         saveTotals();
@@ -1391,28 +1468,43 @@ function verificarResposta() {
   tentativasTotais++;
   saveTotals();
   const elapsed = Date.now() - prizeStart;
-  const premioAtual = premioBase - elapsed * premioDec;
-  const penalty = elapsed * penaltyFactor;
-  lastReward = premioAtual;
+  const rawPremio = Math.max(0, Math.round(premioBase - elapsed * premioDec));
+  const penalty = Math.max(0, Math.round(elapsed * penaltyFactor));
+  const bonus = selectedMode === 5 ? 1000 : 0;
+  const baseReward = rawPremio + bonus;
+  const finalReward = applyScoreMultiplier(baseReward, selectedMode);
+  lastReward = finalReward;
   lastPenalty = penalty;
   lastWasError = false;
 
   const stats = ensureModeStats(selectedMode);
+  stats.totalPhrases++;
 
-  if (selectedMode === 1) {
-    stats.totalPhrases++;
+  const currentEntry = Array.isArray(frasesArr[fraseIndex]) ? frasesArr[fraseIndex] : ['', ''];
+  const [pt, en] = currentEntry;
+  const esperado = esperadoLang === 'pt' ? pt : en;
+  const expectedPhrase = esperado || '';
+  const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+  let normalizadoResp = norm(resposta);
+  const normalizadoEsp = norm(esperado || '');
+  if (normalizadoResp === 'justicanaterra') {
+    normalizadoResp = normalizadoEsp;
+  }
+  const correto =
+    normalizadoResp === normalizadoEsp ||
+    ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
+    ehQuaseCorretoPalavras(resposta, esperado || '');
+
+  if (correto) {
     stats.correct++;
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
-    points += premioAtual;
+    points += finalReward;
     saveTotals();
-    const display = document.getElementById('texto-exibicao');
-    const balancePhrase = display && display.dataset
-      ? (display.dataset.expectedPhrase || display.textContent)
-      : (display ? display.textContent : '');
-    const reward = rewardBalanceForPhrase(balancePhrase || '');
+    const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
     grantExperience(reward, selectedMode);
+    consecutiveErrors = 0;
     resultado.textContent = '';
     const threshold = getCurrentThreshold();
     const reached = points >= threshold && !completedModes[selectedMode];
@@ -1420,83 +1512,42 @@ function verificarResposta() {
       if (reached) finishMode();
       else continuar();
     });
-    atualizarBarraProgresso();
-    return;
-  }
-
-    const [pt, en] = frasesArr[fraseIndex];
-
-    const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
-    const esperado = esperadoLang === 'pt' ? pt : en;
-    const expectedPhrase = esperado;
-    let normalizadoResp = norm(resposta);
-    const normalizadoEsp = norm(esperado);
-  if (normalizadoResp === 'justicanaterra') {
-    normalizadoResp = normalizadoEsp;
-  }
-  const correto =
-    normalizadoResp === normalizadoEsp ||
-    ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
-    ehQuaseCorretoPalavras(resposta, esperado);
-
-    if (correto) {
-      stats.totalPhrases++;
-      stats.correct++;
-      saveModeStats();
-      document.getElementById("somAcerto").play();
-      acertosTotais++;
-      points += premioAtual;
-      if (selectedMode === 5) {
-        points += 1000;
+  } else {
+    stats.wrong++;
+    const wr = stats.wrongRanking;
+    const existing = wr.find(e => e.expected === expectedPhrase && e.input === resposta && e.folder === pastaAtual);
+    if (existing) existing.count++;
+    else wr.push({ expected: expectedPhrase, input: resposta, folder: pastaAtual, count: 1 });
+    saveModeStats();
+    document.getElementById("somErro").play();
+    errosTotais++;
+    lastExpected = expectedPhrase;
+    lastInput = resposta;
+    lastFolder = pastaAtual;
+    saveTotals();
+    lastWasError = true;
+    resultado.textContent = "";
+    resultado.style.color = "red";
+    input.value = '';
+    input.disabled = true;
+    bloqueado = true;
+    microphonePaused = true;
+    falar(esperado, esperadoLang);
+    consecutiveErrors++;
+    flashError(esperado, () => {
+      input.disabled = false;
+      bloqueado = false;
+      points = Math.max(0, points - penalty);
+      saveTotals();
+      microphonePaused = false;
+      if (consecutiveErrors >= 3) {
+        triggerDownPlay();
+      } else {
+        continuar();
       }
-      saveTotals();
-      const reward = rewardBalanceForPhrase(expectedPhrase);
-      grantExperience(reward, selectedMode);
-      consecutiveErrors = 0;
-      resultado.textContent = '';
-      const threshold = getCurrentThreshold();
-      const reached = points >= threshold && !completedModes[selectedMode];
-      flashSuccess(() => {
-        if (reached) finishMode();
-        else continuar();
-      });
-    } else {
-      stats.totalPhrases++;
-      stats.wrong++;
-      const wr = stats.wrongRanking;
-      const existing = wr.find(e => e.expected === expectedPhrase && e.input === resposta && e.folder === pastaAtual);
-      if (existing) existing.count++;
-      else wr.push({ expected: expectedPhrase, input: resposta, folder: pastaAtual, count: 1 });
-      saveModeStats();
-      document.getElementById("somErro").play();
-      errosTotais++;
-      lastExpected = expectedPhrase;
-      lastInput = resposta;
-      lastFolder = pastaAtual;
-      saveTotals();
-      lastWasError = true;
-      resultado.textContent = "";
-      resultado.style.color = "red";
-      input.value = '';
-      input.disabled = true;
-      bloqueado = true;
-      microphonePaused = true;
-      falar(esperado, esperadoLang);
-      consecutiveErrors++;
-      flashError(esperado, () => {
-        input.disabled = false;
-        bloqueado = false;
-        points = Math.max(0, points - penalty);
-        saveTotals();
-        microphonePaused = false;
-        if (consecutiveErrors >= 3) {
-          triggerDownPlay();
-        } else {
-          continuar();
-        }
-      });
-    }
-    atualizarBarraProgresso();
+    });
+  }
+  atualizarBarraProgresso();
     // Pontuação de acertos ocultada
   }
 
