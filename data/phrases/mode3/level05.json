@@ -1,0 +1,54 @@
+{
+  "mode": 3,
+  "level": 5,
+  "entries": [
+    {
+      "pt": "eu carrego a mala",
+      "en": "I carry the bag"
+    },
+    {
+      "pt": "você espera o trem",
+      "en": "You wait for the train"
+    },
+    {
+      "pt": "ele troca a lâmpada",
+      "en": "He changes the bulb"
+    },
+    {
+      "pt": "ela envia a mensagem",
+      "en": "She sends the message"
+    },
+    {
+      "pt": "nós cozinhamos o jantar",
+      "en": "We cook the dinner"
+    },
+    {
+      "pt": "eles limpam o jardim",
+      "en": "They clean the garden"
+    },
+    {
+      "pt": "eu conserto o relógio",
+      "en": "I fix the clock"
+    },
+    {
+      "pt": "você organiza a agenda",
+      "en": "You organize the schedule"
+    },
+    {
+      "pt": "ele prepara o relatório",
+      "en": "He prepares the report"
+    },
+    {
+      "pt": "ela fecha a cortina",
+      "en": "She closes the curtain"
+    },
+    {
+      "pt": "nós reservamos o hotel",
+      "en": "We book the hotel"
+    },
+    {
+      "pt": "eles carregam as caixas",
+      "en": "They carry the boxes"
+    }
+  ]
+}

@@ -5,7 +5,6 @@ const fsPromises = fs.promises;
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const USERS_DB_PATH = path.join(DATA_DIR, 'users.json');
-const PASTAS_PATH = path.join(DATA_DIR, 'pastas.json');
 
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
@@ -17,7 +16,8 @@ const PROGRESS_SCHEMA = {
   completedModes: { type: 'json', default: {} },
   unlockedModes: { type: 'json', default: {} },
   modeIntroShown: { type: 'json', default: {} },
-  pastaAtual: { type: 'number', default: 1 },
+  generalProgress: { type: 'json', default: { level: 1, xp: 0 } },
+  modeProgress: { type: 'json', default: {} },
   tutorialDone: { type: 'boolean', default: false },
   ilifeDone: { type: 'boolean', default: false },
   levelDetails: { type: 'json', default: [] },
@@ -93,29 +93,6 @@ async function writeDatabase(data) {
   return payload;
 }
 
-async function loadPastasRaw() {
-  await ensureDataDirectory();
-  try {
-    const raw = await fsPromises.readFile(PASTAS_PATH, 'utf8');
-    return raw;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return '';
-    }
-    throw error;
-  }
-}
-
-function parsePastas(rawText) {
-  const result = {};
-  const regex = /(\d+):\s*`([\s\S]*?)`/g;
-  let match;
-  while ((match = regex.exec(rawText))) {
-    result[match[1]] = match[2];
-  }
-  return result;
-}
-
 module.exports = {
   DATA_DIR,
   USERS_DB_PATH,
@@ -124,7 +101,5 @@ module.exports = {
   createDefaultData,
   ensureUserDefaults,
   readDatabase,
-  writeDatabase,
-  loadPastasRaw,
-  parsePastas
+  writeDatabase
 };

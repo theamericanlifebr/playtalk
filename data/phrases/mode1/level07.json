@@ -1,0 +1,54 @@
+{
+  "mode": 1,
+  "level": 7,
+  "entries": [
+    {
+      "pt": "pintor",
+      "en": "painter"
+    },
+    {
+      "pt": "dançarino",
+      "en": "dancer"
+    },
+    {
+      "pt": "cantor",
+      "en": "singer"
+    },
+    {
+      "pt": "escritor",
+      "en": "writer"
+    },
+    {
+      "pt": "leitor",
+      "en": "reader"
+    },
+    {
+      "pt": "corredor",
+      "en": "runner"
+    },
+    {
+      "pt": "ajudante",
+      "en": "helper"
+    },
+    {
+      "pt": "líder",
+      "en": "leader"
+    },
+    {
+      "pt": "jogador",
+      "en": "player"
+    },
+    {
+      "pt": "fazendeiro",
+      "en": "farmer"
+    },
+    {
+      "pt": "padeiro",
+      "en": "baker"
+    },
+    {
+      "pt": "cozinheiro",
+      "en": "cook"
+    }
+  ]
+}

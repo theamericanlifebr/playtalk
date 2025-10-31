@@ -1,0 +1,54 @@
+{
+  "mode": 1,
+  "level": 2,
+  "entries": [
+    {
+      "pt": "casa",
+      "en": "house"
+    },
+    {
+      "pt": "cadeira",
+      "en": "chair"
+    },
+    {
+      "pt": "mesa",
+      "en": "table"
+    },
+    {
+      "pt": "água",
+      "en": "water"
+    },
+    {
+      "pt": "pão",
+      "en": "bread"
+    },
+    {
+      "pt": "bolo",
+      "en": "cake"
+    },
+    {
+      "pt": "maçã",
+      "en": "apple"
+    },
+    {
+      "pt": "laranja",
+      "en": "orange"
+    },
+    {
+      "pt": "flor",
+      "en": "flower"
+    },
+    {
+      "pt": "nuvem",
+      "en": "cloud"
+    },
+    {
+      "pt": "estrela",
+      "en": "star"
+    },
+    {
+      "pt": "sapato",
+      "en": "shoe"
+    }
+  ]
+}
