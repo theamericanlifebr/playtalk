@@ -19,6 +19,59 @@ function refreshUserSettings() {
 
 refreshUserSettings();
 
+function sanitizePhraseForBalance(text) {
+  if (typeof text !== 'string') {
+    return '';
+  }
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/gi, '');
+}
+
+function calculateBalanceReward(text) {
+  const cleaned = sanitizePhraseForBalance(text);
+  return cleaned.length > 0 ? cleaned.length : 0;
+}
+
+function updateGameBalanceDisplay(balanceValue) {
+  const scoreEl = document.getElementById('score');
+  if (!scoreEl) {
+    return;
+  }
+  let value = balanceValue;
+  if (!Number.isFinite(value) && window.playtalkBalance && typeof window.playtalkBalance.getBalance === 'function') {
+    value = window.playtalkBalance.getBalance();
+  }
+  if (!Number.isFinite(value)) {
+    value = 0;
+  }
+  scoreEl.textContent = `Saldo: ${Math.max(0, Math.floor(value)).toLocaleString('pt-BR')}`;
+}
+
+function rewardBalanceForPhrase(phrase) {
+  if (!phrase || !window.playtalkBalance || typeof window.playtalkBalance.add !== 'function') {
+    updateGameBalanceDisplay();
+    return;
+  }
+  const reward = calculateBalanceReward(phrase);
+  if (reward <= 0) {
+    updateGameBalanceDisplay();
+    return;
+  }
+  const total = window.playtalkBalance.add(reward);
+  updateGameBalanceDisplay(total);
+}
+
+document.addEventListener('playtalk:balance-change', (event) => {
+  const balance = event && event.detail ? event.detail.balance : undefined;
+  if (Number.isFinite(balance)) {
+    updateGameBalanceDisplay(balance);
+  } else {
+    updateGameBalanceDisplay();
+  }
+});
+
 function parsePastas(raw) {
   const result = {};
   for (const [key, texto] of Object.entries(raw)) {
@@ -1000,6 +1053,12 @@ function mostrarFrase() {
   if (mostrarTexto === 'pt') texto.textContent = pt;
   else if (mostrarTexto === 'en') texto.textContent = en;
   else texto.textContent = '';
+  if (texto) {
+    texto.dataset.expectedPt = pt;
+    texto.dataset.expectedEn = en;
+    const expected = esperadoLang === 'pt' ? pt : en;
+    texto.dataset.expectedPhrase = expected;
+  }
   document.getElementById("pt").value = '';
   document.getElementById("pt").disabled = false;
   if (voz === 'en') falar(en, 'en');
@@ -1133,6 +1192,11 @@ function verificarResposta() {
     handleLevelAdvancement();
     points += premioAtual;
     saveTotals();
+    const display = document.getElementById('texto-exibicao');
+    const balancePhrase = display && display.dataset
+      ? (display.dataset.expectedPhrase || display.textContent)
+      : (display ? display.textContent : '');
+    rewardBalanceForPhrase(balancePhrase || '');
     resultado.textContent = '';
     const threshold = getCurrentThreshold();
     const reached = points >= threshold && !completedModes[selectedMode];
@@ -1171,6 +1235,7 @@ function verificarResposta() {
         points += 1000;
       }
       saveTotals();
+      rewardBalanceForPhrase(expectedPhrase);
       consecutiveErrors = 0;
       resultado.textContent = '';
       const threshold = getCurrentThreshold();
@@ -1232,8 +1297,7 @@ function continuar() {
 }
 
 function atualizarBarraProgresso() {
-  const premioAtual = premioBase - (Date.now() - prizeStart) * premioDec;
-  document.getElementById('score').textContent = `PREMIO (${Math.round(premioAtual)}) pontos: (${Math.round(points)})`;
+  updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
   const limite = getCurrentThreshold();
   const perc = Math.max(0, Math.min(points, limite)) / limite * 100;
@@ -1427,13 +1491,20 @@ async function bootstrapHomePage() {
     return;
   }
   homePageInitialized = true;
+  updateGameBalanceDisplay();
   document.querySelectorAll('#top-nav a').forEach(a => {
     a.addEventListener('click', stopCurrentGame);
+  });
+  document.querySelectorAll('#main-nav a.nav-item').forEach(link => {
+    link.addEventListener('click', () => {
+      stopCurrentGame();
+    });
   });
   const homeLink = document.getElementById('home-link');
   if (homeLink) {
     homeLink.addEventListener('click', (e) => {
       e.preventDefault();
+      stopCurrentGame();
       goHome();
     });
   }

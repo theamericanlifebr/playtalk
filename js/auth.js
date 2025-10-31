@@ -1,6 +1,7 @@
 (function () {
   const API_BASE_URL = window.playtalkAuthApiBase || '';
   const CURRENT_USER_KEY = 'currentUser';
+  const BALANCE_KEY = 'playerBalance';
   const DEFAULT_AVATAR_URL =
     'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
   const PROGRESS_SCHEMA = {
@@ -8,6 +9,7 @@
     errosTotais: { type: 'number', default: 0 },
     tentativasTotais: { type: 'number', default: 0 },
     points: { type: 'number', default: 0 },
+    playerBalance: { type: 'number', default: 0 },
     displayName: { type: 'string', default: '' },
     modeStats: { type: 'json', default: {} },
     completedModes: { type: 'json', default: {} },
@@ -28,6 +30,84 @@
   let closeLoginFlowHandler = null;
   let closeUserMenu = null;
   let teardownUserMenu = null;
+
+  function normalizeBalanceValue(raw) {
+    if (raw === null || raw === undefined) {
+      return 0;
+    }
+    const number = Number(raw);
+    if (!Number.isFinite(number)) {
+      return 0;
+    }
+    return Math.max(0, Math.floor(number));
+  }
+
+  function readStoredBalance() {
+    return normalizeBalanceValue(localStorage.getItem(BALANCE_KEY));
+  }
+
+  function applyBalanceToUI(balance) {
+    const valueEl = document.getElementById('header-balance-value');
+    if (valueEl) {
+      valueEl.textContent = balance.toLocaleString('pt-BR');
+    }
+  }
+
+  function dispatchBalanceChange(balance) {
+    applyBalanceToUI(balance);
+    document.dispatchEvent(new CustomEvent('playtalk:balance-change', {
+      detail: { balance }
+    }));
+  }
+
+  function setStoredBalance(balance, { emitEvent = true } = {}) {
+    const normalized = normalizeBalanceValue(balance);
+    localStorage.setItem(BALANCE_KEY, String(normalized));
+    if (emitEvent) {
+      dispatchBalanceChange(normalized);
+    } else {
+      applyBalanceToUI(normalized);
+    }
+    return normalized;
+  }
+
+  function addToBalance(delta) {
+    const normalizedDelta = normalizeBalanceValue(delta);
+    if (normalizedDelta === 0) {
+      const current = readStoredBalance();
+      dispatchBalanceChange(current);
+      return current;
+    }
+    const updated = readStoredBalance() + normalizedDelta;
+    return setStoredBalance(updated);
+  }
+
+  function resetBalance() {
+    setStoredBalance(0);
+  }
+
+  function initBalanceUI() {
+    dispatchBalanceChange(readStoredBalance());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBalanceUI, { once: true });
+  } else {
+    initBalanceUI();
+  }
+
+  window.playtalkBalance = {
+    getBalance: () => readStoredBalance(),
+    add: addToBalance,
+    set: (value) => setStoredBalance(value),
+    reset: resetBalance
+  };
+
+  window.addEventListener('storage', (event) => {
+    if (event.key === BALANCE_KEY) {
+      applyBalanceToUI(normalizeBalanceValue(event.newValue));
+    }
+  });
 
   function apiUrl(path) {
     if (!API_BASE_URL) {
@@ -164,9 +244,14 @@
       if (value === undefined) {
         localStorage.removeItem(key);
       } else {
-        localStorage.setItem(key, serializeValue(value, schema));
+        if (key === 'playerBalance') {
+          setStoredBalance(value, { emitEvent: false });
+        } else {
+          localStorage.setItem(key, serializeValue(value, schema));
+        }
       }
     }
+    applyBalanceToUI(readStoredBalance());
   }
 
   function collectProgressFromStorage() {
@@ -286,7 +371,7 @@
 
   function updateAuthStatus() {
     const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
+    const logoutButtons = Array.from(document.querySelectorAll('[data-role="logout"]'));
     const nameEl = document.getElementById('header-username');
     const levelEl = document.getElementById('header-level');
     const avatarEl = document.getElementById('header-avatar');
@@ -331,9 +416,10 @@
     if (loginBtn) {
       loginBtn.style.display = user ? 'none' : 'inline-flex';
     }
-    if (logoutBtn) {
-      logoutBtn.style.display = user ? 'flex' : 'none';
-    }
+    logoutButtons.forEach(button => {
+      button.style.display = user ? 'inline-flex' : 'none';
+    });
+    applyBalanceToUI(readStoredBalance());
     if (!user && typeof closeUserMenu === 'function') {
       closeUserMenu();
     }
@@ -379,6 +465,7 @@
     await updateUserSnapshot();
     setCurrentUser(null);
     clearProgressStorage();
+    resetBalance();
     updateAuthStatus();
     dispatchUserChange();
     if (typeof openLoginFlowHandler === 'function') {
@@ -513,7 +600,7 @@
 
   function setupLoginFlow() {
     const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
+    const logoutButtons = Array.from(document.querySelectorAll('[data-role="logout"]'));
     const flow = document.getElementById('login-flow');
     const form = document.getElementById('login-flow-form');
     const errorEl = document.getElementById('login-flow-error');
@@ -521,12 +608,12 @@
     const passwordInput = document.getElementById('login-flow-password');
     const confirmInput = document.getElementById('login-flow-confirm');
 
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', (event) => {
+    logoutButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
         event.preventDefault();
         handleLogout();
       });
-    }
+    });
 
     if (!flow || !form || !usernameInput || !passwordInput || !confirmInput) {
       openLoginFlowHandler = null;
