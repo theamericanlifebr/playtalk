@@ -2047,6 +2047,36 @@ body.theme-blue .fun-actions button {
   background: var(--ranking-status-error-bg);
 }
 
+.ranking-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ranking-carousel__header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ranking-carousel__header h2 {
+  margin: 0;
+  font-size: clamp(22px, 5vw, 30px);
+  font-weight: 700;
+  color: var(--ranking-heading-color);
+}
+
+.ranking-carousel__header p {
+  margin: 0;
+  color: var(--ranking-subheading-color);
+  font-size: 15px;
+}
+
+.ranking-carousel__viewport {
+  position: relative;
+}
+
 .ranking-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -2054,6 +2084,63 @@ body.theme-blue .fun-actions button {
   list-style: none;
   padding: 0;
   margin: 0;
+  transition: opacity 0.45s ease;
+  opacity: 1;
+}
+
+.ranking-list[data-state='leaving'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ranking-list[data-state='entering'] {
+  opacity: 1;
+}
+
+.ranking-carousel__indicators {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ranking-carousel__indicator {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ranking-heading-color);
+  font-weight: 600;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  padding: 0 18px;
+}
+
+.ranking-carousel__indicator:hover,
+.ranking-carousel__indicator:focus {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 22px rgba(9, 34, 71, 0.22);
+  outline: none;
+}
+
+.ranking-carousel__indicator--active {
+  background: rgba(255, 255, 255, 0.35);
+  color: #0d2e6b;
+  box-shadow: 0 12px 28px rgba(9, 34, 71, 0.28);
+}
+
+.ranking-metric {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.ranking-list {
 }
 
 .ranking-card {
