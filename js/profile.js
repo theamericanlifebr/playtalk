@@ -15,18 +15,15 @@ function initProfilePage(context = {}) {
   const nameField = scope.querySelector('#profile-name');
   const photoInput = scope.querySelector('#profile-photo');
   const photoPreview = scope.querySelector('#profile-photo-preview');
+  const photoImage = scope.querySelector('#profile-photo-image');
+  const photoPlaceholder = scope.querySelector('#profile-photo-placeholder');
+  const photoStatus = scope.querySelector('#profile-photo-status');
   const publishButton = scope.querySelector('#profile-photo-publish');
   const shareCheckbox = scope.querySelector('#profile-share-results');
-  const photoProgress = scope.querySelector('#profile-photo-progress');
-  const photoProgressCircle = scope.querySelector('#profile-photo-progress-circle');
-  const photoProgressValue = scope.querySelector('#profile-photo-progress-value');
-  const photoProgressText = scope.querySelector('#profile-photo-progress-text');
 
-  const previewDefaultText = photoPreview ? photoPreview.textContent : '';
-
-  if (photoPreview) {
-    photoPreview.classList.remove('profile-photo-preview--icon');
-  }
+  const previewDefaultText = photoPlaceholder && typeof photoPlaceholder.textContent === 'string'
+    ? photoPlaceholder.textContent.trim()
+    : (photoPreview ? photoPreview.textContent : '');
 
   let progressHideTimeout = null;
   const MAX_UPLOAD_SIZE = 3 * 1024 * 1024;
@@ -99,31 +96,34 @@ function initProfilePage(context = {}) {
   }
 
   function setPhotoProgress(value) {
-    if (!photoProgressCircle || !photoProgressValue) {
+    if (!photoPreview) {
       return;
     }
     const normalized = Math.max(0, Math.min(100, Math.round(value)));
-    photoProgressCircle.style.setProperty('--progress', normalized);
-    photoProgressValue.textContent = `${normalized}%`;
+    photoPreview.style.setProperty('--upload-progress', normalized);
+  }
+
+  function setPhotoStatusMessage(message) {
+    if (photoStatus) {
+      photoStatus.textContent = message || '';
+    }
   }
 
   function showPhotoProgress() {
-    if (!photoProgress) {
+    if (!photoPreview) {
       return;
     }
     if (progressHideTimeout) {
       clearTimeout(progressHideTimeout);
       progressHideTimeout = null;
     }
-    photoProgress.hidden = false;
-    if (photoProgressText) {
-      photoProgressText.textContent = 'Carregando foto...';
-    }
+    photoPreview.dataset.uploading = 'true';
+    setPhotoStatusMessage('Carregando foto...');
     setPhotoProgress(0);
   }
 
   function hidePhotoProgress(delay = 0, options = {}) {
-    if (!photoProgress) {
+    if (!photoPreview) {
       return;
     }
     if (progressHideTimeout) {
@@ -134,17 +134,20 @@ function initProfilePage(context = {}) {
     const message = options && typeof options.message === 'string' && options.message.trim()
       ? options.message.trim()
       : 'Foto pronta!';
+    const isSuccess = !options || options.success !== false;
     progressHideTimeout = setTimeout(() => {
-      if (photoProgressText) {
-        photoProgressText.textContent = message;
+      if (message) {
+        setPhotoStatusMessage(message);
+        if (isSuccess) {
+          setPhotoProgress(100);
+        }
       }
       progressHideTimeout = setTimeout(() => {
-        photoProgress.hidden = true;
-        if (photoProgressText) {
-          photoProgressText.textContent = 'Carregando foto...';
-        }
+        setPhotoStatusMessage('');
+        photoPreview.removeAttribute('data-uploading');
+        setPhotoProgress(0);
         progressHideTimeout = null;
-      }, 360);
+      }, 700);
     }, hideDelay);
   }
 
@@ -152,25 +155,37 @@ function initProfilePage(context = {}) {
     if (!photoPreview) {
       return;
     }
-    if (photoData && typeof photoData === 'string' && photoData.trim()) {
-      photoPreview.style.backgroundImage = `url(${photoData})`;
-      photoPreview.style.background = '';
+    const hasPhoto = Boolean(photoData && typeof photoData === 'string' && photoData.trim());
+    if (hasPhoto) {
+      if (photoImage) {
+        photoImage.src = photoData;
+        photoImage.hidden = false;
+        photoImage.classList.add('profile-photo-preview__image--visible');
+        photoImage.classList.remove('profile-photo-preview__image--dissolve');
+        void photoImage.offsetWidth;
+        photoImage.classList.add('profile-photo-preview__image--dissolve');
+        photoImage.addEventListener('animationend', () => {
+          photoImage.classList.remove('profile-photo-preview__image--dissolve');
+        }, { once: true });
+      }
+      if (photoPlaceholder) {
+        photoPlaceholder.hidden = true;
+      }
       photoPreview.classList.add('has-photo');
-      photoPreview.classList.remove('profile-photo-preview--icon');
-      photoPreview.textContent = '';
-      photoPreview.classList.remove('profile-photo-preview--fade-in');
-      void photoPreview.offsetWidth;
-      photoPreview.classList.add('profile-photo-preview--fade-in');
-      photoPreview.addEventListener('animationend', () => {
-        photoPreview.classList.remove('profile-photo-preview--fade-in');
-      }, { once: true });
     } else {
-      photoPreview.style.backgroundImage = '';
+      if (photoImage) {
+        photoImage.src = '';
+        photoImage.hidden = true;
+        photoImage.classList.remove('profile-photo-preview__image--visible');
+        photoImage.classList.remove('profile-photo-preview__image--dissolve');
+      }
+      if (photoPlaceholder) {
+        photoPlaceholder.hidden = false;
+        photoPlaceholder.textContent = previewDefaultText || 'Adicione uma foto';
+      } else {
+        photoPreview.textContent = previewDefaultText || 'Adicione uma foto';
+      }
       photoPreview.classList.remove('has-photo');
-      photoPreview.classList.remove('profile-photo-preview--icon');
-      photoPreview.style.background = '';
-      photoPreview.textContent = previewDefaultText || 'Adicione uma foto';
-      photoPreview.classList.remove('profile-photo-preview--fade-in');
     }
   }
 
@@ -331,9 +346,7 @@ function initProfilePage(context = {}) {
 
       showPhotoProgress();
       setPhotoProgress(10);
-      if (photoProgressText) {
-        photoProgressText.textContent = 'Processando foto...';
-      }
+      setPhotoStatusMessage('Processando foto...');
 
       try {
         setPhotoProgress(35);
@@ -346,7 +359,7 @@ function initProfilePage(context = {}) {
         hidePhotoProgress(200);
       } catch (error) {
         console.warn('Não foi possível processar a foto selecionada.', error);
-        hidePhotoProgress(0, { message: 'Falha ao processar foto' });
+        hidePhotoProgress(0, { message: 'Falha ao processar foto', success: false });
         alert('Não foi possível processar sua imagem. Tente novamente com outro arquivo.');
       } finally {
         if (inputEl && typeof inputEl.value === 'string') {

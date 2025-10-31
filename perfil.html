@@ -50,12 +50,24 @@
         <input type="text" id="profile-name" name="profile-name" placeholder="Digite seu nome">
       </div>
       <div class="profile-photo">
-        <div id="profile-photo-preview" class="profile-photo-preview">Adicione uma foto</div>
-        <div id="profile-photo-progress" class="profile-photo-progress" hidden>
-          <div class="profile-photo-progress__circle" id="profile-photo-progress-circle">
-            <span class="profile-photo-progress__value" id="profile-photo-progress-value">0%</span>
+        <div
+          id="profile-photo-preview"
+          class="profile-photo-preview"
+          role="img"
+          aria-live="polite"
+        >
+          <div class="profile-photo-preview__content">
+            <img
+              id="profile-photo-image"
+              class="profile-photo-preview__image"
+              alt="Foto do usuário"
+              hidden
+            >
+            <span id="profile-photo-placeholder" class="profile-photo-preview__placeholder">
+              Adicione uma foto
+            </span>
+            <span id="profile-photo-status" class="profile-photo-preview__status" aria-live="polite"></span>
           </div>
-          <p class="profile-photo-progress__text" id="profile-photo-progress-text">Carregando foto...</p>
         </div>
         <label for="profile-photo" class="profile-upload-label">
           <span aria-hidden="true">📷</span>
