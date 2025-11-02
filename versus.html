@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Versus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark-mode">
+  <nav id="top-nav">
+    <a href="index.html">home</a>
+    <a href="#">fun</a>
+    <a href="play.html">play</a>
+    <a href="custom.html">custom</a>
+    <a href="versus.html">versus</a>
+  </nav>
+  <div id="bot-list"></div>
+  <div id="mode-list"></div>
+  <div id="versus-game" style="display:none;">
+    <div id="players">
+      <div class="player" id="player-user">
+        <div class="player-name">the user</div>
+        <img src="users/theuser.png" alt="the user" class="player-img">
+        <div class="stat-bar time"><div class="fill"></div></div>
+        <div class="stat-bar acc"><div class="fill"></div></div>
+      </div>
+      <div class="player" id="player-bot">
+        <div class="player-name" id="bot-name"></div>
+        <img id="bot-avatar" class="player-img" alt="adversario">
+        <div class="stat-bar time"><div class="fill"></div></div>
+        <div class="stat-bar acc"><div class="fill"></div></div>
+      </div>
+    </div>
+    <div class="title-box"><div id="chapter-title" class="chapter-text">Capítulo</div></div>
+    <div id="versus-phrase" class="text-block"></div>
+    <div id="barra-progresso"><div id="barra-preenchida"></div></div>
+  </div>
+  <script src="js/disableScroll.js"></script>
+  <script src="js/versus.js"></script>
+</body>
+</html>
