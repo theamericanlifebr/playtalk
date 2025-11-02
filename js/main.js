@@ -1,131 +1,245 @@
-let pastas = {};
-let homophonesMap = {};
+const settingsAPI = window.playtalkSettings || {};
+const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
+  theme: 'light',
+  pointsPerHit: 4000,
+  pointsLossPerSecond: 0,
+  startingPoints: 0
+};
 
-function safeParse(value, fallback = null) {
-  if (typeof value !== 'string') return fallback;
-  try {
-    return JSON.parse(value);
-  } catch (err) {
-    console.error('Erro ao fazer parse do JSON:', err);
-    return fallback;
+const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
+const MODE_PROGRESS_KEY = 'modeProgress';
+const GENERAL_PROGRESS_KEY = 'generalProgress';
+const XP_BASE_VALUE = 15;
+const MAX_LEVEL_CAP = 1000;
+const LEVEL_SCORE_INCREMENT = 0.05;
+const MODE_SCORE_FACTORS = {
+  1: 0,
+  2: 0.25,
+  3: 0.5,
+  4: 0.75,
+  5: 1,
+  6: 1.25
+};
+
+const COLOR_STOPS = [
+  [0, '#ff0000'],
+  [2000, '#ff3b00'],
+  [4000, '#ff7f00'],
+  [6000, '#ffb300'],
+  [8000, '#ffe000'],
+  [10000, '#ffff66'],
+  [12000, '#ccff66'],
+  [14000, '#99ff99'],
+  [16000, '#00cc66'],
+  [18000, '#00994d'],
+  [20000, '#00ffff'],
+  [22000, '#66ccff'],
+  [24000, '#0099ff'],
+  [25000, '#0099ff']
+];
+
+let userSettings = { ...SETTINGS_FALLBACK };
+
+const phraseLibrary = {
+  config: {},
+  modes: {},
+  maxLevels: {},
+  loaded: false
+};
+
+let generalProgress = { level: 1, xp: 0 };
+let modeProgress = {};
+
+function refreshUserSettings() {
+  if (typeof settingsAPI.loadSettings === 'function') {
+    userSettings = settingsAPI.loadSettings();
+  } else {
+    userSettings = { ...SETTINGS_FALLBACK };
   }
 }
 
-function getUserIdentifier(user) {
-  if (!user || typeof user !== 'object') return null;
-  return (
-    user.id ||
-    user.uid ||
-    user.userId ||
-    user.email ||
-    user.username ||
-    user.name ||
-    'local-user'
-  );
-}
+refreshUserSettings();
 
-function cloneStatsForShare(stats) {
-  const clone = {};
-  Object.entries(stats || {}).forEach(([mode, data]) => {
-    if (!data || typeof data !== 'object') return;
-    clone[mode] = {
-      totalPhrases: data.totalPhrases || 0,
-      totalTime: data.totalTime || 0,
-      timePoints: data.timePoints || 0,
-      correct: data.correct || 0,
-      wrong: data.wrong || 0,
-      report: data.report || 0,
-      wrongRanking: Array.isArray(data.wrongRanking)
-        ? data.wrongRanking.map(item => ({ ...item }))
-        : [],
-      reportRanking: Array.isArray(data.reportRanking)
-        ? data.reportRanking.map(item => ({ ...item }))
-        : []
-    };
-  });
-  return clone;
-}
-
-let currentUser = safeParse(localStorage.getItem('currentUser'), null);
-if (currentUser && typeof window !== 'undefined') {
-  window.currentUser = currentUser;
-}
-
-function syncSharedRankings(user, statsSource = {}) {
-  try {
-    const raw = localStorage.getItem('sharedRankings');
-    const list = safeParse(raw, []);
-    const identifier = getUserIdentifier(user);
-    if (!identifier) {
-      const fallbackIndex = list.findIndex(entry => entry && entry.id === 'local-user');
-      if (!user && fallbackIndex >= 0) {
-        list.splice(fallbackIndex, 1);
-        localStorage.setItem('sharedRankings', JSON.stringify(list));
-      }
-      return;
-    }
-    const existingIndex = list.findIndex(entry => entry && entry.id === identifier);
-    if (!user || !user.shareResults) {
-      if (existingIndex >= 0) {
-        list.splice(existingIndex, 1);
-        localStorage.setItem('sharedRankings', JSON.stringify(list));
-      }
-      return;
-    }
-    const payload = {
-      id: identifier,
-      name: user.displayName || user.name || user.username || user.email || 'Você',
-      shareResults: true,
-      stats: cloneStatsForShare(user.stats || statsSource),
-      updatedAt: new Date().toISOString()
-    };
-    if (existingIndex >= 0) {
-      list[existingIndex] = payload;
-    } else {
-      list.push(payload);
-    }
-    localStorage.setItem('sharedRankings', JSON.stringify(list));
-  } catch (err) {
-    console.error('Erro ao sincronizar rankings compartilhados:', err);
+function getNormalizedLevelValue(level) {
+  if (!Number.isFinite(level)) {
+    return 1;
   }
+  return Math.min(MAX_LEVEL_CAP, Math.max(1, Math.floor(level)));
 }
 
-function parsePastas(raw) {
-  const result = {};
-  for (const [key, texto] of Object.entries(raw)) {
-    result[key] = texto.trim().split(/\n+/).filter(Boolean).map(l => l.split('#').map(s => s.trim()));
-  }
-  return result;
+function getLevelScoreFactor(level) {
+  const normalized = getNormalizedLevelValue(level);
+  return (normalized - 1) * LEVEL_SCORE_INCREMENT;
 }
+
+function getModeScoreFactor(mode) {
+  return MODE_SCORE_FACTORS[mode] ?? 0;
+}
+
+function getScoreMultiplierFor(mode) {
+  const levelFactor = getLevelScoreFactor(generalProgress.level);
+  const modeFactor = getModeScoreFactor(mode);
+  return 1 + levelFactor + modeFactor;
+}
+
+function applyScoreMultiplier(baseValue, mode) {
+  const numeric = Number(baseValue);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return 0;
+  }
+  const multiplier = getScoreMultiplierFor(mode);
+  return Math.max(0, Math.round(numeric * multiplier));
+}
+
+function hexToRgb(hex) {
+  const int = parseInt(hex.slice(1), 16);
+  return [int >> 16 & 255, int >> 8 & 255, int & 255];
+}
+
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+function calcularCor(pontos) {
+  const max = COLOR_STOPS[COLOR_STOPS.length - 1][0];
+  const p = Math.max(0, Math.min(pontos, max));
+  for (let i = 0; i < COLOR_STOPS.length - 1; i++) {
+    const [p1, c1] = COLOR_STOPS[i];
+    const [p2, c2] = COLOR_STOPS[i + 1];
+    if (p >= p1 && p <= p2) {
+      const ratio = (p - p1) / (p2 - p1);
+      const [r1, g1, b1] = hexToRgb(c1);
+      const [r2, g2, b2] = hexToRgb(c2);
+      const r = Math.round(r1 + ratio * (r2 - r1));
+      const g = Math.round(g1 + ratio * (g2 - g1));
+      const b = Math.round(b1 + ratio * (b2 - b1));
+      return rgbToHex(r, g, b);
+    }
+  }
+  return COLOR_STOPS[COLOR_STOPS.length - 1][1];
+}
+
+function colorFromPercent(perc) {
+  const max = COLOR_STOPS[COLOR_STOPS.length - 1][0];
+  return calcularCor((perc / 100) * max);
+}
+
+function sanitizePhraseForBalance(text) {
+  if (typeof text !== 'string') {
+    return '';
+  }
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/gi, '');
+}
+
+function calculateBalanceReward(text) {
+  const cleaned = sanitizePhraseForBalance(text);
+  return cleaned.length > 0 ? cleaned.length : 0;
+}
+
+function updateGameBalanceDisplay(balanceValue) {
+  const scoreEl = document.getElementById('score');
+  if (!scoreEl) {
+    return;
+  }
+  let value = balanceValue;
+  if (!Number.isFinite(value) && window.playtalkBalance && typeof window.playtalkBalance.getBalance === 'function') {
+    value = window.playtalkBalance.getBalance();
+  }
+  if (!Number.isFinite(value)) {
+    value = 0;
+  }
+  scoreEl.textContent = `Saldo: ${Math.max(0, Math.floor(value)).toLocaleString('pt-BR')}`;
+}
+
+function rewardBalanceForPhrase(phrase, mode) {
+  const reward = calculateBalanceReward(phrase);
+  if (!phrase || reward <= 0) {
+    updateGameBalanceDisplay();
+    return 0;
+  }
+  const targetMode = Number.isFinite(mode) ? mode : 1;
+  const finalReward = applyScoreMultiplier(reward, targetMode);
+  if (window.playtalkBalance && typeof window.playtalkBalance.add === 'function') {
+    const total = window.playtalkBalance.add(finalReward);
+    updateGameBalanceDisplay(total);
+  } else {
+    updateGameBalanceDisplay();
+  }
+  return finalReward;
+}
+
+document.addEventListener('playtalk:balance-change', (event) => {
+  const balance = event && event.detail ? event.detail.balance : undefined;
+  if (Number.isFinite(balance)) {
+    updateGameBalanceDisplay(balance);
+  } else {
+    updateGameBalanceDisplay();
+  }
+});
 
 async function carregarPastas() {
-  const resp = await fetch('data/pastas.json');
-  const text = await resp.text();
-  const obj = {};
-  const regex = /(\d+):\s*`([\s\S]*?)`/g;
-  let m;
-  while ((m = regex.exec(text))) {
-    obj[m[1]] = m[2];
+  if (phraseLibrary.loaded) {
+    return phraseLibrary;
   }
-  pastas = parsePastas(obj);
-}
 
-async function carregarHomofonos() {
   try {
-    const resp = await fetch('data/homophones.txt');
-    const text = await resp.text();
-    const map = {};
-    text.split(/\n+/).filter(Boolean).forEach(line => {
-      const words = line.split('@').map(w => w.trim().toLowerCase()).filter(Boolean);
-      if (words.length) {
-        const canonical = words[0];
-        words.forEach(w => { map[w] = canonical; });
-      }
+    const response = await fetch(PHRASE_CONFIG_PATH);
+    if (!response.ok) {
+      throw new Error(`Configuração de frases não encontrada (${response.status})`);
+    }
+    const config = await response.json();
+    const modesConfig = config && config.modes ? config.modes : {};
+    const modeEntries = Object.entries(modesConfig);
+    phraseLibrary.config = modesConfig;
+    phraseLibrary.modes = {};
+    phraseLibrary.maxLevels = {};
+
+    const fetches = [];
+    modeEntries.forEach(([modeKey, modeConfig]) => {
+      const levelPaths = Array.isArray(modeConfig.levels) ? modeConfig.levels : [];
+      phraseLibrary.modes[modeKey] = {};
+      phraseLibrary.maxLevels[modeKey] = levelPaths.length;
+      levelPaths.forEach((levelPath, index) => {
+        fetches.push(
+          fetch(levelPath)
+            .then(levelResponse => {
+              if (!levelResponse.ok) {
+                throw new Error(`Falha ao carregar ${levelPath}`);
+              }
+              return levelResponse.json();
+            })
+            .then(levelData => {
+              const levelNumber = Number.isFinite(levelData.level)
+                ? Math.max(1, Math.floor(levelData.level))
+                : index + 1;
+              const entries = Array.isArray(levelData.entries) ? levelData.entries : [];
+              phraseLibrary.modes[modeKey][levelNumber] = entries.map(entry => [
+                typeof entry.pt === 'string' ? entry.pt : '',
+                typeof entry.en === 'string' ? entry.en : ''
+              ]);
+            })
+            .catch(err => {
+              console.error('Erro ao carregar nível de frases:', err);
+              phraseLibrary.modes[modeKey][index + 1] = [];
+            })
+        );
+      });
     });
-    homophonesMap = map;
-  } catch (e) {
-    console.error('Erro ao carregar homofonos:', e);
+
+    await Promise.all(fetches);
+    phraseLibrary.loaded = true;
+  } catch (error) {
+    console.error('Erro ao carregar frases do jogo:', error);
+    phraseLibrary.loaded = false;
+    phraseLibrary.modes = {};
+    phraseLibrary.maxLevels = {};
+    throw error;
   }
+
+  return phraseLibrary;
 }
 
 function ehQuaseCorreto(res, esp) {
@@ -168,131 +282,73 @@ function ehQuaseCorretoPalavras(resp, esp) {
 let reconhecimento;
 let reconhecimentoAtivo = false;
 let reconhecimentoRodando = false;
-let listeningForCommand = true;
-const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-let allowInput = true;
-let silenceTimer;
+let listeningForCommand = false;
+let microphonePaused = false;
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!isMobile) {
-    reconhecimento = new SpeechRecognition();
-    reconhecimento.lang = 'en-US';
-    reconhecimento.continuous = true;
-    reconhecimento.interimResults = false;
+  reconhecimento = new SpeechRecognition();
+  reconhecimento.lang = 'en-US';
+  reconhecimento.continuous = true;
+  reconhecimento.interimResults = false;
 
-    reconhecimento.onstart = () => {
-      reconhecimentoRodando = true;
-    };
+  reconhecimento.onstart = () => {
+    reconhecimentoRodando = true;
+  };
 
-    reconhecimento.onresult = (event) => {
-      const transcript = event.results[event.results.length - 1][0].transcript.trim();
-      const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (ilifeActive) {
-        if (normCmd.includes('play')) {
-          ilifeActive = false;
-          localStorage.setItem('ilifeDone', 'true');
-          const screen = document.getElementById('ilife-screen');
-          const menu = document.getElementById('menu');
-          if (screen) screen.style.display = 'none';
-          if (menu) menu.style.display = 'flex';
-          if (!tutorialDone) {
-            startTutorial();
-          }
-        }
-        return;
+  reconhecimento.onresult = (event) => {
+    if (microphonePaused) {
+      return;
+    }
+    const transcript = event.results[event.results.length - 1][0].transcript.trim();
+    const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (awaitingRetry && (normCmd.includes('try again') || normCmd.includes('tentar de novo'))) {
+      awaitingRetry = false;
+      if (retryCallback) {
+        const cb = retryCallback;
+        retryCallback = null;
+        cb();
       }
-      if (awaitingNextLevel) {
-        if (normCmd.includes('level') || normCmd.includes('next') || normCmd.includes('game')) {
-          awaitingNextLevel = false;
-          if (nextLevelCallback) {
-            const cb = nextLevelCallback;
-            nextLevelCallback = null;
-            cb();
-          }
-        }
-      } else if (awaitingRetry && (normCmd.includes('try again') || normCmd.includes('tentar de novo'))) {
-        awaitingRetry = false;
-        if (retryCallback) {
-          const cb = retryCallback;
-          retryCallback = null;
-          cb();
-        }
-      } else if (normCmd.includes('next level') || normCmd.includes('proximo nivel')) {
-        points += 25000;
-        saveTotals();
-        atualizarBarraProgresso();
-        const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
-        if (points >= threshold && !completedModes[selectedMode]) {
+    } else if (normCmd.includes('next level') || normCmd.includes('proximo nivel')) {
+      points += 25000;
+      saveTotals();
+      atualizarBarraProgresso();
+      const threshold = getCurrentThreshold();
+      if (points >= threshold && !completedModes[selectedMode]) {
           finishMode();
         }
       } else if (listeningForCommand) {
-        if (normCmd.includes('play')) {
-          listeningForCommand = false;
-          startGame(getHighestUnlockedMode());
-        }
-      } else {
-        if (normCmd.includes('pause') || normCmd.includes('pausa')) {
-          pauseGame();
-        } else if (
-          normCmd.includes('reportar') ||
-          normCmd.includes('report') ||
-          normCmd.includes('my star') ||
-          normCmd.includes('mystar') ||
-          normCmd.includes('estrela')
-        ) {
-          reportLastError();
-        } else {
-          document.getElementById("pt").value = transcript;
-          verificarResposta();
-        }
+      if (normCmd.includes('play')) {
+        listeningForCommand = false;
+        startGame(getHighestUnlockedMode());
       }
-    };
+    } else {
+      if (normCmd.includes('pause') || normCmd.includes('pausa')) {
+        pauseGame();
+      } else if (
+        normCmd.includes('reportar') ||
+        normCmd.includes('report') ||
+        normCmd.includes('my star') ||
+        normCmd.includes('mystar') ||
+        normCmd.includes('estrela')
+      ) {
+        reportLastError();
+      } else {
+        document.getElementById("pt").value = transcript;
+        verificarResposta();
+      }
+    }
+  };
 
-    reconhecimento.onerror = (event) => {
-      console.error('Erro no reconhecimento de voz:', event.error);
-      if (event.error === 'not-allowed') alert('Permissão do microfone negada.');
-    };
+  reconhecimento.onerror = (event) => {
+    console.error('Erro no reconhecimento de voz:', event.error);
+    if (event.error === 'not-allowed') alert('Permissão do microfone negada.');
+  };
 
-    reconhecimento.onend = () => {
-      reconhecimentoRodando = false;
-      if (reconhecimentoAtivo) reconhecimento.start();
-    };
-  } else {
-    reconhecimento = new SpeechRecognition();
-    reconhecimento.lang = 'en-US';
-    reconhecimento.continuous = true;
-    reconhecimento.interimResults = false;
-
-    const restartSilence = () => {
-      clearTimeout(silenceTimer);
-      silenceTimer = setTimeout(() => { window.location.href = 'index.html'; }, 6000);
-    };
-
-    reconhecimento.onstart = () => {
-      reconhecimentoRodando = true;
-      restartSilence();
-    };
-
-    reconhecimento.onsoundstart = restartSilence;
-
-    reconhecimento.onresult = (event) => {
-      restartSilence();
-      const transcript = event.results[event.results.length - 1][0].transcript.trim();
-      if (!allowInput) return;
-      document.getElementById('pt').value = transcript;
-      verificarResposta();
-    };
-
-    reconhecimento.onerror = (event) => {
-      console.error('Erro no reconhecimento de voz:', event.error);
-    };
-
-    reconhecimento.onend = () => {
-      reconhecimentoRodando = false;
-      if (reconhecimentoAtivo) reconhecimento.start();
-    };
-  }
+  reconhecimento.onend = () => {
+    reconhecimentoRodando = false;
+    if (reconhecimentoAtivo) reconhecimento.start(); // reinicia se estiver ativo
+  };
 } else {
   alert('Reconhecimento de voz não é suportado neste navegador. Use o Chrome.');
 }
@@ -305,9 +361,9 @@ setInterval(() => {
 }, 4000);
 
 let frasesArr = [], fraseIndex = 0;
-let acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
-let errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
-let tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
+let acertosTotais = 0;
+let errosTotais = 0;
+let tentativasTotais = 0;
 let pastaAtual = 1;
 let bloqueado = false;
 let mostrarTexto = 'pt';
@@ -316,86 +372,361 @@ let esperadoLang = 'pt';
 let timerInterval = null;
 let inputTimeout = null;
 let lastExpected = '', lastInput = '', lastFolder = 1;
-let slideshowInterval = null;
 const TOTAL_FRASES = 25;
 let selectedMode = 1;
 // Removed difficulty selection; game always starts on easy mode
-const INITIAL_POINTS = 3500;
+const DEFAULT_STARTING_POINTS = userSettings.startingPoints ?? SETTINGS_FALLBACK.startingPoints;
 const COMPLETION_THRESHOLD = 25000;
 const MODE6_THRESHOLD = 25115;
-const timeScoreBases = {
-  2: {6: [2.55, 5.78], 33: [4.63, 8.03]},
-  3: {6: [2.55, 5.78], 33: [4.63, 8.03]},
-  4: {6: [2.03, 5.50], 33: [3.78, 7.06]},
-  5: {6: [3.09, 5.80], 33: [4.79, 8.03]},
-  6: {6: [2.36, 5.78], 33: [3.84, 8.03]}
-};
+const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
+const MAX_TIME = 6.0;
+const ALL_MODES = [1, 2, 3, 4, 5, 6];
 
-function getTimeMetrics(len, mode) {
-  const base = timeScoreBases[mode];
-  if (!base) return { perfect: 0, worst: 0 };
-  const [p6, w6] = base[6];
-  const [p33, w33] = base[33];
-  const clampedLen = Math.max(1, len);
-  const ratio = (clampedLen - 6) / (33 - 6);
-  const perfect = p6 + (p33 - p6) * ratio;
-  const worst = w6 + (w33 - w6) * ratio;
-  return { perfect, worst };
+function getCurrentThreshold() {
+  return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
 }
-let completedModes = JSON.parse(localStorage.getItem('completedModes') || '{}');
-let unlockedModes;
-try {
-  const storedUnlocked = localStorage.getItem('unlockedModes');
-  unlockedModes = storedUnlocked ? JSON.parse(storedUnlocked) : null;
-} catch (e) {
-  unlockedModes = null;
+
+function getXPRequirement(level) {
+  const normalized = getNormalizedLevelValue(level);
+  return Math.round(XP_BASE_VALUE * Math.pow(normalized, 1.5));
 }
-if (!unlockedModes || Object.keys(unlockedModes).length === 0) {
-  unlockedModes = { 1: true };
-  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+
+function ensureModeProgressStructure(mode) {
+  const key = String(mode);
+  if (!modeProgress[key] || typeof modeProgress[key] !== 'object') {
+    modeProgress[key] = { level: 1, xp: 0 };
+  }
+  const entry = modeProgress[key];
+  entry.level = Number.isFinite(entry.level) && entry.level > 0
+    ? Math.min(MAX_LEVEL_CAP, Math.floor(entry.level))
+    : 1;
+  entry.xp = Number.isFinite(entry.xp) && entry.xp >= 0 ? Math.floor(entry.xp) : 0;
+  if (entry.level >= MAX_LEVEL_CAP) {
+    entry.level = MAX_LEVEL_CAP;
+    const capRequirement = getXPRequirement(MAX_LEVEL_CAP);
+    entry.xp = Math.min(entry.xp, capRequirement);
+  }
+  return entry;
 }
-let modeIntroShown = JSON.parse(localStorage.getItem('modeIntroShown') || '{}');
-let points = parseInt(localStorage.getItem('points') || INITIAL_POINTS, 10);
-let premioBase = 4000;
-let premioDec = 1;
+
+function getModeProgress(mode) {
+  return ensureModeProgressStructure(mode);
+}
+
+function getModeLevel(mode) {
+  return getModeProgress(mode).level;
+}
+
+function getMaxLevelForMode(mode) {
+  const key = String(mode);
+  const stored = phraseLibrary.maxLevels[key];
+  return Number.isFinite(stored) && stored > 0 ? stored : 1;
+}
+
+function getLibraryLevelForMode(mode) {
+  const progressLevel = getModeLevel(mode);
+  const maxLevel = getMaxLevelForMode(mode);
+  return Math.min(progressLevel, maxLevel);
+}
+
+function dispatchGeneralProgressUpdate() {
+  const required = getXPRequirement(generalProgress.level);
+  const ratio = required > 0 ? Math.max(0, Math.min(1, generalProgress.xp / required)) : 0;
+  const detail = {
+    level: generalProgress.level,
+    xp: generalProgress.xp,
+    required,
+    ratio
+  };
+  document.dispatchEvent(new CustomEvent('playtalk:level-progress', { detail }));
+  document.dispatchEvent(new CustomEvent('playtalk:general-progress', { detail }));
+}
+
+function dispatchModeProgressUpdate(mode) {
+  const entry = getModeProgress(mode);
+  const required = getXPRequirement(entry.level);
+  const ratio = required > 0 ? Math.max(0, Math.min(1, entry.xp / required)) : 0;
+  const detail = {
+    mode,
+    level: entry.level,
+    xp: entry.xp,
+    required,
+    ratio
+  };
+  document.dispatchEvent(new CustomEvent('playtalk:mode-progress', { detail }));
+}
+
+function saveGeneralProgress(options = {}) {
+  generalProgress.level = getNormalizedLevelValue(generalProgress.level);
+  const normalizedXp = Math.max(0, Math.floor(generalProgress.xp));
+  if (generalProgress.level >= MAX_LEVEL_CAP) {
+    generalProgress.xp = Math.min(normalizedXp, getXPRequirement(MAX_LEVEL_CAP));
+  } else {
+    generalProgress.xp = normalizedXp;
+  }
+  localStorage.setItem(GENERAL_PROGRESS_KEY, JSON.stringify(generalProgress));
+  if (!options || options.emit !== false) {
+    dispatchGeneralProgressUpdate();
+  }
+}
+
+function saveModeProgress(options = {}) {
+  const normalized = {};
+  Object.keys(modeProgress).forEach(key => {
+    const entry = ensureModeProgressStructure(key);
+    const cappedLevel = entry.level;
+    const cappedXp = entry.level >= MAX_LEVEL_CAP
+      ? Math.min(entry.xp, getXPRequirement(MAX_LEVEL_CAP))
+      : Math.max(0, Math.floor(entry.xp));
+    normalized[key] = { level: cappedLevel, xp: cappedXp };
+  });
+  localStorage.setItem(MODE_PROGRESS_KEY, JSON.stringify(normalized));
+  if (!options || options.emit !== false) {
+    Object.keys(normalized).forEach(modeKey => dispatchModeProgressUpdate(Number(modeKey)));
+  }
+}
+
+function addGeneralExperience(amount) {
+  const xp = Math.max(0, Math.floor(amount));
+  if (xp <= 0) {
+    return false;
+  }
+  generalProgress.xp += xp;
+  let leveledUp = false;
+  while (generalProgress.level < MAX_LEVEL_CAP && generalProgress.xp >= getXPRequirement(generalProgress.level)) {
+    generalProgress.xp -= getXPRequirement(generalProgress.level);
+    generalProgress.level += 1;
+    leveledUp = true;
+  }
+  if (generalProgress.level >= MAX_LEVEL_CAP) {
+    generalProgress.level = MAX_LEVEL_CAP;
+    generalProgress.xp = Math.min(generalProgress.xp, getXPRequirement(MAX_LEVEL_CAP));
+  }
+  saveGeneralProgress({ emit: true });
+  return leveledUp;
+}
+
+function addModeExperience(mode, amount) {
+  const xp = Math.max(0, Math.floor(amount));
+  if (xp <= 0) {
+    return false;
+  }
+  const entry = getModeProgress(mode);
+  entry.xp += xp;
+  let leveledUp = false;
+  while (entry.level < MAX_LEVEL_CAP && entry.xp >= getXPRequirement(entry.level)) {
+    entry.xp -= getXPRequirement(entry.level);
+    entry.level += 1;
+    leveledUp = true;
+  }
+  if (entry.level >= MAX_LEVEL_CAP) {
+    entry.level = MAX_LEVEL_CAP;
+    entry.xp = Math.min(entry.xp, getXPRequirement(MAX_LEVEL_CAP));
+  }
+  modeProgress[String(mode)] = entry;
+  saveModeProgress({ emit: true });
+  return leveledUp;
+}
+
+function grantExperience(amount, mode) {
+  const leveledGeneral = addGeneralExperience(amount);
+  const leveledMode = Number.isFinite(mode) ? addModeExperience(mode, amount) : false;
+  if (leveledGeneral || leveledMode) {
+    updateLevelIcon();
+  }
+}
+
+function loadProgressFromStorage() {
+  const storedGeneral = parseJSONStorage(GENERAL_PROGRESS_KEY, null);
+  if (storedGeneral && Number.isFinite(storedGeneral.level)) {
+    generalProgress.level = getNormalizedLevelValue(storedGeneral.level);
+    const normalizedXp = Math.max(0, Math.floor(storedGeneral.xp || 0));
+    if (generalProgress.level >= MAX_LEVEL_CAP) {
+      generalProgress.xp = Math.min(normalizedXp, getXPRequirement(MAX_LEVEL_CAP));
+    } else {
+      generalProgress.xp = normalizedXp;
+    }
+  } else {
+    const legacyLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
+    const fallbackLevel = Number.isFinite(legacyLevel) && legacyLevel > 0 ? legacyLevel : 1;
+    const legacyProgress = parseJSONStorage('levelProgress', null);
+    if (legacyProgress && Number.isFinite(legacyProgress.level)) {
+      generalProgress.level = getNormalizedLevelValue(legacyProgress.level);
+    } else {
+      generalProgress.level = getNormalizedLevelValue(fallbackLevel);
+    }
+    generalProgress.xp = 0;
+  }
+
+  const storedModes = parseJSONStorage(MODE_PROGRESS_KEY, null);
+  modeProgress = {};
+  if (storedModes && typeof storedModes === 'object') {
+    Object.entries(storedModes).forEach(([modeKey, entry]) => {
+      const level = entry && Number.isFinite(entry.level) && entry.level > 0
+        ? Math.min(MAX_LEVEL_CAP, Math.floor(entry.level))
+        : 1;
+      let xp = entry && Number.isFinite(entry.xp) && entry.xp >= 0 ? Math.floor(entry.xp) : 0;
+      if (level >= MAX_LEVEL_CAP) {
+        xp = Math.min(xp, getXPRequirement(MAX_LEVEL_CAP));
+      }
+      modeProgress[String(modeKey)] = { level, xp };
+    });
+  }
+
+  ALL_MODES.forEach(mode => ensureModeProgressStructure(mode));
+  pastaAtual = getLibraryLevelForMode(selectedMode);
+
+  saveGeneralProgress({ emit: false });
+  saveModeProgress({ emit: false });
+  dispatchGeneralProgressUpdate();
+  ALL_MODES.forEach(mode => dispatchModeProgressUpdate(mode));
+}
+
+function getModeLibrary(mode) {
+  const key = String(mode);
+  return phraseLibrary.modes[key] || {};
+}
+
+function getModeLevels(mode) {
+  return Object.keys(getModeLibrary(mode))
+    .map(Number)
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
+}
+
+function resolveModeLevel(mode) {
+  const levels = getModeLevels(mode);
+  if (!levels.length) {
+    return 1;
+  }
+  const target = getModeLevel(mode);
+  const maxAvailable = levels[levels.length - 1];
+  if (target <= levels[0]) {
+    return levels[0];
+  }
+  if (target >= maxAvailable) {
+    return maxAvailable;
+  }
+  if (levels.includes(target)) {
+    return target;
+  }
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (levels[i] <= target) {
+      return levels[i];
+    }
+  }
+  return levels[0];
+}
+
+let completedModes = {};
+let unlockedModes = {};
+let points = DEFAULT_STARTING_POINTS;
+let premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
+let premioDec = 0;
 let penaltyFactor = 0.5;
 let prizeStart = 0;
 let prizeTimer = null;
-let awaitingNextLevel = false;
-let nextLevelCallback = null;
 let awaitingRetry = false;
 let retryCallback = null;
 let tryAgainColorInterval = null;
 let levelUpReady = false;
-let tutorialInProgress = false;
-let tutorialDone = localStorage.getItem('tutorialDone') === 'true';
-let ilifeDone = localStorage.getItem('ilifeDone') === 'true';
-if (!ilifeDone) {
-  localStorage.setItem('ilifeDone', 'true');
-  ilifeDone = true;
-}
-let ilifeActive = false;
 let sessionStart = null;
-const legacyStats = safeParse(localStorage.getItem('mode1Stats'), null);
-let modeStats = safeParse(localStorage.getItem('modeStats'), {});
-if (legacyStats && !modeStats[1]) {
-  modeStats[1] = legacyStats;
-  localStorage.removeItem('mode1Stats');
-  localStorage.setItem('modeStats', JSON.stringify(modeStats));
-}
-syncSharedRankings(currentUser, modeStats);
-if (typeof window !== 'undefined') {
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'currentUser') {
-      currentUser = safeParse(event.newValue, null);
-      if (currentUser) {
-        window.currentUser = currentUser;
-      }
-      syncSharedRankings(currentUser, modeStats);
-    }
-  });
-}
+let modeStats = {};
 let modeStartTimes = {};
+
+function cloneFallback(value) {
+  if (Array.isArray(value)) {
+    return [...value];
+  }
+  if (value && typeof value === 'object') {
+    return { ...value };
+  }
+  return value;
+}
+
+function parseJSONStorage(key, fallback) {
+  const raw = localStorage.getItem(key);
+  if (!raw) {
+    return cloneFallback(fallback);
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed === null ? cloneFallback(fallback) : parsed;
+  } catch (err) {
+    console.warn(`Não foi possível analisar o conteúdo de ${key}:`, err);
+    return cloneFallback(fallback);
+  }
+}
+
+function getAllModesUnlockedState() {
+  return ALL_MODES.reduce((acc, mode) => {
+    acc[String(mode)] = true;
+    return acc;
+  }, {});
+}
+
+function ensureUnlockedModesStructure(raw) {
+  const normalized = getAllModesUnlockedState();
+  if (raw && typeof raw === 'object') {
+    if (Array.isArray(raw)) {
+      raw.forEach((value, index) => {
+        const key = String(index);
+        if (!normalized.hasOwnProperty(key)) {
+          normalized[key] = Boolean(value);
+        }
+      });
+    } else {
+      Object.keys(raw).forEach(key => {
+        if (!normalized.hasOwnProperty(key)) {
+          normalized[key] = Boolean(raw[key]);
+        }
+      });
+    }
+  }
+  localStorage.setItem('unlockedModes', JSON.stringify(normalized));
+  return normalized;
+}
+
+function loadModeStatsFromStorage() {
+  const stats = parseJSONStorage('modeStats', {});
+  const legacy = parseJSONStorage('mode1Stats', null);
+  if (legacy && !stats[1]) {
+    stats[1] = legacy;
+    localStorage.removeItem('mode1Stats');
+    localStorage.setItem('modeStats', JSON.stringify(stats));
+  }
+  return stats;
+}
+
+function reloadPersistentProgress(initialLoad = false) {
+  refreshUserSettings();
+  acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
+  errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
+  tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
+  loadProgressFromStorage();
+  completedModes = parseJSONStorage('completedModes', {});
+  unlockedModes = ensureUnlockedModesStructure(parseJSONStorage('unlockedModes', {}));
+  points = Number(localStorage.getItem('points'));
+  if (!Number.isFinite(points)) {
+    points = DEFAULT_STARTING_POINTS;
+  }
+  premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
+  modeStats = loadModeStatsFromStorage();
+  Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
+  if (initialLoad) {
+    updateLevelIcon({ scope: 'general' });
+  } else {
+    updateLevelIcon({ scope: 'general' });
+  }
+  if (!initialLoad) {
+    updateModeIcons();
+    atualizarBarraProgresso();
+    updateGeneralCircles();
+  }
+}
+
+reloadPersistentProgress(true);
+
 let lastWasError = false;
 let lastReward = 0;
 let lastPenalty = 0;
@@ -405,37 +736,6 @@ let pauseInterval = null;
 let downPlaying = false;
 let downTimeout = null;
 
-const colorModes = ['light', 'dark', 'gradient'];
-let colorModeIndex = parseInt(localStorage.getItem('colorMode') || '0', 10);
-
-function updateGradientColor(color) {
-  if (document.body.classList.contains('gradient-mode')) {
-    document.body.style.setProperty('--grad-color', color);
-  }
-}
-
-function applyColorMode() {
-  document.body.classList.remove('dark-mode', 'gradient-mode');
-  const mode = colorModes[colorModeIndex];
-  if (mode === 'dark') {
-    document.body.classList.add('dark-mode');
-    document.body.style.removeProperty('--grad-color');
-  } else if (mode === 'gradient') {
-    document.body.classList.add('dark-mode', 'gradient-mode');
-    updateGradientColor(calcularCor(points));
-  } else {
-    document.body.style.removeProperty('--grad-color');
-  }
-  localStorage.setItem('colorMode', colorModeIndex);
-}
-
-function toggleDarkMode() {
-  colorModeIndex = (colorModeIndex + 1) % colorModes.length;
-  applyColorMode();
-}
-
-applyColorMode();
-
 const reportClickHandler = () => {
   if (downPlaying) handleReportClick();
 };
@@ -443,8 +743,6 @@ const levelStar = document.getElementById('nivel-indicador');
 if (levelStar) levelStar.addEventListener('click', reportClickHandler);
 const modeLogo = document.getElementById('mode-icon');
 if (modeLogo) modeLogo.addEventListener('click', reportClickHandler);
-const phraseDisplay = document.getElementById('texto-exibicao');
-if (phraseDisplay) phraseDisplay.addEventListener('click', reportLastError);
 
 const modeImages = {
   1: 'selos%20modos%20de%20jogo/modo1.png',
@@ -455,28 +753,11 @@ const modeImages = {
   6: 'selos%20modos%20de%20jogo/modo6.png'
 };
 
-const modeTransitions = {
-  1: { duration: 7500, img: modeImages[2], audio: 'somModo2Intro' },
-  2: { duration: 7500, img: modeImages[3], audio: 'somModo3Intro' },
-  3: { duration: 8250, img: modeImages[4], audio: 'somModo4Intro' },
-  4: { duration: 6500, img: modeImages[5], audio: 'somModo5Intro' },
-  5: { duration: 6000, img: modeImages[6], audio: 'somModo6Intro' }
-};
-
-const modeIntros = {
-  2: { duration: 7500, img: modeImages[2], audio: 'somModo2Intro' },
-  3: { duration: 7500, img: modeImages[3], audio: 'somModo3Intro' },
-  4: { duration: 8250, img: modeImages[4], audio: 'somModo4Intro' },
-  5: { duration: 6500, img: modeImages[5], audio: 'somModo5Intro' },
-  6: { duration: 6000, img: modeImages[6], audio: 'somModo6Intro' }
-};
-
 function ensureModeStats(mode) {
   if (!modeStats[mode]) {
     modeStats[mode] = {
       totalPhrases: 0,
       totalTime: 0,
-      timePoints: 0,
       correct: 0,
       wrong: 0,
       report: 0,
@@ -486,36 +767,29 @@ function ensureModeStats(mode) {
   } else {
     if (!Array.isArray(modeStats[mode].wrongRanking)) modeStats[mode].wrongRanking = [];
     if (!Array.isArray(modeStats[mode].reportRanking)) modeStats[mode].reportRanking = [];
-    if (typeof modeStats[mode].timePoints !== 'number') modeStats[mode].timePoints = 0;
   }
   return modeStats[mode];
 }
 
 function saveModeStats() {
   localStorage.setItem('modeStats', JSON.stringify(modeStats));
-  if (currentUser && typeof currentUser === 'object') {
-    currentUser.stats = cloneStatsForShare(modeStats);
-    try {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-      if (typeof window !== 'undefined') {
-        window.currentUser = currentUser;
-      }
-    } catch (err) {
-      console.error('Erro ao salvar dados do usuário:', err);
-    }
+  if (typeof currentUser === 'object' && currentUser) {
+    currentUser.stats = modeStats;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
   }
-  syncSharedRankings(currentUser, modeStats);
   if (typeof saveUserPerformance === 'function') {
     saveUserPerformance(modeStats);
   }
+  updateGeneralCircles();
 }
 
 function saveTotals() {
   localStorage.setItem('acertosTotais', acertosTotais);
   localStorage.setItem('errosTotais', errosTotais);
   localStorage.setItem('tentativasTotais', tentativasTotais);
-  localStorage.setItem('points', points);
-  if (!paused && points >= 25115) {
+  localStorage.setItem('points', Math.max(0, Math.floor(points)));
+  const limite = getCurrentThreshold();
+  if (!paused && points >= limite) {
     pauseGame();
   }
 }
@@ -544,12 +818,6 @@ function stopCurrentGame() {
     reconhecimentoAtivo = false;
     try { reconhecimento.stop(); } catch {}
   }
-  if (slideshowInterval) {
-    clearInterval(slideshowInterval);
-    slideshowInterval = null;
-  }
-  const photo = document.getElementById('photo-viewer');
-  if (photo) photo.style.display = 'none';
 }
 
 function pauseGame(noPenalty = false) {
@@ -563,6 +831,7 @@ function pauseGame(noPenalty = false) {
   bloqueado = true;
   const texto = document.getElementById('texto-exibicao');
   if (texto) {
+    texto.style.transition = 'opacity 500ms linear';
     texto.style.opacity = '0';
   }
   const input = document.getElementById('pt');
@@ -584,12 +853,14 @@ function resumeGame() {
     clearInterval(pauseInterval);
     pauseInterval = null;
   }
-  if (points >= 25115) {
+  const limite = getCurrentThreshold();
+  if (points >= limite) {
     pauseGame();
     return;
   }
   const texto = document.getElementById('texto-exibicao');
   if (texto) {
+    texto.style.transition = 'opacity 500ms linear';
     texto.style.opacity = '1';
   }
   const input = document.getElementById('pt');
@@ -619,6 +890,7 @@ function triggerDownPlay() {
   if (input) input.disabled = true;
   const texto = document.getElementById('texto-exibicao');
   if (texto) {
+    texto.style.transition = 'opacity 2000ms linear';
     texto.style.opacity = '0';
   }
   const audio = new Audio('gamesounds/down.wav');
@@ -627,6 +899,7 @@ function triggerDownPlay() {
     document.getElementById('menu').style.display = 'flex';
     const visor = document.getElementById('visor');
     if (visor) visor.style.display = 'none';
+    document.body.classList.remove('game-active');
     downPlaying = false;
   }, 4000);
 }
@@ -643,6 +916,8 @@ function reportLastError() {
   const audio = new Audio('gamesounds/report.wav');
   audio.play();
   acertosTotais++;
+  const reward = rewardBalanceForPhrase(lastExpected || '', selectedMode);
+  grantExperience(reward, selectedMode);
   errosTotais = Math.max(0, errosTotais - 1);
   points += lastReward + lastPenalty;
   saveTotals();
@@ -669,31 +944,33 @@ function reportLastError() {
   }
 }
 
-function updateLevelIcon() {
+function updateLevelIcon(options = {}) {
   const icon = document.getElementById('nivel-indicador');
-  if (icon) {
-    icon.src = `selos_niveis/level%20${pastaAtual}.png`;
-    icon.style.opacity = '1';
+  if (!icon) {
+    return;
   }
-  localStorage.setItem('pastaAtual', pastaAtual);
+  const scope = options.scope || (document.body.classList.contains('game-active') ? 'mode' : 'general');
+  const levelValue = scope === 'mode' ? getModeLevel(selectedMode) : generalProgress.level;
+  const normalizedLevel = Math.max(1, Math.floor(levelValue));
+  icon.style.transition = '';
+  icon.style.opacity = '1';
+  icon.src = `selos_niveis/level%20${normalizedLevel}.png`;
+  icon.dataset.levelScope = scope;
 }
 
-function unlockMode(mode) {
+function unlockMode(mode, duration = 1000) {
   unlockedModes[mode] = true;
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
   document.querySelectorAll(`#menu-modes img[data-mode="${mode}"], #mode-buttons img[data-mode="${mode}"]`).forEach(img => {
+    img.style.transition = `opacity ${duration}ms linear`;
     img.style.opacity = '1';
   });
 }
 
 function updateModeIcons() {
   document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
-    const mode = parseInt(img.dataset.mode, 10);
-    if (unlockedModes[mode]) {
-      img.style.opacity = '1';
-    } else {
-      img.style.opacity = '0.5';
-    }
+    img.style.opacity = '1';
+    img.style.pointerEvents = 'auto';
   });
   checkForMenuLevelUp();
 }
@@ -708,293 +985,200 @@ function checkForMenuLevelUp() {
 }
 
 function performMenuLevelUp() {
-  const icons = document.querySelectorAll('#menu-modes img, #mode-buttons img');
-  icons.forEach(img => {
-    const modo = parseInt(img.dataset.mode, 10);
-    img.style.opacity = modo === 1 ? '1' : '0.5';
+  generalProgress.level += 1;
+  generalProgress.xp = 0;
+  saveGeneralProgress();
+  completedModes = {};
+  unlockedModes = getAllModesUnlockedState();
+  localStorage.setItem('completedModes', JSON.stringify(completedModes));
+  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+  document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
+    img.src = modeImages[6];
   });
-  setTimeout(() => {
-    pastaAtual++;
-    completedModes = {};
-    unlockedModes = { 1: true };
-    localStorage.setItem('completedModes', JSON.stringify(completedModes));
-    localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-    document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
-      img.src = modeImages[6];
-    });
-    updateLevelIcon();
-    updateModeIcons();
-    atualizarBarraProgresso();
-    levelUpReady = false;
-  }, 500);
+  updateLevelIcon();
+  updateModeIcons();
+  atualizarBarraProgresso();
+  levelUpReady = false;
 }
 
 function enforceStarClick() {
   const all = document.querySelectorAll('#menu-modes img, #mode-buttons img, #top-nav a');
   all.forEach(el => { el.style.pointerEvents = 'none'; });
   const stars = document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]');
+  if (!stars.length) {
+    all.forEach(el => { el.style.pointerEvents = ''; });
+    return;
+  }
   stars.forEach(st => { st.style.pointerEvents = 'auto'; });
-  let timeout = setTimeout(() => {
-    if (stars[0]) stars[0].click();
-  }, 5000);
   stars.forEach(st => {
     st.addEventListener('click', () => {
-      clearTimeout(timeout);
       all.forEach(el => { el.style.pointerEvents = ''; });
-      startStatsSequence();
+      performMenuLevelUp();
     }, { once: true });
   });
 }
 
 function startStatsSequence() {
-  const audio = new Audio('gamesounds/nivel2.mp3');
-  audio.addEventListener('ended', () => {
-    localStorage.setItem('statsSequence', 'true');
-    window.location.href = 'play.html';
-  });
-  audio.play();
+  localStorage.setItem('statsSequence', 'true');
+  window.location.href = 'play.html';
 }
 
 function menuLevelUpSequence() {
   goHome();
-  const menu = document.getElementById('menu');
-  const icons = menu.querySelectorAll('#menu-modes img');
-  icons.forEach(img => {
-    img.style.opacity = '0.5';
-  });
-  const audio = document.getElementById('somNivelDesbloqueado');
-  if (audio) { audio.currentTime = 0; audio.play(); }
-
-  const msg = document.createElement('div');
-  msg.id = 'next-level-msg';
-  msg.textContent = 'diga next level para avançar';
-  menu.appendChild(msg);
-
-  icons.forEach(img => { img.style.opacity = '1'; });
-  msg.style.display = 'block';
-  awaitingNextLevel = true;
-  nextLevelCallback = () => {
-    msg.remove();
-    performMenuLevelUp();
-  };
-  if (reconhecimento) {
-    reconhecimentoAtivo = true;
-    reconhecimento.lang = 'en-US';
-    reconhecimento.start();
-  }
+  performMenuLevelUp();
 }
 
 let transitioning = false;
 
-const levelUpTransition = {
-  duration: 4000,
-  img: 'https://cdn.dribbble.com/userupload/41814123/file/original-fb8a772ba8676fd28c528fd1259cabcb.gif'
-};
-
-const colorStops = [
-  [0, '#ff0000'],
-  [2000, '#ff3b00'],
-  [4000, '#ff7f00'],
-  [6000, '#ffb300'],
-  [8000, '#ffe000'],
-  [10000, '#ffff66'],
-  [12000, '#ccff66'],
-  [14000, '#99ff99'],
-  [16000, '#00cc66'],
-  [18000, '#00994d'],
-  [20000, '#00ffff'],
-  [22000, '#66ccff'],
-  [24000, '#0099ff'],
-  [25000, '#0099ff']
-];
-
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [int >> 16 & 255, int >> 8 & 255, int & 255];
-}
-
-function rgbToHex(r, g, b) {
-  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
-function calcularCor(pontos) {
-  const max = colorStops[colorStops.length - 1][0];
-  const p = Math.max(0, Math.min(pontos, max));
-  for (let i = 0; i < colorStops.length - 1; i++) {
-    const [p1, c1] = colorStops[i];
-    const [p2, c2] = colorStops[i + 1];
-    if (p >= p1 && p <= p2) {
-      const ratio = (p - p1) / (p2 - p1);
-      const [r1, g1, b1] = hexToRgb(c1);
-      const [r2, g2, b2] = hexToRgb(c2);
-      const r = Math.round(r1 + ratio * (r2 - r1));
-      const g = Math.round(g1 + ratio * (g2 - g1));
-      const b = Math.round(b1 + ratio * (b2 - b1));
-      return rgbToHex(r, g, b);
-    }
+function createStatCircle(perc, label, iconSrc, extraText) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'stat-circle';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 120 120');
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius;
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  bg.setAttribute('class', 'circle-bg');
+  bg.setAttribute('cx', '60');
+  bg.setAttribute('cy', '60');
+  bg.setAttribute('r', radius);
+  svg.appendChild(bg);
+  const prog = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  prog.setAttribute('class', 'circle-progress');
+  prog.setAttribute('cx', '60');
+  prog.setAttribute('cy', '60');
+  prog.setAttribute('r', radius);
+  prog.setAttribute('stroke-dasharray', circumference);
+  const clamped = Math.max(0, Math.min(perc, 100));
+  prog.setAttribute('stroke-dashoffset', circumference);
+  prog.style.stroke = colorFromPercent(perc);
+  svg.appendChild(prog);
+  wrapper.appendChild(svg);
+  const icon = document.createElement('img');
+  icon.className = 'circle-icon';
+  icon.src = iconSrc;
+  icon.alt = label;
+  wrapper.appendChild(icon);
+  setTimeout(() => {
+    prog.setAttribute('stroke-dashoffset', circumference * (1 - clamped / 100));
+  }, 50);
+  const value = document.createElement('div');
+  value.className = 'circle-value';
+  value.textContent = `${Math.round(perc)}%`;
+  wrapper.appendChild(value);
+  const labelEl = document.createElement('div');
+  labelEl.className = 'circle-label';
+  labelEl.textContent = label;
+  wrapper.appendChild(labelEl);
+  if (extraText) {
+    const extra = document.createElement('div');
+    extra.className = 'circle-extra';
+    extra.textContent = extraText;
+    wrapper.appendChild(extra);
   }
-  return colorStops[colorStops.length - 1][1];
+  return wrapper;
 }
 
-function colorFromPercent(perc) {
-  const max = colorStops[colorStops.length - 1][0];
-  return calcularCor((perc / 100) * max);
+function calcModeStats(mode) {
+  const stats = modeStats[mode] || {};
+  const total = stats.totalPhrases || 0;
+  const correct = stats.correct || 0;
+  const report = stats.report || 0;
+  const totalTime = stats.totalTime || 0;
+  const accPerc = total ? (correct / total * 100) : 0;
+  const avg = total ? (totalTime / total / 1000) : 0;
+  const goal = timeGoals[mode] || MAX_TIME;
+  let timePerc = total ? ((MAX_TIME - avg) / (MAX_TIME - goal) * 100) : 0;
+  if (avg >= MAX_TIME) timePerc = 0;
+  if ([2, 3, 6].includes(mode) && total) timePerc += 20;
+  const notReportPerc = total ? (100 - (report / total * 100)) : 100;
+  return { accPerc, timePerc, avg, notReportPerc };
 }
 
-let introProgressInterval = null;
+function calcGeneralStats() {
+  const modes = [2, 3, 4, 5, 6];
+  let totalPhrases = 0, totalCorrect = 0, totalTime = 0, totalReport = 0;
+  let timePercSum = 0, timePercCount = 0;
+  modes.forEach(m => {
+    const s = modeStats[m] || {};
+    totalPhrases += s.totalPhrases || 0;
+    totalCorrect += s.correct || 0;
+    totalTime += s.totalTime || 0;
+    totalReport += s.report || 0;
+    const tp = calcModeStats(m).timePerc;
+    if (tp >= 1) {
+      timePercSum += tp;
+      timePercCount++;
+    }
+  });
+  const accPerc = totalPhrases ? (totalCorrect / totalPhrases * 100) : 0;
+  const avg = totalPhrases ? (totalTime / totalPhrases / 1000) : 0;
+  const timePerc = timePercCount ? (timePercSum / timePercCount) : 0;
+  const notReportPerc = totalPhrases ? (100 - (totalReport / totalPhrases * 100)) : 100;
+  return { accPerc, timePerc, avg, notReportPerc };
+}
 
-function startIntroProgress(duration) {
-  const filled = document.getElementById('intro-progress-filled');
-  if (!filled) return;
-  if (introProgressInterval) clearInterval(introProgressInterval);
-  filled.style.transition = 'none';
-  filled.style.width = '0%';
-  filled.style.backgroundColor = calcularCor(0);
-  const start = Date.now();
-  introProgressInterval = setInterval(() => {
-    const ratio = Math.min((Date.now() - start) / duration, 1);
-    const limite = selectedMode === 6 ? MODE6_THRESHOLD : 25000;
-    const pontos = ratio * limite;
-    filled.style.width = (ratio * 100) + '%';
-    filled.style.backgroundColor = calcularCor(pontos);
-    if (ratio >= 1) clearInterval(introProgressInterval);
+function updateGeneralCircles() {
+  const { accPerc, timePerc } = calcGeneralStats();
+  const scoreWrapper = document.getElementById('general-score-circle');
+  const speedWrapper = document.getElementById('general-speed-circle');
+  if (scoreWrapper) {
+    scoreWrapper.innerHTML = '';
+    scoreWrapper.appendChild(
+      createStatCircle(accPerc, 'Pontuação Geral', 'selos%20modos%20de%20jogo/precisao.png')
+    );
+  }
+  if (speedWrapper) {
+    speedWrapper.innerHTML = '';
+    speedWrapper.appendChild(
+      createStatCircle(timePerc, 'Velocidade Geral', 'selos%20modos%20de%20jogo/velocidade.png')
+    );
+  }
+}
+
+function startTryAgainAnimation() {
+  const msg = document.getElementById('nivel-mensagem');
+  if (!msg) return;
+  if (tryAgainColorInterval) clearInterval(tryAgainColorInterval);
+  const duration = 30000;
+  const maxPoints = selectedMode === 6 ? MODE6_THRESHOLD : 25000;
+  const begin = Date.now();
+  tryAgainColorInterval = setInterval(() => {
+    const elapsed = (Date.now() - begin) % duration;
+    const pts = (elapsed / duration) * maxPoints;
+    msg.style.color = calcularCor(pts);
   }, 50);
 }
-
-function resetIntroProgress() {
-  const filled = document.getElementById('intro-progress-filled');
-  if (!filled) return;
-  if (introProgressInterval) clearInterval(introProgressInterval);
-  filled.style.transition = 'none';
-  filled.style.width = '0%';
-  filled.style.backgroundColor = calcularCor(0);
-}
-
-function startTryAgainAnimation() {}
 
 function stopTryAgainAnimation() {
   if (tryAgainColorInterval) clearInterval(tryAgainColorInterval);
   tryAgainColorInterval = null;
 }
 
-function showEmptyModeScreen() {
-  const menu = document.getElementById('menu');
-  const visor = document.getElementById('visor');
-  const photo = document.getElementById('photo-viewer');
-  if (menu) menu.style.display = 'none';
-  if (visor) visor.style.display = 'none';
-  if (photo) photo.style.display = 'none';
-  const overlay = document.createElement('div');
-  overlay.id = 'empty-mode-overlay';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = '#000';
-  overlay.style.zIndex = '9999';
-  document.body.appendChild(overlay);
-  setTimeout(() => {
-    overlay.remove();
-    if (menu) menu.style.display = 'flex';
-  }, 5700);
-}
-
 function startGame(modo) {
-  if (modo === 7 || modo === 8) {
-    showEmptyModeScreen();
-    return;
-  }
   const prevMode = selectedMode;
   if (prevMode !== modo) {
     recordModeTime(prevMode);
   }
   selectedMode = modo;
-  points = modo === 1 ? 0 : INITIAL_POINTS;
+  refreshUserSettings();
+  const startingPoints = userSettings.startingPoints ?? SETTINGS_FALLBACK.startingPoints;
+  points = Math.max(0, startingPoints);
   saveTotals();
   atualizarBarraProgresso();
   updateModeIcons();
+  updateLevelIcon({ scope: 'mode' });
   listeningForCommand = false;
   document.getElementById('menu').style.display = 'none';
+  document.body.classList.add('game-active');
   document.getElementById('visor').style.display = 'none';
-  const photo = document.getElementById('photo-viewer');
-  if (photo) photo.style.display = 'none';
-  if (slideshowInterval) clearInterval(slideshowInterval);
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
   if (reconhecimento) {
     reconhecimentoAtivo = false;
     reconhecimento.stop();
   }
-  const start = () => beginGame();
-  if (!modeIntroShown[modo]) {
-    if (modo === 1) {
-      showMode1Intro(() => {
-        modeIntroShown[1] = true;
-        localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
-        start();
-      });
-    } else {
-      const info = modeIntros[modo];
-      if (info) {
-        showModeIntro(info, () => {
-          modeIntroShown[modo] = true;
-          localStorage.setItem('modeIntroShown', JSON.stringify(modeIntroShown));
-          start();
-        });
-      } else {
-        start();
-      }
-    }
-  } else {
-    if (modo === 7 || modo === 8) {
-      start();
-    } else {
-      showShortModeIntro(modo, start);
-    }
-  }
-}
-
-function showMode1Intro(callback) {
-  callback();
-}
-
-function showModeIntro(info, callback) {
-  callback();
-}
-
-function showModeTransition(info, callback) {
-  callback();
-}
-
-function showLevelUp(callback) {
-  const overlay = document.getElementById('intro-overlay');
-  const img = document.getElementById('intro-image');
-  const audio = document.getElementById(levelUpTransition.audio);
-  atualizarBarraProgresso();
-  img.src = levelUpTransition.img;
-  img.style.animation = 'none';
-  img.style.width = '397px';
-  img.style.height = '304px';
-  overlay.style.display = 'flex';
-  startIntroProgress(levelUpTransition.duration);
-  if (audio) {
-    audio.currentTime = 0;
-    audio.play();
-  }
-  awaitingNextLevel = true;
-  nextLevelCallback = () => {
-    overlay.style.display = 'none';
-    resetIntroProgress();
-    img.style.width = '250px';
-    img.style.height = '250px';
-    callback();
-  };
-  if (reconhecimento) {
-    reconhecimentoAtivo = true;
-    reconhecimento.lang = 'en-US';
-    reconhecimento.start();
-  }
+  beginGame();
 }
 
 function beginGame() {
@@ -1002,30 +1186,27 @@ function beginGame() {
   modeStartTimes[selectedMode] = Date.now();
   consecutiveErrors = 0;
   paused = false;
-  if (selectedMode === 7 || selectedMode === 8) {
-    startPhotoSlideshow();
-    return;
-  }
   const start = () => {
     document.getElementById('visor').style.display = 'flex';
     const icon = document.getElementById('mode-icon');
     if (icon) {
       icon.src = modeImages[selectedMode];
-      const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+      const threshold = getCurrentThreshold();
       const ratio = Math.max(0, Math.min(points, threshold)) / threshold;
       icon.style.opacity = ratio;
       icon.style.display = 'block';
       icon.onclick = () => { if (paused) resumeGame(); };
     }
+    updateGeneralCircles();
     const texto = document.getElementById('texto-exibicao');
     if (texto) texto.style.opacity = '1';
-    updateLevelIcon();
+    updateLevelIcon({ scope: 'mode' });
     updateModeIcons();
     switch (selectedMode) {
       case 1:
-        mostrarTexto = 'en';
+        mostrarTexto = 'pt';
         voz = 'en';
-        esperadoLang = 'en';
+        esperadoLang = 'pt';
         break;
     case 2:
       mostrarTexto = 'pt';
@@ -1043,9 +1224,9 @@ function beginGame() {
       esperadoLang = 'en';
       break;
     case 5:
-      mostrarTexto = 'pt';
-      voz = null;
-      esperadoLang = 'en';
+      mostrarTexto = 'none';
+      voz = 'en';
+      esperadoLang = 'pt';
       break;
     case 6:
       mostrarTexto = 'pt';
@@ -1059,55 +1240,23 @@ function beginGame() {
       } else {
         reconhecimento.lang = esperadoLang === 'pt' ? 'pt-BR' : 'en-US';
       }
-      if (isMobile) {
-        reconhecimentoAtivo = false;
-      } else {
-        reconhecimentoAtivo = true;
-        reconhecimento.start();
-      }
+      reconhecimentoAtivo = true;
+      reconhecimento.start();
     }
-    if (selectedMode === 1) {
-      premioBase = 1000;
-      premioDec = 0;
-      penaltyFactor = 0;
-    } else {
-      premioBase = 4000;
-      premioDec = 1;
-      penaltyFactor = 0.5;
-    }
+    const rewardValue = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
+    premioBase = Math.max(0, rewardValue);
+    premioDec = 0;
+    penaltyFactor = selectedMode === 1 ? 0 : 0.5;
     carregarFrases();
   };
 
   start();
 }
 
-async function startPhotoSlideshow() {
-  const container = document.getElementById('photo-viewer');
-  const img = document.getElementById('photo-img');
-  container.style.display = 'flex';
-  document.getElementById('intro-overlay').style.display = 'none';
-  if (slideshowInterval) clearInterval(slideshowInterval);
-  try {
-    const resp = await fetch('photos/photos.json');
-    const photos = await resp.json();
-    if (!Array.isArray(photos) || photos.length === 0) return;
-    const showRandom = () => {
-      const idx = Math.floor(Math.random() * photos.length);
-      img.src = 'photos/' + photos[idx];
-    };
-    showRandom();
-    slideshowInterval = setInterval(showRandom, 6200);
-  } catch (e) {
-    console.error('Erro ao carregar fotos', e);
-  }
-}
-
 function falar(texto, lang) {
   const utter = new SpeechSynthesisUtterance(texto);
   utter.lang = lang === 'pt' ? 'pt-BR' : 'en-US';
   speechSynthesis.cancel();
-  allowInput = false;
-  utter.onend = () => { allowInput = true; };
   speechSynthesis.speak(utter);
 }
 
@@ -1121,8 +1270,8 @@ function toggleEn() {
   mostrarFrase();
 }
 
-function showShortModeIntro(modo, callback) {
-  callback();
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
 }
 
 function falarFrase() {
@@ -1144,84 +1293,88 @@ function embaralhar(array) {
 }
 
 function carregarFrases() {
-  let principais = [], anteriores = [];
-  if (pastas[pastaAtual]) {
-	principais = pastas[pastaAtual];
-
-  }
-  if (pastaAtual > 1) {
-    for (let i = 1; i < pastaAtual; i++) {
-      if (pastas[i]) {
-		const frases = pastas[i];
-
-        anteriores = anteriores.concat(frases);
+  const library = getModeLibrary(selectedMode);
+  const levelToUse = resolveModeLevel(selectedMode);
+  pastaAtual = levelToUse;
+  const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
+  let anteriores = [];
+  getModeLevels(selectedMode)
+    .filter(level => level < levelToUse)
+    .forEach(level => {
+      if (Array.isArray(library[level])) {
+        anteriores = anteriores.concat(library[level]);
       }
-    }
-  }
-  const qtdPrincipais = pastaAtual === 1 ? TOTAL_FRASES : Math.round(TOTAL_FRASES * 0.8);
+    });
+
+  const qtdPrincipais = levelToUse === 1 ? TOTAL_FRASES : Math.round(TOTAL_FRASES * 0.8);
   const qtdAnteriores = TOTAL_FRASES - qtdPrincipais;
-  frasesArr = [].concat(
+  let selecionadas = [].concat(
     embaralhar(principais).slice(0, qtdPrincipais),
     embaralhar(anteriores).slice(0, qtdAnteriores)
   );
-  frasesArr = embaralhar(frasesArr);
+
+  if (!selecionadas.length && principais.length) {
+    selecionadas = [...principais];
+  }
+
+  if (!selecionadas.length) {
+    selecionadas = [['', '']];
+  }
+
+  frasesArr = embaralhar(selecionadas);
   fraseIndex = 0;
   setTimeout(() => mostrarFrase(), 300);
   atualizarBarraProgresso();
-}
-
-function setPhraseTheme(theme) {
-  const texto = document.getElementById('texto-exibicao');
-  if (!texto) return;
-  texto.classList.remove('phrase-box--dark', 'phrase-box--light', 'phrase-box--hidden', 'phrase-box--success', 'phrase-box--error');
-  if (theme === 'dark') {
-    texto.classList.add('phrase-box--dark');
-  } else if (theme === 'light') {
-    texto.classList.add('phrase-box--light');
-  } else if (theme === 'hidden') {
-    texto.classList.add('phrase-box--dark', 'phrase-box--hidden');
-  }
+  dispatchModeProgressUpdate(selectedMode);
 }
 
 function mostrarFrase() {
+  refreshUserSettings();
   if (inputTimeout) clearTimeout(inputTimeout);
+  if (timerInterval) clearInterval(timerInterval);
+  const threshold = getCurrentThreshold();
+  if (points >= threshold) {
+    return;
+  }
   if (fraseIndex >= frasesArr.length) fraseIndex = 0;
   const [pt, en] = frasesArr[fraseIndex];
   const texto = document.getElementById("texto-exibicao");
-  if (!texto) return;
-  if (mostrarTexto === 'pt') {
-    texto.textContent = pt;
-    setPhraseTheme('light');
-  } else if (mostrarTexto === 'en') {
-    texto.textContent = en;
-    setPhraseTheme('dark');
-  } else {
-    texto.textContent = '';
-    setPhraseTheme('hidden');
+  if (mostrarTexto === 'pt') texto.textContent = pt;
+  else if (mostrarTexto === 'en') texto.textContent = en;
+  else texto.textContent = '';
+  if (texto) {
+    texto.dataset.expectedPt = pt;
+    texto.dataset.expectedEn = en;
+    const expected = esperadoLang === 'pt' ? pt : en;
+    texto.dataset.expectedPhrase = expected;
   }
   document.getElementById("pt").value = '';
   document.getElementById("pt").disabled = false;
   if (voz === 'en') falar(en, 'en');
   else if (voz === 'pt') falar(pt, 'pt');
   bloqueado = false;
-  if (timerInterval) clearInterval(timerInterval);
   const timerEl = document.getElementById('timer');
   const start = Date.now();
   timerEl.textContent = 'Tempo: 0s';
+  const lossPerSecond = userSettings.pointsLossPerSecond ?? SETTINGS_FALLBACK.pointsLossPerSecond;
+  let lastTimerSecond = 0;
   timerInterval = setInterval(() => {
     const secs = Math.floor((Date.now() - start) / 1000);
     timerEl.textContent = `Tempo: ${secs}s`;
+    if (lossPerSecond > 0 && secs > lastTimerSecond) {
+      const dec = Math.max(0, Math.round(lossPerSecond * (secs - lastTimerSecond)));
+      if (dec > 0) {
+        points = Math.max(0, points - dec);
+        saveTotals();
+        atualizarBarraProgresso();
+      }
+    }
+    lastTimerSecond = secs;
   }, 1000);
   if (prizeTimer) clearInterval(prizeTimer);
   prizeStart = Date.now();
   prizeTimer = setInterval(atualizarBarraProgresso, 50);
   atualizarBarraProgresso();
-  if (isMobile && reconhecimento && !reconhecimentoAtivo) {
-    setTimeout(() => {
-      reconhecimentoAtivo = true;
-      reconhecimento.start();
-    }, 500);
-  }
   if (selectedMode >= 2) {
     inputTimeout = setTimeout(handleNoInput, 6000);
   }
@@ -1229,13 +1382,12 @@ function mostrarFrase() {
 
 function flashSuccess(callback) {
   const texto = document.getElementById('texto-exibicao');
-  if (!texto) {
-    callback();
-    return;
-  }
-  texto.classList.add('phrase-box--success');
+  const color = calcularCor(points);
+  texto.style.transition = 'color 500ms linear';
+  texto.style.color = color;
   setTimeout(() => {
-    texto.classList.remove('phrase-box--success');
+    texto.style.transition = 'color 500ms linear';
+    texto.style.color = '#333';
     setTimeout(() => {
       document.getElementById('resultado').textContent = '';
       callback();
@@ -1249,20 +1401,26 @@ function flashError(expected, callback) {
     callback();
     return;
   }
-  const previous = texto.textContent;
-  const wasHidden = texto.classList.contains('phrase-box--hidden');
+  const previousText = texto.textContent;
+  const previousColor = window.getComputedStyle(texto).color;
+  const resultadoEl = document.getElementById('resultado');
   texto.textContent = expected;
-  if (wasHidden) texto.classList.remove('phrase-box--hidden');
-  texto.classList.add('phrase-box--error');
+  texto.style.transition = 'color 280ms ease';
+  texto.style.color = '#ff4d4f';
+  const HIGHLIGHT_DURATION = 2100;
+  const RESET_DURATION = 500;
   setTimeout(() => {
-    texto.classList.remove('phrase-box--error');
+    texto.style.transition = 'color 240ms ease';
+    texto.style.color = previousColor;
     setTimeout(() => {
-      texto.textContent = previous;
-      if (wasHidden) texto.classList.add('phrase-box--hidden');
-      document.getElementById('resultado').textContent = '';
+      texto.textContent = previousText;
+      texto.style.transition = '';
+      if (resultadoEl) {
+        resultadoEl.textContent = '';
+      }
       callback();
-    }, 500);
-  }, 1500);
+    }, RESET_DURATION);
+  }, HIGHLIGHT_DURATION);
 }
 
 function handleNoInput() {
@@ -1280,10 +1438,15 @@ function verificarResposta() {
   const resposta = input.value.trim();
   const cheat = /^GOTO(\d+)$/i.exec(resposta);
   if (cheat) {
-    const nivel = parseInt(cheat[1], 10);
-    if (pastas[nivel]) {
-      pastaAtual = nivel;
-      updateLevelIcon();
+    const nivel = Math.max(1, parseInt(cheat[1], 10));
+    const modeKey = String(selectedMode);
+    if (phraseLibrary.modes[modeKey] && phraseLibrary.modes[modeKey][nivel]) {
+      const progress = getModeProgress(selectedMode);
+      progress.level = nivel;
+      progress.xp = 0;
+      modeProgress[modeKey] = progress;
+      saveModeProgress({ emit: true });
+      updateLevelIcon({ scope: 'mode' });
       carregarFrases();
     }
     input.value = "";
@@ -1295,7 +1458,7 @@ function verificarResposta() {
     saveTotals();
     input.value = '';
     atualizarBarraProgresso();
-    const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+    const threshold = getCurrentThreshold();
     if (points >= threshold && !completedModes[selectedMode]) {
       finishMode();
     }
@@ -1305,120 +1468,86 @@ function verificarResposta() {
   tentativasTotais++;
   saveTotals();
   const elapsed = Date.now() - prizeStart;
-  const premioAtual = premioBase - elapsed * premioDec;
-  const penalty = elapsed * penaltyFactor;
-  lastReward = premioAtual;
+  const rawPremio = Math.max(0, Math.round(premioBase - elapsed * premioDec));
+  const penalty = Math.max(0, Math.round(elapsed * penaltyFactor));
+  const bonus = selectedMode === 5 ? 1000 : 0;
+  const baseReward = rawPremio + bonus;
+  const finalReward = applyScoreMultiplier(baseReward, selectedMode);
+  lastReward = finalReward;
   lastPenalty = penalty;
   lastWasError = false;
 
   const stats = ensureModeStats(selectedMode);
+  stats.totalPhrases++;
 
-  if (selectedMode === 1) {
-    stats.totalPhrases++;
+  const currentEntry = Array.isArray(frasesArr[fraseIndex]) ? frasesArr[fraseIndex] : ['', ''];
+  const [pt, en] = currentEntry;
+  const esperado = esperadoLang === 'pt' ? pt : en;
+  const expectedPhrase = esperado || '';
+  const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+  let normalizadoResp = norm(resposta);
+  const normalizadoEsp = norm(esperado || '');
+  if (normalizadoResp === 'justicanaterra') {
+    normalizadoResp = normalizadoEsp;
+  }
+  const correto =
+    normalizadoResp === normalizadoEsp ||
+    ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
+    ehQuaseCorretoPalavras(resposta, esperado || '');
+
+  if (correto) {
     stats.correct++;
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
-    points += 1000;
+    points += finalReward;
     saveTotals();
+    const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
+    grantExperience(reward, selectedMode);
+    consecutiveErrors = 0;
     resultado.textContent = '';
-    const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+    const threshold = getCurrentThreshold();
     const reached = points >= threshold && !completedModes[selectedMode];
     flashSuccess(() => {
       if (reached) finishMode();
       else continuar();
     });
-    atualizarBarraProgresso();
-    return;
-  }
-
-    const [pt, en] = frasesArr[fraseIndex];
-
-    const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
-    const esperado = esperadoLang === 'pt' ? pt : en;
-    const expectedPhrase = esperado;
-
-    const applyCanonical = phrase =>
-      phrase.split(/\s+/).map(w => homophonesMap[w.toLowerCase()] || w).join(' ');
-
-    const respostaCanon = applyCanonical(resposta);
-    const esperadoCanon = applyCanonical(esperado);
-
-    let normalizadoResp = norm(respostaCanon);
-    const normalizadoEsp = norm(esperadoCanon);
-    if (normalizadoResp === 'justicanaterra') {
-      normalizadoResp = normalizadoEsp;
-    }
-    const correto =
-      normalizadoResp === normalizadoEsp ||
-      ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
-      ehQuaseCorretoPalavras(respostaCanon, esperadoCanon);
-
-  const phraseLen = expectedPhrase.replace(/\s+/g, '').length;
-  let timePoints = 0;
-  if (selectedMode >= 2) {
-    const { perfect, worst } = getTimeMetrics(phraseLen, selectedMode);
-    const elapsedSec = elapsed / 1000;
-    timePoints = ((worst - elapsedSec) / (worst - perfect)) * 100;
-    if (timePoints < 0) timePoints = 0;
-  }
-
-    if (correto) {
-      stats.totalPhrases++;
-      stats.correct++;
-      stats.timePoints += timePoints;
-      saveModeStats();
-      document.getElementById("somAcerto").play();
-      acertosTotais++;
-      points += premioAtual;
-      if (selectedMode === 5) {
-        points += 1000;
+  } else {
+    stats.wrong++;
+    const wr = stats.wrongRanking;
+    const existing = wr.find(e => e.expected === expectedPhrase && e.input === resposta && e.folder === pastaAtual);
+    if (existing) existing.count++;
+    else wr.push({ expected: expectedPhrase, input: resposta, folder: pastaAtual, count: 1 });
+    saveModeStats();
+    document.getElementById("somErro").play();
+    errosTotais++;
+    lastExpected = expectedPhrase;
+    lastInput = resposta;
+    lastFolder = pastaAtual;
+    saveTotals();
+    lastWasError = true;
+    resultado.textContent = "";
+    resultado.style.color = "red";
+    input.value = '';
+    input.disabled = true;
+    bloqueado = true;
+    microphonePaused = true;
+    falar(esperado, esperadoLang);
+    consecutiveErrors++;
+    flashError(esperado, () => {
+      input.disabled = false;
+      bloqueado = false;
+      points = Math.max(0, points - penalty);
+      saveTotals();
+      microphonePaused = false;
+      if (consecutiveErrors >= 3) {
+        triggerDownPlay();
+      } else {
+        continuar();
       }
-      saveTotals();
-      consecutiveErrors = 0;
-      resultado.textContent = '';
-      const threshold = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
-      const reached = points >= threshold && !completedModes[selectedMode];
-      flashSuccess(() => {
-        if (reached) finishMode();
-        else continuar();
-      });
-    } else {
-      stats.totalPhrases++;
-      stats.wrong++;
-      stats.timePoints += timePoints;
-      const wr = stats.wrongRanking;
-      const existing = wr.find(e => e.expected === expectedPhrase && e.input === resposta && e.folder === pastaAtual);
-      if (existing) existing.count++;
-      else wr.push({ expected: expectedPhrase, input: resposta, folder: pastaAtual, count: 1 });
-      saveModeStats();
-      document.getElementById("somErro").play();
-      errosTotais++;
-      lastExpected = expectedPhrase;
-      lastInput = resposta;
-      lastFolder = pastaAtual;
-      saveTotals();
-      lastWasError = true;
-      resultado.textContent = "";
-      resultado.style.color = "red";
-      input.value = '';
-      input.disabled = true;
-      bloqueado = true;
-      falar(esperado, esperadoLang);
-      consecutiveErrors++;
-      flashError(esperado, () => {
-        input.disabled = false;
-        bloqueado = false;
-        points = Math.max(0, points - penalty);
-        saveTotals();
-        if (consecutiveErrors >= 3) {
-          triggerDownPlay();
-        } else {
-          continuar();
-        }
-      });
-    }
-    atualizarBarraProgresso();
+    });
+  }
+  atualizarBarraProgresso();
     // Pontuação de acertos ocultada
   }
 
@@ -1426,20 +1555,21 @@ function continuar() {
   if (transitioning) {
     return;
   }
+  const threshold = getCurrentThreshold();
+  if (points >= threshold) {
+    return;
+  }
   fraseIndex++;
   mostrarFrase();
 }
 
 function atualizarBarraProgresso() {
-  const premioAtual = premioBase - (Date.now() - prizeStart) * premioDec;
-  document.getElementById('score').textContent = `PREMIO (${Math.round(premioAtual)}) pontos: (${Math.round(points)})`;
+  updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
-  const limite = selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+  const limite = getCurrentThreshold();
   const perc = Math.max(0, Math.min(points, limite)) / limite * 100;
   filled.style.width = perc + '%';
-  const barColor = calcularCor(points);
-  filled.style.backgroundColor = barColor;
-  updateGradientColor(barColor);
+  filled.style.backgroundColor = calcularCor(points);
   const icon = document.getElementById('mode-icon');
   if (icon) {
     icon.style.opacity = perc / 100;
@@ -1453,12 +1583,15 @@ function finishMode() {
   localStorage.setItem('completedModes', JSON.stringify(completedModes));
   const next = selectedMode + 1;
   if (next <= 6) {
-    unlockMode(next, 500);
-    const audio = document.getElementById('somModoDesbloqueado');
-    if (audio) { audio.currentTime = 0; audio.play(); }
+    unlockMode(next, 0);
 
     if (selectedMode === 5) {
-      setTimeout(() => { continuar(); }, 500);
+      setTimeout(() => {
+        const threshold = getCurrentThreshold();
+        if (points < threshold) {
+          continuar();
+        }
+      }, 500);
     }
   }
 
@@ -1468,16 +1601,19 @@ function finishMode() {
     const stats6 = ensureModeStats(6);
     const total = stats6.totalPhrases || 0;
     const acc = total ? (stats6.correct / total * 100).toFixed(2) : '0';
-    const avgPts = total ? (stats6.timePoints / total) : 0;
+    const avg = total ? (stats6.totalTime / total / 1000) : 0;
+    const MAX_TIME = 6.0;
+    const goal = 2.0;
+    let speed = total ? ((MAX_TIME - avg) / (MAX_TIME - goal) * 100) : 0;
+    if (avg >= MAX_TIME) speed = 0;
+    if (total) speed += 20;
     const reportPerc = total ? (stats6.report / total * 100).toFixed(2) : '0';
     const details = JSON.parse(localStorage.getItem('levelDetails') || '[]');
-    details.push({ level: pastaAtual + 1, accuracy: acc, speed: avgPts.toFixed(2), reports: reportPerc });
+    details.push({ level: pastaAtual + 1, accuracy: acc, speed: speed.toFixed(2), reports: reportPerc });
     localStorage.setItem('levelDetails', JSON.stringify(details));
     document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
       img.src = 'selos%20modos%20de%20jogo/modostar.png';
     });
-    const star = document.getElementById('somLevelStar');
-    if (star) { star.currentTime = 0; star.play(); }
     levelUpReady = true;
     goHome();
     enforceStarClick();
@@ -1492,27 +1628,14 @@ function nextMode() {
     const current = selectedMode;
     recordModeTime(current);
     const next = current + 1;
-    const info = modeTransitions[current];
     selectedMode = next;
-    const done = () => {
-      startGame(next);
-      transitioning = false;
-    };
-    if (info) {
-      showModeTransition(info, done);
-    } else {
-      done();
-    }
+    startGame(next);
+    transitioning = false;
   } else {
     recordModeTime(selectedMode);
-    pastaAtual++;
     selectedMode = 1;
-    const done = () => {
-      updateLevelIcon();
-      startGame(1);
-      transitioning = false;
-    };
-    showModeTransition(levelUpTransition, done);
+    startGame(1);
+    transitioning = false;
   }
 }
 
@@ -1528,20 +1651,21 @@ function goHome() {
     sessionStart = null;
   }
   recordModeTime(selectedMode);
-  points = INITIAL_POINTS;
+  points = DEFAULT_STARTING_POINTS;
   saveTotals();
   atualizarBarraProgresso();
   document.getElementById('visor').style.display = 'none';
   document.getElementById('menu').style.display = 'flex';
+  document.body.classList.remove('game-active');
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
   if (reconhecimento) {
-    reconhecimentoAtivo = true;
-    reconhecimento.lang = 'en-US';
-    reconhecimento.start();
+    reconhecimentoAtivo = false;
+    try { reconhecimento.stop(); } catch {}
   }
-  listeningForCommand = true;
+  listeningForCommand = false;
   updateModeIcons();
+  updateLevelIcon({ scope: 'general' });
 }
 
 function updateClock() {
@@ -1551,75 +1675,28 @@ function updateClock() {
   el.textContent = now;
 }
 
-function startTutorial() {
-  tutorialInProgress = true;
-  localStorage.setItem('tutorialDone', 'true');
-  const welcome = document.getElementById('somWelcome');
-  if (welcome) { welcome.currentTime = 0; welcome.play(); }
-
-  const tutorialLogo = document.getElementById('tutorial-logo');
-  const logoTop = document.getElementById('logo-top');
-  const levelIcon = document.getElementById('nivel-indicador');
-  const menuIcons = document.querySelectorAll('#menu-modes img');
-  const menuLogo = document.getElementById('menu-logo');
-
-  if (levelIcon) levelIcon.style.display = 'none';
-  if (menuLogo) menuLogo.style.display = 'none';
-  if (tutorialLogo) {
-    tutorialLogo.style.display = 'none';
-  }
-
-  menuIcons.forEach(img => { img.style.opacity = '0.5'; });
-
-  const mode1 = document.querySelector('#menu-modes img[data-mode="1"]');
-
-  if (levelIcon) levelIcon.style.display = 'block';
-  if (logoTop) logoTop.style.display = 'block';
-  if (menuLogo) menuLogo.style.display = 'block';
-  if (mode1) unlockMode(1);
-  tutorialInProgress = false;
-}
-
-
 async function initGame() {
-  const saved = parseInt(localStorage.getItem('pastaAtual'), 10);
-  if (saved) pastaAtual = saved;
-  await carregarHomofonos();
-  await carregarPastas();
-  updateLevelIcon();
-  updateModeIcons();
-  if (!ilifeDone) {
-    const menu = document.getElementById('menu');
-    const screen = document.getElementById('ilife-screen');
-    if (menu) menu.style.display = 'none';
-    if (screen) {
-      screen.style.display = 'flex';
-      const text = document.getElementById('ilife-text');
-      const lock = document.getElementById('somLock');
-      screen.addEventListener('click', () => {
-        if (lock) { lock.currentTime = 0; lock.play(); }
-        if (text) text.textContent = 'diga play para começar';
-      }, { once: true });
-    }
-    ilifeActive = true;
-  } else {
-    const screen = document.getElementById('ilife-screen');
-    if (screen) screen.style.display = 'none';
-    const menu = document.getElementById('menu');
-    if (menu) menu.style.display = 'flex';
-    points = INITIAL_POINTS;
-    saveTotals();
-    atualizarBarraProgresso();
-    if (!tutorialDone && !isMobile) {
-      startTutorial();
-    }
-    const logoTop = document.getElementById('logo-top');
-    const levelIcon = document.getElementById('nivel-indicador');
-    const menuLogo = document.getElementById('menu-logo');
-    if (logoTop) logoTop.style.display = 'block';
-    if (levelIcon) levelIcon.style.display = 'block';
-    if (menuLogo) menuLogo.style.display = 'block';
+  reloadPersistentProgress();
+  try {
+    await carregarPastas();
+  } catch (error) {
+    console.error('Não foi possível carregar as frases do jogo.', error);
   }
+  updateLevelIcon({ scope: 'general' });
+  updateModeIcons();
+  const menu = document.getElementById('menu');
+  if (menu) menu.style.display = 'flex';
+  document.body.classList.remove('game-active');
+  listeningForCommand = false;
+  if (reconhecimento) {
+    reconhecimentoAtivo = false;
+    try { reconhecimento.stop(); } catch {}
+  }
+  points = DEFAULT_STARTING_POINTS;
+  saveTotals();
+  atualizarBarraProgresso();
+  const levelIcon = document.getElementById('nivel-indicador');
+  if (levelIcon) levelIcon.style.display = 'block';
 
   document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
     img.addEventListener('click', () => {
@@ -1631,26 +1708,20 @@ async function initGame() {
       }
       if (!unlockedModes[modo]) {
         const lock = document.getElementById('somLock');
-        if (lock) { lock.currentTime = 0; lock.play(); }
+        if (lock) {
+          lock.currentTime = 0;
+          const playPromise = lock.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {});
+          }
+        }
         return;
       }
-      img.style.opacity = '1';
       startGame(modo);
     });
   });
 
-  if (reconhecimento) {
-    reconhecimento.lang = 'en-US';
-    reconhecimentoAtivo = true;
-    reconhecimento.start();
-  }
-
   document.addEventListener('keydown', e => {
-    if (ilifeActive && e.code === 'Space') {
-      const lock = document.getElementById('somLock');
-      if (lock) { lock.currentTime = 0; lock.play(); }
-      return;
-    }
     if (e.key.toLowerCase() === 'p') {
       if (!paused) pauseGame();
       return;
@@ -1671,49 +1742,61 @@ async function initGame() {
       }
       clearInterval(timerInterval);
       clearInterval(prizeTimer);
-      pastaAtual++;
-      updateLevelIcon();
+      const progress = getModeProgress(selectedMode);
+      progress.level += 1;
+      progress.xp = 0;
+      modeProgress[String(selectedMode)] = progress;
+      saveModeProgress({ emit: true });
+      updateLevelIcon({ scope: 'mode' });
       beginGame();
     }
   });
 }
 
-  window.onload = async () => {
-    document.querySelectorAll('#top-nav a').forEach(a => {
-      a.addEventListener('click', stopCurrentGame);
-    });
-    const homeLink = document.getElementById('home-link');
-    if (homeLink) {
-      homeLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        goHome();
-      });
-    }
-    await initGame();
-    if (isMobile) {
-      const tapLogo = document.getElementById('ilife-logo');
-      if (tapLogo) {
-        let tapCount = 0;
-        let tapTimer;
-        tapLogo.addEventListener('touchstart', () => {
-          tapCount++;
-          clearTimeout(tapTimer);
-          tapTimer = setTimeout(() => { tapCount = 0; }, 500);
-          if (tapCount === 3) {
-            const screen = document.getElementById('ilife-screen');
-            const menu = document.getElementById('menu');
-            if (screen) screen.style.display = 'none';
-            if (menu) menu.style.display = 'flex';
-            ilifeActive = false;
-            localStorage.setItem('ilifeDone', 'true');
-            startTutorial();
-          }
-        });
-      }
-    }
-    window.addEventListener('beforeunload', () => {
-      recordModeTime(selectedMode);
-      saveModeStats();
+document.addEventListener('playtalk:user-change', () => {
+  reloadPersistentProgress();
+  selectedMode = 1;
+  goHome();
+});
+
+let homePageInitialized = false;
+
+async function bootstrapHomePage() {
+  if (homePageInitialized) {
+    return;
+  }
+  homePageInitialized = true;
+  updateGameBalanceDisplay();
+  document.querySelectorAll('#top-nav a').forEach(a => {
+    a.addEventListener('click', stopCurrentGame);
+  });
+  document.querySelectorAll('#main-nav a.nav-item').forEach(link => {
+    link.addEventListener('click', () => {
       stopCurrentGame();
     });
-  };
+  });
+  const homeLink = document.getElementById('home-link');
+  if (homeLink) {
+    homeLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      stopCurrentGame();
+      goHome();
+    });
+  }
+  await initGame();
+  window.addEventListener('beforeunload', () => {
+    recordModeTime(selectedMode);
+    saveModeStats();
+    stopCurrentGame();
+  });
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  bootstrapHomePage();
+} else {
+  window.addEventListener('load', bootstrapHomePage, { once: true });
+}
+
+if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
+  window.registerPlaytalkPage('page-home', bootstrapHomePage);
+}

@@ -30,7 +30,6 @@
   let closeLoginFlowHandler = null;
   let closeUserMenu = null;
   let teardownUserMenu = null;
-  let logoutDelegatedHandler = null;
 
   function normalizeBalanceValue(raw) {
     if (raw === null || raw === undefined) {
@@ -429,9 +428,7 @@
       loginBtn.style.display = user ? 'none' : 'inline-flex';
     }
     logoutButtons.forEach(button => {
-      button.disabled = false;
-      button.removeAttribute('hidden');
-      button.setAttribute('aria-hidden', 'false');
+      button.style.display = user ? 'inline-flex' : 'none';
     });
     applyBalanceToUI(readStoredBalance());
     if (!user && typeof closeUserMenu === 'function') {
@@ -485,46 +482,6 @@
     if (typeof openLoginFlowHandler === 'function') {
       openLoginFlowHandler();
     }
-  }
-
-  function ensureLogoutDelegation() {
-    if (logoutDelegatedHandler) {
-      return;
-    }
-
-    logoutDelegatedHandler = (event) => {
-      const trigger = event.target && event.target.closest('[data-role="logout"]');
-      if (!trigger) {
-        return;
-      }
-
-      event.preventDefault();
-
-      if (trigger.disabled) {
-        return;
-      }
-
-      const user = readStoredCurrentUser();
-      const restoreButton = () => {
-        trigger.disabled = false;
-        trigger.removeAttribute('aria-busy');
-      };
-
-      trigger.disabled = true;
-      trigger.setAttribute('aria-busy', 'true');
-
-      if (user) {
-        Promise.resolve(handleLogout()).finally(restoreButton);
-      } else if (typeof openLoginFlowHandler === 'function') {
-        restoreButton();
-        openLoginFlowHandler();
-      } else {
-        restoreButton();
-        handleLogout();
-      }
-    };
-
-    document.addEventListener('click', logoutDelegatedHandler);
   }
   async function completeLoginFlow({ username, password, confirm }) {
     if (!username || !password || !confirm) {
@@ -654,6 +611,7 @@
 
   function setupLoginFlow() {
     const loginBtn = document.getElementById('login-btn');
+    const logoutButtons = Array.from(document.querySelectorAll('[data-role="logout"]'));
     const flow = document.getElementById('login-flow');
     const form = document.getElementById('login-flow-form');
     const errorEl = document.getElementById('login-flow-error');
@@ -661,7 +619,12 @@
     const passwordInput = document.getElementById('login-flow-password');
     const confirmInput = document.getElementById('login-flow-confirm');
 
-    ensureLogoutDelegation();
+    logoutButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        handleLogout();
+      });
+    });
 
     if (!flow || !form || !usernameInput || !passwordInput || !confirmInput) {
       openLoginFlowHandler = null;

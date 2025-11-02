@@ -48,81 +48,63 @@ function colorFromPercent(perc) {
   return calcularCor((perc / 100) * max);
 }
 
-function createStatCircle(perc, label, iconSrc, extraText) {
+function createStatBar(perc, label) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'stat-circle';
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 120 120');
-  const radius = 38;
-  const circumference = 2 * Math.PI * radius;
-  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  bg.setAttribute('class', 'circle-bg');
-  bg.setAttribute('cx', '60');
-  bg.setAttribute('cy', '60');
-  bg.setAttribute('r', radius);
-  svg.appendChild(bg);
-  const prog = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  prog.setAttribute('class', 'circle-progress');
-  prog.setAttribute('cx', '60');
-  prog.setAttribute('cy', '60');
-  prog.setAttribute('r', radius);
-  prog.setAttribute('stroke-dasharray', circumference);
-  const clamped = Math.max(0, Math.min(perc, 100));
-  prog.setAttribute('stroke-dashoffset', circumference);
-  prog.style.stroke = colorFromPercent(perc);
-  svg.appendChild(prog);
-  wrapper.appendChild(svg);
-  const icon = document.createElement('img');
-  icon.className = 'circle-icon';
-  icon.src = iconSrc;
-  icon.alt = label;
-  wrapper.appendChild(icon);
-  setTimeout(() => {
-    prog.setAttribute('stroke-dashoffset', circumference * (1 - clamped / 100));
-  }, 50);
-  const value = document.createElement('div');
-  value.className = 'circle-value';
-  value.textContent = `${Math.round(perc)}%`;
-  wrapper.appendChild(value);
-  const labelEl = document.createElement('div');
-  labelEl.className = 'circle-label';
-  labelEl.textContent = label;
-  wrapper.appendChild(labelEl);
-  if (extraText) {
-    const extra = document.createElement('div');
-    extra.className = 'circle-extra';
-    extra.textContent = extraText;
-    wrapper.appendChild(extra);
-  }
+  wrapper.className = 'stat-bar';
+  const safePerc = Number.isFinite(perc) ? perc : 0;
+  const clamped = Math.max(0, Math.min(safePerc, 100));
+  const rounded = Math.round(clamped);
+  const title = document.createElement('div');
+  title.className = 'stat-bar-label';
+  title.textContent = `${label} ${rounded}%`;
+  const track = document.createElement('div');
+  track.className = 'stat-bar-track';
+  const fill = document.createElement('div');
+  fill.className = 'stat-bar-fill';
+  fill.style.backgroundColor = colorFromPercent(clamped);
+  fill.style.width = '0%';
+  track.appendChild(fill);
+  wrapper.appendChild(title);
+  wrapper.appendChild(track);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      fill.style.width = `${clamped}%`;
+    });
+  });
   return wrapper;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('play-content');
-  const buttons = document.querySelectorAll('#mode-buttons img');
-  const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
-  const statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
-
-  const params = new URLSearchParams(window.location.search);
-  const botName = params.get('bot');
-  const botMode = parseInt(params.get('mode'), 10);
-
-  if (botName) {
-    document.getElementById('mode-buttons').style.display = 'none';
-    container.style.display = 'none';
-    startVersus(botName, botMode);
+function initPlayPage(context = {}) {
+  const scope = context && context.container ? context.container : document;
+  const container = scope.querySelector('#play-content');
+  if (!container) {
     return;
   }
+  container.classList.add('stats-wrapper');
+  container.style.transition = 'opacity 0.2s';
+  const buttons = scope.querySelectorAll('#mode-buttons img');
+  const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
+  let statsData = {};
+  let activeMode = 1;
+  function refreshStatsData() {
+    statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
+  }
+  refreshStatsData();
+  const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
+  const MAX_TIME = 6.0;
+
   function calcModeStats(mode) {
     const stats = statsData[mode] || {};
     const total = stats.totalPhrases || 0;
     const correct = stats.correct || 0;
     const report = stats.report || 0;
     const totalTime = stats.totalTime || 0;
-    const timePts = stats.timePoints || 0;
     const accPerc = total ? (correct / total * 100) : 0;
     const avg = total ? (totalTime / total / 1000) : 0;
-    const timePerc = total ? (timePts / total) : 0;
+    const goal = timeGoals[mode] || MAX_TIME;
+    let timePerc = total ? ((MAX_TIME - avg) / (MAX_TIME - goal) * 100) : 0;
+    if (avg >= MAX_TIME) timePerc = 0;
+    if ([2, 3, 6].includes(mode) && total) timePerc += 20;
     const notReportPerc = total ? (100 - (report / total * 100)) : 100;
     return { accPerc, timePerc, avg, notReportPerc };
   }
@@ -150,69 +132,31 @@ document.addEventListener('DOMContentLoaded', () => {
     return { accPerc, timePerc, avg, notReportPerc };
   }
 
-  function startVersus(name, mode) {
-    fetch('users/bots.json')
-      .then(r => r.json())
-      .then(data => {
-        const bot = data.bots.find(b => b.name === name);
-        if (!bot) return;
-        const base = bot.modes[String(mode)] || { precisao: 0, tempo: 0 };
-        const vs = document.getElementById('versus-stats');
-        const title = document.getElementById('vs-title');
-        const roundEl = document.getElementById('round');
-        const userAcc = document.getElementById('user-acc');
-        const userTime = document.getElementById('user-time');
-        const botAcc = document.getElementById('bot-acc');
-        const botTime = document.getElementById('bot-time');
-        vs.style.display = 'block';
-        title.textContent = `${bot.name} - Modo ${mode}`;
-        let round = 1;
-        const totalRounds = 5;
-        function nextRound() {
-          roundEl.textContent = `Frase ${round}`;
-          userAcc.textContent = 'Você precisão: 0%';
-          userTime.textContent = 'Você tempo: 0s';
-          botAcc.textContent = 'Bot precisão: 0%';
-          botTime.textContent = 'Bot tempo: 0s';
-          setTimeout(() => {
-            const vary = v => v * (1 + (Math.random() * 0.14 - 0.07));
-            const bAcc = vary(base.precisao);
-            const bTime = vary(base.tempo);
-            botAcc.textContent = `Bot precisão: ${bAcc.toFixed(1)}%`;
-            botTime.textContent = `Bot tempo: ${bTime.toFixed(1)}s`;
-            const uAcc = vary(base.precisao);
-            const uTime = vary(base.tempo);
-            userAcc.textContent = `Você precisão: ${uAcc.toFixed(1)}%`;
-            userTime.textContent = `Você tempo: ${uTime.toFixed(1)}s`;
-            round++;
-            if (round <= totalRounds) {
-              setTimeout(nextRound, 1000);
-            }
-          }, 1000);
-        }
-        nextRound();
-      });
-  }
-
   function render(mode) {
-    container.innerHTML = '';
-    if (mode === 1) {
-      const { accPerc, timePerc, notReportPerc } = calcGeneralStats();
-      container.appendChild(createStatCircle(accPerc, 'Precisão', 'selos%20modos%20de%20jogo/precisao.png'));
-      container.appendChild(createStatCircle(timePerc, 'Tempo', 'selos%20modos%20de%20jogo/velocidade.png'));
-      container.appendChild(createStatCircle(notReportPerc, 'Report', 'selos%20modos%20de%20jogo/reports.png'));
-    } else {
-      const { accPerc, timePerc, notReportPerc } = calcModeStats(mode);
-      container.appendChild(createStatCircle(accPerc, 'Precisão', 'selos%20modos%20de%20jogo/precisao.png'));
-      container.appendChild(createStatCircle(timePerc, 'Tempo', 'selos%20modos%20de%20jogo/velocidade.png'));
-      container.appendChild(createStatCircle(notReportPerc, 'Report', 'selos%20modos%20de%20jogo/reports.png'));
-    }
+    container.style.opacity = 0;
+    setTimeout(() => {
+      container.innerHTML = '';
+      if (mode === 1) {
+        const { accPerc, timePerc, notReportPerc } = calcGeneralStats();
+        container.appendChild(createStatBar(timePerc, 'Tempo'));
+        container.appendChild(createStatBar(accPerc, 'Precisão'));
+        container.appendChild(createStatBar(notReportPerc, 'Report'));
+      } else {
+        const { accPerc, timePerc, notReportPerc } = calcModeStats(mode);
+        const displayTime = mode === 5 ? timePerc * 1.75 : timePerc;
+        container.appendChild(createStatBar(displayTime, 'Tempo'));
+        container.appendChild(createStatBar(accPerc, 'Precisão'));
+        container.appendChild(createStatBar(notReportPerc, 'Report'));
+      }
+      container.style.opacity = 1;
+    }, 150);
   }
 
   function selectMode(mode) {
     buttons.forEach(img => {
-      img.style.opacity = img.dataset.mode == mode ? '1' : '0.5';
+      img.style.opacity = img.dataset.mode == mode ? '1' : '0.3';
     });
+    activeMode = mode;
     render(mode);
   }
 
@@ -229,5 +173,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const seq = localStorage.getItem('statsSequence');
   if (seq === 'true') {
     localStorage.removeItem('statsSequence');
+    let delay = 3000;
+    [2, 3, 4, 5, 6].forEach(mode => {
+      setTimeout(() => selectMode(mode), delay);
+      delay += 1500;
+    });
   }
-});
+
+  document.addEventListener('playtalk:user-change', () => {
+    refreshStatsData();
+    selectMode(activeMode);
+  });
+}
+
+if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
+  window.registerPlaytalkPage('page-play', initPlayPage);
+} else if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => initPlayPage(), { once: true });
+} else {
+  initPlayPage();
+}
