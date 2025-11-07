@@ -2,37 +2,121 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
   <title>Play</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/settings.js"></script>
+  <script src="js/auth.js"></script>
 </head>
-<body class="dark-mode play-page">
-  <nav id="top-nav">
-    <a href="index.html">home</a>
-    <a href="#">fun</a>
-    <a href="play.html">play</a>
-    <a href="custom.html">custom</a>
-    <a href="versus.html">versus</a>
-  </nav>
-  <div id="play-content" style="text-align:center;margin-top:50px;"></div>
-  <div id="versus-stats" style="display:none;text-align:center;margin-top:50px;">
-    <h2 id="vs-title"></h2>
-    <div id="round"></div>
-    <div id="user-acc"></div>
-    <div id="user-time"></div>
-    <div id="bot-acc"></div>
-    <div id="bot-time"></div>
+<body class="page-play">
+  <header class="site-header" id="global-header">
+    <div class="site-header__profile">
+      <div class="site-header__avatar-container" id="header-avatar-container">
+        <div class="site-header__avatar-ring">
+          <img
+            src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E"
+            alt="Foto do usuário"
+            class="site-header__avatar"
+            id="header-avatar"
+          >
+        </div>
+      </div>
+      <div class="site-header__text">
+        <span class="site-header__name" id="header-username">Jogador</span>
+        <span class="site-header__level" id="header-level">Nível 1</span>
+      </div>
+    </div>
+    <div class="site-header__actions">
+      <div class="site-header__balance" id="header-balance" aria-live="polite">
+        <span class="site-header__balance-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false">
+            <path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v1.18A3 3 0 0 1 22 11v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3H3a1 1 0 0 1 0-2h1v-2H3a1 1 0 0 1 0-2h1Zm2 0v1h12V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm0 6v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm6 3a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z"/>
+          </svg>
+        </span>
+        <div class="site-header__balance-text">
+          <span class="site-header__balance-label">Saldo</span>
+          <span class="site-header__balance-value" id="header-balance-value">0</span>
+        </div>
+      </div>
+      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+    </div>
+  </header>
+  <main id="play-container" data-page-transition>
+    <div id="play-content" class="stats-wrapper"></div>
+    <div id="mode-buttons" class="stats-mode-icons">
+      <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
+      <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
+      <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
+      <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
+      <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
+      <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
+    </div>
+  </main>
+  <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
+    <div class="login-flow__panel">
+      <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life" class="login-flow__logo" width="70" height="70">
+      <h1 id="login-flow-title" class="login-flow__title">Bem-vindo</h1>
+      <form id="login-flow-form" class="login-flow__form" autocomplete="off" novalidate>
+        <div class="login-flow__step login-flow__step--active" data-step="username">
+          <label for="login-flow-username">Nome de usuário</label>
+          <input type="text" id="login-flow-username" name="login-flow-username" maxlength="40" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
+        </div>
+        <div class="login-flow__step" data-step="password">
+          <label for="login-flow-password">Senha</label>
+          <input type="password" id="login-flow-password" name="login-flow-password" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
+        </div>
+        <div class="login-flow__step" data-step="confirm">
+          <label for="login-flow-confirm">Confirmar senha</label>
+          <input type="password" id="login-flow-confirm" name="login-flow-confirm" required>
+          <button type="submit" class="login-flow__submit">Criar conta</button>
+        </div>
+        <p id="login-flow-error" class="login-flow__error" role="alert"></p>
+      </form>
+    </div>
   </div>
-  <div id="mode-buttons">
-    <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
-    <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
-    <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
-    <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
-    <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
-    <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
-  </div>
-  <script src="js/disableScroll.js"></script>
+  <footer class="page-footer">
+    <nav id="main-nav">
+      <a href="index.html" class="nav-item" aria-label="Home" data-nav-index="0">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+        </span>
+        <span class="sr-only">Home</span>
+      </a>
+      <a href="fun.html" class="nav-item" aria-label="Opções de jogo" data-nav-index="1">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19.14 12.94a7.97 7.97 0 0 0 .06-.94 7.97 7.97 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.88 7.88 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.65 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.97 7.97 0 0 0-.06.94c0 .32.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.49.39 1.04.7 1.63.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.14-.55 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64Zm-7.14 1.56a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/></svg>
+        </span>
+        <span class="sr-only">Opções de jogo</span>
+      </a>
+      <a href="play.html" class="nav-item active" aria-label="Estatísticas" data-nav-index="2">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 21a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5Zm6 0a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-2Zm6 0a1 1 0 0 1-1-1V13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2Z"/></svg>
+        </span>
+        <span class="sr-only">Estatísticas</span>
+      </a>
+      <a href="custom.html" class="nav-item" aria-label="Social" data-nav-index="3">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M4 4h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4l-4 4-4-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/></svg>
+        </span>
+        <span class="sr-only">Social</span>
+      </a>
+      <a href="ranking.html" class="nav-item" aria-label="Ranking" data-nav-index="4">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 4h14a1 1 0 0 1 1 1v3a4 4 0 0 1-3 3.87V13a3 3 0 0 1-1.76 2.71L13 17v2h3a1 1 0 0 1 1 1v1H7v-1a1 1 0 0 1 1-1h3v-2l-2.24-1.29A3 3 0 0 1 7 13v-1.13A4 4 0 0 1 4 8V5a1 1 0 0 1 1-1Zm1 4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6H6Z"/></svg>
+        </span>
+        <span class="sr-only">Ranking</span>
+      </a>
+      <a href="perfil.html" class="nav-item" aria-label="Perfil" data-nav-index="5">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
+        </span>
+        <span class="sr-only">Perfil</span>
+      </a>
+    </nav>
+  </footer>
   <script src="js/play.js"></script>
 </body>
 </html>

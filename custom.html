@@ -2,198 +2,111 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
   <title>Custom</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/settings.js"></script>
+  <script src="js/auth.js"></script>
 </head>
-<body class="dark-mode">
-  <nav id="top-nav">
-    <a href="index.html">home</a>
-    <a href="#">fun</a>
-    <a href="play.html">play</a>
-    <a href="custom.html">custom</a>
-    <a href="versus.html">versus</a>
-  </nav>
-  <div id="custom-content" style="text-align:center;margin-top:50px;"></div>
-  <script src="js/disableScroll.js"></script>
-  <script>
-    function safeParse(value, fallback) {
-      if (typeof value !== 'string') return fallback;
-      try {
-        return JSON.parse(value);
-      } catch (err) {
-        console.error('Erro ao analisar JSON:', err);
-        return fallback;
-      }
-    }
-    function formatTime(ms) {
-      const sec = Math.floor(ms / 1000);
-      const min = Math.floor(sec / 60);
-      const s = sec % 60;
-      return `${min}m ${s}s`;
-    }
-    function createRankingTable(data, color, columns) {
-      const table = document.createElement('table');
-      table.className = 'ranking-table' + (color ? ` ${color}` : '');
-      const header = document.createElement('tr');
-      header.innerHTML = columns.map(c => `<th>${c.label}</th>`).join('');
-      table.appendChild(header);
-      data.forEach(item => {
-        const row = document.createElement('tr');
-        columns.forEach(c => {
-          const td = document.createElement('td');
-          const value = c.format ? c.format(item) : item[c.field];
-          td.textContent = value === undefined || value === null ? '' : value;
-          row.appendChild(td);
-        });
-        table.appendChild(row);
-      });
-      return table;
-    }
-    function getUserId(user) {
-      if (!user || typeof user !== 'object') return null;
-      return user.id || user.uid || user.userId || user.email || user.username || user.name || 'local-user';
-    }
-    function getUserName(user, fallback = 'Jogador') {
-      if (!user || typeof user !== 'object') return fallback;
-      return user.name || user.displayName || user.username || user.email || fallback;
-    }
-    function getModeStats(source, mode) {
-      if (!source || typeof source !== 'object') return {};
-      return source[mode] || source[String(mode)] || {};
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('custom-content');
-      const versusLog = safeParse(localStorage.getItem('versusLog'), []);
-      if (versusLog.length) {
-        const vTitle = document.createElement('h1');
-        vTitle.className = 'custom-title';
-        vTitle.textContent = 'Versus - Resultados';
-        container.appendChild(vTitle);
-        const table = document.createElement('table');
-        table.className = 'ranking-table';
-        const header = document.createElement('tr');
-        header.innerHTML = '<th>Frase</th><th>Entrada</th><th>Resultado</th><th>Tempo Reconhecimento</th><th>Tempo Jogo</th>';
-        table.appendChild(header);
-        versusLog.forEach(v => {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${v.phrase}</td><td>${v.input}</td><td>${v.result}</td><td>${v.recTime}</td><td>${v.gameTime}</td>`;
-          table.appendChild(row);
-        });
-        container.appendChild(table);
-      }
-      const statsData = safeParse(localStorage.getItem('modeStats'), {});
-      const currentUser = safeParse(localStorage.getItem('currentUser'), null);
-      const sharedRankings = safeParse(localStorage.getItem('sharedRankings'), []);
-      const shareEnabled = Boolean(currentUser && currentUser.shareResults);
-      const localUserId = getUserId(currentUser);
-      const localDisplayName = (currentUser && (currentUser.displayName || currentUser.name || currentUser.username || currentUser.email)) || 'Você';
-      let sharedUsers = Array.isArray(sharedRankings) ? sharedRankings.filter(u => u && u.shareResults) : [];
-      if (shareEnabled) {
-        const statsSource = (currentUser && currentUser.stats) || statsData;
-        const existing = sharedUsers.find(u => u.id === localUserId);
-        if (existing) {
-          if (!existing.stats) existing.stats = statsSource;
-          if (!existing.name) existing.name = localDisplayName;
-        } else {
-          sharedUsers.push({
-            id: localUserId || 'local-user',
-            name: localDisplayName,
-            stats: statsSource,
-            shareResults: true
-          });
-        }
-      }
-      for (let i = 1; i <= 6; i++) {
-        const stats = getModeStats(statsData, i);
-        const totalTime = stats.totalTime || 0;
-        const total = stats.totalPhrases || 0;
-        const correct = stats.correct || 0;
-        const wrong = stats.wrong || 0;
-        const report = stats.report || 0;
-        const acc = total ? ((correct / total) * 100).toFixed(2) : '0';
-        const avg = total ? formatTime(totalTime / total) : '0s';
-        const timePts = stats.timePoints || 0;
-        const avgPts = total ? (timePts / total).toFixed(2) : '0';
-        const reportPerc = total ? ((report / total) * 100).toFixed(2) : '0';
-        const section = document.createElement('div');
-        section.innerHTML = `
-          <h1 class="custom-title">Modo ${i} - Resultados</h1>
-          <div class="custom-info">Frases totais: ${total}</div>
-          <div class="custom-info">Tempo de jogo: ${formatTime(totalTime)}</div>
-          <div class="custom-info">Frases acertadas: ${correct}</div>
-          <div class="custom-info">Frases erradas: ${wrong}</div>
-          <div class="custom-info">Porcentagem de acertos: ${acc}%</div>
-          <div class="custom-info">Média de tempo por frase: ${avg}</div>
-          <div class="custom-info">Pontos de tempo: ${avgPts}</div>
-          <div class="custom-info">Uso de reportar: ${reportPerc}%</div>
-        `;
-        const includeLocalBase = !(shareEnabled && sharedUsers.some(u => u.id === localUserId));
-        const localLabel = shareEnabled ? localDisplayName : 'Você';
-        const redEntries = includeLocalBase ? (stats.wrongRanking || []).map(item => ({ ...item, user: localLabel })) : [];
-        const greenEntries = includeLocalBase ? (stats.reportRanking || []).map(item => ({ ...item, user: localLabel })) : [];
-        sharedUsers.forEach(user => {
-          const userStats = getModeStats(user.stats, i);
-          if (!userStats) return;
-          const label = user.id === localUserId ? localDisplayName : getUserName(user);
-          (userStats.wrongRanking || []).forEach(item => {
-            redEntries.push({ ...item, user: label });
-          });
-          (userStats.reportRanking || []).forEach(item => {
-            greenEntries.push({ ...item, user: label });
-          });
-        });
-        if (redEntries.length) {
-          const title = document.createElement('h2');
-          title.textContent = 'Ranking vermelho';
-          title.className = 'ranking-title-red';
-          section.appendChild(title);
-          const sortedRed = [...redEntries].sort((a, b) => (b.count || 0) - (a.count || 0));
-          section.appendChild(createRankingTable(sortedRed, 'red', [
-            { field: 'user', label: 'Usuário' },
-            { field: 'expected', label: 'Esperado' },
-            { field: 'input', label: 'Entrada' },
-            { field: 'folder', label: 'Pasta' },
-            { field: 'count', label: 'Erros' }
-          ]));
-        }
-        if (greenEntries.length) {
-          const title = document.createElement('h2');
-          title.textContent = 'Ranking verde limão';
-          title.className = 'ranking-title-lime';
-          section.appendChild(title);
-          const sortedGreen = [...greenEntries].sort((a, b) => parseFloat(b.level || 0) - parseFloat(a.level || 0));
-          section.appendChild(createRankingTable(sortedGreen, 'lime', [
-            { field: 'user', label: 'Usuário' },
-            { field: 'expected', label: 'Esperado' },
-            { field: 'input', label: 'Entrada' },
-            { field: 'folder', label: 'Pasta' },
-            { field: 'level', label: 'Nível de reports' }
-          ]));
-        }
-        container.appendChild(section);
-      }
-      const levelTitle = document.createElement('h1');
-      levelTitle.className = 'custom-title';
-      levelTitle.textContent = 'Detalhe dos níveis';
-      container.appendChild(levelTitle);
-      const details = safeParse(localStorage.getItem('levelDetails'), []);
-      if (details.length) {
-        const table = document.createElement('table');
-        table.className = 'ranking-table';
-        const header = document.createElement('tr');
-        header.innerHTML = '<th>Nível</th><th>Precisão</th><th>Velocidade</th><th>Reports</th>';
-        table.appendChild(header);
-        details.forEach(d => {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${d.level}</td><td>${d.accuracy}%</td><td>${d.speed}%</td><td>${d.reports}%</td>`;
-          table.appendChild(row);
-        });
-        container.appendChild(table);
-      }
-    });
-  </script>
-
+<body class="page-custom">
+  <header class="site-header" id="global-header">
+    <div class="site-header__profile">
+      <div class="site-header__avatar-container" id="header-avatar-container">
+        <div class="site-header__avatar-ring">
+          <img
+            src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E"
+            alt="Foto do usuário"
+            class="site-header__avatar"
+            id="header-avatar"
+          >
+        </div>
+      </div>
+      <div class="site-header__text">
+        <span class="site-header__name" id="header-username">Jogador</span>
+        <span class="site-header__level" id="header-level">Nível 1</span>
+      </div>
+    </div>
+    <div class="site-header__actions">
+      <div class="site-header__balance" id="header-balance" aria-live="polite">
+        <span class="site-header__balance-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false">
+            <path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v1.18A3 3 0 0 1 22 11v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3H3a1 1 0 0 1 0-2h1v-2H3a1 1 0 0 1 0-2h1Zm2 0v1h12V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm0 6v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm6 3a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z"/>
+          </svg>
+        </span>
+        <div class="site-header__balance-text">
+          <span class="site-header__balance-label">Saldo</span>
+          <span class="site-header__balance-value" id="header-balance-value">0</span>
+        </div>
+      </div>
+      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+    </div>
+  </header>
+  <main id="custom-content" data-page-transition style="text-align:center;margin-top:50px;"></main>
+  <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
+    <div class="login-flow__panel">
+      <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life" class="login-flow__logo" width="70" height="70">
+      <h1 id="login-flow-title" class="login-flow__title">Bem-vindo</h1>
+      <form id="login-flow-form" class="login-flow__form" autocomplete="off" novalidate>
+        <div class="login-flow__step login-flow__step--active" data-step="username">
+          <label for="login-flow-username">Nome de usuário</label>
+          <input type="text" id="login-flow-username" name="login-flow-username" maxlength="40" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
+        </div>
+        <div class="login-flow__step" data-step="password">
+          <label for="login-flow-password">Senha</label>
+          <input type="password" id="login-flow-password" name="login-flow-password" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
+        </div>
+        <div class="login-flow__step" data-step="confirm">
+          <label for="login-flow-confirm">Confirmar senha</label>
+          <input type="password" id="login-flow-confirm" name="login-flow-confirm" required>
+          <button type="submit" class="login-flow__submit">Criar conta</button>
+        </div>
+        <p id="login-flow-error" class="login-flow__error" role="alert"></p>
+      </form>
+    </div>
+  </div>
+  <script src="js/custom-page.js" defer></script>
+  <footer class="page-footer">
+    <nav id="main-nav">
+      <a href="index.html" class="nav-item" aria-label="Home" data-nav-index="0">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+        </span>
+        <span class="sr-only">Home</span>
+      </a>
+      <a href="fun.html" class="nav-item" aria-label="Opções de jogo" data-nav-index="1">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19.14 12.94a7.97 7.97 0 0 0 .06-.94 7.97 7.97 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.88 7.88 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.65 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.97 7.97 0 0 0-.06.94c0 .32.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.49.39 1.04.7 1.63.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.14-.55 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64Zm-7.14 1.56a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/></svg>
+        </span>
+        <span class="sr-only">Opções de jogo</span>
+      </a>
+      <a href="play.html" class="nav-item" aria-label="Estatísticas" data-nav-index="2">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 21a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5Zm6 0a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-2Zm6 0a1 1 0 0 1-1-1V13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2Z"/></svg>
+        </span>
+        <span class="sr-only">Estatísticas</span>
+      </a>
+      <a href="custom.html" class="nav-item active" aria-label="Social" data-nav-index="3">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M4 4h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4l-4 4-4-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/></svg>
+        </span>
+        <span class="sr-only">Social</span>
+      </a>
+      <a href="ranking.html" class="nav-item" aria-label="Ranking" data-nav-index="4">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 4h14a1 1 0 0 1 1 1v3a4 4 0 0 1-3 3.87V13a3 3 0 0 1-1.76 2.71L13 17v2h3a1 1 0 0 1 1 1v1H7v-1a1 1 0 0 1 1-1h3v-2l-2.24-1.29A3 3 0 0 1 7 13v-1.13A4 4 0 0 1 4 8V5a1 1 0 0 1 1-1Zm1 4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6H6Z"/></svg>
+        </span>
+        <span class="sr-only">Ranking</span>
+      </a>
+      <a href="perfil.html" class="nav-item" aria-label="Perfil" data-nav-index="5">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
+        </span>
+        <span class="sr-only">Perfil</span>
+      </a>
+    </nav>
+  </footer>
 </body>
 </html>
