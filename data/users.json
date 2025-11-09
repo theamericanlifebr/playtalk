@@ -1,4 +1,27 @@
 {
-  "users": {},
+  "users": {
+    "playtalk": {
+      "username": "PlayTalk",
+      "password": "tatatata",
+      "data": {
+        "acertosTotais": 0,
+        "errosTotais": 0,
+        "tentativasTotais": 0,
+        "points": 0,
+        "displayName": "",
+        "modeStats": {},
+        "completedModes": {},
+        "unlockedModes": {},
+        "modeIntroShown": {},
+        "pastaAtual": 1,
+        "tutorialDone": false,
+        "ilifeDone": false,
+        "levelDetails": [],
+        "totalTime": 0,
+        "shareResults": false,
+        "avatar": ""
+      }
+    }
+  },
   "updatedAt": "1970-01-01T00:00:00.000Z"
 }

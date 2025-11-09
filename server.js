@@ -8,6 +8,11 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_DB_PATH = path.join(DATA_DIR, 'users.json');
 
+const DEFAULT_USER = {
+  username: 'PlayTalk',
+  password: 'tatatata'
+};
+
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
   errosTotais: { type: 'number', default: 0 },
@@ -119,6 +124,28 @@ function ensureUserDefaults(user) {
 }
 
 ensureDataDirectory();
+
+async function ensureDefaultUser() {
+  try {
+    const database = await readDatabase();
+    const defaultUserKey = normalizeKey(DEFAULT_USER.username);
+
+    if (!database.users[defaultUserKey]) {
+      const user = ensureUserDefaults({
+        username: DEFAULT_USER.username,
+        password: DEFAULT_USER.password,
+        data: createDefaultData()
+      });
+
+      database.users[defaultUserKey] = user;
+      await writeDatabase(database);
+    }
+  } catch (error) {
+    console.error('Erro ao garantir usuário padrão:', error);
+  }
+}
+
+ensureDefaultUser();
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(staticDir));
