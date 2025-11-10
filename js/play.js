@@ -48,30 +48,152 @@ function colorFromPercent(perc) {
   return calcularCor((perc / 100) * max);
 }
 
-function createStatBar(perc, label) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'stat-bar';
-  const safePerc = Number.isFinite(perc) ? perc : 0;
-  const clamped = Math.max(0, Math.min(safePerc, 100));
-  const rounded = Math.round(clamped);
-  const title = document.createElement('div');
-  title.className = 'stat-bar-label';
-  title.textContent = `${label} ${rounded}%`;
-  const track = document.createElement('div');
-  track.className = 'stat-bar-track';
-  const fill = document.createElement('div');
-  fill.className = 'stat-bar-fill';
-  fill.style.backgroundColor = colorFromPercent(clamped);
-  fill.style.width = '0%';
-  track.appendChild(fill);
-  wrapper.appendChild(title);
-  wrapper.appendChild(track);
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      fill.style.width = `${clamped}%`;
-    });
+const MEDAL_CONFIG = [
+  { key: 'diamante', label: 'Diamante', icon: 'medalhas/diamante.png' },
+  { key: 'ouro', label: 'Ouro', icon: 'medalhas/ouro.png' },
+  { key: 'prata', label: 'Prata', icon: 'medalhas/prata.png' },
+  { key: 'bronze', label: 'Bronze', icon: 'medalhas/bronze.png' },
+  { key: 'chumbo', label: 'Chumbo', icon: 'medalhas/chumbo.png' },
+  { key: 'gesso', label: 'Gesso', icon: 'medalhas/gesso.png' }
+];
+
+function getEmptyMedalCounts() {
+  return {
+    diamante: 0,
+    ouro: 0,
+    prata: 0,
+    bronze: 0,
+    chumbo: 0,
+    gesso: 0
+  };
+}
+
+function normalizeMedals(medals) {
+  const base = getEmptyMedalCounts();
+  if (!medals || typeof medals !== 'object') {
+    return base;
+  }
+  MEDAL_CONFIG.forEach(({ key }) => {
+    const value = Number(medals[key]);
+    base[key] = Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
   });
-  return wrapper;
+  return base;
+}
+
+function hasMedals(medals) {
+  return MEDAL_CONFIG.some(({ key }) => (medals[key] || 0) > 0);
+}
+
+function formatInteger(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return '0';
+  }
+  return Math.max(0, Math.floor(number)).toLocaleString('pt-BR');
+}
+
+function formatPercent(value) {
+  const number = Number(value);
+  const safe = Number.isFinite(number) ? Math.max(0, Math.min(number, 100)) : 0;
+  return safe.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+}
+
+function formatCpm(value) {
+  const number = Number(value);
+  const safe = Number.isFinite(number) ? Math.max(0, number) : 0;
+  return safe.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+function createMetricCard(label, value, accentPercent) {
+  const card = document.createElement('div');
+  card.className = 'stat-metric';
+  const labelEl = document.createElement('span');
+  labelEl.className = 'stat-metric__label';
+  labelEl.textContent = label;
+  const valueEl = document.createElement('span');
+  valueEl.className = 'stat-metric__value';
+  valueEl.textContent = value;
+  if (Number.isFinite(accentPercent)) {
+    const clamped = Math.max(0, Math.min(accentPercent, 100));
+    valueEl.style.color = colorFromPercent(clamped);
+  }
+  card.appendChild(labelEl);
+  card.appendChild(valueEl);
+  return card;
+}
+
+function createMetricsSection(summary = {}) {
+  const section = document.createElement('div');
+  section.className = 'stats-metrics';
+  section.appendChild(createMetricCard('Velocidade', `(${formatCpm(summary.cpm)})/cpm`));
+  section.appendChild(createMetricCard('Precisão', formatPercent(summary.accuracyPerc), summary.accuracyPerc));
+  section.appendChild(createMetricCard('Sem reports', formatPercent(summary.noReportPerc), summary.noReportPerc));
+  return section;
+}
+
+function createStatsSection(title, items) {
+  const section = document.createElement('div');
+  section.className = 'stats-section';
+  const titleEl = document.createElement('h3');
+  titleEl.className = 'stats-section__title';
+  titleEl.textContent = title;
+  section.appendChild(titleEl);
+  const list = document.createElement('div');
+  list.className = 'stats-list';
+  items.forEach((item) => {
+    const row = document.createElement('div');
+    row.className = 'stats-list__item';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'stats-list__label';
+    labelEl.textContent = item.label;
+    const valueEl = document.createElement('span');
+    valueEl.className = 'stats-list__value';
+    valueEl.textContent = item.value;
+    row.appendChild(labelEl);
+    row.appendChild(valueEl);
+    list.appendChild(row);
+  });
+  section.appendChild(list);
+  return section;
+}
+
+function createMedalsSection(medals) {
+  const counts = normalizeMedals(medals);
+  if (!hasMedals(counts)) {
+    return null;
+  }
+  const section = document.createElement('div');
+  section.className = 'stats-section stats-medals';
+  const titleEl = document.createElement('h3');
+  titleEl.className = 'stats-section__title';
+  titleEl.textContent = 'Medalhas';
+  section.appendChild(titleEl);
+  const list = document.createElement('ul');
+  list.className = 'stats-medals__list';
+  MEDAL_CONFIG.forEach(({ key, label, icon }) => {
+    const count = counts[key];
+    if (!count) {
+      return;
+    }
+    const item = document.createElement('li');
+    item.className = 'stats-medals__item';
+    const image = document.createElement('img');
+    image.className = 'stats-medals__icon';
+    image.src = icon;
+    image.alt = label;
+    item.appendChild(image);
+    const name = document.createElement('span');
+    name.className = 'stats-medals__label';
+    name.textContent = label;
+    const value = document.createElement('span');
+    value.className = 'stats-medals__value';
+    value.textContent = formatInteger(count);
+    item.appendChild(name);
+    item.appendChild(value);
+    list.appendChild(item);
+  });
+  section.appendChild(list);
+  return section;
 }
 
 function initPlayPage(context = {}) {
@@ -90,63 +212,89 @@ function initPlayPage(context = {}) {
     statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
   }
   refreshStatsData();
-  const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
-  const MAX_TIME = 6.0;
-
   function calcModeStats(mode) {
     const stats = statsData[mode] || {};
-    const total = stats.totalPhrases || 0;
-    const correct = stats.correct || 0;
-    const report = stats.report || 0;
+    const totalPhrases = stats.totalPhrases || 0;
+    const correctPhrases = stats.correct || 0;
     const totalTime = stats.totalTime || 0;
-    const accPerc = total ? (correct / total * 100) : 0;
-    const avg = total ? (totalTime / total / 1000) : 0;
-    const goal = timeGoals[mode] || MAX_TIME;
-    let timePerc = total ? ((MAX_TIME - avg) / (MAX_TIME - goal) * 100) : 0;
-    if (avg >= MAX_TIME) timePerc = 0;
-    if ([2, 3, 6].includes(mode) && total) timePerc += 20;
-    const notReportPerc = total ? (100 - (report / total * 100)) : 100;
-    return { accPerc, timePerc, avg, notReportPerc };
+    const report = stats.report || 0;
+    const totalChars = stats.totalChars || 0;
+    const correctChars = stats.correctChars || 0;
+    const accuracyPerc = totalPhrases ? (correctPhrases / totalPhrases * 100) : 0;
+    const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
+    const cpm = minutes > 0 ? (correctChars / minutes) : 0;
+    const noReportPerc = totalPhrases ? (100 - (report / totalPhrases * 100)) : 100;
+    return {
+      totalPhrases,
+      correctPhrases,
+      totalChars,
+      correctChars,
+      accuracyPerc,
+      cpm,
+      noReportPerc,
+      medals: normalizeMedals(stats.medals)
+    };
   }
 
   function calcGeneralStats() {
     const modes = [2, 3, 4, 5, 6];
-    let totalPhrases = 0, totalCorrect = 0, totalTime = 0, totalReport = 0;
-    let timePercSum = 0, timePercCount = 0;
-    modes.forEach(m => {
-      const s = statsData[m] || {};
-      totalPhrases += s.totalPhrases || 0;
-      totalCorrect += s.correct || 0;
-      totalTime += s.totalTime || 0;
-      totalReport += s.report || 0;
-      const tp = calcModeStats(m).timePerc;
-      if (tp >= 1) {
-        timePercSum += tp;
-        timePercCount++;
-      }
+    const totals = {
+      totalPhrases: 0,
+      correctPhrases: 0,
+      totalChars: 0,
+      correctChars: 0,
+      totalTime: 0,
+      report: 0,
+      medals: getEmptyMedalCounts()
+    };
+    modes.forEach((mode) => {
+      const stats = statsData[mode] || {};
+      totals.totalPhrases += stats.totalPhrases || 0;
+      totals.correctPhrases += stats.correct || 0;
+      totals.totalChars += stats.totalChars || 0;
+      totals.correctChars += stats.correctChars || 0;
+      totals.totalTime += stats.totalTime || 0;
+      totals.report += stats.report || 0;
+      const medals = normalizeMedals(stats.medals);
+      MEDAL_CONFIG.forEach(({ key }) => {
+        totals.medals[key] += medals[key];
+      });
     });
-    const accPerc = totalPhrases ? (totalCorrect / totalPhrases * 100) : 0;
-    const avg = totalPhrases ? (totalTime / totalPhrases / 1000) : 0;
-    const timePerc = timePercCount ? (timePercSum / timePercCount) : 0;
-    const notReportPerc = totalPhrases ? (100 - (totalReport / totalPhrases * 100)) : 100;
-    return { accPerc, timePerc, avg, notReportPerc };
+    const accuracyPerc = totals.totalPhrases
+      ? (totals.correctPhrases / totals.totalPhrases) * 100
+      : 0;
+    const minutes = totals.totalTime > 0 ? (totals.totalTime / 60000) : 0;
+    const cpm = minutes > 0 ? (totals.correctChars / minutes) : 0;
+    const noReportPerc = totals.totalPhrases
+      ? (100 - (totals.report / totals.totalPhrases * 100))
+      : 100;
+    return {
+      totalPhrases: totals.totalPhrases,
+      correctPhrases: totals.correctPhrases,
+      totalChars: totals.totalChars,
+      correctChars: totals.correctChars,
+      accuracyPerc,
+      cpm,
+      noReportPerc,
+      medals: totals.medals
+    };
   }
 
   function render(mode) {
     container.style.opacity = 0;
     setTimeout(() => {
       container.innerHTML = '';
-      if (mode === 1) {
-        const { accPerc, timePerc, notReportPerc } = calcGeneralStats();
-        container.appendChild(createStatBar(timePerc, 'Tempo'));
-        container.appendChild(createStatBar(accPerc, 'Precisão'));
-        container.appendChild(createStatBar(notReportPerc, 'Report'));
-      } else {
-        const { accPerc, timePerc, notReportPerc } = calcModeStats(mode);
-        const displayTime = mode === 5 ? timePerc * 1.75 : timePerc;
-        container.appendChild(createStatBar(displayTime, 'Tempo'));
-        container.appendChild(createStatBar(accPerc, 'Precisão'));
-        container.appendChild(createStatBar(notReportPerc, 'Report'));
+      const summary = mode === 1 ? calcGeneralStats() : calcModeStats(mode);
+      container.appendChild(createMetricsSection(summary));
+      container.appendChild(createStatsSection('Totais', [
+        { label: 'Frases totais', value: formatInteger(summary.totalPhrases) },
+        { label: 'Frases certas', value: formatInteger(summary.correctPhrases) },
+        { label: 'Caracteres totais', value: formatInteger(summary.totalChars) },
+        { label: 'Caracteres certos', value: formatInteger(summary.correctChars) }
+      ]));
+      const medalsSection = createMedalsSection(summary.medals);
+      if (medalsSection) {
+        container.appendChild(medalsSection);
       }
       container.style.opacity = 1;
     }, 150);

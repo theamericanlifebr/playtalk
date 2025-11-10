@@ -88,6 +88,40 @@ const MEDAL_RULES = [
   { min: 90, max: 100, image: 'medalhas/diamante.png', label: 'Medalha de Diamante', levelDelta: 1, status: 'Você subiu de nível!' }
 ];
 
+const MEDAL_LABEL_TO_KEY = {
+  'Medalha de Diamante': 'diamante',
+  'Medalha de Ouro': 'ouro',
+  'Medalha de Prata': 'prata',
+  'Medalha de Bronze': 'bronze',
+  'Medalha de Chumbo': 'chumbo',
+  'Medalha de Gesso': 'gesso'
+};
+
+const MEDAL_KEYS = ['diamante', 'ouro', 'prata', 'bronze', 'chumbo', 'gesso'];
+
+function createEmptyMedalCounts() {
+  return {
+    diamante: 0,
+    ouro: 0,
+    prata: 0,
+    bronze: 0,
+    chumbo: 0,
+    gesso: 0
+  };
+}
+
+function normalizeMedalCounts(entry) {
+  const base = createEmptyMedalCounts();
+  if (!entry || typeof entry !== 'object') {
+    return base;
+  }
+  MEDAL_KEYS.forEach((key) => {
+    const value = Number(entry[key]);
+    base[key] = Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+  });
+  return base;
+}
+
 function getMedalForAccuracy(accuracy) {
   const perc = Math.max(0, Math.min(100, accuracy));
   for (const medal of MEDAL_RULES) {
@@ -973,15 +1007,24 @@ function ensureModeStats(mode) {
     modeStats[mode] = {
       totalPhrases: 0,
       totalTime: 0,
+      totalChars: 0,
+      correctChars: 0,
       correct: 0,
       wrong: 0,
       report: 0,
+      medals: createEmptyMedalCounts(),
       wrongRanking: [],
       reportRanking: []
     };
   } else {
-    if (!Array.isArray(modeStats[mode].wrongRanking)) modeStats[mode].wrongRanking = [];
-    if (!Array.isArray(modeStats[mode].reportRanking)) modeStats[mode].reportRanking = [];
+    const entry = modeStats[mode];
+    if (!Array.isArray(entry.wrongRanking)) entry.wrongRanking = [];
+    if (!Array.isArray(entry.reportRanking)) entry.reportRanking = [];
+    const totalChars = Number(entry.totalChars);
+    entry.totalChars = Number.isFinite(totalChars) && totalChars > 0 ? Math.floor(totalChars) : 0;
+    const correctChars = Number(entry.correctChars);
+    entry.correctChars = Number.isFinite(correctChars) && correctChars > 0 ? Math.floor(correctChars) : 0;
+    entry.medals = normalizeMedalCounts(entry.medals);
   }
   return modeStats[mode];
 }
@@ -1136,6 +1179,7 @@ function reportLastError() {
   saveTotals();
   atualizarBarraProgresso();
   const stats = ensureModeStats(selectedMode);
+  stats.correctChars += expectedChars;
   stats.correct++;
   stats.wrong = Math.max(0, stats.wrong - 1);
   stats.report++;
@@ -1295,6 +1339,8 @@ function calcModeStats(mode) {
   const correct = stats.correct || 0;
   const report = stats.report || 0;
   const totalTime = stats.totalTime || 0;
+  const totalChars = stats.totalChars || 0;
+  const correctChars = stats.correctChars || 0;
   const accPerc = total ? (correct / total * 100) : 0;
   const avg = total ? (totalTime / total / 1000) : 0;
   const goal = timeGoals[mode] || MAX_TIME;
@@ -1302,12 +1348,15 @@ function calcModeStats(mode) {
   if (avg >= MAX_TIME) timePerc = 0;
   if ([2, 3, 6].includes(mode) && total) timePerc += 20;
   const notReportPerc = total ? (100 - (report / total * 100)) : 100;
-  return { accPerc, timePerc, avg, notReportPerc };
+  const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
+  const cpm = minutes > 0 ? (correctChars / minutes) : 0;
+  return { accPerc, timePerc, avg, notReportPerc, cpm, total, correct, totalChars, correctChars };
 }
 
 function calcGeneralStats() {
   const modes = [2, 3, 4, 5, 6];
   let totalPhrases = 0, totalCorrect = 0, totalTime = 0, totalReport = 0;
+  let totalChars = 0, totalCorrectChars = 0;
   let timePercSum = 0, timePercCount = 0;
   modes.forEach(m => {
     const s = modeStats[m] || {};
@@ -1315,6 +1364,8 @@ function calcGeneralStats() {
     totalCorrect += s.correct || 0;
     totalTime += s.totalTime || 0;
     totalReport += s.report || 0;
+    totalChars += s.totalChars || 0;
+    totalCorrectChars += s.correctChars || 0;
     const tp = calcModeStats(m).timePerc;
     if (tp >= 1) {
       timePercSum += tp;
@@ -1325,7 +1376,19 @@ function calcGeneralStats() {
   const avg = totalPhrases ? (totalTime / totalPhrases / 1000) : 0;
   const timePerc = timePercCount ? (timePercSum / timePercCount) : 0;
   const notReportPerc = totalPhrases ? (100 - (totalReport / totalPhrases * 100)) : 100;
-  return { accPerc, timePerc, avg, notReportPerc };
+  const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
+  const cpm = minutes > 0 ? (totalCorrectChars / minutes) : 0;
+  return {
+    accPerc,
+    timePerc,
+    avg,
+    notReportPerc,
+    cpm,
+    total: totalPhrases,
+    correct: totalCorrect,
+    totalChars,
+    correctChars: totalCorrectChars
+  };
 }
 
 function updateGeneralCircles() {
@@ -1588,9 +1651,6 @@ function mostrarFrase() {
   prizeStart = Date.now();
   prizeTimer = setInterval(atualizarBarraProgresso, 50);
   atualizarBarraProgresso();
-  if (selectedMode >= 2) {
-    inputTimeout = setTimeout(handleNoInput, 6000);
-  }
 }
 
 function flashSuccess(callback) {
@@ -1698,7 +1758,10 @@ function verificarResposta() {
     ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
     ehQuaseCorretoPalavras(resposta, esperado || '');
 
+  const expectedChars = countCorrectCharacters(expectedPhrase, expectedPhrase);
   const correctChars = countCorrectCharacters(expectedPhrase, resposta);
+  stats.totalChars += expectedChars;
+  stats.correctChars += correctChars;
   roundCorrectChars += correctChars;
   if (!roundActive) {
     roundActive = true;
@@ -1808,6 +1871,12 @@ function finishMode() {
   const cpm = minutes > 0 ? (roundCorrectChars / minutes) : 0;
 
   const medal = getMedalForAccuracy(accuracy);
+  const stats = ensureModeStats(selectedMode);
+  const medalKey = medal && MEDAL_LABEL_TO_KEY[medal.label];
+  if (medalKey) {
+    stats.medals[medalKey] += 1;
+  }
+  saveModeStats();
   const progress = getModeProgress(selectedMode);
   const previousLevel = progress.level;
   let nextLevel = previousLevel + medal.levelDelta;
