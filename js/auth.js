@@ -423,7 +423,14 @@
       loginBtn.style.display = user ? 'none' : 'inline-flex';
     }
     logoutButtons.forEach(button => {
-      button.style.display = user ? 'inline-flex' : 'none';
+      const isProfilePage = Boolean(button.closest('.page-profile'));
+      if (user) {
+        button.disabled = false;
+        button.style.display = 'inline-flex';
+      } else {
+        button.disabled = true;
+        button.style.display = isProfilePage ? 'inline-flex' : 'none';
+      }
     });
     applyBalanceToUI(readStoredBalance());
     if (!user && typeof closeUserMenu === 'function') {

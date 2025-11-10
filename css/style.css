@@ -1183,6 +1183,172 @@ body.theme-blue .stat-bar-track {
   transition: width 0.7s ease;
 }
 
+.stats-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 18px;
+  width: min(520px, 90vw);
+}
+
+.stat-metric {
+  background: rgba(12, 61, 94, 0.06);
+  padding: 18px 22px;
+  border-radius: 20px;
+  text-align: center;
+  min-width: 160px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-metric__label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #0c3d5e;
+}
+
+.stat-metric__value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #08304a;
+  font-variant-numeric: tabular-nums;
+}
+
+body.dark-mode .stat-metric,
+body.theme-blue .stat-metric {
+  background: rgba(240, 246, 255, 0.08);
+  box-shadow: none;
+}
+
+body.dark-mode .stat-metric__label,
+body.theme-blue .stat-metric__label {
+  color: #f0f6ff;
+}
+
+body.dark-mode .stat-metric__value,
+body.theme-blue .stat-metric__value {
+  color: #8ac8ff;
+}
+
+.stats-section {
+  width: min(520px, 90vw);
+  margin: 0 auto;
+  background: rgba(12, 61, 94, 0.04);
+  padding: 20px 24px;
+  border-radius: 22px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats-section__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #0c3d5e;
+}
+
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stats-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  color: #0c3d5e;
+}
+
+.stats-list__label {
+  font-weight: 600;
+}
+
+.stats-list__value {
+  font-weight: 700;
+  color: #08304a;
+  font-variant-numeric: tabular-nums;
+}
+
+body.dark-mode .stats-section,
+body.theme-blue .stats-section {
+  background: rgba(240, 246, 255, 0.08);
+  box-shadow: none;
+}
+
+body.dark-mode .stats-section__title,
+body.theme-blue .stats-section__title,
+body.dark-mode .stats-list__label,
+body.theme-blue .stats-list__label {
+  color: #f0f6ff;
+}
+
+body.dark-mode .stats-list__value,
+body.theme-blue .stats-list__value {
+  color: #8ac8ff;
+}
+
+.stats-medals__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.stats-medals__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(12, 61, 94, 0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+}
+
+.stats-medals__icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.stats-medals__label {
+  font-weight: 600;
+  color: #0c3d5e;
+}
+
+.stats-medals__value {
+  font-weight: 700;
+  color: #08304a;
+  font-variant-numeric: tabular-nums;
+}
+
+body.dark-mode .stats-medals__item,
+body.theme-blue .stats-medals__item {
+  background: rgba(240, 246, 255, 0.1);
+  box-shadow: none;
+}
+
+body.dark-mode .stats-medals__label,
+body.theme-blue .stats-medals__label {
+  color: #f0f6ff;
+}
+
+body.dark-mode .stats-medals__value,
+body.theme-blue .stats-medals__value {
+  color: #8ac8ff;
+}
+
 @media (max-width: 640px) {
   #play-container {
     gap: 18px;
@@ -1199,6 +1365,28 @@ body.theme-blue .stat-bar-track {
 
   .stat-bar {
     width: min(280px, 90vw);
+  }
+
+  .stats-metrics {
+    width: 100%;
+    gap: 14px;
+  }
+
+  .stat-metric {
+    padding: 16px 18px;
+  }
+
+  .stat-metric__value {
+    font-size: 24px;
+  }
+
+  .stats-section {
+    width: 100%;
+    padding: 18px 20px;
+  }
+
+  .stats-medals__item {
+    padding: 8px 12px;
   }
 
   body.page-play #mode-buttons,
@@ -1279,8 +1467,22 @@ body.theme-blue #profile-container {
   justify-content: flex-end;
 }
 
+.page-profile .logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-profile .logout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: saturate(0.7);
+}
+
 .profile-actions .logout-button {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 15px;
   padding: 10px 22px;
   border-radius: 999px;
