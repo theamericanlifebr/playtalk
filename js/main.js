@@ -543,12 +543,7 @@ function ensureModeProgressStructure(mode) {
   entry.level = Number.isFinite(entry.level) && entry.level > 0
     ? Math.min(MAX_LEVEL_CAP, Math.floor(entry.level))
     : 1;
-  entry.xp = Number.isFinite(entry.xp) && entry.xp >= 0 ? Math.floor(entry.xp) : 0;
-  if (entry.level >= MAX_LEVEL_CAP) {
-    entry.level = MAX_LEVEL_CAP;
-    const capRequirement = getXPRequirement(MAX_LEVEL_CAP);
-    entry.xp = Math.min(entry.xp, capRequirement);
-  }
+  entry.xp = 0;
   return entry;
 }
 
@@ -649,33 +644,10 @@ function addGeneralExperience(amount) {
   return leveledUp;
 }
 
-function addModeExperience(mode, amount) {
-  const xp = Math.max(0, Math.floor(amount));
-  if (xp <= 0) {
-    return false;
-  }
-  const entry = getModeProgress(mode);
-  entry.xp += xp;
-  let leveledUp = false;
-  while (entry.level < MAX_LEVEL_CAP && entry.xp >= getXPRequirement(entry.level)) {
-    entry.xp -= getXPRequirement(entry.level);
-    entry.level += 1;
-    leveledUp = true;
-  }
-  if (entry.level >= MAX_LEVEL_CAP) {
-    entry.level = MAX_LEVEL_CAP;
-    entry.xp = Math.min(entry.xp, getXPRequirement(MAX_LEVEL_CAP));
-  }
-  modeProgress[String(mode)] = entry;
-  saveModeProgress({ emit: true });
-  return leveledUp;
-}
-
 function grantExperience(amount, mode) {
   const leveledGeneral = addGeneralExperience(amount);
-  const leveledMode = Number.isFinite(mode) ? addModeExperience(mode, amount) : false;
-  if (leveledGeneral || leveledMode) {
-    updateLevelIcon();
+  if (leveledGeneral) {
+    updateLevelIcon({ scope: 'general' });
   }
 }
 
