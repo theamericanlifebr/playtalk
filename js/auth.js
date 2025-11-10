@@ -391,11 +391,6 @@
     const displayName = user
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
-    const levelProgress = readLevelProgress();
-    const level = levelProgress.level;
-    const requirement = getLevelRequirement(level);
-    const normalizedXp = Math.max(0, Math.min(levelProgress.xp, requirement));
-    const ratio = requirement > 0 ? Math.max(0, Math.min(1, normalizedXp / requirement)) : 0;
     let avatarUrl = DEFAULT_AVATAR_URL;
     const storedAvatar = localStorage.getItem('avatar');
     if (storedAvatar && storedAvatar.trim()) {
@@ -409,12 +404,12 @@
       nameEl.title = displayName;
     }
     if (levelEl) {
-      levelEl.textContent = `Nível ${level}`;
+      levelEl.textContent = 'Nível 1';
     }
 
     if (avatarContainer) {
-      avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
-      avatarContainer.title = `Progresso de nível: ${normalizedXp}/${requirement}`;
+      avatarContainer.style.setProperty('--avatar-progress', '0deg');
+      avatarContainer.title = 'Nível central fixo no nível 1.';
     }
 
     if (avatarEl) {
@@ -1050,22 +1045,14 @@
   document.addEventListener('playtalk:level-progress', event => {
     const detail = event && event.detail ? event.detail : null;
     if (detail) {
-      const levelValue = Number.isFinite(detail.level) && detail.level > 0 ? Math.floor(detail.level) : getStoredLevel();
-      const requirement = Number.isFinite(detail.required) && detail.required > 0
-        ? Math.floor(detail.required)
-        : getLevelRequirement(levelValue);
-      const xpValue = Number.isFinite(detail.xp) && detail.xp >= 0
-        ? Math.floor(detail.xp)
-        : Math.max(0, Math.min(readLevelProgress().xp, requirement));
-      const ratio = requirement > 0 ? Math.max(0, Math.min(1, (detail.ratio ?? (xpValue / requirement)))) : 0;
       const levelEl = document.getElementById('header-level');
       if (levelEl) {
-        levelEl.textContent = `Nível ${levelValue}`;
+        levelEl.textContent = 'Nível 1';
       }
       const avatarContainer = document.getElementById('header-avatar-container');
       if (avatarContainer) {
-        avatarContainer.style.setProperty('--avatar-progress', `${(ratio * 360).toFixed(2)}deg`);
-        avatarContainer.title = `Progresso de nível: ${Math.min(xpValue, requirement)}/${requirement}`;
+        avatarContainer.style.setProperty('--avatar-progress', '0deg');
+        avatarContainer.title = 'Nível central fixo no nível 1.';
       }
     } else {
       updateAuthStatus();
