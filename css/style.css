@@ -2241,3 +2241,207 @@ body.theme-blue .fun-actions button {
   }
 }
 
+
+.game-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 7, 18, 0.9);
+  backdrop-filter: blur(6px);
+  z-index: 1100;
+}
+
+.game-overlay__panel {
+  width: min(92vw, 540px);
+  border-radius: 24px;
+  padding: clamp(24px, 3vw, 40px);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(236, 244, 255, 0.96));
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vw, 24px);
+}
+
+body.dark-mode .game-overlay__panel {
+  background: linear-gradient(145deg, rgba(18, 24, 39, 0.96), rgba(28, 35, 54, 0.96));
+  color: #f7f7ff;
+}
+
+.game-overlay__logo {
+  width: clamp(160px, 40vw, 240px);
+  margin: 0 auto;
+  display: block;
+}
+
+.game-overlay__title {
+  font-size: clamp(26px, 4vw, 36px);
+  margin: 0;
+  color: #0d1c3b;
+}
+
+body.dark-mode .game-overlay__title {
+  color: #dfe7ff;
+}
+
+.game-overlay__description {
+  font-size: clamp(16px, 2.2vw, 18px);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pre-game-level {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(16px, 2vw, 18px);
+}
+
+.pre-game-level__label {
+  opacity: 0.8;
+}
+
+.pre-game-round {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pre-game-round__label {
+  font-weight: 600;
+  margin: 0;
+}
+
+.pre-game-round__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pre-game-round__option {
+  padding: 14px 12px;
+  border-radius: 14px;
+  border: 2px solid rgba(9, 40, 97, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.pre-game-round__option:hover,
+.pre-game-round__option.is-selected {
+  transform: translateY(-2px);
+  border-color: #2d5bff;
+  box-shadow: 0 12px 22px rgba(45, 91, 255, 0.18);
+}
+
+body.dark-mode .pre-game-round__option {
+  background: rgba(20, 32, 64, 0.85);
+  border-color: rgba(144, 172, 255, 0.25);
+  color: #f1f4ff;
+}
+
+.game-overlay__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.game-overlay__primary,
+.game-overlay__secondary {
+  min-width: 160px;
+  padding: 14px 22px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.game-overlay__primary {
+  background: linear-gradient(120deg, #2d5bff, #00c6ff);
+  color: #fff;
+  box-shadow: 0 16px 30px rgba(0, 114, 255, 0.25);
+}
+
+.game-overlay__secondary {
+  background: rgba(255, 255, 255, 0.8);
+  color: #0d1c3b;
+  border: 1px solid rgba(9, 40, 97, 0.2);
+}
+
+body.dark-mode .game-overlay__secondary {
+  background: rgba(24, 32, 60, 0.8);
+  color: #f1f4ff;
+  border-color: rgba(144, 172, 255, 0.25);
+}
+
+.game-overlay__primary:hover,
+.game-overlay__secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+.game-overlay__medal {
+  width: clamp(180px, 38vw, 220px);
+  height: auto;
+  margin: 0 auto;
+}
+
+.game-overlay__subtitle {
+  font-size: clamp(17px, 2.4vw, 19px);
+  margin: 0;
+  font-weight: 600;
+}
+
+.post-game-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.post-game-stats__item {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: inset 0 0 0 1px rgba(9, 40, 97, 0.08);
+}
+
+.post-game-stats__item dt {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.75;
+  margin: 0;
+}
+
+.post-game-stats__item dd {
+  margin: 0;
+  font-size: clamp(18px, 2.6vw, 22px);
+  font-weight: 700;
+}
+
+body.dark-mode .post-game-stats__item {
+  background: rgba(18, 28, 55, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(144, 172, 255, 0.12);
+}
+
+@media (max-width: 520px) {
+  .post-game-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .game-overlay__panel {
+    width: 100%;
+  }
+}

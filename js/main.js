@@ -21,22 +21,82 @@ const MODE_SCORE_FACTORS = {
   6: 1.25
 };
 
-const COLOR_STOPS = [
+const ROUND_OPTIONS = [12, 18, 24, 36];
+const DEFAULT_ROUND_SIZE = ROUND_OPTIONS[0];
+const MAX_PROGRESS_POINTS = ROUND_OPTIONS[ROUND_OPTIONS.length - 1];
+const COLOR_STOP_RATIOS = [
   [0, '#ff0000'],
-  [2000, '#ff3b00'],
-  [4000, '#ff7f00'],
-  [6000, '#ffb300'],
-  [8000, '#ffe000'],
-  [10000, '#ffff66'],
-  [12000, '#ccff66'],
-  [14000, '#99ff99'],
-  [16000, '#00cc66'],
-  [18000, '#00994d'],
-  [20000, '#00ffff'],
-  [22000, '#66ccff'],
-  [24000, '#0099ff'],
-  [25000, '#0099ff']
+  [0.08, '#ff3b00'],
+  [0.16, '#ff7f00'],
+  [0.24, '#ffb300'],
+  [0.32, '#ffe000'],
+  [0.4, '#ffff66'],
+  [0.48, '#ccff66'],
+  [0.56, '#99ff99'],
+  [0.64, '#00cc66'],
+  [0.72, '#00994d'],
+  [0.8, '#00ffff'],
+  [0.88, '#66ccff'],
+  [0.96, '#0099ff'],
+  [1, '#0099ff']
 ];
+
+const COLOR_STOPS = COLOR_STOP_RATIOS.map(([ratio, color]) => [
+  Math.round(ratio * MAX_PROGRESS_POINTS * 100) / 100,
+  color
+]);
+
+const MODE_DETAILS = {
+  1: {
+    title: 'Modo 1 — Aquecimento bilingue',
+    description: 'Escute em inglês, visualize em português e aqueça sua mente traduzindo rapidamente antes de responder.',
+    logo: 'selos%20modos%20de%20jogo/modo1.png'
+  },
+  2: {
+    title: 'Modo 2 — Tradução direta',
+    description: 'Veja a frase em português e responda em inglês sem hesitar para consolidar vocabulário ativo.',
+    logo: 'selos%20modos%20de%20jogo/modo2.png'
+  },
+  3: {
+    title: 'Modo 3 — Listening puro',
+    description: 'Apenas o áudio em inglês e sua resposta. Foque na compreensão auditiva para dominar a estrutura das frases.',
+    logo: 'selos%20modos%20de%20jogo/modo3.png'
+  },
+  4: {
+    title: 'Modo 4 — Reading em inglês',
+    description: 'Leia em inglês, pense em inglês. Esse modo solidifica leitura e pronúncia mental em ritmo acelerado.',
+    logo: 'selos%20modos%20de%20jogo/modo4.png'
+  },
+  5: {
+    title: 'Modo 5 — Tradução reversa',
+    description: 'Escute em inglês e responda em português com precisão. Ideal para treinar compreensão e produção simultânea.',
+    logo: 'selos%20modos%20de%20jogo/modo5.png'
+  },
+  6: {
+    title: 'Modo 6 — Desafio final',
+    description: 'Combine leitura, escuta e resposta em inglês em ritmo máximo para provar que você domina o idioma.',
+    logo: 'selos%20modos%20de%20jogo/modo6.png'
+  }
+};
+
+const MEDAL_RULES = [
+  { min: 0, max: 35, image: 'medalhas/gesso.png', label: 'Medalha de Gesso', levelDelta: -1, status: 'Você perdeu um nível.' },
+  { min: 36, max: 66, image: 'medalhas/chumbo.png', label: 'Medalha de Chumbo', levelDelta: -1, status: 'Você perdeu um nível.' },
+  { min: 67, max: 75, image: 'medalhas/bronze.png', label: 'Medalha de Bronze', levelDelta: 0, status: 'Você permanece no nível.' },
+  { min: 76, max: 82, image: 'medalhas/prata.png', label: 'Medalha de Prata', levelDelta: 0, status: 'Você permanece no nível.' },
+  { min: 83, max: 89, image: 'medalhas/ouro.png', label: 'Medalha de Ouro', levelDelta: 1, status: 'Você subiu de nível!' },
+  { min: 90, max: 100, image: 'medalhas/diamante.png', label: 'Medalha de Diamante', levelDelta: 1, status: 'Você subiu de nível!' }
+];
+
+function getMedalForAccuracy(accuracy) {
+  const perc = Math.max(0, Math.min(100, accuracy));
+  for (const medal of MEDAL_RULES) {
+    if (perc >= medal.min && perc <= medal.max) {
+      return medal;
+    }
+  }
+  return MEDAL_RULES[0];
+}
 
 let userSettings = { ...SETTINGS_FALLBACK };
 
@@ -137,6 +197,29 @@ function sanitizePhraseForBalance(text) {
 function calculateBalanceReward(text) {
   const cleaned = sanitizePhraseForBalance(text);
   return cleaned.length > 0 ? cleaned.length : 0;
+}
+
+function normalizeForCharTiming(text) {
+  if (typeof text !== 'string') {
+    return '';
+  }
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function countCorrectCharacters(expected, answer) {
+  const normalizedExpected = normalizeForCharTiming(expected);
+  const normalizedAnswer = normalizeForCharTiming(answer);
+  const limit = Math.min(normalizedExpected.length, normalizedAnswer.length);
+  let correct = 0;
+  for (let i = 0; i < limit; i += 1) {
+    if (normalizedExpected[i] === normalizedAnswer[i]) {
+      correct += 1;
+    }
+  }
+  return correct;
 }
 
 function updateGameBalanceDisplay(balanceValue) {
@@ -310,14 +393,11 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         cb();
       }
     } else if (normCmd.includes('next level') || normCmd.includes('proximo nivel')) {
-      points += 25000;
-      saveTotals();
+      points = roundTarget;
+      roundAttempts = roundTarget;
       atualizarBarraProgresso();
-      const threshold = getCurrentThreshold();
-      if (points >= threshold && !completedModes[selectedMode]) {
-          finishMode();
-        }
-      } else if (listeningForCommand) {
+      finishMode();
+    } else if (listeningForCommand) {
       if (normCmd.includes('play')) {
         listeningForCommand = false;
         startGame(getHighestUnlockedMode());
@@ -372,18 +452,47 @@ let esperadoLang = 'pt';
 let timerInterval = null;
 let inputTimeout = null;
 let lastExpected = '', lastInput = '', lastFolder = 1;
-const TOTAL_FRASES = 25;
 let selectedMode = 1;
-// Removed difficulty selection; game always starts on easy mode
-const DEFAULT_STARTING_POINTS = userSettings.startingPoints ?? SETTINGS_FALLBACK.startingPoints;
-const COMPLETION_THRESHOLD = 25000;
-const MODE6_THRESHOLD = 25115;
+let roundTarget = DEFAULT_ROUND_SIZE;
+let roundAttempts = 0;
+let roundWrongCount = 0;
+let roundCorrectChars = 0;
+let roundStartTime = 0;
+let lastPhraseTimestamp = 0;
+let roundActive = false;
+let pendingModeStart = null;
+const roundSelections = {};
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
 
 function getCurrentThreshold() {
-  return selectedMode === 6 ? MODE6_THRESHOLD : COMPLETION_THRESHOLD;
+  return roundTarget;
+}
+
+function getRoundSelection(mode) {
+  const key = String(mode);
+  if (!roundSelections[key]) {
+    roundSelections[key] = DEFAULT_ROUND_SIZE;
+  }
+  return roundSelections[key];
+}
+
+function setRoundSelection(mode, size) {
+  if (!ROUND_OPTIONS.includes(size)) {
+    return;
+  }
+  roundSelections[String(mode)] = size;
+}
+
+function resetRoundState() {
+  points = 0;
+  roundAttempts = 0;
+  roundWrongCount = 0;
+  roundCorrectChars = 0;
+  roundStartTime = 0;
+  lastPhraseTimestamp = 0;
+  roundActive = false;
 }
 
 function getXPRequirement(level) {
@@ -618,18 +727,13 @@ function resolveModeLevel(mode) {
   return levels[0];
 }
 
-let completedModes = {};
 let unlockedModes = {};
-let points = DEFAULT_STARTING_POINTS;
-let premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
-let premioDec = 0;
-let penaltyFactor = 0.5;
+let points = 0;
 let prizeStart = 0;
 let prizeTimer = null;
 let awaitingRetry = false;
 let retryCallback = null;
 let tryAgainColorInterval = null;
-let levelUpReady = false;
 let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
@@ -704,13 +808,8 @@ function reloadPersistentProgress(initialLoad = false) {
   errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
   tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
   loadProgressFromStorage();
-  completedModes = parseJSONStorage('completedModes', {});
   unlockedModes = ensureUnlockedModesStructure(parseJSONStorage('unlockedModes', {}));
-  points = Number(localStorage.getItem('points'));
-  if (!Number.isFinite(points)) {
-    points = DEFAULT_STARTING_POINTS;
-  }
-  premioBase = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
+  points = 0;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
   if (initialLoad) {
@@ -728,8 +827,6 @@ function reloadPersistentProgress(initialLoad = false) {
 reloadPersistentProgress(true);
 
 let lastWasError = false;
-let lastReward = 0;
-let lastPenalty = 0;
 let paused = false;
 let consecutiveErrors = 0;
 let pauseInterval = null;
@@ -752,6 +849,124 @@ const modeImages = {
   5: 'selos%20modos%20de%20jogo/modo5.png',
   6: 'selos%20modos%20de%20jogo/modo6.png'
 };
+
+function getModeDetail(mode) {
+  return MODE_DETAILS[mode] || {
+    title: `Modo ${mode}`,
+    description: 'Prepare-se para a rodada.',
+    logo: modeImages[mode] || modeImages[1]
+  };
+}
+
+function updatePreGameRoundButtons(mode, selectedSize) {
+  const buttons = document.querySelectorAll('#pre-game-screen .pre-game-round__option');
+  buttons.forEach(button => {
+    if (!button.dataset.round) {
+      return;
+    }
+    const value = parseInt(button.dataset.round, 10);
+    if (!Number.isFinite(value)) {
+      return;
+    }
+    if (value === selectedSize) {
+      button.classList.add('is-selected');
+    } else {
+      button.classList.remove('is-selected');
+    }
+  });
+}
+
+function updatePreGameScreen(mode) {
+  const overlay = document.getElementById('pre-game-screen');
+  if (!overlay) {
+    return;
+  }
+  const detail = getModeDetail(mode);
+  const titleEl = document.getElementById('pre-game-title');
+  const descEl = document.getElementById('pre-game-description');
+  const logoEl = document.getElementById('pre-game-logo');
+  const levelEl = document.getElementById('pre-game-level');
+  if (titleEl) titleEl.textContent = detail.title;
+  if (descEl) descEl.textContent = detail.description;
+  if (logoEl) {
+    logoEl.src = detail.logo;
+    logoEl.alt = `Logo do ${detail.title}`;
+  }
+  if (levelEl) {
+    const level = resolveModeLevel(mode);
+    levelEl.textContent = `Pasta ${level}`;
+  }
+  const selectedSize = getRoundSelection(mode);
+  updatePreGameRoundButtons(mode, selectedSize);
+  overlay.dataset.mode = String(mode);
+}
+
+function openPreGameScreen(mode) {
+  const overlay = document.getElementById('pre-game-screen');
+  if (!overlay) {
+    beginGame();
+    return;
+  }
+  pendingModeStart = mode;
+  roundTarget = getRoundSelection(mode);
+  updatePreGameScreen(mode);
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function closePreGameScreen() {
+  const overlay = document.getElementById('pre-game-screen');
+  if (!overlay) {
+    return;
+  }
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.removeAttribute('data-mode');
+}
+
+function openPostGameScreen(summary) {
+  const overlay = document.getElementById('post-game-screen');
+  if (!overlay) {
+    return;
+  }
+  const medalEl = document.getElementById('post-game-medal');
+  const statusEl = document.getElementById('post-game-level-status');
+  const correctEl = document.getElementById('post-game-correct');
+  const wrongEl = document.getElementById('post-game-wrong');
+  const accuracyEl = document.getElementById('post-game-accuracy');
+  const cpmEl = document.getElementById('post-game-cpm');
+  if (medalEl) {
+    medalEl.src = summary.medal.image;
+    medalEl.alt = summary.medal.label;
+  }
+  if (statusEl) {
+    let levelNote = '';
+    if (Number.isFinite(summary.newLevel)) {
+      const previous = Number.isFinite(summary.previousLevel) ? summary.previousLevel : summary.newLevel;
+      if (summary.newLevel !== previous) {
+        levelNote = ` Você foi da pasta ${previous} para a pasta ${summary.newLevel}.`;
+      } else {
+        levelNote = ` Você continua na pasta ${summary.newLevel}.`;
+      }
+    }
+    statusEl.textContent = `${summary.medal.status}${levelNote}`;
+  }
+  if (correctEl) correctEl.textContent = summary.correct;
+  if (wrongEl) wrongEl.textContent = summary.wrong;
+  if (accuracyEl) accuracyEl.textContent = `${summary.accuracy.toFixed(1)}%`;
+  if (cpmEl) cpmEl.textContent = summary.cpm.toFixed(1);
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function closePostGameScreen() {
+  const overlay = document.getElementById('post-game-screen');
+  if (!overlay) {
+    return;
+  }
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+}
 
 function ensureModeStats(mode) {
   if (!modeStats[mode]) {
@@ -787,11 +1002,6 @@ function saveTotals() {
   localStorage.setItem('acertosTotais', acertosTotais);
   localStorage.setItem('errosTotais', errosTotais);
   localStorage.setItem('tentativasTotais', tentativasTotais);
-  localStorage.setItem('points', Math.max(0, Math.floor(points)));
-  const limite = getCurrentThreshold();
-  if (!paused && points >= limite) {
-    pauseGame();
-  }
 }
 
 saveTotals();
@@ -838,7 +1048,6 @@ function pauseGame(noPenalty = false) {
   if (input) input.disabled = true;
   if (!noPenalty) {
     pauseInterval = setInterval(() => {
-      points = Math.max(0, points - 250);
       saveTotals();
       atualizarBarraProgresso();
     }, 1000);
@@ -853,9 +1062,8 @@ function resumeGame() {
     clearInterval(pauseInterval);
     pauseInterval = null;
   }
-  const limite = getCurrentThreshold();
-  if (points >= limite) {
-    pauseGame();
+  if (roundAttempts >= roundTarget) {
+    finishMode();
     return;
   }
   const texto = document.getElementById('texto-exibicao');
@@ -919,7 +1127,12 @@ function reportLastError() {
   const reward = rewardBalanceForPhrase(lastExpected || '', selectedMode);
   grantExperience(reward, selectedMode);
   errosTotais = Math.max(0, errosTotais - 1);
-  points += lastReward + lastPenalty;
+  points = Math.min(roundTarget, points + 1);
+  if (roundWrongCount > 0) {
+    roundWrongCount -= 1;
+  }
+  const expectedChars = countCorrectCharacters(lastExpected || '', lastExpected || '');
+  roundCorrectChars += expectedChars;
   saveTotals();
   atualizarBarraProgresso();
   const stats = ensureModeStats(selectedMode);
@@ -988,9 +1201,7 @@ function performMenuLevelUp() {
   generalProgress.level += 1;
   generalProgress.xp = 0;
   saveGeneralProgress();
-  completedModes = {};
   unlockedModes = getAllModesUnlockedState();
-  localStorage.setItem('completedModes', JSON.stringify(completedModes));
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
   document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
     img.src = modeImages[6];
@@ -998,7 +1209,6 @@ function performMenuLevelUp() {
   updateLevelIcon();
   updateModeIcons();
   atualizarBarraProgresso();
-  levelUpReady = false;
 }
 
 function enforceStarClick() {
@@ -1141,7 +1351,7 @@ function startTryAgainAnimation() {
   if (!msg) return;
   if (tryAgainColorInterval) clearInterval(tryAgainColorInterval);
   const duration = 30000;
-  const maxPoints = selectedMode === 6 ? MODE6_THRESHOLD : 25000;
+  const maxPoints = Math.max(1, getCurrentThreshold());
   const begin = Date.now();
   tryAgainColorInterval = setInterval(() => {
     const elapsed = (Date.now() - begin) % duration;
@@ -1162,38 +1372,45 @@ function startGame(modo) {
   }
   selectedMode = modo;
   refreshUserSettings();
-  const startingPoints = userSettings.startingPoints ?? SETTINGS_FALLBACK.startingPoints;
-  points = Math.max(0, startingPoints);
+  resetRoundState();
+  roundTarget = getRoundSelection(modo);
   saveTotals();
   atualizarBarraProgresso();
   updateModeIcons();
   updateLevelIcon({ scope: 'mode' });
   listeningForCommand = false;
-  document.getElementById('menu').style.display = 'none';
+  const menu = document.getElementById('menu');
+  if (menu) menu.style.display = 'none';
   document.body.classList.add('game-active');
-  document.getElementById('visor').style.display = 'none';
+  const visor = document.getElementById('visor');
+  if (visor) visor.style.display = 'none';
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
   if (reconhecimento) {
     reconhecimentoAtivo = false;
     reconhecimento.stop();
   }
-  beginGame();
+  openPreGameScreen(modo);
 }
 
 function beginGame() {
+  closePreGameScreen();
+  closePostGameScreen();
+  resetRoundState();
+  roundTarget = getRoundSelection(selectedMode);
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
   consecutiveErrors = 0;
   paused = false;
+  roundStartTime = Date.now();
+  roundActive = true;
   const start = () => {
-    document.getElementById('visor').style.display = 'flex';
+    const visor = document.getElementById('visor');
+    if (visor) visor.style.display = 'flex';
     const icon = document.getElementById('mode-icon');
     if (icon) {
       icon.src = modeImages[selectedMode];
-      const threshold = getCurrentThreshold();
-      const ratio = Math.max(0, Math.min(points, threshold)) / threshold;
-      icon.style.opacity = ratio;
+      icon.style.opacity = 0;
       icon.style.display = 'block';
       icon.onclick = () => { if (paused) resumeGame(); };
     }
@@ -1243,14 +1460,11 @@ function beginGame() {
       reconhecimentoAtivo = true;
       reconhecimento.start();
     }
-    const rewardValue = userSettings.pointsPerHit ?? SETTINGS_FALLBACK.pointsPerHit;
-    premioBase = Math.max(0, rewardValue);
-    premioDec = 0;
-    penaltyFactor = selectedMode === 1 ? 0 : 0.5;
     carregarFrases();
   };
 
   start();
+  pendingModeStart = null;
 }
 
 function falar(texto, lang) {
@@ -1306,8 +1520,11 @@ function carregarFrases() {
       }
     });
 
-  const qtdPrincipais = levelToUse === 1 ? TOTAL_FRASES : Math.round(TOTAL_FRASES * 0.8);
-  const qtdAnteriores = TOTAL_FRASES - qtdPrincipais;
+  const totalNecessario = Math.max(1, roundTarget);
+  const qtdPrincipais = levelToUse === 1
+    ? totalNecessario
+    : Math.max(1, Math.round(totalNecessario * 0.7));
+  const qtdAnteriores = Math.max(0, totalNecessario - qtdPrincipais);
   let selecionadas = [].concat(
     embaralhar(principais).slice(0, qtdPrincipais),
     embaralhar(anteriores).slice(0, qtdAnteriores)
@@ -1321,8 +1538,13 @@ function carregarFrases() {
     selecionadas = [['', '']];
   }
 
-  frasesArr = embaralhar(selecionadas);
+  while (selecionadas.length < totalNecessario && principais.length) {
+    selecionadas = selecionadas.concat(embaralhar(principais).slice(0, totalNecessario - selecionadas.length));
+  }
+
+  frasesArr = embaralhar(selecionadas).slice(0, totalNecessario);
   fraseIndex = 0;
+  points = 0;
   setTimeout(() => mostrarFrase(), 300);
   atualizarBarraProgresso();
   dispatchModeProgressUpdate(selectedMode);
@@ -1332,11 +1554,13 @@ function mostrarFrase() {
   refreshUserSettings();
   if (inputTimeout) clearTimeout(inputTimeout);
   if (timerInterval) clearInterval(timerInterval);
-  const threshold = getCurrentThreshold();
-  if (points >= threshold) {
+  if (roundAttempts >= roundTarget) {
+    finishMode();
     return;
   }
-  if (fraseIndex >= frasesArr.length) fraseIndex = 0;
+  if (fraseIndex >= frasesArr.length) {
+    fraseIndex = fraseIndex % Math.max(1, frasesArr.length);
+  }
   const [pt, en] = frasesArr[fraseIndex];
   const texto = document.getElementById("texto-exibicao");
   if (mostrarTexto === 'pt') texto.textContent = pt;
@@ -1356,20 +1580,9 @@ function mostrarFrase() {
   const timerEl = document.getElementById('timer');
   const start = Date.now();
   timerEl.textContent = 'Tempo: 0s';
-  const lossPerSecond = userSettings.pointsLossPerSecond ?? SETTINGS_FALLBACK.pointsLossPerSecond;
-  let lastTimerSecond = 0;
   timerInterval = setInterval(() => {
     const secs = Math.floor((Date.now() - start) / 1000);
     timerEl.textContent = `Tempo: ${secs}s`;
-    if (lossPerSecond > 0 && secs > lastTimerSecond) {
-      const dec = Math.max(0, Math.round(lossPerSecond * (secs - lastTimerSecond)));
-      if (dec > 0) {
-        points = Math.max(0, points - dec);
-        saveTotals();
-        atualizarBarraProgresso();
-      }
-    }
-    lastTimerSecond = secs;
   }, 1000);
   if (prizeTimer) clearInterval(prizeTimer);
   prizeStart = Date.now();
@@ -1382,7 +1595,9 @@ function mostrarFrase() {
 
 function flashSuccess(callback) {
   const texto = document.getElementById('texto-exibicao');
-  const color = calcularCor(points);
+  const limite = Math.max(1, getCurrentThreshold());
+  const perc = Math.min(100, (points / limite) * 100);
+  const color = colorFromPercent(perc);
   texto.style.transition = 'color 500ms linear';
   texto.style.color = color;
   setTimeout(() => {
@@ -1452,29 +1667,17 @@ function verificarResposta() {
     input.value = "";
     return;
   }
-  const bonusPhrase = resposta.toLowerCase().replace(/\s+/g, '');
-  if (bonusPhrase === 'Justiça de Deus' || bonusPhrase === 'getpointslife') {
-    points += 25000;
-    saveTotals();
-    input.value = '';
+  const bonusPhrase = normalizeForCharTiming(resposta).replace(/\s+/g, '');
+  if (bonusPhrase === 'justicadedeus' || bonusPhrase === 'getpointslife') {
+    points = roundTarget;
+    roundAttempts = roundTarget;
     atualizarBarraProgresso();
-    const threshold = getCurrentThreshold();
-    if (points >= threshold && !completedModes[selectedMode]) {
-      finishMode();
-    }
+    finishMode();
     return;
   }
   const resultado = document.getElementById("resultado");
   tentativasTotais++;
   saveTotals();
-  const elapsed = Date.now() - prizeStart;
-  const rawPremio = Math.max(0, Math.round(premioBase - elapsed * premioDec));
-  const penalty = Math.max(0, Math.round(elapsed * penaltyFactor));
-  const bonus = selectedMode === 5 ? 1000 : 0;
-  const baseReward = rawPremio + bonus;
-  const finalReward = applyScoreMultiplier(baseReward, selectedMode);
-  lastReward = finalReward;
-  lastPenalty = penalty;
   lastWasError = false;
 
   const stats = ensureModeStats(selectedMode);
@@ -1495,21 +1698,27 @@ function verificarResposta() {
     ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
     ehQuaseCorretoPalavras(resposta, esperado || '');
 
+  const correctChars = countCorrectCharacters(expectedPhrase, resposta);
+  roundCorrectChars += correctChars;
+  if (!roundActive) {
+    roundActive = true;
+  }
+  roundAttempts++;
+  const reachedRoundEnd = roundAttempts >= roundTarget;
+
   if (correto) {
     stats.correct++;
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
-    points += finalReward;
+    points = Math.min(roundTarget, points + 1);
     saveTotals();
     const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
     grantExperience(reward, selectedMode);
     consecutiveErrors = 0;
     resultado.textContent = '';
-    const threshold = getCurrentThreshold();
-    const reached = points >= threshold && !completedModes[selectedMode];
     flashSuccess(() => {
-      if (reached) finishMode();
+      if (reachedRoundEnd) finishMode();
       else continuar();
     });
   } else {
@@ -1521,6 +1730,7 @@ function verificarResposta() {
     saveModeStats();
     document.getElementById("somErro").play();
     errosTotais++;
+    roundWrongCount++;
     lastExpected = expectedPhrase;
     lastInput = resposta;
     lastFolder = pastaAtual;
@@ -1537,10 +1747,10 @@ function verificarResposta() {
     flashError(esperado, () => {
       input.disabled = false;
       bloqueado = false;
-      points = Math.max(0, points - penalty);
-      saveTotals();
       microphonePaused = false;
-      if (consecutiveErrors >= 3) {
+      if (reachedRoundEnd) {
+        finishMode();
+      } else if (consecutiveErrors >= 3) {
         triggerDownPlay();
       } else {
         continuar();
@@ -1548,15 +1758,14 @@ function verificarResposta() {
     });
   }
   atualizarBarraProgresso();
-    // Pontuação de acertos ocultada
   }
 
 function continuar() {
   if (transitioning) {
     return;
   }
-  const threshold = getCurrentThreshold();
-  if (points >= threshold) {
+  if (roundAttempts >= roundTarget) {
+    finishMode();
     return;
   }
   fraseIndex++;
@@ -1566,58 +1775,61 @@ function continuar() {
 function atualizarBarraProgresso() {
   updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
-  const limite = getCurrentThreshold();
-  const perc = Math.max(0, Math.min(points, limite)) / limite * 100;
+  const limite = Math.max(1, getCurrentThreshold());
+  const ratio = Math.max(0, Math.min(points, limite)) / limite;
+  const perc = ratio * 100;
   filled.style.width = perc + '%';
-  filled.style.backgroundColor = calcularCor(points);
+  filled.style.backgroundColor = colorFromPercent(perc);
   const icon = document.getElementById('mode-icon');
   if (icon) {
-    icon.style.opacity = perc / 100;
+    icon.style.opacity = Math.min(1, ratio);
   }
 }
 
 function finishMode() {
-  if (completedModes[selectedMode]) return;
   stopCurrentGame();
-  completedModes[selectedMode] = true;
-  localStorage.setItem('completedModes', JSON.stringify(completedModes));
-  const next = selectedMode + 1;
-  if (next <= 6) {
-    unlockMode(next, 0);
-
-    if (selectedMode === 5) {
-      setTimeout(() => {
-        const threshold = getCurrentThreshold();
-        if (points < threshold) {
-          continuar();
-        }
-      }, 500);
-    }
+  roundActive = false;
+  const icon = document.getElementById('mode-icon');
+  if (icon) {
+    icon.style.display = 'none';
   }
+  const visor = document.getElementById('visor');
+  if (visor) {
+    visor.style.display = 'none';
+  }
+  recordModeTime(selectedMode);
+  const totalAttempts = Math.max(roundAttempts, points + roundWrongCount);
+  const correct = Math.min(points, roundTarget);
+  const wrong = Math.max(0, totalAttempts - correct);
+  const attemptsForAccuracy = correct + wrong;
+  const accuracy = attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
+  const elapsedMs = roundStartTime ? Date.now() - roundStartTime : 0;
+  const minutes = elapsedMs > 0 ? (elapsedMs / 60000) : 0;
+  const cpm = minutes > 0 ? (roundCorrectChars / minutes) : 0;
 
+  const medal = getMedalForAccuracy(accuracy);
+  const progress = getModeProgress(selectedMode);
+  const previousLevel = progress.level;
+  let nextLevel = previousLevel + medal.levelDelta;
+  nextLevel = Math.max(1, Math.min(MAX_LEVEL_CAP, nextLevel));
+  progress.level = nextLevel;
+  progress.xp = 0;
+  modeProgress[String(selectedMode)] = progress;
+  saveModeProgress({ emit: true });
+  pastaAtual = resolveModeLevel(selectedMode);
+  updateLevelIcon({ scope: 'mode' });
+  dispatchModeProgressUpdate(selectedMode);
   updateModeIcons();
 
-  if (selectedMode === 6) {
-    const stats6 = ensureModeStats(6);
-    const total = stats6.totalPhrases || 0;
-    const acc = total ? (stats6.correct / total * 100).toFixed(2) : '0';
-    const avg = total ? (stats6.totalTime / total / 1000) : 0;
-    const MAX_TIME = 6.0;
-    const goal = 2.0;
-    let speed = total ? ((MAX_TIME - avg) / (MAX_TIME - goal) * 100) : 0;
-    if (avg >= MAX_TIME) speed = 0;
-    if (total) speed += 20;
-    const reportPerc = total ? (stats6.report / total * 100).toFixed(2) : '0';
-    const details = JSON.parse(localStorage.getItem('levelDetails') || '[]');
-    details.push({ level: pastaAtual + 1, accuracy: acc, speed: speed.toFixed(2), reports: reportPerc });
-    localStorage.setItem('levelDetails', JSON.stringify(details));
-    document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
-      img.src = 'selos%20modos%20de%20jogo/modostar.png';
-    });
-    levelUpReady = true;
-    goHome();
-    enforceStarClick();
-  }
+  openPostGameScreen({
+    correct,
+    wrong,
+    accuracy,
+    cpm,
+    medal,
+    previousLevel,
+    newLevel: nextLevel
+  });
 }
 
 function nextMode() {
@@ -1651,12 +1863,16 @@ function goHome() {
     sessionStart = null;
   }
   recordModeTime(selectedMode);
-  points = DEFAULT_STARTING_POINTS;
+  resetRoundState();
   saveTotals();
   atualizarBarraProgresso();
-  document.getElementById('visor').style.display = 'none';
-  document.getElementById('menu').style.display = 'flex';
+  const visor = document.getElementById('visor');
+  if (visor) visor.style.display = 'none';
+  const menu = document.getElementById('menu');
+  if (menu) menu.style.display = 'flex';
   document.body.classList.remove('game-active');
+  closePreGameScreen();
+  closePostGameScreen();
   const icon = document.getElementById('mode-icon');
   if (icon) icon.style.display = 'none';
   if (reconhecimento) {
@@ -1664,6 +1880,7 @@ function goHome() {
     try { reconhecimento.stop(); } catch {}
   }
   listeningForCommand = false;
+  pendingModeStart = null;
   updateModeIcons();
   updateLevelIcon({ scope: 'general' });
 }
@@ -1692,7 +1909,7 @@ async function initGame() {
     reconhecimentoAtivo = false;
     try { reconhecimento.stop(); } catch {}
   }
-  points = DEFAULT_STARTING_POINTS;
+  resetRoundState();
   saveTotals();
   atualizarBarraProgresso();
   const levelIcon = document.getElementById('nivel-indicador');
@@ -1702,10 +1919,6 @@ async function initGame() {
     img.addEventListener('click', () => {
       stopCurrentGame();
       const modo = parseInt(img.dataset.mode, 10);
-      if (modo === 6 && completedModes[6] && levelUpReady) {
-        performMenuLevelUp();
-        return;
-      }
       if (!unlockedModes[modo]) {
         const lock = document.getElementById('somLock');
         if (lock) {
@@ -1720,6 +1933,52 @@ async function initGame() {
       startGame(modo);
     });
   });
+
+  const preGameStartBtn = document.getElementById('pre-game-start');
+  if (preGameStartBtn) {
+    preGameStartBtn.addEventListener('click', () => {
+      const mode = pendingModeStart ?? selectedMode;
+      setRoundSelection(mode, roundTarget);
+      beginGame();
+    });
+  }
+
+  const preGameCancelBtn = document.getElementById('pre-game-cancel');
+  if (preGameCancelBtn) {
+    preGameCancelBtn.addEventListener('click', () => {
+      closePreGameScreen();
+      goHome();
+    });
+  }
+
+  document.querySelectorAll('#pre-game-screen .pre-game-round__option').forEach(button => {
+    button.addEventListener('click', () => {
+      const value = parseInt(button.dataset.round, 10);
+      if (!Number.isFinite(value)) {
+        return;
+      }
+      const mode = pendingModeStart ?? selectedMode;
+      setRoundSelection(mode, value);
+      roundTarget = value;
+      updatePreGameRoundButtons(mode, value);
+    });
+  });
+
+  const postReplayBtn = document.getElementById('post-game-replay');
+  if (postReplayBtn) {
+    postReplayBtn.addEventListener('click', () => {
+      closePostGameScreen();
+      startGame(selectedMode);
+    });
+  }
+
+  const postMenuBtn = document.getElementById('post-game-menu');
+  if (postMenuBtn) {
+    postMenuBtn.addEventListener('click', () => {
+      closePostGameScreen();
+      goHome();
+    });
+  }
 
   document.addEventListener('keydown', e => {
     if (e.key.toLowerCase() === 'p') {
@@ -1748,7 +2007,7 @@ async function initGame() {
       modeProgress[String(selectedMode)] = progress;
       saveModeProgress({ emit: true });
       updateLevelIcon({ scope: 'mode' });
-      beginGame();
+      startGame(selectedMode);
     }
   });
 }
