@@ -78,6 +78,61 @@
         <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
       </div>
     </div>
+
+    <section id="pre-game-screen" class="game-overlay hidden" aria-hidden="true">
+      <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
+        <img id="pre-game-logo" class="game-overlay__logo" alt="Logo do modo selecionado">
+        <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
+        <p id="pre-game-description" class="game-overlay__description"></p>
+        <div class="pre-game-level">
+          <span class="pre-game-level__label">Nível atual:</span>
+          <strong id="pre-game-level" class="pre-game-level__value">1</strong>
+        </div>
+        <div class="pre-game-round">
+          <p class="pre-game-round__label">Escolha o tamanho da rodada</p>
+          <div class="pre-game-round__options" role="group" aria-label="Quantidade de frases">
+            <button type="button" class="pre-game-round__option" data-round="12">12 frases</button>
+            <button type="button" class="pre-game-round__option" data-round="18">18 frases</button>
+            <button type="button" class="pre-game-round__option" data-round="24">24 frases</button>
+            <button type="button" class="pre-game-round__option" data-round="36">36 frases</button>
+          </div>
+        </div>
+        <div class="game-overlay__actions">
+          <button id="pre-game-start" class="game-overlay__primary" type="button">Play</button>
+          <button id="pre-game-cancel" class="game-overlay__secondary" type="button">Cancelar</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="post-game-screen" class="game-overlay hidden" aria-hidden="true">
+      <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
+        <h2 id="post-game-title" class="game-overlay__title">Fim de jogo</h2>
+        <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
+        <p id="post-game-level-status" class="game-overlay__subtitle"></p>
+        <dl class="post-game-stats">
+          <div class="post-game-stats__item">
+            <dt>Acertos</dt>
+            <dd id="post-game-correct">0</dd>
+          </div>
+          <div class="post-game-stats__item">
+            <dt>Erros</dt>
+            <dd id="post-game-wrong">0</dd>
+          </div>
+          <div class="post-game-stats__item">
+            <dt>Precisão</dt>
+            <dd id="post-game-accuracy">0%</dd>
+          </div>
+          <div class="post-game-stats__item">
+            <dt>Caracteres corretos por minuto</dt>
+            <dd id="post-game-cpm">0</dd>
+          </div>
+        </dl>
+        <div class="game-overlay__actions">
+          <button id="post-game-replay" class="game-overlay__primary" type="button">Jogar novamente</button>
+          <button id="post-game-menu" class="game-overlay__secondary" type="button">Voltar ao menu</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
