@@ -613,11 +613,12 @@ function restoreRoundState(saved) {
   roundTarget = storedTarget;
   setRoundSelection(selectedMode, storedTarget);
   frasesArr = sanitizedPhrases;
-  fraseIndex = Math.max(0, Math.min(Math.floor(saved.fraseIndex || 0), frasesArr.length - 1));
-  points = Math.max(0, Math.min(Math.floor(saved.points || 0), roundTarget));
   roundAttempts = Math.max(0, Math.floor(saved.roundAttempts || 0));
+  points = Math.max(0, Math.min(Math.floor(saved.points || 0), roundTarget));
   roundWrongCount = Math.max(0, Math.floor(saved.roundWrongCount || 0));
   roundCorrectChars = Math.max(0, Math.floor(saved.roundCorrectChars || 0));
+  const nextIndex = Math.max(0, Math.min(roundAttempts, frasesArr.length - 1));
+  fraseIndex = nextIndex;
   const elapsedMs = Number.isFinite(saved.elapsedMs) ? Math.max(0, Math.floor(saved.elapsedMs)) : 0;
   roundStartTime = Date.now() - elapsedMs;
   if (!Number.isFinite(roundStartTime) || roundStartTime <= 0) {
@@ -956,13 +957,15 @@ let pauseInterval = null;
 let downPlaying = false;
 let downTimeout = null;
 
-const reportClickHandler = () => {
-  if (downPlaying) handleReportClick();
-};
 const levelStar = document.getElementById('nivel-indicador');
-if (levelStar) levelStar.addEventListener('click', reportClickHandler);
-const modeLogo = document.getElementById('mode-icon');
-if (modeLogo) modeLogo.addEventListener('click', reportClickHandler);
+if (levelStar) {
+  levelStar.addEventListener('click', () => {
+    reportLastError();
+  });
+}
+
+const MEDAL_DOUBLE_TAP_DELAY = 320;
+let lastMedalTapTime = 0;
 
 const modeImages = {
   1: 'selos%20modos%20de%20jogo/modo1.png',
@@ -1021,6 +1024,19 @@ function updatePreGameScreen(mode) {
   }
   const selectedSize = getRoundSelection(mode);
   updatePreGameRoundButtons(mode, selectedSize);
+  const startBtn = document.getElementById('pre-game-start');
+  if (startBtn) {
+    const savedRound = getStoredRoundState(mode);
+    const hasResume = Boolean(
+      savedRound &&
+      Number.isFinite(savedRound.roundTarget) &&
+      Number.isFinite(savedRound.roundAttempts) &&
+      savedRound.roundAttempts < savedRound.roundTarget
+    );
+    startBtn.textContent = hasResume ? 'Continuar' : 'Jogar';
+    startBtn.classList.toggle('game-overlay__primary--continue', hasResume);
+    startBtn.setAttribute('data-resume', hasResume ? 'true' : 'false');
+  }
   overlay.dataset.mode = String(mode);
 }
 
@@ -1248,11 +1264,6 @@ function triggerDownPlay() {
   }, 4000);
 }
 
-function handleReportClick() {
-  if (!downPlaying) return;
-  reportLastError();
-}
-
 function reportLastError() {
   if (!lastWasError) return;
   lastWasError = false;
@@ -1292,6 +1303,52 @@ function reportLastError() {
       downTimeout = null;
     }
     resumeGame();
+  }
+}
+
+function setupModeIconInteractions() {
+  const icon = document.getElementById('mode-icon');
+  if (!icon || icon.dataset.reportBound === 'true') {
+    return;
+  }
+  icon.dataset.reportBound = 'true';
+
+  icon.addEventListener('click', () => {
+    if (paused) {
+      resumeGame();
+    }
+  });
+
+  const triggerReport = (event) => {
+    event.preventDefault();
+    reportLastError();
+  };
+
+  icon.addEventListener('dblclick', triggerReport);
+  icon.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'touch') {
+      return;
+    }
+    const now = Date.now();
+    if (now - lastMedalTapTime <= MEDAL_DOUBLE_TAP_DELAY) {
+      lastMedalTapTime = 0;
+      triggerReport(event);
+    } else {
+      lastMedalTapTime = now;
+    }
+  });
+
+  const supportsPointerEvents = typeof window !== 'undefined' && 'onpointerdown' in window;
+  if (!supportsPointerEvents) {
+    icon.addEventListener('touchstart', (event) => {
+      const now = Date.now();
+      if (now - lastMedalTapTime <= MEDAL_DOUBLE_TAP_DELAY) {
+        lastMedalTapTime = 0;
+        triggerReport(event);
+      } else {
+        lastMedalTapTime = now;
+      }
+    }, { passive: false });
   }
 }
 
@@ -1569,8 +1626,8 @@ function beginGame() {
     if (icon) {
       icon.dataset.medalSrc = '';
       icon.style.display = 'block';
-      icon.onclick = () => { if (paused) resumeGame(); };
     }
+    setupModeIconInteractions();
     updateModeMedalIcon(0);
     updateGeneralCircles();
     const texto = document.getElementById('texto-exibicao');
@@ -1730,7 +1787,7 @@ function updateModeMedalIcon(ratio) {
     icon.classList.add('medal-slide-active');
   }
   icon.style.display = 'block';
-  icon.style.opacity = clampedRatio;
+  icon.style.opacity = 1;
 }
 
 function mostrarFrase() {
@@ -1935,11 +1992,30 @@ function atualizarBarraProgresso() {
   updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
   const limite = Math.max(1, getCurrentThreshold());
-  const ratio = Math.max(0, Math.min(points, limite)) / limite;
-  const perc = ratio * 100;
-  filled.style.width = perc + '%';
-  filled.style.backgroundColor = colorFromPercent(perc);
-  updateModeMedalIcon(ratio);
+  const currentPoints = Math.max(0, Math.min(points, limite));
+  const accuracyRatio = currentPoints / limite;
+  const perc = accuracyRatio * 100;
+  let segmentRatio = accuracyRatio;
+  const medal = getMedalForAccuracy(perc);
+  if (medal) {
+    const currentIndex = MEDAL_RULES.indexOf(medal);
+    if (currentIndex >= 0) {
+      const start = Number.isFinite(medal.min) ? medal.min : 0;
+      const nextMedal = MEDAL_RULES[currentIndex + 1];
+      if (nextMedal) {
+        const end = nextMedal.min;
+        const span = Math.max(1, end - start);
+        segmentRatio = Math.max(0, Math.min(1, (perc - start) / span));
+      } else {
+        segmentRatio = 1;
+      }
+    }
+  }
+  if (filled) {
+    filled.style.width = (segmentRatio * 100) + '%';
+    filled.style.backgroundColor = colorFromPercent(perc);
+  }
+  updateModeMedalIcon(accuracyRatio);
 }
 
 function finishMode() {
@@ -2097,6 +2173,8 @@ async function initGame() {
       startGame(modo);
     });
   });
+
+  setupModeIconInteractions();
 
   const preGameStartBtn = document.getElementById('pre-game-start');
   if (preGameStartBtn) {
