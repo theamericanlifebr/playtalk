@@ -27,12 +27,23 @@
         <span class="site-header__level" id="header-level">Nível 1</span>
       </div>
     </div>
-    <div class="site-header__actions">
+      <div class="site-header__actions">
+        <div class="site-header__balance" id="header-balance" aria-live="polite">
+          <span class="site-header__balance-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false">
+              <path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v1.18A3 3 0 0 1 22 11v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3H3a1 1 0 0 1 0-2h1v-2H3a1 1 0 0 1 0-2h1Zm2 0v1h12V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm0 6v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm6 3a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z"/>
+            </svg>
+          </span>
+          <div class="site-header__balance-text">
+            <span class="site-header__balance-label">Saldo</span>
+            <span class="site-header__balance-value" id="header-balance-value">0</span>
+          </div>
+        </div>
         <button id="login-btn" class="site-header__button" type="button">Entrar</button>
       </div>
     </header>
   <main id="home-main" class="container-screen container-screen--home" data-page-transition>
-    <div id="menu" class="view-panel view-panel--menu">
+    <div id="menu">
       <div id="menu-modes">
         <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
         <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" alt="Modo 2">
@@ -43,7 +54,7 @@
       </div>
     </div>
 
-    <div id="visor" class="view-panel view-panel--visor">
+    <div id="visor" class="container-screen container-screen--visor">
       <!-- conteúdo visual aqui -->
       <div id="score"></div>
       <img id="mode-icon" alt="Mode Icon" style="display:none" />
@@ -152,66 +163,40 @@
   <footer class="page-footer">
     <nav id="main-nav">
       <a href="index.html" id="home-link" class="nav-item active" aria-label="Home" data-nav-index="0">
-        <span class="nav-item__content">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
-          </span>
-          <span class="nav-item__text">
-            <span class="nav-item__label">Home</span>
-          </span>
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
         </span>
+        <span class="sr-only">Home</span>
       </a>
       <a href="fun.html" class="nav-item" aria-label="Opções de jogo" data-nav-index="1">
-        <span class="nav-item__content">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19.14 12.94a7.97 7.97 0 0 0 .06-.94 7.97 7.97 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.88 7.88 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.65 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.97 7.97 0 0 0-.06.94c0 .32.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.49.39 1.04.7 1.63.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.14-.55 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64Zm-7.14 1.56a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/></svg>
-          </span>
-          <span class="nav-item__text">
-            <span class="nav-item__label">Modos</span>
-          </span>
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19.14 12.94a7.97 7.97 0 0 0 .06-.94 7.97 7.97 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.88 7.88 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.65 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.97 7.97 0 0 0-.06.94c0 .32.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.49.39 1.04.7 1.63.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.14-.55 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64Zm-7.14 1.56a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/></svg>
         </span>
+        <span class="sr-only">Opções de jogo</span>
       </a>
       <a href="play.html" class="nav-item" aria-label="Estatísticas" data-nav-index="2">
-        <span class="nav-item__content">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 21a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5Zm6 0a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-2Zm6 0a1 1 0 0 1-1-1V13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2Z"/></svg>
-          </span>
-          <span class="nav-item__text">
-            <span class="nav-item__label">Estatísticas</span>
-            <span class="nav-item__balance" data-balance-value>0</span>
-          </span>
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 21a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5Zm6 0a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-2Zm6 0a1 1 0 0 1-1-1V13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2Z"/></svg>
         </span>
+        <span class="sr-only">Estatísticas</span>
       </a>
       <a href="custom.html" class="nav-item" aria-label="Social" data-nav-index="3">
-        <span class="nav-item__content">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M4 4h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4l-4 4-4-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/></svg>
-          </span>
-          <span class="nav-item__text">
-            <span class="nav-item__label">Social</span>
-          </span>
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M4 4h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4l-4 4-4-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/></svg>
         </span>
+        <span class="sr-only">Social</span>
       </a>
       <a href="ranking.html" class="nav-item" aria-label="Ranking" data-nav-index="4">
-        <span class="nav-item__content">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 4h14a1 1 0 0 1 1 1v3a4 4 0 0 1-3 3.87V13a3 3 0 0 1-1.76 2.71L13 17v2h3a1 1 0 0 1 1 1v1H7v-1a1 1 0 0 1 1-1h3v-2l-2.24-1.29A3 3 0 0 1 7 13v-1.13A4 4 0 0 1 4 8V5a1 1 0 0 1 1-1Zm1 4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6H6Z"/></svg>
-          </span>
-          <span class="nav-item__text">
-            <span class="nav-item__label">Ranking</span>
-          </span>
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 4h14a1 1 0 0 1 1 1v3a4 4 0 0 1-3 3.87V13a3 3 0 0 1-1.76 2.71L13 17v2h3a1 1 0 0 1 1 1v1H7v-1a1 1 0 0 1 1-1h3v-2l-2.24-1.29A3 3 0 0 1 7 13v-1.13A4 4 0 0 1 4 8V5a1 1 0 0 1 1-1Zm1 4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6H6Z"/></svg>
         </span>
+        <span class="sr-only">Ranking</span>
       </a>
       <a href="perfil.html" class="nav-item" aria-label="Perfil" data-nav-index="5">
-        <span class="nav-item__content">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
-          </span>
-          <span class="nav-item__text">
-            <span class="nav-item__label">Perfil</span>
-            <span class="nav-item__balance" data-balance-value>0</span>
-          </span>
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
         </span>
+        <span class="sr-only">Perfil</span>
       </a>
     </nav>
   </footer>
