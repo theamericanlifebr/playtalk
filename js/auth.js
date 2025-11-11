@@ -481,6 +481,11 @@
     resetBalance();
     updateAuthStatus();
     dispatchUserChange();
+    const onProfilePage = document.body && document.body.classList.contains('page-profile');
+    if (onProfilePage) {
+      window.location.href = 'index.html';
+      return;
+    }
     if (typeof openLoginFlowHandler === 'function') {
       openLoginFlowHandler();
     }
