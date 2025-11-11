@@ -941,6 +941,9 @@
         if (typeof window.runPlaytalkPage === 'function' && classes.length) {
           window.runPlaytalkPage(classes, { container: entry.main });
         }
+        if (pathKey === 'index.html' && typeof window.goHome === 'function') {
+          window.goHome();
+        }
         currentKey = pathKey;
         setActiveNav(pathKey);
         if (pushState) {

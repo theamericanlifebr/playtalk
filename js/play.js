@@ -100,8 +100,8 @@ function formatPercent(value) {
 
 function formatCpm(value) {
   const number = Number(value);
-  const safe = Number.isFinite(number) ? Math.max(0, number) : 0;
-  return safe.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const safe = Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;
+  return safe.toLocaleString('pt-BR');
 }
 
 function createMetricCard(label, value, accentPercent) {
@@ -125,19 +125,20 @@ function createMetricCard(label, value, accentPercent) {
 function createMetricsSection(summary = {}) {
   const section = document.createElement('div');
   section.className = 'stats-metrics';
-  section.appendChild(createMetricCard('Velocidade', `(${formatCpm(summary.cpm)})/cpm`));
+  section.appendChild(createMetricCard('Velocidade', `${formatCpm(summary.cpm)} cpm`));
   section.appendChild(createMetricCard('Precisão', formatPercent(summary.accuracyPerc), summary.accuracyPerc));
-  section.appendChild(createMetricCard('Sem reports', formatPercent(summary.noReportPerc), summary.noReportPerc));
   return section;
 }
 
 function createStatsSection(title, items) {
   const section = document.createElement('div');
   section.className = 'stats-section';
-  const titleEl = document.createElement('h3');
-  titleEl.className = 'stats-section__title';
-  titleEl.textContent = title;
-  section.appendChild(titleEl);
+  if (title) {
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'stats-section__title';
+    titleEl.textContent = title;
+    section.appendChild(titleEl);
+  }
   const list = document.createElement('div');
   list.className = 'stats-list';
   items.forEach((item) => {
@@ -159,40 +160,47 @@ function createStatsSection(title, items) {
 
 function createMedalsSection(medals) {
   const counts = normalizeMedals(medals);
-  if (!hasMedals(counts)) {
-    return null;
-  }
   const section = document.createElement('div');
-  section.className = 'stats-section stats-medals';
-  const titleEl = document.createElement('h3');
-  titleEl.className = 'stats-section__title';
-  titleEl.textContent = 'Medalhas';
-  section.appendChild(titleEl);
+  section.className = 'stats-medal-board';
+  if (!hasMedals(counts)) {
+    const empty = document.createElement('p');
+    empty.className = 'stats-medal-board__empty';
+    empty.textContent = 'Sem medalhas conquistadas';
+    section.appendChild(empty);
+    return section;
+  }
   const list = document.createElement('ul');
-  list.className = 'stats-medals__list';
+  list.className = 'stats-medal-board__grid';
   MEDAL_CONFIG.forEach(({ key, label, icon }) => {
     const count = counts[key];
     if (!count) {
       return;
     }
     const item = document.createElement('li');
-    item.className = 'stats-medals__item';
+    item.className = 'stats-medal-board__item';
     const image = document.createElement('img');
-    image.className = 'stats-medals__icon';
+    image.className = 'stats-medal-board__icon';
     image.src = icon;
     image.alt = label;
-    item.appendChild(image);
-    const name = document.createElement('span');
-    name.className = 'stats-medals__label';
-    name.textContent = label;
     const value = document.createElement('span');
-    value.className = 'stats-medals__value';
+    value.className = 'stats-medal-board__value';
     value.textContent = formatInteger(count);
-    item.appendChild(name);
+    item.appendChild(image);
     item.appendChild(value);
     list.appendChild(item);
   });
   section.appendChild(list);
+  return section;
+}
+
+function createTotalsSection(summary = {}) {
+  const section = createStatsSection(null, [
+    { label: 'Frases totais', value: formatInteger(summary.totalPhrases) },
+    { label: 'Frases certas', value: formatInteger(summary.correctPhrases) },
+    { label: 'Caracteres totais', value: formatInteger(summary.totalChars) },
+    { label: 'Caracteres certos', value: formatInteger(summary.correctChars) }
+  ]);
+  section.classList.add('stats-section--totals');
   return section;
 }
 
@@ -202,12 +210,56 @@ function initPlayPage(context = {}) {
   if (!container) {
     return;
   }
-  container.classList.add('stats-wrapper');
+  const modeButtonsContainer = scope.querySelector('#mode-buttons');
+  if (!modeButtonsContainer) {
+    return;
+  }
+  container.classList.add('stats-wrapper', 'stats-layout');
   container.style.transition = 'opacity 0.2s';
   const buttons = scope.querySelectorAll('#mode-buttons img');
   const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
   let statsData = {};
   let activeMode = 1;
+
+  function createBlock(modifier, titleText) {
+    const block = document.createElement('div');
+    block.className = `stats-block ${modifier}`;
+    const heading = document.createElement('h2');
+    heading.className = 'stats-subtitle';
+    heading.textContent = titleText;
+    block.appendChild(heading);
+    const content = document.createElement('div');
+    content.className = 'stats-block__content';
+    block.appendChild(content);
+    return { block, content };
+  }
+
+  const titleBlock = document.createElement('div');
+  titleBlock.className = 'stats-block stats-block--title';
+  const title = document.createElement('h1');
+  title.className = 'stats-title';
+  title.textContent = 'Estatísticas';
+  titleBlock.appendChild(title);
+
+  const performanceBlock = createBlock('stats-block--performance', 'Desempenho');
+  const medalsBlock = createBlock('stats-block--medals', 'Quadro de medalhas');
+  const modesBlock = createBlock('stats-block--modes', 'Modos de jogo');
+  const totalsBlock = createBlock('stats-block--totals', 'Totais');
+
+  const performanceContent = performanceBlock.content;
+  const medalsContent = medalsBlock.content;
+  const totalsContent = totalsBlock.content;
+
+  modesBlock.content.classList.add('stats-block__content--modes');
+  modeButtonsContainer.classList.add('stats-mode-icons');
+  modesBlock.content.appendChild(modeButtonsContainer);
+
+  container.innerHTML = '';
+  container.appendChild(titleBlock);
+  container.appendChild(performanceBlock.block);
+  container.appendChild(medalsBlock.block);
+  container.appendChild(modesBlock.block);
+  container.appendChild(totalsBlock.block);
   function refreshStatsData() {
     statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
   }
@@ -283,19 +335,13 @@ function initPlayPage(context = {}) {
   function render(mode) {
     container.style.opacity = 0;
     setTimeout(() => {
-      container.innerHTML = '';
       const summary = mode === 1 ? calcGeneralStats() : calcModeStats(mode);
-      container.appendChild(createMetricsSection(summary));
-      container.appendChild(createStatsSection('Totais', [
-        { label: 'Frases totais', value: formatInteger(summary.totalPhrases) },
-        { label: 'Frases certas', value: formatInteger(summary.correctPhrases) },
-        { label: 'Caracteres totais', value: formatInteger(summary.totalChars) },
-        { label: 'Caracteres certos', value: formatInteger(summary.correctChars) }
-      ]));
-      const medalsSection = createMedalsSection(summary.medals);
-      if (medalsSection) {
-        container.appendChild(medalsSection);
-      }
+      performanceContent.innerHTML = '';
+      performanceContent.appendChild(createMetricsSection(summary));
+      medalsContent.innerHTML = '';
+      medalsContent.appendChild(createMedalsSection(summary.medals));
+      totalsContent.innerHTML = '';
+      totalsContent.appendChild(createTotalsSection(summary));
       container.style.opacity = 1;
     }, 150);
   }
