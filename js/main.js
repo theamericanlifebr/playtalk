@@ -8,6 +8,7 @@ const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
 
 const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
 const MODE_PROGRESS_KEY = 'modeProgress';
+const ROUND_STATE_KEY = 'modeRoundState';
 const GENERAL_PROGRESS_KEY = 'generalProgress';
 const XP_BASE_VALUE = 15;
 const MAX_LEVEL_CAP = 1000;
@@ -426,20 +427,13 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         retryCallback = null;
         cb();
       }
-    } else if (normCmd.includes('next level') || normCmd.includes('proximo nivel')) {
-      points = roundTarget;
-      roundAttempts = roundTarget;
-      atualizarBarraProgresso();
-      finishMode();
     } else if (listeningForCommand) {
       if (normCmd.includes('play')) {
         listeningForCommand = false;
         startGame(getHighestUnlockedMode());
       }
     } else {
-      if (normCmd.includes('pause') || normCmd.includes('pausa')) {
-        pauseGame();
-      } else if (
+      if (
         normCmd.includes('reportar') ||
         normCmd.includes('report') ||
         normCmd.includes('my star') ||
@@ -517,6 +511,127 @@ function setRoundSelection(mode, size) {
     return;
   }
   roundSelections[String(mode)] = size;
+}
+
+function persistRoundStateCache() {
+  localStorage.setItem(ROUND_STATE_KEY, JSON.stringify(roundStateCache));
+}
+
+function sanitizeStoredPhrases(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  return list
+    .map(entry => Array.isArray(entry) ? [String(entry[0] ?? ''), String(entry[1] ?? '')] : ['', ''])
+    .filter(entry => entry.length === 2);
+}
+
+function getStoredRoundState(mode) {
+  const key = String(mode);
+  const entry = roundStateCache && typeof roundStateCache === 'object' ? roundStateCache[key] : null;
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+  const frases = sanitizeStoredPhrases(entry.frases);
+  if (!frases.length) {
+    return null;
+  }
+  return {
+    points: Number.isFinite(entry.points) ? entry.points : 0,
+    roundTarget: Number.isFinite(entry.roundTarget) ? entry.roundTarget : DEFAULT_ROUND_SIZE,
+    roundAttempts: Number.isFinite(entry.roundAttempts) ? entry.roundAttempts : 0,
+    roundWrongCount: Number.isFinite(entry.roundWrongCount) ? entry.roundWrongCount : 0,
+    roundCorrectChars: Number.isFinite(entry.roundCorrectChars) ? entry.roundCorrectChars : 0,
+    fraseIndex: Number.isFinite(entry.fraseIndex) ? entry.fraseIndex : 0,
+    frases,
+    roundActive: Boolean(entry.roundActive),
+    elapsedMs: Number.isFinite(entry.elapsedMs) ? entry.elapsedMs : 0
+  };
+}
+
+function saveRoundStateForMode(mode, state) {
+  const key = String(mode);
+  if (!state) {
+    if (roundStateCache && typeof roundStateCache === 'object' && key in roundStateCache) {
+      delete roundStateCache[key];
+      persistRoundStateCache();
+    }
+    return;
+  }
+  if (!roundStateCache || typeof roundStateCache !== 'object') {
+    roundStateCache = {};
+  }
+  roundStateCache[key] = { ...state, frases: sanitizeStoredPhrases(state.frases) };
+  persistRoundStateCache();
+}
+
+function clearRoundState(mode) {
+  saveRoundStateForMode(mode, null);
+}
+
+function persistCurrentRoundState() {
+  if (!Array.isArray(frasesArr) || !frasesArr.length) {
+    clearRoundState(selectedMode);
+    return;
+  }
+  if (roundAttempts >= roundTarget) {
+    clearRoundState(selectedMode);
+    return;
+  }
+  const sanitizedPhrases = sanitizeStoredPhrases(frasesArr);
+  if (!sanitizedPhrases.length) {
+    clearRoundState(selectedMode);
+    return;
+  }
+  const clampedTarget = Math.max(1, Math.floor(roundTarget));
+  const clampedIndex = Math.max(0, Math.min(Math.floor(fraseIndex), sanitizedPhrases.length - 1));
+  const snapshot = {
+    points: Math.max(0, Math.min(clampedTarget, Math.floor(points))),
+    roundTarget: clampedTarget,
+    roundAttempts: Math.max(0, Math.floor(roundAttempts)),
+    roundWrongCount: Math.max(0, Math.floor(roundWrongCount)),
+    roundCorrectChars: Math.max(0, Math.floor(roundCorrectChars)),
+    fraseIndex: clampedIndex,
+    frases: sanitizedPhrases,
+    roundActive: Boolean(roundActive),
+    elapsedMs: roundStartTime ? Math.max(0, Date.now() - roundStartTime) : 0
+  };
+  saveRoundStateForMode(selectedMode, snapshot);
+}
+
+function restoreRoundState(saved) {
+  if (!saved) {
+    return false;
+  }
+  const sanitizedPhrases = sanitizeStoredPhrases(saved.frases);
+  if (!sanitizedPhrases.length) {
+    return false;
+  }
+  const storedTarget = Number.isFinite(saved.roundTarget) && saved.roundTarget > 0
+    ? Math.floor(saved.roundTarget)
+    : DEFAULT_ROUND_SIZE;
+  roundTarget = storedTarget;
+  setRoundSelection(selectedMode, storedTarget);
+  frasesArr = sanitizedPhrases;
+  fraseIndex = Math.max(0, Math.min(Math.floor(saved.fraseIndex || 0), frasesArr.length - 1));
+  points = Math.max(0, Math.min(Math.floor(saved.points || 0), roundTarget));
+  roundAttempts = Math.max(0, Math.floor(saved.roundAttempts || 0));
+  roundWrongCount = Math.max(0, Math.floor(saved.roundWrongCount || 0));
+  roundCorrectChars = Math.max(0, Math.floor(saved.roundCorrectChars || 0));
+  const elapsedMs = Number.isFinite(saved.elapsedMs) ? Math.max(0, Math.floor(saved.elapsedMs)) : 0;
+  roundStartTime = Date.now() - elapsedMs;
+  if (!Number.isFinite(roundStartTime) || roundStartTime <= 0) {
+    roundStartTime = Date.now();
+  }
+  roundActive = true;
+  if (roundAttempts >= roundTarget) {
+    clearRoundState(selectedMode);
+    return false;
+  }
+  atualizarBarraProgresso();
+  dispatchModeProgressUpdate(selectedMode);
+  setTimeout(() => mostrarFrase(), 100);
+  return true;
 }
 
 function resetRoundState() {
@@ -743,6 +858,7 @@ let tryAgainColorInterval = null;
 let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
+let roundStateCache = {};
 
 function cloneFallback(value) {
   if (Array.isArray(value)) {
@@ -814,6 +930,7 @@ function reloadPersistentProgress(initialLoad = false) {
   errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
   tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
   loadProgressFromStorage();
+  roundStateCache = parseJSONStorage(ROUND_STATE_KEY, {});
   unlockedModes = ensureUnlockedModesStructure(parseJSONStorage('unlockedModes', {}));
   points = 0;
   modeStats = loadModeStatsFromStorage();
@@ -1050,9 +1167,13 @@ function pauseGame(noPenalty = false) {
     clearInterval(pauseInterval);
     pauseInterval = null;
   }
-  if (paused && noPenalty) return;
+  if (paused && noPenalty) {
+    persistCurrentRoundState();
+    return;
+  }
   paused = true;
   stopCurrentGame();
+  persistCurrentRoundState();
   bloqueado = true;
   const texto = document.getElementById('texto-exibicao');
   if (texto) {
@@ -1163,6 +1284,7 @@ function reportLastError() {
   const level = totals.total ? ((totals.report / totals.total) * 100).toFixed(2) : '0';
   stats.reportRanking.push({ expected: lastExpected, input: lastInput, folder: lastFolder, level });
   saveModeStats();
+  persistCurrentRoundState();
   if (downPlaying) {
     downPlaying = false;
     if (downTimeout) {
@@ -1402,6 +1524,7 @@ function stopTryAgainAnimation() {
 
 function startGame(modo) {
   const prevMode = selectedMode;
+  persistCurrentRoundState();
   if (prevMode !== modo) {
     recordModeTime(prevMode);
   }
@@ -1444,11 +1567,11 @@ function beginGame() {
     if (visor) visor.style.display = 'flex';
     const icon = document.getElementById('mode-icon');
     if (icon) {
-      icon.src = modeImages[selectedMode];
-      icon.style.opacity = 0;
+      icon.dataset.medalSrc = '';
       icon.style.display = 'block';
       icon.onclick = () => { if (paused) resumeGame(); };
     }
+    updateModeMedalIcon(0);
     updateGeneralCircles();
     const texto = document.getElementById('texto-exibicao');
     if (texto) texto.style.opacity = '1';
@@ -1457,45 +1580,46 @@ function beginGame() {
     switch (selectedMode) {
       case 1:
         mostrarTexto = 'pt';
+        voz = null;
+        esperadoLang = 'en';
+        break;
+      case 2:
+        mostrarTexto = 'pt';
+        voz = 'en';
+        esperadoLang = 'en';
+        break;
+      case 3:
+        mostrarTexto = 'none';
+        voz = 'en';
+        esperadoLang = 'en';
+        break;
+      case 4:
+        mostrarTexto = 'en';
+        voz = null;
+        esperadoLang = 'en';
+        break;
+      case 5:
+        mostrarTexto = 'none';
         voz = 'en';
         esperadoLang = 'pt';
         break;
-    case 2:
-      mostrarTexto = 'pt';
-      voz = 'en';
-      esperadoLang = 'en';
-      break;
-    case 3:
-      mostrarTexto = 'none';
-      voz = 'en';
-      esperadoLang = 'en';
-      break;
-    case 4:
-      mostrarTexto = 'en';
-      voz = null;
-      esperadoLang = 'en';
-      break;
-    case 5:
-      mostrarTexto = 'none';
-      voz = 'en';
-      esperadoLang = 'pt';
-      break;
-    case 6:
-      mostrarTexto = 'pt';
-      voz = null;
-      esperadoLang = 'en';
-      break;
+      case 6:
+        mostrarTexto = 'pt';
+        voz = null;
+        esperadoLang = 'en';
+        break;
     }
     if (reconhecimento) {
-      if (selectedMode === 1) {
-        reconhecimento.lang = 'en-US';
-      } else {
-        reconhecimento.lang = esperadoLang === 'pt' ? 'pt-BR' : 'en-US';
-      }
+      reconhecimento.lang = esperadoLang === 'pt' ? 'pt-BR' : 'en-US';
+    }
+    const restored = restoreRoundState(getStoredRoundState(selectedMode));
+    if (reconhecimento) {
       reconhecimentoAtivo = true;
       reconhecimento.start();
     }
-    carregarFrases();
+    if (!restored) {
+      carregarFrases();
+    }
   };
 
   start();
@@ -1524,6 +1648,9 @@ function toggleDarkMode() {
 }
 
 function falarFrase() {
+  if (selectedMode === 1) {
+    return;
+  }
   if (frasesArr[fraseIndex]) {
     const [, en] = frasesArr[fraseIndex];
     falar(en, 'en');
@@ -1583,6 +1710,27 @@ function carregarFrases() {
   setTimeout(() => mostrarFrase(), 300);
   atualizarBarraProgresso();
   dispatchModeProgressUpdate(selectedMode);
+  persistCurrentRoundState();
+}
+
+function updateModeMedalIcon(ratio) {
+  const icon = document.getElementById('mode-icon');
+  if (!icon) {
+    return;
+  }
+  const clampedRatio = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
+  const perc = clampedRatio * 100;
+  const medal = getMedalForAccuracy(perc);
+  const src = medal && medal.image ? medal.image : 'medalhas/gesso.png';
+  if (icon.dataset.medalSrc !== src) {
+    icon.dataset.medalSrc = src;
+    icon.src = src;
+    icon.classList.remove('medal-slide-active');
+    void icon.offsetWidth;
+    icon.classList.add('medal-slide-active');
+  }
+  icon.style.display = 'block';
+  icon.style.opacity = clampedRatio;
 }
 
 function mostrarFrase() {
@@ -1623,6 +1771,7 @@ function mostrarFrase() {
   prizeStart = Date.now();
   prizeTimer = setInterval(atualizarBarraProgresso, 50);
   atualizarBarraProgresso();
+  persistCurrentRoundState();
 }
 
 function flashSuccess(callback) {
@@ -1683,30 +1832,6 @@ function verificarResposta() {
   if (timerInterval) clearInterval(timerInterval);
   const input = document.getElementById("pt");
   const resposta = input.value.trim();
-  const cheat = /^GOTO(\d+)$/i.exec(resposta);
-  if (cheat) {
-    const nivel = Math.max(1, parseInt(cheat[1], 10));
-    const modeKey = String(selectedMode);
-    if (phraseLibrary.modes[modeKey] && phraseLibrary.modes[modeKey][nivel]) {
-      const progress = getModeProgress(selectedMode);
-      progress.level = nivel;
-      progress.xp = 0;
-      modeProgress[modeKey] = progress;
-      saveModeProgress({ emit: true });
-      updateLevelIcon({ scope: 'mode' });
-      carregarFrases();
-    }
-    input.value = "";
-    return;
-  }
-  const bonusPhrase = normalizeForCharTiming(resposta).replace(/\s+/g, '');
-  if (bonusPhrase === 'justicadedeus' || bonusPhrase === 'getpointslife') {
-    points = roundTarget;
-    roundAttempts = roundTarget;
-    atualizarBarraProgresso();
-    finishMode();
-    return;
-  }
   const resultado = document.getElementById("resultado");
   tentativasTotais++;
   saveTotals();
@@ -1722,9 +1847,6 @@ function verificarResposta() {
   const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
   let normalizadoResp = norm(resposta);
   const normalizadoEsp = norm(esperado || '');
-  if (normalizadoResp === 'justicanaterra') {
-    normalizadoResp = normalizadoEsp;
-  }
   const correto =
     normalizadoResp === normalizadoEsp ||
     ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
@@ -1752,6 +1874,7 @@ function verificarResposta() {
     grantExperience(reward, selectedMode);
     consecutiveErrors = 0;
     resultado.textContent = '';
+    persistCurrentRoundState();
     flashSuccess(() => {
       if (reachedRoundEnd) finishMode();
       else continuar();
@@ -1777,16 +1900,17 @@ function verificarResposta() {
     input.disabled = true;
     bloqueado = true;
     microphonePaused = true;
-    falar(esperado, esperadoLang);
+    if (selectedMode !== 1) {
+      falar(esperado, esperadoLang);
+    }
     consecutiveErrors++;
+    persistCurrentRoundState();
     flashError(esperado, () => {
       input.disabled = false;
       bloqueado = false;
       microphonePaused = false;
       if (reachedRoundEnd) {
         finishMode();
-      } else if (consecutiveErrors >= 3) {
-        triggerDownPlay();
       } else {
         continuar();
       }
@@ -1815,15 +1939,13 @@ function atualizarBarraProgresso() {
   const perc = ratio * 100;
   filled.style.width = perc + '%';
   filled.style.backgroundColor = colorFromPercent(perc);
-  const icon = document.getElementById('mode-icon');
-  if (icon) {
-    icon.style.opacity = Math.min(1, ratio);
-  }
+  updateModeMedalIcon(ratio);
 }
 
 function finishMode() {
   stopCurrentGame();
   roundActive = false;
+  clearRoundState(selectedMode);
   const icon = document.getElementById('mode-icon');
   if (icon) {
     icon.style.display = 'none';
@@ -1875,6 +1997,7 @@ function finishMode() {
 
 function nextMode() {
   if (transitioning) return;
+  persistCurrentRoundState();
   stopCurrentGame();
   transitioning = true;
   if (selectedMode < 6) {
@@ -2022,10 +2145,6 @@ async function initGame() {
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key.toLowerCase() === 'p') {
-      if (!paused) pauseGame();
-      return;
-    }
     if (e.key === 'r') falarFrase();
     if (e.key.toLowerCase() === 'h') toggleDarkMode();
     if (e.key.toLowerCase() === 'i') {
@@ -2034,21 +2153,6 @@ async function initGame() {
       document.getElementById('pt').value = esperado;
       verificarResposta();
       return;
-    }
-    if (e.key.toLowerCase() === 'l') {
-      if (reconhecimento) {
-        reconhecimentoAtivo = false;
-        reconhecimento.stop();
-      }
-      clearInterval(timerInterval);
-      clearInterval(prizeTimer);
-      const progress = getModeProgress(selectedMode);
-      progress.level += 1;
-      progress.xp = 0;
-      modeProgress[String(selectedMode)] = progress;
-      saveModeProgress({ emit: true });
-      updateLevelIcon({ scope: 'mode' });
-      startGame(selectedMode);
     }
   });
 }
@@ -2087,6 +2191,7 @@ async function bootstrapHomePage() {
   window.addEventListener('beforeunload', () => {
     recordModeTime(selectedMode);
     saveModeStats();
+    persistCurrentRoundState();
     stopCurrentGame();
   });
 }

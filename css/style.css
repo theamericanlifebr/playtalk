@@ -1053,7 +1053,12 @@ body.theme-blue .auth-message {
   height: 250px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 500ms linear;
+  transform: translateX(-24px);
+  transition: opacity 500ms linear, transform 500ms ease;
+}
+
+#mode-icon.medal-slide-active {
+  transform: translateX(0);
 }
 
 body.page-home #mode-buttons {
