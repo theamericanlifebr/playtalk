@@ -25,27 +25,6 @@ const MODE_SCORE_FACTORS = {
 const ROUND_OPTIONS = [12, 18, 24, 36];
 const DEFAULT_ROUND_SIZE = ROUND_OPTIONS[0];
 const MAX_PROGRESS_POINTS = ROUND_OPTIONS[ROUND_OPTIONS.length - 1];
-const COLOR_STOP_RATIOS = [
-  [0, '#ff0000'],
-  [0.08, '#ff3b00'],
-  [0.16, '#ff7f00'],
-  [0.24, '#ffb300'],
-  [0.32, '#ffe000'],
-  [0.4, '#ffff66'],
-  [0.48, '#ccff66'],
-  [0.56, '#99ff99'],
-  [0.64, '#00cc66'],
-  [0.72, '#00994d'],
-  [0.8, '#00ffff'],
-  [0.88, '#66ccff'],
-  [0.96, '#0099ff'],
-  [1, '#0099ff']
-];
-
-const COLOR_STOPS = COLOR_STOP_RATIOS.map(([ratio, color]) => [
-  Math.round(ratio * MAX_PROGRESS_POINTS * 100) / 100,
-  color
-]);
 
 const MODE_DETAILS = {
   1: {
@@ -81,12 +60,21 @@ const MODE_DETAILS = {
 };
 
 const MEDAL_RULES = [
-  { min: 0, max: 35, image: 'medalhas/gesso.png', label: 'Medalha de Gesso', levelDelta: -1, status: 'Você perdeu um nível.' },
-  { min: 36, max: 66, image: 'medalhas/chumbo.png', label: 'Medalha de Chumbo', levelDelta: -1, status: 'Você perdeu um nível.' },
-  { min: 67, max: 75, image: 'medalhas/bronze.png', label: 'Medalha de Bronze', levelDelta: 0, status: 'Você permanece no nível.' },
-  { min: 76, max: 82, image: 'medalhas/prata.png', label: 'Medalha de Prata', levelDelta: 0, status: 'Você permanece no nível.' },
-  { min: 83, max: 89, image: 'medalhas/ouro.png', label: 'Medalha de Ouro', levelDelta: 1, status: 'Você subiu de nível!' },
+  { min: 0, max: 25, image: 'medalhas/gesso.png', label: 'Medalha de Gesso', levelDelta: -1, status: 'Você perdeu um nível.' },
+  { min: 26, max: 50, image: 'medalhas/chumbo.png', label: 'Medalha de Chumbo', levelDelta: -1, status: 'Você perdeu um nível.' },
+  { min: 51, max: 70, image: 'medalhas/bronze.png', label: 'Medalha de Bronze', levelDelta: 0, status: 'Você permanece no nível.' },
+  { min: 71, max: 80, image: 'medalhas/prata.png', label: 'Medalha de Prata', levelDelta: 0, status: 'Você permanece no nível.' },
+  { min: 81, max: 89, image: 'medalhas/ouro.png', label: 'Medalha de Ouro', levelDelta: 1, status: 'Você subiu de nível!' },
   { min: 90, max: 100, image: 'medalhas/diamante.png', label: 'Medalha de Diamante', levelDelta: 1, status: 'Você subiu de nível!' }
+];
+
+const MEDAL_COLOR_RULES = [
+  { max: 25, color: '#b0bec5' },
+  { max: 50, color: '#78909c' },
+  { max: 70, color: '#cd7f32' },
+  { max: 80, color: '#c0c0c0' },
+  { max: 89, color: '#d4af37' },
+  { max: 100, color: '#b9f2ff' }
 ];
 
 const MEDAL_LABEL_TO_KEY = {
@@ -124,7 +112,7 @@ function normalizeMedalCounts(entry) {
 }
 
 function getMedalForAccuracy(accuracy) {
-  const perc = Math.max(0, Math.min(100, accuracy));
+  const perc = Math.max(0, Math.min(100, Math.round(accuracy)));
   for (const medal of MEDAL_RULES) {
     if (perc >= medal.min && perc <= medal.max) {
       return medal;
@@ -186,37 +174,15 @@ function applyScoreMultiplier(baseValue, mode) {
   return Math.max(0, Math.round(numeric * multiplier));
 }
 
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [int >> 16 & 255, int >> 8 & 255, int & 255];
-}
-
-function rgbToHex(r, g, b) {
-  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
 function calcularCor(pontos) {
-  const max = COLOR_STOPS[COLOR_STOPS.length - 1][0];
-  const p = Math.max(0, Math.min(pontos, max));
-  for (let i = 0; i < COLOR_STOPS.length - 1; i++) {
-    const [p1, c1] = COLOR_STOPS[i];
-    const [p2, c2] = COLOR_STOPS[i + 1];
-    if (p >= p1 && p <= p2) {
-      const ratio = (p - p1) / (p2 - p1);
-      const [r1, g1, b1] = hexToRgb(c1);
-      const [r2, g2, b2] = hexToRgb(c2);
-      const r = Math.round(r1 + ratio * (r2 - r1));
-      const g = Math.round(g1 + ratio * (g2 - g1));
-      const b = Math.round(b1 + ratio * (b2 - b1));
-      return rgbToHex(r, g, b);
-    }
-  }
-  return COLOR_STOPS[COLOR_STOPS.length - 1][1];
+  const ratio = Math.max(0, Math.min(1, pontos / MAX_PROGRESS_POINTS));
+  return colorFromPercent(ratio * 100);
 }
 
 function colorFromPercent(perc) {
-  const max = COLOR_STOPS[COLOR_STOPS.length - 1][0];
-  return calcularCor((perc / 100) * max);
+  const safePerc = Math.max(0, Math.min(100, perc));
+  const rule = MEDAL_COLOR_RULES.find(({ max }) => safePerc <= max) || MEDAL_COLOR_RULES[MEDAL_COLOR_RULES.length - 1];
+  return rule.color;
 }
 
 function sanitizePhraseForBalance(text) {
@@ -1991,29 +1957,17 @@ function continuar() {
 function atualizarBarraProgresso() {
   updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
+  const track = document.getElementById('barra-progresso');
   const limite = Math.max(1, getCurrentThreshold());
   const currentPoints = Math.max(0, Math.min(points, limite));
   const accuracyRatio = currentPoints / limite;
   const perc = accuracyRatio * 100;
-  let segmentRatio = accuracyRatio;
-  const medal = getMedalForAccuracy(perc);
-  if (medal) {
-    const currentIndex = MEDAL_RULES.indexOf(medal);
-    if (currentIndex >= 0) {
-      const start = Number.isFinite(medal.min) ? medal.min : 0;
-      const nextMedal = MEDAL_RULES[currentIndex + 1];
-      if (nextMedal) {
-        const end = nextMedal.min;
-        const span = Math.max(1, end - start);
-        segmentRatio = Math.max(0, Math.min(1, (perc - start) / span));
-      } else {
-        segmentRatio = 1;
-      }
-    }
-  }
   if (filled) {
-    filled.style.width = (segmentRatio * 100) + '%';
+    filled.style.width = `${Math.max(0, Math.min(100, perc))}%`;
     filled.style.backgroundColor = colorFromPercent(perc);
+  }
+  if (track) {
+    track.setAttribute('aria-valuenow', Math.round(Math.max(0, Math.min(100, perc))));
   }
   updateModeMedalIcon(accuracyRatio);
 }

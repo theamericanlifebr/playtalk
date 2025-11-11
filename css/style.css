@@ -83,12 +83,11 @@ body.page-play {
   overflow-x: hidden;
 }
 
-body.page-home {
+body.page-home,
+body.page-play,
+body.page-fun {
   overflow-y: hidden;
-}
-
-body.page-play {
-  overflow-y: hidden;
+  overscroll-behavior: contain;
 }
 
 .site-header {
@@ -779,13 +778,174 @@ body.theme-blue .login-flow__error {
 #visor {
   position: relative;
   display: none;
+  width: 100%;
+  padding: clamp(12px, 3vw, 24px) 0;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: clamp(16px, 4vh, 32px);
+}
+
+.game-mobile-frame {
+  width: min(400px, calc(100vw - 24px));
+  height: min(810px, calc(100vh - var(--header-height) - var(--nav-height) - clamp(24px, 6vh, 48px)));
+  min-height: 520px;
+  margin: 0 auto;
+  padding: clamp(16px, 4vw, 28px) clamp(14px, 4vw, 22px);
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 24px 48px rgba(11, 61, 145, 0.12);
+  display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: clamp(20px, 4vw, 36px);
+  gap: clamp(14px, 3vh, 26px);
+  position: relative;
+  overflow: hidden;
+}
+
+body.dark-mode .game-mobile-frame,
+body.theme-blue .game-mobile-frame {
+  background: rgba(12, 34, 64, 0.8);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.game-mobile-frame__score {
+  position: absolute;
+  top: clamp(12px, 3vh, 18px);
+  right: clamp(12px, 6vw, 24px);
+}
+
+.game-mobile-frame__medal {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: clamp(8px, 2vh, 16px);
+}
+
+.game-mobile-frame__medal-icon {
+  width: min(180px, 65%);
+  height: auto;
+  max-height: 160px;
+  display: block;
+}
+
+#mode-icon.medal-slide-active {
+  transform: translateY(0);
+}
+
+.game-mobile-frame__phrase {
+  margin: 0;
+  font-size: clamp(26px, 6vw, 40px);
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  color: #0c2f57;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.dark-mode .game-mobile-frame__phrase,
+body.theme-blue .game-mobile-frame__phrase {
+  color: #f0f6ff;
+}
+
+.game-mobile-frame__progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-progress__track {
+  width: 100%;
+  height: 24px;
+  background: rgba(12, 61, 94, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.game-progress__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  border-radius: inherit;
+  transition: width 0.4s ease, background-color 0.4s ease;
+}
+
+.game-progress__legend {
+  list-style: none;
   padding: 0;
-  box-sizing: border-box;
+  margin: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  justify-items: center;
+}
+
+.game-progress__legend-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0c2f57;
+}
+
+.game-progress__legend-item img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+body.dark-mode .game-progress__legend-item,
+body.theme-blue .game-progress__legend-item {
+  color: #f0f6ff;
+}
+
+.game-mobile-frame__input {
+  width: 100%;
+}
+
+.game-mobile-frame__feedback {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  text-align: center;
+  color: #0c2f57;
+}
+
+body.dark-mode .game-mobile-frame__feedback,
+body.theme-blue .game-mobile-frame__feedback {
+  color: #f0f6ff;
+}
+
+.game-mobile-frame__modes {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  justify-items: center;
+}
+
+.game-mobile-frame__modes img {
+  width: 90px;
+  height: 90px;
 }
 
 #menu {
@@ -1048,48 +1208,14 @@ body.theme-blue .auth-message {
 }
 
 
-#texto-exibicao {
-  font-size: clamp(32px, 6vw, 50px);
-  color: #333;
-  font-family: 'Open Sans', sans-serif;
-  font-weight: bold;
-  text-align: center;
-  max-width: min(90vw, 960px);
-  line-height: 1.2;
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: calc(1.2em * 2);
-  word-break: break-word;
-}
 
 #score {
   display: none;
 }
 
-#barra-progresso {
-  width: 100%;
-  max-width: min(90vw, 960px);
-  height: 20px;
-  background: #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-}
-
-#barra-preenchida {
-  height: 100%;
-  width: 0%;
-  background-color: #ff0000;
-  border-radius: 10px;
-  transition: width 1.5s linear, background-color 1.5s linear;
-}
-
-#resultado, #acertos {
-  color: #333;
+#resultado,
+#acertos {
+  color: inherit;
 }
 
 #acertos {
@@ -1099,7 +1225,6 @@ body.theme-blue .auth-message {
 #timer {
   display: none;
   font-size: 18px;
-  color: #333;
 }
 
 #nivel-mensagem {
@@ -1149,17 +1274,10 @@ body.theme-blue .auth-message {
 }
 
 #mode-icon {
-  width: clamp(180px, 45vw, 260px);
-  height: auto;
-  max-width: 100%;
   opacity: 1;
-  pointer-events: auto;
-  transform: translateX(-24px);
-  transition: transform 500ms ease;
-}
-
-#mode-icon.medal-slide-active {
-  transform: translateX(0);
+  pointer-events: none;
+  transform: translateY(18px);
+  transition: transform 400ms ease;
 }
 
 body.page-home #mode-buttons {
@@ -2159,17 +2277,20 @@ body.theme-blue .fun-actions button {
 }
 
 @media (max-width: 600px) {
-  #mode-icon {
-    width: 150px;
-    height: 150px;
-    position: relative;
-    top: -100px;
+  .game-mobile-frame {
+    width: min(360px, calc(100vw - 16px));
+    height: min(720px, calc(100vh - var(--header-height) - var(--nav-height) - clamp(16px, 5vh, 40px)));
+    padding: clamp(14px, 5vw, 20px) clamp(12px, 4vw, 18px);
+    border-radius: 26px;
+    gap: clamp(12px, 4vh, 22px);
   }
 
-  #texto-exibicao,
-  #barra-progresso {
-    position: relative;
-    top: -100px;
+  .game-mobile-frame__medal-icon {
+    max-height: 140px;
+  }
+
+  .game-progress__legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   #clock {
