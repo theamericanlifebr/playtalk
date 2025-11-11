@@ -1,6 +1,7 @@
 :root {
   --nav-height: 72px;
-  --header-height: 92px;
+  --header-height: 56px;
+  --container-max-width: 1180px;
 }
 
 html,
@@ -25,10 +26,10 @@ body.dark-mode {
 }
 
 .container-screen {
-  width: 100%;
+  width: min(100%, var(--container-max-width));
   min-height: calc(100vh - var(--header-height) - var(--nav-height));
-  margin: 0;
-  padding: clamp(0px, 0vw, 0px) clamp(12px, 5vw, 48px);
+  margin: 0 auto;
+  padding: clamp(16px, 4vw, 48px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -95,8 +96,8 @@ body.page-play {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 10px 24px;
+  gap: 16px;
+  padding: 6px 18px;
   background: linear-gradient(135deg, #1a66cc 0%, #357de0 100%);
   color: #ffffff;
   position: fixed;
@@ -104,7 +105,7 @@ body.page-play {
   left: 0;
   right: 0;
   z-index: 1250;
-  box-shadow: 0 8px 22px rgba(11, 61, 145, 0.35);
+  box-shadow: 0 6px 18px rgba(11, 61, 145, 0.28);
   backdrop-filter: blur(8px);
   flex-wrap: wrap;
   box-sizing: border-box;
@@ -127,10 +128,10 @@ body.page-play {
 .site-header__avatar-container {
   --avatar-ring-color: #27ae60;
   --avatar-progress: 0deg;
-  width: 72px;
-  height: 72px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
-  padding: 4px;
+  padding: 3px;
   background: conic-gradient(var(--avatar-ring-color) var(--avatar-progress), rgba(11, 61, 145, 0.15) 0deg);
   display: flex;
   align-items: center;
@@ -181,7 +182,7 @@ body.page-play {
 
 .site-header__name {
   font-weight: 700;
-  font-size: clamp(12px, 2.5vw, 16px);
+  font-size: clamp(12px, 2.5vw, 15px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -189,7 +190,7 @@ body.page-play {
 }
 
 .site-header__level {
-  font-size: clamp(14px, 3vw, 18px);
+  font-size: clamp(13px, 3vw, 16px);
   opacity: 0.9;
   white-space: nowrap;
   font-weight: 600;
@@ -215,56 +216,10 @@ body.theme-blue .site-header__avatar-ring {
 .site-header__actions {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   justify-content: flex-end;
   margin-left: auto;
   flex-wrap: wrap;
-}
-
-.site-header__balance {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-  min-width: 140px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  flex: 0 1 auto;
-}
-
-.site-header__balance-icon {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.site-header__balance-icon svg {
-  width: 100%;
-  height: 100%;
-  fill: currentColor;
-}
-
-.site-header__balance-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.site-header__balance-label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  opacity: 0.85;
-}
-
-.site-header__balance-value {
-  font-size: 20px;
-  font-weight: 700;
 }
 
 .site-header__user {
@@ -276,13 +231,13 @@ body.theme-blue .site-header__avatar-ring {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px;
+  padding: 6px 18px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.16);
   color: inherit;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -314,33 +269,122 @@ body.theme-blue .site-header__button--logout {
 @media (max-width: 720px) {
   .site-header {
     justify-content: flex-start;
-    gap: 12px;
-    padding: 0px 0px;
+    gap: 10px;
+    padding: 4px 12px;
   }
 
   .site-header__avatar-container {
     order: -1;
-    width: 58px;
-    height: 58px;
+    width: 48px;
+    height: 48px;
     padding: 3px;
     margin-right: 4px;
   }
 
   .site-header__actions {
-    width: 100%;
-    justify-content: flex-end;
-    margin-left: 0;
-  }
-
-  .site-header__balance {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    margin-left: auto;
   }
 }
 
 @media (max-width: 720px) {
   :root {
-    --header-height: 92px;
+    --header-height: 56px;
+  }
+}
+
+.balance-section {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.balance-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 22px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(26, 102, 204, 0.12) 0%, rgba(53, 125, 224, 0.18) 100%);
+  color: #0b3d91;
+  box-shadow: 0 12px 28px rgba(11, 61, 145, 0.12);
+  border: 1px solid rgba(26, 102, 204, 0.12);
+}
+
+.balance-card__icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.balance-card__icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.balance-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  line-height: 1.1;
+}
+
+.balance-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(11, 61, 145, 0.76);
+}
+
+.balance-card__value {
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 700;
+  color: inherit;
+}
+
+body.theme-blue .balance-card {
+  background: linear-gradient(135deg, rgba(240, 246, 255, 0.16) 0%, rgba(179, 207, 255, 0.22) 100%);
+  color: #f0f6ff;
+  border-color: rgba(240, 246, 255, 0.24);
+}
+
+body.theme-blue .balance-card__label {
+  color: rgba(240, 246, 255, 0.75);
+}
+
+body.dark-mode .balance-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.12) 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-mode .balance-card__label {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+@media (max-width: 720px) {
+  .container-screen {
+    width: 100%;
+    padding: clamp(16px, 6vw, 28px);
+  }
+
+  .balance-section {
+    justify-content: center;
+  }
+
+  .balance-card {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .balance-card__text {
+    align-items: center;
   }
 }
 
