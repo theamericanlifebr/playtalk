@@ -42,7 +42,7 @@
         <button id="login-btn" class="site-header__button" type="button">Entrar</button>
       </div>
     </header>
-  <main id="home-main" data-page-transition>
+  <main id="home-main" class="container-screen container-screen--home" data-page-transition>
     <div id="menu">
       <div id="menu-modes">
         <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
@@ -54,7 +54,7 @@
       </div>
     </div>
 
-    <div id="visor">
+    <div id="visor" class="container-screen container-screen--visor">
       <!-- conteúdo visual aqui -->
       <div id="score"></div>
       <img id="mode-icon" alt="Mode Icon" style="display:none" />
@@ -79,7 +79,7 @@
       </div>
     </div>
 
-    <section id="pre-game-screen" class="game-overlay hidden" aria-hidden="true">
+    <section id="pre-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
         <img id="pre-game-logo" class="game-overlay__logo" alt="Logo do modo selecionado">
         <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
@@ -104,7 +104,7 @@
       </div>
     </section>
 
-    <section id="post-game-screen" class="game-overlay hidden" aria-hidden="true">
+    <section id="post-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
         <h2 id="post-game-title" class="game-overlay__title">Fim de jogo</h2>
         <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
