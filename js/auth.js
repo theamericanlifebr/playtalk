@@ -47,10 +47,11 @@
   }
 
   function applyBalanceToUI(balance) {
-    const valueEl = document.getElementById('header-balance-value');
-    if (valueEl) {
-      valueEl.textContent = balance.toLocaleString('pt-BR');
-    }
+    const formatted = balance.toLocaleString('pt-BR');
+    const valueEls = document.querySelectorAll('[data-balance-value]');
+    valueEls.forEach((element) => {
+      element.textContent = formatted;
+    });
   }
 
   function dispatchBalanceChange(balance) {
