@@ -826,6 +826,11 @@ let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
 let roundStateCache = {};
+let medalLog = [];
+let bestCpm = 0;
+let bestSequentialCorrect = 0;
+let currentSequentialCorrect = 0;
+let monthlyAccuracy = {};
 
 function cloneFallback(value) {
   if (Array.isArray(value)) {
@@ -849,6 +854,75 @@ function parseJSONStorage(key, fallback) {
     console.warn(`Não foi possível analisar o conteúdo de ${key}:`, err);
     return cloneFallback(fallback);
   }
+}
+
+function ensureMedalLogLimit() {
+  if (medalLog.length > 500) {
+    medalLog = medalLog.slice(-500);
+  }
+}
+
+function loadMedalLog() {
+  const parsed = parseJSONStorage('medalLog', []);
+  medalLog = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  const originalLength = medalLog.length;
+  ensureMedalLogLimit();
+  if (medalLog.length !== originalLength) {
+    localStorage.setItem('medalLog', JSON.stringify(medalLog));
+  }
+}
+
+function saveMedalLog() {
+  ensureMedalLogLimit();
+  localStorage.setItem('medalLog', JSON.stringify(medalLog));
+  document.dispatchEvent(new CustomEvent('playtalk:aura-log-changed'));
+}
+
+function loadSequentialStats() {
+  bestSequentialCorrect = parseInt(localStorage.getItem('bestSequentialCorrect') || '0', 10) || 0;
+  currentSequentialCorrect = parseInt(localStorage.getItem('currentSequentialCorrect') || '0', 10) || 0;
+}
+
+function persistSequentialStats() {
+  localStorage.setItem('bestSequentialCorrect', String(bestSequentialCorrect));
+  localStorage.setItem('currentSequentialCorrect', String(currentSequentialCorrect));
+}
+
+function loadBestCpm() {
+  const raw = parseFloat(localStorage.getItem('bestCpm') || '0');
+  bestCpm = Number.isFinite(raw) && raw > 0 ? raw : 0;
+}
+
+function persistBestCpm() {
+  localStorage.setItem('bestCpm', String(Math.max(0, Math.round(bestCpm * 100) / 100)));
+}
+
+function pruneMonthlyAccuracy() {
+  const entries = Object.entries(monthlyAccuracy || {});
+  if (entries.length <= 24) {
+    return;
+  }
+  entries.sort((a, b) => a[0].localeCompare(b[0]));
+  const kept = entries.slice(-24);
+  monthlyAccuracy = kept.reduce((acc, [key, value]) => {
+    acc[key] = value;
+    return acc;
+  }, {});
+}
+
+function loadMonthlyAccuracy() {
+  const parsed = parseJSONStorage('monthlyAccuracy', {});
+  monthlyAccuracy = parsed && typeof parsed === 'object' ? parsed : {};
+  const before = JSON.stringify(monthlyAccuracy);
+  pruneMonthlyAccuracy();
+  if (before !== JSON.stringify(monthlyAccuracy)) {
+    localStorage.setItem('monthlyAccuracy', JSON.stringify(monthlyAccuracy));
+  }
+}
+
+function persistMonthlyAccuracy() {
+  pruneMonthlyAccuracy();
+  localStorage.setItem('monthlyAccuracy', JSON.stringify(monthlyAccuracy));
 }
 
 function getAllModesUnlockedState() {
@@ -902,6 +976,10 @@ function reloadPersistentProgress(initialLoad = false) {
   points = 0;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
+  loadMedalLog();
+  loadSequentialStats();
+  loadBestCpm();
+  loadMonthlyAccuracy();
   if (initialLoad) {
     updateLevelIcon({ scope: 'general' });
   } else {
@@ -1102,10 +1180,6 @@ function ensureModeStats(mode) {
 
 function saveModeStats() {
   localStorage.setItem('modeStats', JSON.stringify(modeStats));
-  if (typeof currentUser === 'object' && currentUser) {
-    currentUser.stats = modeStats;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-  }
   if (typeof saveUserPerformance === 'function') {
     saveUserPerformance(modeStats);
   }
@@ -1247,6 +1321,11 @@ function reportLastError() {
   const expectedChars = countCorrectCharacters(lastExpected || '', lastExpected || '');
   roundCorrectChars += expectedChars;
   saveTotals();
+  currentSequentialCorrect += 1;
+  if (currentSequentialCorrect > bestSequentialCorrect) {
+    bestSequentialCorrect = currentSequentialCorrect;
+  }
+  persistSequentialStats();
   atualizarBarraProgresso();
   const stats = ensureModeStats(selectedMode);
   stats.correctChars += expectedChars;
@@ -1896,6 +1975,11 @@ function verificarResposta() {
     const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
     grantExperience(reward, selectedMode);
     consecutiveErrors = 0;
+    currentSequentialCorrect += 1;
+    if (currentSequentialCorrect > bestSequentialCorrect) {
+      bestSequentialCorrect = currentSequentialCorrect;
+    }
+    persistSequentialStats();
     resultado.textContent = '';
     persistCurrentRoundState();
     flashSuccess(() => {
@@ -1916,6 +2000,8 @@ function verificarResposta() {
     lastInput = resposta;
     lastFolder = pastaAtual;
     saveTotals();
+    currentSequentialCorrect = 0;
+    persistSequentialStats();
     lastWasError = true;
     resultado.textContent = "";
     resultado.style.color = "red";
@@ -1999,6 +2085,15 @@ function finishMode() {
   const medalKey = medal && MEDAL_LABEL_TO_KEY[medal.label];
   if (medalKey) {
     stats.medals[medalKey] += 1;
+    medalLog.push({
+      medal: medalKey,
+      timestamp: Date.now(),
+      mode: selectedMode,
+      accuracy,
+      correct,
+      total: attemptsForAccuracy
+    });
+    saveMedalLog();
   }
   saveModeStats();
   const progress = getModeProgress(selectedMode);
@@ -2023,6 +2118,22 @@ function finishMode() {
     previousLevel,
     newLevel: nextLevel
   });
+
+  if (cpm > bestCpm) {
+    bestCpm = cpm;
+    persistBestCpm();
+  }
+
+  if ([3, 4, 5, 6].includes(selectedMode)) {
+    const now = new Date();
+    const monthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+    if (!monthlyAccuracy[monthKey]) {
+      monthlyAccuracy[monthKey] = { correct: 0, total: 0 };
+    }
+    monthlyAccuracy[monthKey].correct += correct;
+    monthlyAccuracy[monthKey].total += attemptsForAccuracy;
+    persistMonthlyAccuracy();
+  }
 }
 
 function nextMode() {
