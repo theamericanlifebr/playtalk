@@ -55,6 +55,290 @@ function clampNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function mergeFlagEntries(current, incoming) {
+  const base = current && typeof current === 'object' && !Array.isArray(current)
+    ? { ...current }
+    : {};
+  if (!incoming || typeof incoming !== 'object') {
+    return base;
+  }
+  for (const [key, value] of Object.entries(incoming)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      base[key] = mergeFlagEntries(base[key], value);
+    } else if (typeof value === 'boolean') {
+      base[key] = Boolean(value) || Boolean(base[key]);
+    } else if (value !== undefined) {
+      base[key] = value;
+    }
+  }
+  return base;
+}
+
+function mergeStatObject(current, incoming) {
+  const base = current && typeof current === 'object' && !Array.isArray(current)
+    ? { ...current }
+    : {};
+  if (!incoming || typeof incoming !== 'object') {
+    return base;
+  }
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(incoming)) {
+    if (typeof value === 'number') {
+      const currentNumber = Number.isFinite(merged[key]) ? Number(merged[key]) : 0;
+      merged[key] = Math.max(currentNumber, Number(value));
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      merged[key] = mergeStatObject(merged[key], value);
+    } else if (Array.isArray(value)) {
+      merged[key] = value.slice();
+    } else {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
+function mergeModeStats(current, incoming) {
+  const base = current && typeof current === 'object' && !Array.isArray(current)
+    ? { ...current }
+    : {};
+  if (!incoming || typeof incoming !== 'object') {
+    return base;
+  }
+  const merged = { ...base };
+  for (const [mode, stats] of Object.entries(incoming)) {
+    merged[mode] = mergeStatObject(merged[mode], stats);
+  }
+  return merged;
+}
+
+function mergeModeProgress(current, incoming) {
+  const base = current && typeof current === 'object' && !Array.isArray(current)
+    ? { ...current }
+    : {};
+  if (!incoming || typeof incoming !== 'object') {
+    return base;
+  }
+  const merged = { ...base };
+  for (const [modeKey, value] of Object.entries(incoming)) {
+    if (!value || typeof value !== 'object') {
+      continue;
+    }
+    const existing = merged[modeKey] && typeof merged[modeKey] === 'object'
+      ? { ...merged[modeKey] }
+      : {};
+    const currentLevel = Number.isFinite(existing.level) ? Math.max(1, Math.floor(existing.level)) : 0;
+    const currentXp = Number.isFinite(existing.xp) ? Math.max(0, Math.floor(existing.xp)) : 0;
+    const incomingLevel = Number.isFinite(value.level) ? Math.max(1, Math.floor(value.level)) : null;
+    const incomingXp = Number.isFinite(value.xp) ? Math.max(0, Math.floor(value.xp)) : null;
+    if (incomingLevel !== null) {
+      if (incomingLevel > currentLevel) {
+        existing.level = incomingLevel;
+        existing.xp = incomingXp !== null ? incomingXp : 0;
+      } else if (incomingLevel === currentLevel) {
+        if (incomingXp !== null) {
+          existing.xp = Math.max(currentXp, incomingXp);
+        }
+        if (!existing.level) {
+          existing.level = incomingLevel;
+        }
+      }
+    } else if (incomingXp !== null) {
+      existing.xp = Math.max(currentXp, incomingXp);
+    }
+    if (incomingLevel === null && currentLevel) {
+      existing.level = currentLevel;
+    }
+    if (!existing.level && incomingLevel !== null) {
+      existing.level = incomingLevel;
+    }
+    if (!existing.level) {
+      existing.level = Math.max(1, incomingLevel || currentLevel || 1);
+    }
+    if (!Number.isFinite(existing.xp)) {
+      existing.xp = incomingXp !== null ? incomingXp : currentXp;
+    }
+    merged[modeKey] = existing;
+  }
+  return merged;
+}
+
+function mergeMonthlyAccuracy(current, incoming) {
+  const base = current && typeof current === 'object' && !Array.isArray(current)
+    ? { ...current }
+    : {};
+  if (!incoming || typeof incoming !== 'object') {
+    return base;
+  }
+  const merged = { ...base };
+  for (const [month, value] of Object.entries(incoming)) {
+    if (!value || typeof value !== 'object') {
+      continue;
+    }
+    const currentEntry = merged[month] && typeof merged[month] === 'object'
+      ? { ...merged[month] }
+      : { correct: 0, total: 0 };
+    const nextCorrect = clampNumber(value.correct, 0);
+    const nextTotal = clampNumber(value.total, 0);
+    currentEntry.correct = Math.max(clampNumber(currentEntry.correct, 0), nextCorrect);
+    currentEntry.total = Math.max(clampNumber(currentEntry.total, 0), nextTotal);
+    merged[month] = currentEntry;
+  }
+  return merged;
+}
+
+function mergeMedalLog(current, incoming) {
+  const combined = [];
+  if (Array.isArray(current)) {
+    combined.push(...current);
+  }
+  if (Array.isArray(incoming)) {
+    combined.push(...incoming);
+  }
+  return sanitizeMedalLog(combined);
+}
+
+function mergeLevelDetails(current, incoming) {
+  const existing = Array.isArray(current) ? current.slice() : [];
+  const next = Array.isArray(incoming) ? incoming : [];
+  if (!next.length) {
+    return existing;
+  }
+  if (!existing.length) {
+    return next.slice();
+  }
+  const seen = new Set(existing.map((item) => {
+    try {
+      return JSON.stringify(item);
+    } catch (err) {
+      return null;
+    }
+  }).filter(Boolean));
+  next.forEach((item) => {
+    let key;
+    try {
+      key = JSON.stringify(item);
+    } catch (err) {
+      key = null;
+    }
+    if (!key || !seen.has(key)) {
+      existing.push(item);
+      if (key) {
+        seen.add(key);
+      }
+    }
+  });
+  return existing;
+}
+
+function mergeGeneralProgress(current, incoming) {
+  const baseLevel = Number.isFinite(current && current.level) ? Math.max(1, Math.floor(current.level)) : 1;
+  const baseXp = Number.isFinite(current && current.xp) ? Math.max(0, Math.floor(current.xp)) : 0;
+  const merged = { level: baseLevel, xp: baseXp };
+  if (!incoming || typeof incoming !== 'object') {
+    return merged;
+  }
+  const nextLevel = Number.isFinite(incoming.level) ? Math.max(1, Math.floor(incoming.level)) : null;
+  const nextXp = Number.isFinite(incoming.xp) ? Math.max(0, Math.floor(incoming.xp)) : null;
+  if (nextLevel !== null) {
+    if (nextLevel > merged.level) {
+      merged.level = nextLevel;
+      merged.xp = nextXp !== null ? nextXp : 0;
+    } else if (nextLevel === merged.level && nextXp !== null) {
+      merged.xp = Math.max(merged.xp, nextXp);
+    } else if (nextLevel < merged.level && nextXp !== null && merged.xp === 0) {
+      merged.xp = nextXp;
+    }
+  } else if (nextXp !== null) {
+    merged.xp = Math.max(merged.xp, nextXp);
+  }
+  return merged;
+}
+
+function mergeProgressData(existingData, incomingData) {
+  const current = existingData && typeof existingData === 'object' ? { ...existingData } : {};
+  const incoming = incomingData && typeof incomingData === 'object' ? incomingData : {};
+
+  const merged = { ...current };
+
+  if (incoming.acertosTotais !== undefined) {
+    merged.acertosTotais = Math.max(clampNumber(current.acertosTotais, 0), clampNumber(incoming.acertosTotais, 0));
+  }
+  if (incoming.errosTotais !== undefined) {
+    merged.errosTotais = Math.max(clampNumber(current.errosTotais, 0), clampNumber(incoming.errosTotais, 0));
+  }
+  if (incoming.tentativasTotais !== undefined) {
+    merged.tentativasTotais = Math.max(clampNumber(current.tentativasTotais, 0), clampNumber(incoming.tentativasTotais, 0));
+  }
+  if (incoming.points !== undefined) {
+    merged.points = Math.max(clampNumber(current.points, 0), clampNumber(incoming.points, 0));
+  }
+  if (incoming.playerBalance !== undefined) {
+    merged.playerBalance = clampNumber(incoming.playerBalance, 0);
+  }
+  if (incoming.displayName !== undefined) {
+    merged.displayName = typeof incoming.displayName === 'string' ? incoming.displayName : current.displayName;
+  }
+  if (incoming.modeStats !== undefined) {
+    merged.modeStats = mergeModeStats(current.modeStats, incoming.modeStats);
+  }
+  if (incoming.completedModes !== undefined) {
+    merged.completedModes = mergeFlagEntries(current.completedModes, incoming.completedModes);
+  }
+  if (incoming.unlockedModes !== undefined) {
+    merged.unlockedModes = mergeFlagEntries(current.unlockedModes, incoming.unlockedModes);
+  }
+  if (incoming.modeIntroShown !== undefined) {
+    merged.modeIntroShown = mergeFlagEntries(current.modeIntroShown, incoming.modeIntroShown);
+  }
+  if (incoming.pastaAtual !== undefined) {
+    merged.pastaAtual = Math.max(clampNumber(current.pastaAtual, 1), clampNumber(incoming.pastaAtual, 1));
+  }
+  if (incoming.tutorialDone !== undefined) {
+    merged.tutorialDone = Boolean(incoming.tutorialDone);
+  }
+  if (incoming.ilifeDone !== undefined) {
+    merged.ilifeDone = Boolean(incoming.ilifeDone);
+  }
+  if (incoming.levelDetails !== undefined) {
+    merged.levelDetails = mergeLevelDetails(current.levelDetails, incoming.levelDetails);
+  }
+  if (incoming.totalTime !== undefined) {
+    merged.totalTime = Math.max(clampNumber(current.totalTime, 0), clampNumber(incoming.totalTime, 0));
+  }
+  if (incoming.shareResults !== undefined) {
+    merged.shareResults = Boolean(incoming.shareResults);
+  }
+  if (incoming.avatar !== undefined) {
+    merged.avatar = typeof incoming.avatar === 'string' ? incoming.avatar : current.avatar;
+  }
+  if (incoming.generalProgress !== undefined) {
+    merged.generalProgress = mergeGeneralProgress(current.generalProgress, incoming.generalProgress);
+  }
+  if (incoming.modeProgress !== undefined) {
+    merged.modeProgress = mergeModeProgress(current.modeProgress, incoming.modeProgress);
+  }
+  if (incoming.medalLog !== undefined) {
+    merged.medalLog = mergeMedalLog(current.medalLog, incoming.medalLog);
+  }
+  if (incoming.bestCpm !== undefined) {
+    merged.bestCpm = Math.max(clampNumber(current.bestCpm, 0), clampNumber(incoming.bestCpm, 0));
+  }
+  if (incoming.bestSequentialCorrect !== undefined) {
+    merged.bestSequentialCorrect = Math.max(
+      clampNumber(current.bestSequentialCorrect, 0),
+      clampNumber(incoming.bestSequentialCorrect, 0)
+    );
+  }
+  if (incoming.currentSequentialCorrect !== undefined) {
+    merged.currentSequentialCorrect = Math.max(0, clampNumber(incoming.currentSequentialCorrect, 0));
+  }
+  if (incoming.monthlyAccuracy !== undefined) {
+    merged.monthlyAccuracy = mergeMonthlyAccuracy(current.monthlyAccuracy, incoming.monthlyAccuracy);
+  }
+
+  return merged;
+}
+
 function sanitizeMedalLog(log) {
   if (!Array.isArray(log)) {
     return [];
@@ -545,7 +829,7 @@ app.post('/api/users/update', async (req, res) => {
     }
 
     if (data && typeof data === 'object') {
-      entry.data = { ...entry.data, ...data };
+      entry.data = mergeProgressData(entry.data, data);
     }
 
     ensureUserDefaults(entry);
