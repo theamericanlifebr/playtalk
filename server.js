@@ -13,11 +13,22 @@ const DEFAULT_USER = {
   password: 'tatatata'
 };
 
+const MEDAL_ORDER = ['diamante', 'ouro', 'prata', 'bronze', 'chumbo', 'gesso'];
+const MEDAL_WEIGHTS = {
+  diamante: 12,
+  ouro: 8,
+  prata: 4,
+  bronze: 2,
+  chumbo: 1,
+  gesso: 0
+};
+
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
   errosTotais: { type: 'number', default: 0 },
   tentativasTotais: { type: 'number', default: 0 },
   points: { type: 'number', default: 0 },
+  playerBalance: { type: 'number', default: 0 },
   displayName: { type: 'string', default: '' },
   modeStats: { type: 'json', default: {} },
   completedModes: { type: 'json', default: {} },
@@ -29,8 +40,136 @@ const PROGRESS_SCHEMA = {
   levelDetails: { type: 'json', default: [] },
   totalTime: { type: 'number', default: 0 },
   shareResults: { type: 'boolean', default: false },
-  avatar: { type: 'string', default: '' }
+  avatar: { type: 'string', default: '' },
+  generalProgress: { type: 'json', default: { level: 1, xp: 0 } },
+  modeProgress: { type: 'json', default: {} },
+  medalLog: { type: 'json', default: [] },
+  bestCpm: { type: 'number', default: 0 },
+  bestSequentialCorrect: { type: 'number', default: 0 },
+  currentSequentialCorrect: { type: 'number', default: 0 },
+  monthlyAccuracy: { type: 'json', default: {} }
 };
+
+function clampNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function sanitizeMedalLog(log) {
+  if (!Array.isArray(log)) {
+    return [];
+  }
+  return log
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+      const medal = MEDAL_ORDER.includes(entry.medal) ? entry.medal : null;
+      if (!medal) {
+        return null;
+      }
+      return {
+        medal,
+        timestamp: clampNumber(entry.timestamp, Date.now()),
+        mode: clampNumber(entry.mode, 0),
+        accuracy: clampNumber(entry.accuracy, 0),
+        correct: clampNumber(entry.correct, 0),
+        total: clampNumber(entry.total, 0)
+      };
+    })
+    .filter(Boolean)
+    .slice(-500);
+}
+
+function sanitizeMonthlyAccuracy(map) {
+  if (!map || typeof map !== 'object') {
+    return {};
+  }
+  const entries = Object.entries(map)
+    .filter(([key, value]) => typeof key === 'string' && value && typeof value === 'object')
+    .map(([key, value]) => {
+      const normalized = {
+        correct: clampNumber(value.correct, 0),
+        total: clampNumber(value.total, 0)
+      };
+      return [key, normalized];
+    });
+  entries.sort((a, b) => a[0].localeCompare(b[0]));
+  const limited = entries.slice(-24);
+  return limited.reduce((acc, [key, value]) => {
+    acc[key] = value;
+    return acc;
+  }, {});
+}
+
+const MEDAL_GRADIENTS = {
+  diamante: ['#7fc8ff', '#d9f3ff'],
+  ouro: ['#f5b700', '#ffe680'],
+  prata: ['#ced3d9', '#f8f9fb'],
+  bronze: ['#a76a3a', '#f1c388'],
+  chumbo: ['#6f7a82', '#9aa4ab'],
+  gesso: ['#8f6b4a', '#e7d2b5']
+};
+
+function buildAuraGradient(segments) {
+  if (!segments.length) {
+    return '';
+  }
+  let cursor = 0;
+  const stops = [];
+  segments.forEach((segment) => {
+    const colors = MEDAL_GRADIENTS[segment.medal] || ['#8ea6ff', '#cfe2ff'];
+    const sweep = Math.max(0, Math.min(360, segment.ratio * 360));
+    const end = cursor + sweep;
+    const mid = cursor + sweep * 0.6;
+    stops.push(`${colors[0]} ${cursor.toFixed(2)}deg`);
+    stops.push(`${colors[1]} ${mid.toFixed(2)}deg`);
+    stops.push(`${colors[0]} ${end.toFixed(2)}deg`);
+    cursor = end;
+  });
+  stops.push('#e0edff 360deg');
+  return `conic-gradient(${stops.join(', ')})`;
+}
+
+function computeAuraScore(log) {
+  const entries = sanitizeMedalLog(log);
+  const counts = MEDAL_ORDER.reduce((acc, key) => {
+    acc[key] = 0;
+    return acc;
+  }, {});
+  entries.forEach((entry) => {
+    counts[entry.medal] += 1;
+  });
+  const total = Object.values(counts).reduce((acc, value) => acc + value, 0);
+  if (!total) {
+    return { total: 0, score: 0, segments: [], gradient: '', hasAura: false };
+  }
+  const ranked = MEDAL_ORDER
+    .map((medal) => ({ medal, count: counts[medal], weight: MEDAL_WEIGHTS[medal] }))
+    .filter((item) => item.count > 0)
+    .sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+      return b.weight - a.weight;
+    })
+    .slice(0, 3);
+  const subsetTotal = ranked.reduce((acc, item) => acc + item.count, 0) || 1;
+  const segments = ranked.map((item) => ({
+    medal: item.medal,
+    ratio: item.count / subsetTotal,
+    weight: item.weight
+  }));
+  const score = segments.reduce((acc, segment) => acc + segment.weight * segment.ratio, 0);
+  const gradient = total >= 10 ? buildAuraGradient(segments) : '';
+  return {
+    total,
+    score,
+    segments,
+    gradient,
+    hasAura: total >= 10 && Boolean(gradient)
+  };
+}
 
 const staticDir = (() => {
   const customDir = process.env.STATIC_DIR;
@@ -120,7 +259,122 @@ function ensureUserDefaults(user) {
       user.data[key] = getDefaultValue(schema);
     }
   }
+  user.data.medalLog = sanitizeMedalLog(user.data.medalLog);
+  user.data.bestCpm = clampNumber(user.data.bestCpm, 0);
+  user.data.bestSequentialCorrect = Math.max(0, Math.floor(clampNumber(user.data.bestSequentialCorrect, 0)));
+  user.data.currentSequentialCorrect = Math.max(0, Math.floor(clampNumber(user.data.currentSequentialCorrect, 0)));
+  user.data.monthlyAccuracy = sanitizeMonthlyAccuracy(user.data.monthlyAccuracy);
   return user;
+}
+
+function extractPlayerProfile(entry) {
+  const user = ensureUserDefaults({ ...entry, data: { ...entry.data } });
+  const data = user.data || {};
+  const displayName = (typeof data.displayName === 'string' && data.displayName.trim())
+    ? data.displayName.trim()
+    : (user.username || 'Jogador');
+  const avatar = (typeof data.avatar === 'string' && data.avatar.trim()) ? data.avatar.trim() : '';
+  const general = data.generalProgress && typeof data.generalProgress === 'object'
+    ? data.generalProgress
+    : { level: 1 };
+  const levelValue = clampNumber(general.level || data.pastaAtual || 1, 1);
+  const level = Math.max(1, Math.floor(levelValue));
+  const aura = computeAuraScore(data.medalLog);
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const monthEntry = data.monthlyAccuracy && data.monthlyAccuracy[monthKey]
+    ? data.monthlyAccuracy[monthKey]
+    : { correct: 0, total: 0 };
+  const monthTotal = Math.max(0, clampNumber(monthEntry.total, 0));
+  const monthCorrect = Math.max(0, clampNumber(monthEntry.correct, 0));
+  const monthAccuracy = monthTotal > 0
+    ? Math.max(0, Math.min(1, monthCorrect / monthTotal))
+    : 0;
+  return {
+    key: entry.key,
+    username: entry.username,
+    displayName,
+    avatar,
+    level,
+    bestCpm: Math.max(0, clampNumber(data.bestCpm, 0)),
+    totalPoints: Math.max(0, clampNumber(data.points, 0)),
+    aura,
+    monthlyAccuracy: monthAccuracy,
+    monthlyStats: { correct: monthCorrect, total: monthTotal },
+    bestSequential: Math.max(0, Math.floor(clampNumber(data.bestSequentialCorrect, 0)))
+  };
+}
+
+function createPlaceholder(position) {
+  return {
+    position,
+    displayName: 'Vazio',
+    avatar: '',
+    level: 0,
+    bestCpm: 0,
+    totalPoints: 0,
+    aura: { hasAura: false, gradient: '', score: 0, total: 0 },
+    monthlyAccuracy: 0,
+    monthlyStats: { correct: 0, total: 0 },
+    bestSequential: 0,
+    metric: 0
+  };
+}
+
+function buildRanking(players, metricSelector, options = {}) {
+  const { descending = true, minMetric = null, predicate = null } = options;
+  const populated = players
+    .map((player) => {
+      const metric = metricSelector(player);
+      return { ...player, metric };
+    })
+    .filter((player) => {
+      if (typeof predicate === 'function' && !predicate(player)) {
+        return false;
+      }
+      if (minMetric === null) {
+        return true;
+      }
+      return player.metric >= minMetric;
+    })
+    .sort((a, b) => {
+      const diff = (descending ? b.metric - a.metric : a.metric - b.metric);
+      if (diff !== 0) {
+        return diff;
+      }
+      if (descending) {
+        return a.displayName.localeCompare(b.displayName);
+      }
+      return a.displayName.localeCompare(b.displayName);
+    })
+    .slice(0, 20)
+    .map((player, index) => ({ ...player, position: index + 1 }));
+
+  while (populated.length < 20) {
+    populated.push(createPlaceholder(populated.length + 1));
+  }
+  return populated;
+}
+
+function computeRankings(users) {
+  const profiles = Object.entries(users || {}).map(([key, value]) => extractPlayerProfile({ key, ...value }));
+  const level = buildRanking(profiles, (player) => player.level, { descending: true });
+  const speed = buildRanking(profiles, (player) => player.bestCpm, { descending: true, minMetric: 0.01 });
+  const points = buildRanking(profiles, (player) => player.totalPoints, { descending: true });
+  const aura = buildRanking(profiles, (player) => player.aura.score, {
+    descending: true,
+    predicate: (player) => player.aura && player.aura.hasAura
+  });
+  const monthly = buildRanking(profiles, (player) => player.monthlyAccuracy, { descending: true, minMetric: 0.0001 });
+  const streak = buildRanking(profiles, (player) => player.bestSequential, { descending: true });
+
+  return {
+    level,
+    speed,
+    points,
+    aura,
+    monthly,
+    streak
+  };
 }
 
 ensureDataDirectory();
@@ -169,6 +423,21 @@ app.get('/api/users', async (req, res) => {
   } catch (error) {
     console.error('Erro ao ler usuários:', error);
     res.status(500).json({ success: false, message: 'Erro ao carregar usuários.' });
+  }
+});
+
+app.get('/api/rankings', async (req, res) => {
+  try {
+    const database = await readDatabase();
+    const rankings = computeRankings(database.users);
+    res.json({
+      success: true,
+      rankings,
+      generatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao gerar rankings:', error);
+    res.status(500).json({ success: false, message: 'Erro ao gerar rankings.' });
   }
 });
 

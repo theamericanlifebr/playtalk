@@ -1,5 +1,140 @@
 (function () {
   const API_BASE_URL = window.playtalkAuthApiBase || '';
+
+  const remoteStorage = (() => {
+    const remoteKeys = new Set();
+    const cache = new Map();
+    const dirtyKeys = new Set();
+    const original = {
+      getItem: Storage.prototype.getItem,
+      setItem: Storage.prototype.setItem,
+      removeItem: Storage.prototype.removeItem
+    };
+
+    let suppressed = 0;
+    let syncTimer = null;
+    let syncCallback = null;
+
+    function isRemoteKey(key) {
+      return remoteKeys.has(String(key));
+    }
+
+    function scheduleSync() {
+      if (suppressed || typeof syncCallback !== 'function' || !dirtyKeys.size) {
+        return;
+      }
+      if (syncTimer) {
+        return;
+      }
+      syncTimer = window.setTimeout(() => {
+        syncTimer = null;
+        if (dirtyKeys.size && typeof syncCallback === 'function') {
+          try {
+            syncCallback(Array.from(dirtyKeys));
+          } finally {
+            dirtyKeys.clear();
+          }
+        }
+      }, 1200);
+    }
+
+    Storage.prototype.getItem = function getItem(key) {
+      if (!isRemoteKey(key)) {
+        return original.getItem.call(this, key);
+      }
+      return cache.has(key) ? cache.get(key) : null;
+    };
+
+    Storage.prototype.setItem = function setItem(key, value) {
+      if (!isRemoteKey(key)) {
+        original.setItem.call(this, key, value);
+        return;
+      }
+      const normalized = value == null ? '' : String(value);
+      cache.set(key, normalized);
+      if (!suppressed) {
+        dirtyKeys.add(key);
+        scheduleSync();
+      }
+    };
+
+    Storage.prototype.removeItem = function removeItem(key) {
+      if (!isRemoteKey(key)) {
+        original.removeItem.call(this, key);
+        return;
+      }
+      if (cache.has(key)) {
+        cache.delete(key);
+        if (!suppressed) {
+          dirtyKeys.add(key);
+          scheduleSync();
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', () => {
+      if (typeof syncCallback === 'function' && dirtyKeys.size) {
+        try {
+          syncCallback(Array.from(dirtyKeys));
+        } catch (err) {
+          console.warn('Falha ao sincronizar antes de sair:', err);
+        } finally {
+          dirtyKeys.clear();
+        }
+      }
+    });
+
+    return {
+      register(keys) {
+        keys.forEach((key) => {
+          if (key) {
+            remoteKeys.add(String(key));
+          }
+        });
+      },
+      suspend(fn) {
+        suppressed += 1;
+        try {
+          return typeof fn === 'function' ? fn() : undefined;
+        } finally {
+          suppressed = Math.max(0, suppressed - 1);
+          if (!suppressed) {
+            scheduleSync();
+          }
+        }
+      },
+      load(snapshot = {}) {
+        this.suspend(() => {
+          cache.clear();
+          Object.entries(snapshot).forEach(([key, value]) => {
+            if (!isRemoteKey(key)) {
+              return;
+            }
+            cache.set(key, value == null ? '' : String(value));
+          });
+          dirtyKeys.clear();
+        });
+      },
+      clear() {
+        this.suspend(() => {
+          cache.clear();
+          dirtyKeys.clear();
+        });
+      },
+      setSyncHandler(handler) {
+        syncCallback = typeof handler === 'function' ? handler : null;
+      },
+      getSnapshot() {
+        const payload = {};
+        cache.forEach((value, key) => {
+          payload[key] = value;
+        });
+        return payload;
+      }
+    };
+  })();
+
+  window.playtalkRemoteStorage = remoteStorage;
   const CURRENT_USER_KEY = 'currentUser';
   const BALANCE_KEY = 'playerBalance';
   const DEFAULT_AVATAR_URL =
@@ -22,8 +157,162 @@
     levelDetails: { type: 'json', default: [] },
     totalTime: { type: 'number', default: 0 },
     shareResults: { type: 'boolean', default: false },
-    avatar: { type: 'string', default: DEFAULT_AVATAR_URL }
+    avatar: { type: 'string', default: DEFAULT_AVATAR_URL },
+    medalLog: { type: 'json', default: [] },
+    bestCpm: { type: 'number', default: 0 },
+    bestSequentialCorrect: { type: 'number', default: 0 },
+    currentSequentialCorrect: { type: 'number', default: 0 },
+    monthlyAccuracy: { type: 'json', default: {} }
   };
+
+  remoteStorage.register(Object.keys(PROGRESS_SCHEMA));
+
+  const MEDAL_ORDER = ['diamante', 'ouro', 'prata', 'bronze', 'chumbo', 'gesso'];
+  const MEDAL_WEIGHTS = {
+    diamante: 12,
+    ouro: 8,
+    prata: 4,
+    bronze: 2,
+    chumbo: 1,
+    gesso: 0
+  };
+  const MEDAL_GRADIENTS = {
+    diamante: ['#7fc8ff', '#d9f3ff'],
+    ouro: ['#f5b700', '#ffe680'],
+    prata: ['#ced3d9', '#f8f9fb'],
+    bronze: ['#a76a3a', '#f1c388'],
+    chumbo: ['#6f7a82', '#9aa4ab'],
+    gesso: ['#8f6b4a', '#e7d2b5']
+  };
+
+  function parseMedalLog(raw) {
+    if (!raw) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed
+        .map((entry) => {
+          if (!entry || typeof entry !== 'object') {
+            return null;
+          }
+          const medal = entry.medal || entry.type;
+          if (!MEDAL_WEIGHTS.hasOwnProperty(medal)) {
+            return null;
+          }
+          return {
+            medal,
+            timestamp: Number(entry.timestamp) || Date.now()
+          };
+        })
+        .filter(Boolean);
+    } catch (err) {
+      console.warn('Não foi possível analisar o histórico de medalhas:', err);
+      return [];
+    }
+  }
+
+  function buildAuraGradient(segments) {
+    if (!segments || !segments.length) {
+      return '';
+    }
+    let cursor = 0;
+    const stops = [];
+    segments.forEach((segment) => {
+      const colors = MEDAL_GRADIENTS[segment.medal] || ['#8ea6ff', '#cfe2ff'];
+      const sweep = Math.max(0, Math.min(360, segment.ratio * 360));
+      const end = cursor + sweep;
+      const mid = cursor + sweep * 0.6;
+      stops.push(`${colors[0]} ${cursor.toFixed(2)}deg`);
+      stops.push(`${colors[1]} ${mid.toFixed(2)}deg`);
+      stops.push(`${colors[0]} ${end.toFixed(2)}deg`);
+      cursor = end;
+    });
+    stops.push('#e0edff 360deg');
+    return `conic-gradient(${stops.join(', ')})`;
+  }
+
+  function computeAuraScore(logEntries) {
+    const entries = Array.isArray(logEntries) ? logEntries.slice(-500) : [];
+    const counts = MEDAL_ORDER.reduce((acc, key) => {
+      acc[key] = 0;
+      return acc;
+    }, {});
+    entries.forEach((entry) => {
+      if (entry && MEDAL_WEIGHTS.hasOwnProperty(entry.medal)) {
+        counts[entry.medal] += 1;
+      }
+    });
+    const total = Object.values(counts).reduce((acc, value) => acc + value, 0);
+    if (total === 0) {
+      return { total: 0, score: 0, segments: [], gradient: '', hasAura: false };
+    }
+    const ranked = MEDAL_ORDER
+      .map((medal) => ({ medal, count: counts[medal], weight: MEDAL_WEIGHTS[medal] }))
+      .filter((item) => item.count > 0)
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return b.weight - a.weight;
+      })
+      .slice(0, 3);
+    const subsetTotal = ranked.reduce((acc, item) => acc + item.count, 0) || 1;
+    const segments = ranked.map((item) => ({
+      medal: item.medal,
+      ratio: item.count / subsetTotal,
+      weight: item.weight
+    }));
+    const score = segments.reduce((acc, segment) => acc + segment.weight * segment.ratio, 0);
+    const gradient = total >= 10 ? buildAuraGradient(segments) : '';
+    return {
+      total,
+      score,
+      segments,
+      gradient,
+      hasAura: total >= 10 && Boolean(gradient)
+    };
+  }
+
+  function readAuraState() {
+    const log = parseMedalLog(localStorage.getItem('medalLog'));
+    return computeAuraScore(log);
+  }
+
+  function applyAuraToElement(element, aura) {
+    if (!element) {
+      return;
+    }
+    const hasAura = aura && aura.hasAura;
+    if (hasAura) {
+      element.classList.add('has-aura');
+      element.style.setProperty('--aura-gradient', aura.gradient);
+      element.dataset.aurascore = aura.score ? aura.score.toFixed(2) : '0';
+    } else {
+      element.classList.remove('has-aura');
+      element.style.removeProperty('--aura-gradient');
+      delete element.dataset.aurascore;
+    }
+  }
+
+  let remoteSyncRunning = false;
+  remoteStorage.setSyncHandler(() => {
+    if (remoteSyncRunning) {
+      return;
+    }
+    remoteSyncRunning = true;
+    Promise.resolve()
+      .then(() => updateUserSnapshot())
+      .catch((err) => {
+        console.warn('Falha ao sincronizar progresso automaticamente:', err);
+      })
+      .finally(() => {
+        remoteSyncRunning = false;
+      });
+  });
 
   let cachedCurrentUser = null;
   let openLoginFlowHandler = null;
@@ -237,21 +526,23 @@
 
   function applyUserDataToStorage(user) {
     const data = (user && user.data) || {};
-    for (const [key, schema] of Object.entries(PROGRESS_SCHEMA)) {
-      let value = data[key];
-      if (value === undefined) {
-        value = getDefaultValue(schema);
-      }
-      if (value === undefined) {
-        localStorage.removeItem(key);
-      } else {
-        if (key === 'playerBalance') {
-          setStoredBalance(value, { emitEvent: false });
+    remoteStorage.suspend(() => {
+      for (const [key, schema] of Object.entries(PROGRESS_SCHEMA)) {
+        let value = data[key];
+        if (value === undefined) {
+          value = getDefaultValue(schema);
+        }
+        if (value === undefined) {
+          localStorage.removeItem(key);
         } else {
-          localStorage.setItem(key, serializeValue(value, schema));
+          if (key === 'playerBalance') {
+            setStoredBalance(value, { emitEvent: false });
+          } else {
+            localStorage.setItem(key, serializeValue(value, schema));
+          }
         }
       }
-    }
+    });
     applyBalanceToUI(readStoredBalance());
   }
 
@@ -281,9 +572,16 @@
   }
 
   function setCurrentUser(user) {
+    const sanitized = user
+      ? {
+          key: user.key,
+          username: user.username,
+          password: user.password
+        }
+      : null;
     cachedCurrentUser = user ? { ...user } : null;
-    if (cachedCurrentUser) {
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cachedCurrentUser));
+    if (sanitized) {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(sanitized));
     } else {
       localStorage.removeItem(CURRENT_USER_KEY);
     }
@@ -408,9 +706,11 @@
       levelEl.textContent = 'Nível 1';
     }
 
+    const auraData = readAuraState();
     if (avatarContainer) {
       avatarContainer.style.setProperty('--avatar-progress', '0deg');
       avatarContainer.title = 'Nível central fixo no nível 1.';
+      applyAuraToElement(avatarContainer, auraData);
     }
 
     if (avatarEl) {
@@ -443,9 +743,11 @@
   }
 
   function clearProgressStorage() {
-    for (const key of Object.keys(PROGRESS_SCHEMA)) {
-      localStorage.removeItem(key);
-    }
+    remoteStorage.suspend(() => {
+      for (const key of Object.keys(PROGRESS_SCHEMA)) {
+        localStorage.removeItem(key);
+      }
+    });
   }
 
   async function updateUserSnapshot({ useBeacon = false } = {}) {
@@ -753,6 +1055,23 @@
       }
     });
   }
+
+  window.playtalkAura = {
+    getLocalAura: () => readAuraState(),
+    applyAura: (element, aura) => {
+      applyAuraToElement(element, aura || readAuraState());
+    },
+    computeAura: (entries) => computeAuraScore(entries || []),
+    buildGradient: (segments) => buildAuraGradient(segments),
+    medalWeights: { ...MEDAL_WEIGHTS }
+  };
+
+  document.addEventListener('playtalk:aura-log-changed', () => {
+    const container = document.getElementById('header-avatar-container');
+    if (container) {
+      applyAuraToElement(container, readAuraState());
+    }
+  });
 
   async function init() {
     readStoredCurrentUser();
