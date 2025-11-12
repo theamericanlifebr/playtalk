@@ -1,12 +1,17 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_DB_PATH = path.join(DATA_DIR, 'users.json');
+
+const SESSION_COOKIE = 'playtalk_session';
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
+const sessions = new Map();
 
 const DEFAULT_USER = {
   username: 'PlayTalk',
@@ -49,6 +54,85 @@ const PROGRESS_SCHEMA = {
   currentSequentialCorrect: { type: 'number', default: 0 },
   monthlyAccuracy: { type: 'json', default: {} }
 };
+
+function generateSessionId() {
+  return crypto.randomBytes(24).toString('hex');
+}
+
+function parseCookies(req) {
+  const header = req.headers && req.headers.cookie;
+  if (!header) {
+    return {};
+  }
+  return header.split(';').reduce((acc, entry) => {
+    const [name, ...rest] = entry.split('=');
+    if (!name) {
+      return acc;
+    }
+    const key = name.trim();
+    const value = rest.join('=').trim();
+    acc[key] = decodeURIComponent(value || '');
+    return acc;
+  }, {});
+}
+
+function getSession(sessionId) {
+  if (!sessionId) {
+    return null;
+  }
+  const entry = sessions.get(sessionId);
+  if (!entry) {
+    return null;
+  }
+  if (entry.expiresAt <= Date.now()) {
+    sessions.delete(sessionId);
+    return null;
+  }
+  return entry;
+}
+
+function touchSession(sessionId) {
+  const entry = sessions.get(sessionId);
+  if (!entry) {
+    return;
+  }
+  entry.expiresAt = Date.now() + SESSION_TTL_MS;
+}
+
+function issueSession(res, userKey) {
+  const sessionId = generateSessionId();
+  sessions.set(sessionId, { key: userKey, expiresAt: Date.now() + SESSION_TTL_MS });
+  res.cookie(SESSION_COOKIE, sessionId, {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: SESSION_TTL_MS,
+    path: '/'
+  });
+  return sessionId;
+}
+
+function clearSession(res, sessionId) {
+  if (sessionId) {
+    sessions.delete(sessionId);
+  }
+  res.cookie(SESSION_COOKIE, '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/'
+  });
+}
+
+function sanitizeUserResponse(key, entry) {
+  if (!entry) {
+    return null;
+  }
+  return {
+    key,
+    username: entry.username,
+    data: entry.data
+  };
+}
 
 function clampNumber(value, fallback = 0) {
   const number = Number(value);
@@ -686,6 +770,23 @@ async function ensureDefaultUser() {
 ensureDefaultUser();
 
 app.use(express.json({ limit: '1mb' }));
+
+app.use((req, res, next) => {
+  const cookies = parseCookies(req);
+  const sessionId = cookies[SESSION_COOKIE];
+  const session = getSession(sessionId);
+  if (session) {
+    touchSession(sessionId);
+    req.session = { id: sessionId, key: session.key };
+  } else {
+    if (sessionId) {
+      clearSession(res, sessionId);
+    }
+    req.session = null;
+  }
+  next();
+});
+
 app.use(express.static(staticDir));
 
 app.use((req, res, next) => {
@@ -707,6 +808,33 @@ app.get('/api/users', async (req, res) => {
   } catch (error) {
     console.error('Erro ao ler usuários:', error);
     res.status(500).json({ success: false, message: 'Erro ao carregar usuários.' });
+  }
+});
+
+app.get('/api/session', async (req, res) => {
+  const session = req.session;
+  if (!session || !session.key) {
+    res.json({ success: true, user: null });
+    return;
+  }
+
+  try {
+    const database = await readDatabase();
+    const entry = database.users[session.key];
+    if (!entry) {
+      clearSession(res, session.id);
+      res.json({ success: true, user: null });
+      return;
+    }
+
+    ensureUserDefaults(entry);
+    res.json({
+      success: true,
+      user: sanitizeUserResponse(session.key, entry)
+    });
+  } catch (error) {
+    console.error('Erro ao recuperar sessão ativa:', error);
+    res.status(500).json({ success: false, message: 'Erro ao recuperar sessão.' });
   }
 });
 
@@ -752,9 +880,11 @@ app.post('/api/users/register', async (req, res) => {
     database.users[key] = user;
     await writeDatabase(database);
 
+    issueSession(res, key);
+
     res.status(201).json({
       success: true,
-      user: { key, ...user }
+      user: sanitizeUserResponse(key, user)
     });
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);
@@ -783,14 +913,11 @@ app.post('/api/users/login', async (req, res) => {
 
     ensureUserDefaults(entry);
 
+    issueSession(res, key);
+
     res.json({
       success: true,
-      user: {
-        key,
-        username: entry.username || username.trim(),
-        password: entry.password,
-        data: entry.data
-      }
+      user: sanitizeUserResponse(key, entry)
     });
   } catch (error) {
     console.error('Erro ao autenticar usuário:', error);
@@ -799,24 +926,26 @@ app.post('/api/users/login', async (req, res) => {
 });
 
 app.post('/api/users/update', async (req, res) => {
-  const { key, data, password, username } = req.body || {};
+  const session = req.session;
+  const { key: bodyKey, data, password, username } = req.body || {};
 
-  if (!key) {
-    res.status(400).json({ success: false, message: 'Usuário inválido.' });
+  if (!session || !session.key) {
+    res.status(401).json({ success: false, message: 'Sessão inválida.' });
+    return;
+  }
+
+  if (bodyKey && bodyKey !== session.key) {
+    res.status(403).json({ success: false, message: 'Sessão não corresponde ao usuário informado.' });
     return;
   }
 
   try {
     const database = await readDatabase();
-    const entry = database.users[key];
+    const entry = database.users[session.key];
 
     if (!entry) {
+      clearSession(res, session.id);
       res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-      return;
-    }
-
-    if (entry.password && password && entry.password !== password) {
-      res.status(403).json({ success: false, message: 'Senha incorreta.' });
       return;
     }
 
@@ -824,7 +953,7 @@ app.post('/api/users/update', async (req, res) => {
       entry.username = username.trim();
     }
 
-    if (password && typeof password === 'string') {
+    if (password && typeof password === 'string' && password.length) {
       entry.password = password;
     }
 
@@ -837,17 +966,23 @@ app.post('/api/users/update', async (req, res) => {
 
     res.json({
       success: true,
-      user: {
-        key,
-        username: entry.username,
-        password: entry.password,
-        data: entry.data
-      }
+      user: sanitizeUserResponse(session.key, entry)
     });
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro ao atualizar usuário.' });
   }
+});
+
+app.post('/api/users/logout', (req, res) => {
+  const session = req.session;
+  if (session && session.id) {
+    clearSession(res, session.id);
+  } else {
+    clearSession(res);
+  }
+  req.session = null;
+  res.json({ success: true });
 });
 
 if (require.main === module) {
