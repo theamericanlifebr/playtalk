@@ -44,60 +44,27 @@
     </div>
 
     <div id="visor" class="container-screen container-screen--visor">
-      <div class="game-mobile-frame" role="group" aria-label="Ambiente de jogo">
-        <div id="score" class="game-mobile-frame__score"></div>
-        <div class="game-mobile-frame__medal">
-          <img id="mode-icon" class="game-mobile-frame__medal-icon" alt="Medalha do desempenho" style="display:none" />
-        </div>
-        <p id="texto-exibicao" class="game-mobile-frame__phrase"></p>
-        <div class="game-mobile-frame__progress">
-          <div id="barra-progresso" class="game-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-            <div id="barra-preenchida" class="game-progress__fill"></div>
-          </div>
-          <ul class="game-progress__legend" aria-hidden="true">
-            <li class="game-progress__legend-item" data-range="0-25">
-              <img src="medalhas/gesso.png" alt="Gesso" />
-              <span>0–25%</span>
-            </li>
-            <li class="game-progress__legend-item" data-range="26-50">
-              <img src="medalhas/chumbo.png" alt="Chumbo" />
-              <span>26–50%</span>
-            </li>
-            <li class="game-progress__legend-item" data-range="51-70">
-              <img src="medalhas/bronze.png" alt="Bronze" />
-              <span>51–70%</span>
-            </li>
-            <li class="game-progress__legend-item" data-range="71-80">
-              <img src="medalhas/prata.png" alt="Prata" />
-              <span>71–80%</span>
-            </li>
-            <li class="game-progress__legend-item" data-range="81-89">
-              <img src="medalhas/ouro.png" alt="Ouro" />
-              <span>81–89%</span>
-            </li>
-            <li class="game-progress__legend-item" data-range="90-100">
-              <img src="medalhas/diamante.png" alt="Diamante" />
-              <span>90–100%</span>
-            </li>
-          </ul>
-        </div>
-        <div id="pt-container" class="game-mobile-frame__input">
-          <textarea id="pt" rows="1" readonly></textarea>
-        </div>
-        <div class="game-mobile-frame__feedback">
-          <div id="resultado"></div>
-          <div id="acertos"></div>
-          <div id="timer"></div>
-        </div>
-        <div id="nivel-mensagem"></div>
-        <div id="mode-buttons" class="game-mobile-frame__modes">
-          <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
-          <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
-          <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
-          <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
-          <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
-          <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
-        </div>
+      <!-- conteúdo visual aqui -->
+      <div id="score"></div>
+      <img id="mode-icon" alt="Mode Icon" style="display:none" />
+      <div id="texto-exibicao"></div>
+      <div id="pt-container">
+        <textarea id="pt" rows="1" readonly></textarea>
+      </div>
+      <div id="barra-progresso">
+        <div id="barra-preenchida"></div>
+      </div>
+      <div id="nivel-mensagem"></div>
+      <div id="timer"></div>
+      <div id="resultado"></div>
+      <div id="acertos"></div>
+      <div id="mode-buttons">
+        <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
+        <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
+        <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
+        <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
+        <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
+        <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
       </div>
     </div>
 
