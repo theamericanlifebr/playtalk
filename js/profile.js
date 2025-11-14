@@ -1,4 +1,5 @@
 function initProfilePage(context = {}) {
+  const storage = window.playtalkStorage;
   const scope = context && context.container ? context.container : document;
   const authAPI = window.playtalkAuth || null;
   let currentUser = null;
@@ -197,14 +198,14 @@ function initProfilePage(context = {}) {
   const storageKey = `profile:${username}`;
   let profileData = {};
   try {
-    const stored = localStorage.getItem(storageKey);
+    const stored = storage.getItem(storageKey);
     profileData = stored ? JSON.parse(stored) : {};
   } catch (error) {
     console.warn('Não foi possível carregar os dados de perfil salvos.', error);
     profileData = {};
   }
 
-  const storedAvatar = localStorage.getItem('avatar');
+  const storedAvatar = storage.getItem('avatar');
   if (!profileData.photo && storedAvatar) {
     profileData.photo = storedAvatar;
   }
@@ -219,15 +220,15 @@ function initProfilePage(context = {}) {
 
   function persistAvatarValue(photoData) {
     if (photoData && typeof photoData === 'string' && photoData.length) {
-      localStorage.setItem('avatar', photoData);
+      storage.setItem('avatar', photoData);
     } else {
-      localStorage.removeItem('avatar');
+      storage.removeItem('avatar');
     }
   }
 
   function saveProfile() {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(profileData));
+      storage.setItem(storageKey, JSON.stringify(profileData));
       persistAvatarValue(profileData.photo);
     } catch (error) {
       console.warn('Não foi possível salvar o perfil.', error);
@@ -235,7 +236,7 @@ function initProfilePage(context = {}) {
   }
 
   const storedDisplayName = (() => {
-    const saved = localStorage.getItem('displayName');
+    const saved = storage.getItem('displayName');
     if (saved && saved.trim()) {
       return saved.trim();
     }
@@ -257,7 +258,7 @@ function initProfilePage(context = {}) {
   persistAvatarValue(profileData.photo);
   updatePublishButtonState();
 
-  const storedShare = localStorage.getItem('shareResults');
+  const storedShare = storage.getItem('shareResults');
   const shareEnabled = storedShare !== null
     ? storedShare === 'true'
     : Boolean(profileData.shareResults);
@@ -267,10 +268,10 @@ function initProfilePage(context = {}) {
     shareCheckbox.checked = shareEnabled;
   }
   if (storedShare === null) {
-    localStorage.setItem('shareResults', shareEnabled ? 'true' : 'false');
+    storage.setItem('shareResults', shareEnabled ? 'true' : 'false');
   }
-  if (storedDisplayName && !localStorage.getItem('displayName')) {
-    localStorage.setItem('displayName', storedDisplayName);
+  if (storedDisplayName && !storage.getItem('displayName')) {
+    storage.setItem('displayName', storedDisplayName);
   }
 
   let persistTimeout = null;
@@ -306,7 +307,7 @@ function initProfilePage(context = {}) {
     nameField.addEventListener('input', () => {
       const value = nameField.value.trim();
       profileData.name = value;
-      localStorage.setItem('displayName', value);
+      storage.setItem('displayName', value);
       schedulePersist();
     });
   }
@@ -315,7 +316,7 @@ function initProfilePage(context = {}) {
     shareCheckbox.addEventListener('change', () => {
       const enabled = shareCheckbox.checked;
       profileData.shareResults = enabled;
-      localStorage.setItem('shareResults', enabled ? 'true' : 'false');
+      storage.setItem('shareResults', enabled ? 'true' : 'false');
       persistProfileChanges();
     });
   }
