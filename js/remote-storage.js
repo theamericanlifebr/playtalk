@@ -1,6 +1,10 @@
-(function() {
-  const store = new Map();
+(function(global) {
+  if (!global) {
+    return;
+  }
+
   const STORAGE_EVENT = 'playtalk-storage';
+  const memoryStore = new Map();
 
   function normalizeKey(key) {
     if (key === undefined || key === null) {
@@ -17,47 +21,100 @@
   }
 
   function emitChange(key, newValue, oldValue) {
-    window.dispatchEvent(new CustomEvent(STORAGE_EVENT, {
-      detail: { key, newValue, oldValue }
-    }));
+    try {
+      global.dispatchEvent(new CustomEvent(STORAGE_EVENT, {
+        detail: { key, newValue, oldValue }
+      }));
+    } catch (error) {
+      console.warn('Não foi possível emitir evento de armazenamento:', error);
+    }
+  }
+
+  function isLocalStorageAvailable() {
+    try {
+      if (!('localStorage' in global)) {
+        return false;
+      }
+      const testKey = '__playtalk_storage_test__';
+      global.localStorage.setItem(testKey, '1');
+      global.localStorage.removeItem(testKey);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  const nativeStorage = isLocalStorageAvailable() ? global.localStorage : null;
+
+  function getEntries() {
+    if (nativeStorage) {
+      const entries = [];
+      for (let i = 0; i < nativeStorage.length; i += 1) {
+        const key = nativeStorage.key(i);
+        if (key !== null && key !== undefined) {
+          entries.push([key, nativeStorage.getItem(key)]);
+        }
+      }
+      return entries;
+    }
+    return Array.from(memoryStore.entries());
   }
 
   const storage = {
     get length() {
-      return store.size;
+      return nativeStorage ? nativeStorage.length : memoryStore.size;
     },
     key(index) {
-      if (!Number.isFinite(index) || index < 0 || index >= store.size) {
+      if (!Number.isFinite(index) || index < 0) {
         return null;
       }
-      return Array.from(store.keys())[index];
+      if (nativeStorage) {
+        return nativeStorage.key(index);
+      }
+      return Array.from(memoryStore.keys())[index] || null;
     },
     getItem(key) {
       const normalized = normalizeKey(key);
-      return store.has(normalized) ? store.get(normalized) : null;
+      if (nativeStorage) {
+        const value = nativeStorage.getItem(normalized);
+        return value === null ? null : value;
+      }
+      return memoryStore.has(normalized) ? memoryStore.get(normalized) : null;
     },
     setItem(key, value) {
       const normalized = normalizeKey(key);
       const newValue = toValue(value);
-      const oldValue = store.has(normalized) ? store.get(normalized) : null;
-      store.set(normalized, newValue);
+      const oldValue = this.getItem(normalized);
+      if (nativeStorage) {
+        nativeStorage.setItem(normalized, newValue);
+      } else {
+        memoryStore.set(normalized, newValue);
+      }
       emitChange(normalized, newValue, oldValue);
     },
     removeItem(key) {
       const normalized = normalizeKey(key);
-      if (!store.has(normalized)) {
+      const oldValue = this.getItem(normalized);
+      if (oldValue === null) {
         return;
       }
-      const oldValue = store.get(normalized);
-      store.delete(normalized);
+      if (nativeStorage) {
+        nativeStorage.removeItem(normalized);
+      } else {
+        memoryStore.delete(normalized);
+      }
       emitChange(normalized, null, oldValue);
     },
     clear() {
-      if (!store.size) {
+      const entries = getEntries();
+      if (!entries.length) {
         return;
       }
-      const entries = Array.from(store.entries());
-      store.clear();
+      if (nativeStorage) {
+        nativeStorage.clear();
+      } else {
+        memoryStore.clear();
+      }
       entries.forEach(([key, value]) => emitChange(key, null, value));
     }
   };
@@ -73,7 +130,7 @@
 
   function exportSnapshot() {
     const payload = {};
-    store.forEach((value, key) => {
+    getEntries().forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
         payload[key] = value;
       }
@@ -81,11 +138,11 @@
     return payload;
   }
 
-  window.playtalkStorage = storage;
-  window.playtalkStorageSync = {
+  global.playtalkStorage = storage;
+  global.playtalkStorageSync = {
     import: importSnapshot,
     export: exportSnapshot,
     reset: () => storage.clear(),
     eventName: STORAGE_EVENT
   };
-})();
+})(typeof window !== 'undefined' ? window : null);

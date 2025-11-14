@@ -130,6 +130,7 @@
   function setStoredBalance(balance, { emitEvent = true } = {}) {
     const normalized = normalizeBalanceValue(balance);
     storage.setItem(BALANCE_KEY, String(normalized));
+    storage.setItem('points', String(normalized));
     if (emitEvent) {
       dispatchBalanceChange(normalized);
     } else {
@@ -142,6 +143,7 @@
     const normalizedDelta = normalizeBalanceValue(delta);
     if (normalizedDelta === 0) {
       const current = readStoredBalance();
+      setStoredBalance(current, { emitEvent: false });
       dispatchBalanceChange(current);
       return current;
     }
