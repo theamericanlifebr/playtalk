@@ -1,4 +1,5 @@
 (function() {
+  const storage = window.playtalkStorage;
   const CHUNK_SECONDS = 30;
   const BITRATE = 128000; // bits per second
   const CHUNK_BYTES = Math.floor(BITRATE / 8 * CHUNK_SECONDS);
@@ -29,14 +30,14 @@
 
   function storeFull(url, blob) {
     const reader = new FileReader();
-    reader.onloadend = () => localStorage.setItem('song_' + url, reader.result);
+    reader.onloadend = () => storage.setItem('song_' + url, reader.result);
     reader.readAsDataURL(blob);
   }
 
   function preload(url) {
-    if (localStorage.getItem('song_' + url)) {
+    if (storage.getItem('song_' + url)) {
       cache[url] = {
-        audio: new Audio(localStorage.getItem('song_' + url)),
+        audio: new Audio(storage.getItem('song_' + url)),
         loaded: true
       };
       return Promise.resolve();
@@ -57,7 +58,7 @@
           setBufferWidth(percent);
         });
         const reader = new FileReader();
-        reader.onloadend = () => localStorage.setItem('song_' + url + '_part', reader.result);
+        reader.onloadend = () => storage.setItem('song_' + url + '_part', reader.result);
         reader.readAsDataURL(blob);
       });
   }

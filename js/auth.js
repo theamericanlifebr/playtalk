@@ -1,4 +1,10 @@
 (function () {
+  const storage = window.playtalkStorage;
+  const STORAGE_EVENT = (window.playtalkStorageSync && window.playtalkStorageSync.eventName) || 'playtalk-storage';
+  const auraAPI = window.playtalkAura || {
+    compute: () => ({ segments: [], score: 0, total: 0 }),
+    gradientFromSegments: () => ''
+  };
   const API_BASE_URL = window.playtalkAuthApiBase || '';
   const CURRENT_USER_KEY = 'currentUser';
   const BALANCE_KEY = 'playerBalance';
@@ -22,7 +28,11 @@
     levelDetails: { type: 'json', default: [] },
     totalTime: { type: 'number', default: 0 },
     shareResults: { type: 'boolean', default: false },
-    avatar: { type: 'string', default: DEFAULT_AVATAR_URL }
+    avatar: { type: 'string', default: DEFAULT_AVATAR_URL },
+    medalHistory: { type: 'json', default: [] },
+    monthlyPerformance: { type: 'json', default: {} },
+    bestStreak: { type: 'number', default: 0 },
+    currentStreak: { type: 'number', default: 0 }
   };
 
   let cachedCurrentUser = null;
@@ -42,8 +52,64 @@
     return Math.max(0, Math.floor(number));
   }
 
+  function getStorageEventKey(event) {
+    if (!event) {
+      return null;
+    }
+    if (event.detail && event.detail.key) {
+      return event.detail.key;
+    }
+    return event.key || null;
+  }
+
+  function getStorageEventValue(event, type = 'newValue') {
+    if (!event) {
+      return null;
+    }
+    if (event.detail && type in event.detail) {
+      return event.detail[type];
+    }
+    return event[type] || null;
+  }
+
+  function readMedalHistoryFromStorage() {
+    const raw = storage.getItem('medalHistory');
+    if (!raw) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function applyAuraToElement(element) {
+    if (!element) {
+      return;
+    }
+    const history = readMedalHistoryFromStorage();
+    const aura = auraAPI.compute(history);
+    if (aura && aura.total >= 10) {
+      element.style.setProperty('--aura-gradient', auraAPI.gradientFromSegments(aura.segments));
+    } else {
+      element.style.removeProperty('--aura-gradient');
+    }
+  }
+
+  function refreshGameState(initial = false) {
+    if (window.playtalkGame && typeof window.playtalkGame.reloadPersistentProgress === 'function') {
+      try {
+        window.playtalkGame.reloadPersistentProgress(initial);
+      } catch (error) {
+        console.warn('Não foi possível atualizar o progresso do jogo:', error);
+      }
+    }
+  }
+
   function readStoredBalance() {
-    return normalizeBalanceValue(localStorage.getItem(BALANCE_KEY));
+    return normalizeBalanceValue(storage.getItem(BALANCE_KEY));
   }
 
   function applyBalanceToUI(balance) {
@@ -63,7 +129,7 @@
 
   function setStoredBalance(balance, { emitEvent = true } = {}) {
     const normalized = normalizeBalanceValue(balance);
-    localStorage.setItem(BALANCE_KEY, String(normalized));
+    storage.setItem(BALANCE_KEY, String(normalized));
     if (emitEvent) {
       dispatchBalanceChange(normalized);
     } else {
@@ -104,9 +170,10 @@
     reset: resetBalance
   };
 
-  window.addEventListener('storage', (event) => {
-    if (event.key === BALANCE_KEY) {
-      applyBalanceToUI(normalizeBalanceValue(event.newValue));
+  window.addEventListener(STORAGE_EVENT, (event) => {
+    const key = getStorageEventKey(event);
+    if (key === BALANCE_KEY) {
+      applyBalanceToUI(normalizeBalanceValue(getStorageEventValue(event)));
     }
   });
 
@@ -243,12 +310,12 @@
         value = getDefaultValue(schema);
       }
       if (value === undefined) {
-        localStorage.removeItem(key);
+        storage.removeItem(key);
       } else {
         if (key === 'playerBalance') {
           setStoredBalance(value, { emitEvent: false });
         } else {
-          localStorage.setItem(key, serializeValue(value, schema));
+          storage.setItem(key, serializeValue(value, schema));
         }
       }
     }
@@ -258,7 +325,7 @@
   function collectProgressFromStorage() {
     const snapshot = {};
     for (const [key, schema] of Object.entries(PROGRESS_SCHEMA)) {
-      const raw = localStorage.getItem(key);
+      const raw = storage.getItem(key);
       const value = parseValue(raw, schema);
       if (value !== undefined) {
         snapshot[key] = value;
@@ -270,7 +337,7 @@
   function readStoredCurrentUser() {
     if (cachedCurrentUser) return cachedCurrentUser;
     try {
-      const stored = localStorage.getItem(CURRENT_USER_KEY);
+      const stored = storage.getItem(CURRENT_USER_KEY);
       cachedCurrentUser = stored ? JSON.parse(stored) : null;
     } catch (err) {
       console.error('Erro ao carregar usuário atual:', err);
@@ -283,9 +350,9 @@
   function setCurrentUser(user) {
     cachedCurrentUser = user ? { ...user } : null;
     if (cachedCurrentUser) {
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cachedCurrentUser));
+      storage.setItem(CURRENT_USER_KEY, JSON.stringify(cachedCurrentUser));
     } else {
-      localStorage.removeItem(CURRENT_USER_KEY);
+      storage.removeItem(CURRENT_USER_KEY);
     }
     window.currentUser = cachedCurrentUser;
   }
@@ -336,7 +403,7 @@
   }
 
   function readLevelProgress() {
-    const raw = localStorage.getItem('generalProgress');
+    const raw = storage.getItem('generalProgress');
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
@@ -347,7 +414,7 @@
         console.warn('Não foi possível ler o progresso de nível.', err);
       }
     }
-    const legacyRaw = localStorage.getItem('levelProgress');
+    const legacyRaw = storage.getItem('levelProgress');
     if (legacyRaw) {
       try {
         const parsedLegacy = JSON.parse(legacyRaw);
@@ -371,7 +438,7 @@
   }
 
   function getDisplayName(user) {
-    const stored = localStorage.getItem('displayName');
+    const stored = storage.getItem('displayName');
     if (stored && stored.trim()) {
       return stored.trim();
     }
@@ -388,12 +455,13 @@
     const levelEl = document.getElementById('header-level');
     const avatarEl = document.getElementById('header-avatar');
     const avatarContainer = document.getElementById('header-avatar-container');
+    const avatarRing = avatarContainer ? avatarContainer.querySelector('.site-header__avatar-ring') : null;
     const user = readStoredCurrentUser();
     const displayName = user
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
     let avatarUrl = DEFAULT_AVATAR_URL;
-    const storedAvatar = localStorage.getItem('avatar');
+    const storedAvatar = storage.getItem('avatar');
     if (storedAvatar && storedAvatar.trim()) {
       avatarUrl = storedAvatar.trim();
     } else if (user && user.data && typeof user.data.avatar === 'string' && user.data.avatar.trim()) {
@@ -412,6 +480,7 @@
       avatarContainer.style.setProperty('--avatar-progress', '0deg');
       avatarContainer.title = 'Nível central fixo no nível 1.';
     }
+    applyAuraToElement(avatarRing);
 
     if (avatarEl) {
       if (avatarEl.getAttribute('src') !== avatarUrl) {
@@ -444,7 +513,7 @@
 
   function clearProgressStorage() {
     for (const key of Object.keys(PROGRESS_SCHEMA)) {
-      localStorage.removeItem(key);
+      storage.removeItem(key);
     }
   }
 
@@ -480,6 +549,7 @@
     setCurrentUser(null);
     clearProgressStorage();
     resetBalance();
+    refreshGameState(true);
     updateAuthStatus();
     dispatchUserChange();
     const onProfilePage = document.body && document.body.classList.contains('page-profile');
@@ -505,6 +575,7 @@
       const user = await registerRequest(username, password);
       setCurrentUser(user);
       applyUserDataToStorage(user);
+      refreshGameState(false);
       updateAuthStatus();
       dispatchUserChange();
     } catch (err) {
@@ -513,6 +584,7 @@
           const user = await loginRequest(username, password);
           setCurrentUser(user);
           applyUserDataToStorage(user);
+          refreshGameState(false);
           updateAuthStatus();
           dispatchUserChange();
           return;
@@ -760,6 +832,7 @@
 
     if (user) {
       applyUserDataToStorage(user);
+      refreshGameState(true);
     }
 
     updateAuthStatus();
@@ -779,10 +852,12 @@
         const refreshedUser = await loginRequest(user.username, user.password);
         setCurrentUser(refreshedUser);
         applyUserDataToStorage(refreshedUser);
+        refreshGameState(false);
         updateAuthStatus();
       } catch (err) {
         console.warn('Não foi possível sincronizar usuário atual:', err);
         applyUserDataToStorage(user);
+        refreshGameState(false);
         updateAuthStatus();
       }
     }
@@ -1075,23 +1150,15 @@
     }
   });
 
-  window.addEventListener('storage', (event) => {
-    if (!event) {
+  window.addEventListener(STORAGE_EVENT, (event) => {
+    const key = getStorageEventKey(event);
+    if (!key) {
+      updateAuthStatus();
       return;
     }
 
     const watchedKeys = ['generalProgress', 'modeProgress', 'displayName', 'avatar'];
-    if (event.key && watchedKeys.includes(event.key)) {
-      updateAuthStatus();
-      return;
-    }
-
-    if (event.key && event.key.startsWith('profile:')) {
-      updateAuthStatus();
-      return;
-    }
-
-    if (event.key === null) {
+    if (watchedKeys.includes(key) || key.startsWith('profile:')) {
       updateAuthStatus();
     }
   });

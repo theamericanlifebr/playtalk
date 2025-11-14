@@ -1,3 +1,4 @@
+const storage = window.playtalkStorage;
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   theme: 'light',
@@ -514,7 +515,7 @@ function setRoundSelection(mode, size) {
 }
 
 function persistRoundStateCache() {
-  localStorage.setItem(ROUND_STATE_KEY, JSON.stringify(roundStateCache));
+  storage.setItem(ROUND_STATE_KEY, JSON.stringify(roundStateCache));
 }
 
 function sanitizeStoredPhrases(list) {
@@ -718,7 +719,7 @@ function saveGeneralProgress(options = {}) {
   } else {
     generalProgress.xp = normalizedXp;
   }
-  localStorage.setItem(GENERAL_PROGRESS_KEY, JSON.stringify(generalProgress));
+  storage.setItem(GENERAL_PROGRESS_KEY, JSON.stringify(generalProgress));
   if (!options || options.emit !== false) {
     dispatchGeneralProgressUpdate();
   }
@@ -734,7 +735,7 @@ function saveModeProgress(options = {}) {
       : Math.max(0, Math.floor(entry.xp));
     normalized[key] = { level: cappedLevel, xp: cappedXp };
   });
-  localStorage.setItem(MODE_PROGRESS_KEY, JSON.stringify(normalized));
+  storage.setItem(MODE_PROGRESS_KEY, JSON.stringify(normalized));
   if (!options || options.emit !== false) {
     Object.keys(normalized).forEach(modeKey => dispatchModeProgressUpdate(Number(modeKey)));
   }
@@ -778,7 +779,7 @@ function loadProgressFromStorage() {
       generalProgress.xp = normalizedXp;
     }
   } else {
-    const legacyLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
+    const legacyLevel = parseInt(storage.getItem('pastaAtual'), 10);
     const fallbackLevel = Number.isFinite(legacyLevel) && legacyLevel > 0 ? legacyLevel : 1;
     const legacyProgress = parseJSONStorage('levelProgress', null);
     if (legacyProgress && Number.isFinite(legacyProgress.level)) {
@@ -860,6 +861,11 @@ let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
 let roundStateCache = {};
+let medalHistory = parseJSONStorage('medalHistory', []);
+let monthlyPerformance = normalizeMonthlyPerformanceSnapshot(parseJSONStorage('monthlyPerformance', {}));
+saveMonthlyPerformance();
+let currentStreak = parseInt(storage.getItem('currentStreak') || '0', 10) || 0;
+let bestStreak = parseInt(storage.getItem('bestStreak') || '0', 10) || 0;
 
 function cloneFallback(value) {
   if (Array.isArray(value)) {
@@ -872,7 +878,7 @@ function cloneFallback(value) {
 }
 
 function parseJSONStorage(key, fallback) {
-  const raw = localStorage.getItem(key);
+  const raw = storage.getItem(key);
   if (!raw) {
     return cloneFallback(fallback);
   }
@@ -883,6 +889,61 @@ function parseJSONStorage(key, fallback) {
     console.warn(`Não foi possível analisar o conteúdo de ${key}:`, err);
     return cloneFallback(fallback);
   }
+}
+
+function saveMedalHistory() {
+  storage.setItem('medalHistory', JSON.stringify(medalHistory));
+}
+
+function recordMedalHistory(medalType) {
+  if (!medalType) {
+    return;
+  }
+  const entry = { type: medalType, earnedAt: new Date().toISOString() };
+  medalHistory.push(entry);
+  const max = (window.playtalkAura && window.playtalkAura.MAX_HISTORY) || 500;
+  if (medalHistory.length > max) {
+    medalHistory.splice(0, medalHistory.length - max);
+  }
+  saveMedalHistory();
+}
+
+function getCurrentMonthKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+function normalizeMonthlyPerformanceSnapshot(raw) {
+  const currentKey = getCurrentMonthKey();
+  let entry = raw && typeof raw === 'object' ? raw[currentKey] : null;
+  if (!entry || typeof entry !== 'object') {
+    entry = { correct: 0, attempts: 0 };
+  } else {
+    entry = {
+      correct: Math.max(0, Number(entry.correct) || 0),
+      attempts: Math.max(0, Number(entry.attempts) || 0)
+    };
+  }
+  return { [currentKey]: entry };
+}
+
+function saveMonthlyPerformance() {
+  storage.setItem('monthlyPerformance', JSON.stringify(monthlyPerformance));
+}
+
+function recordMonthlyPerformanceSummary(mode, correct, wrong) {
+  if (![3, 4, 5, 6].includes(Number(mode))) {
+    return;
+  }
+  const currentKey = getCurrentMonthKey();
+  const entry = monthlyPerformance[currentKey] || { correct: 0, attempts: 0 };
+  const normalizedCorrect = Math.max(0, Number(correct) || 0);
+  const normalizedWrong = Math.max(0, Number(wrong) || 0);
+  entry.correct += normalizedCorrect;
+  entry.attempts += normalizedCorrect + normalizedWrong;
+  monthlyPerformance = { [currentKey]: entry };
+  saveMonthlyPerformance();
 }
 
 function getAllModesUnlockedState() {
@@ -910,7 +971,7 @@ function ensureUnlockedModesStructure(raw) {
       });
     }
   }
-  localStorage.setItem('unlockedModes', JSON.stringify(normalized));
+  storage.setItem('unlockedModes', JSON.stringify(normalized));
   return normalized;
 }
 
@@ -919,21 +980,26 @@ function loadModeStatsFromStorage() {
   const legacy = parseJSONStorage('mode1Stats', null);
   if (legacy && !stats[1]) {
     stats[1] = legacy;
-    localStorage.removeItem('mode1Stats');
-    localStorage.setItem('modeStats', JSON.stringify(stats));
+    storage.removeItem('mode1Stats');
+    storage.setItem('modeStats', JSON.stringify(stats));
   }
   return stats;
 }
 
 function reloadPersistentProgress(initialLoad = false) {
   refreshUserSettings();
-  acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
-  errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
-  tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
+  acertosTotais = parseInt(storage.getItem('acertosTotais') || '0', 10);
+  errosTotais = parseInt(storage.getItem('errosTotais') || '0', 10);
+  tentativasTotais = parseInt(storage.getItem('tentativasTotais') || '0', 10);
   loadProgressFromStorage();
   roundStateCache = parseJSONStorage(ROUND_STATE_KEY, {});
   unlockedModes = ensureUnlockedModesStructure(parseJSONStorage('unlockedModes', {}));
   points = 0;
+  medalHistory = parseJSONStorage('medalHistory', []);
+  monthlyPerformance = normalizeMonthlyPerformanceSnapshot(parseJSONStorage('monthlyPerformance', {}));
+  saveMonthlyPerformance();
+  currentStreak = parseInt(storage.getItem('currentStreak') || '0', 10) || 0;
+  bestStreak = parseInt(storage.getItem('bestStreak') || '0', 10) || 0;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
   if (initialLoad) {
@@ -1135,10 +1201,10 @@ function ensureModeStats(mode) {
 }
 
 function saveModeStats() {
-  localStorage.setItem('modeStats', JSON.stringify(modeStats));
+  storage.setItem('modeStats', JSON.stringify(modeStats));
   if (typeof currentUser === 'object' && currentUser) {
     currentUser.stats = modeStats;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    storage.setItem('currentUser', JSON.stringify(currentUser));
   }
   if (typeof saveUserPerformance === 'function') {
     saveUserPerformance(modeStats);
@@ -1147,9 +1213,9 @@ function saveModeStats() {
 }
 
 function saveTotals() {
-  localStorage.setItem('acertosTotais', acertosTotais);
-  localStorage.setItem('errosTotais', errosTotais);
-  localStorage.setItem('tentativasTotais', tentativasTotais);
+  storage.setItem('acertosTotais', acertosTotais);
+  storage.setItem('errosTotais', errosTotais);
+  storage.setItem('tentativasTotais', tentativasTotais);
 }
 
 saveTotals();
@@ -1368,7 +1434,7 @@ function updateLevelIcon(options = {}) {
 
 function unlockMode(mode, duration = 1000) {
   unlockedModes[mode] = true;
-  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+  storage.setItem('unlockedModes', JSON.stringify(unlockedModes));
   document.querySelectorAll(`#menu-modes img[data-mode="${mode}"], #mode-buttons img[data-mode="${mode}"]`).forEach(img => {
     img.style.transition = `opacity ${duration}ms linear`;
     img.style.opacity = '1';
@@ -1397,7 +1463,7 @@ function performMenuLevelUp() {
   generalProgress.xp = 0;
   saveGeneralProgress();
   unlockedModes = getAllModesUnlockedState();
-  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+  storage.setItem('unlockedModes', JSON.stringify(unlockedModes));
   document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
     img.src = modeImages[6];
   });
@@ -1424,7 +1490,7 @@ function enforceStarClick() {
 }
 
 function startStatsSequence() {
-  localStorage.setItem('statsSequence', 'true');
+  storage.setItem('statsSequence', 'true');
   window.location.href = 'play.html';
 }
 
@@ -1925,6 +1991,12 @@ function verificarResposta() {
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
+    currentStreak += 1;
+    if (currentStreak > bestStreak) {
+      bestStreak = currentStreak;
+      storage.setItem('bestStreak', String(bestStreak));
+    }
+    storage.setItem('currentStreak', String(currentStreak));
     points = Math.min(roundTarget, points + 1);
     saveTotals();
     const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
@@ -1961,6 +2033,8 @@ function verificarResposta() {
       falar(esperado, esperadoLang);
     }
     consecutiveErrors++;
+    currentStreak = 0;
+    storage.setItem('currentStreak', '0');
     persistCurrentRoundState();
     flashError(esperado, () => {
       input.disabled = false;
@@ -2045,6 +2119,7 @@ function finishMode() {
   const medalKey = medal && MEDAL_LABEL_TO_KEY[medal.label];
   if (medalKey) {
     stats.medals[medalKey] += 1;
+    recordMedalHistory(medalKey);
   }
   saveModeStats();
   const progress = getModeProgress(selectedMode);
@@ -2059,6 +2134,8 @@ function finishMode() {
   updateLevelIcon({ scope: 'mode' });
   dispatchModeProgressUpdate(selectedMode);
   updateModeIcons();
+
+  recordMonthlyPerformanceSummary(selectedMode, correct, wrong);
 
   openPostGameScreen({
     correct,
@@ -2098,8 +2175,8 @@ function goHome() {
   consecutiveErrors = 0;
   bloqueado = false;
   if (sessionStart) {
-    const total = parseInt(localStorage.getItem('totalTime') || '0', 10);
-    localStorage.setItem('totalTime', total + (Date.now() - sessionStart));
+    const total = parseInt(storage.getItem('totalTime') || '0', 10);
+    storage.setItem('totalTime', total + (Date.now() - sessionStart));
     sessionStart = null;
   }
   recordModeTime(selectedMode);
@@ -2279,6 +2356,11 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 } else {
   window.addEventListener('load', bootstrapHomePage, { once: true });
 }
+
+window.playtalkGame = window.playtalkGame || {};
+window.playtalkGame.reloadPersistentProgress = function(initial = false) {
+  reloadPersistentProgress(initial);
+};
 
 if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
   window.registerPlaytalkPage('page-home', bootstrapHomePage);
