@@ -6,8 +6,6 @@
   <title>Ranking Global</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script src="js/remote-storage.js"></script>
-  <script src="js/aura.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
@@ -38,30 +36,20 @@
       <h1>Ranking Global Centralizado</h1>
     </header>
 
-    <section class="ranking-rotator" aria-live="polite">
-      <div class="ranking-rotator__header">
-        <div class="ranking-rotator__title-group">
-          <p class="ranking-rotator__eyebrow">Ranking dinâmico</p>
-          <h2 id="ranking-title">Ranking de nível</h2>
-          <p id="ranking-description" class="ranking-rotator__description">Os melhores níveis globais.</p>
-        </div>
-        <div class="ranking-rotator__controls" role="group" aria-label="Alternar ranking">
-          <button type="button" class="ranking-rotator__control" data-action="prev" aria-label="Ranking anterior">
-            ‹
-          </button>
-          <button type="button" class="ranking-rotator__control" data-action="next" aria-label="Próximo ranking">
-            ›
-          </button>
-        </div>
-      </div>
-      <section id="ranking-status" class="ranking-status" role="status" aria-live="polite">
-        Carregando ranking...
-      </section>
-      <div class="ranking-board" id="ranking-board" role="region" aria-labelledby="ranking-title">
-        <ol id="ranking-list" class="ranking-board__list" aria-live="assertive"></ol>
-      </div>
-      <div id="ranking-indicators" class="ranking-indicators" role="tablist" aria-label="Seleção de ranking"></div>
+    <section id="ranking-status" class="ranking-status" role="status" aria-live="polite">
+      Carregando ranking...
     </section>
+
+    <nav id="ranking-tabs" class="ranking-tabs" aria-label="Categorias de ranking">
+      <button type="button" data-ranking-tab="level" class="ranking-tab">Ranking 1 · Nível</button>
+      <button type="button" data-ranking-tab="speed" class="ranking-tab">Ranking 2 · Rápidos</button>
+      <button type="button" data-ranking-tab="points" class="ranking-tab">Ranking 3 · Pontos</button>
+      <button type="button" data-ranking-tab="aura" class="ranking-tab">Ranking 4 · Aura Score</button>
+      <button type="button" data-ranking-tab="monthly" class="ranking-tab">Ranking 5 · Melhores do mês</button>
+      <button type="button" data-ranking-tab="streak" class="ranking-tab">Ranking 6 · Sequências</button>
+    </nav>
+
+    <section id="ranking-carousel" class="ranking-carousel" aria-live="polite" aria-label="Listas de ranking"></section>
   </main>
 
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">

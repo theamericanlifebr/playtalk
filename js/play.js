@@ -1,4 +1,3 @@
-const storage = window.playtalkStorage;
 const colorStops = [
   [0, '#ff0000'],
   [2000, '#ff3b00'],
@@ -262,7 +261,7 @@ function initPlayPage(context = {}) {
   container.appendChild(modesBlock.block);
   container.appendChild(totalsBlock.block);
   function refreshStatsData() {
-    statsData = JSON.parse(storage.getItem('modeStats') || '{}');
+    statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
   }
   refreshStatsData();
   function calcModeStats(mode) {
@@ -365,9 +364,9 @@ function initPlayPage(context = {}) {
 
   selectMode(1);
 
-  const seq = storage.getItem('statsSequence');
+  const seq = localStorage.getItem('statsSequence');
   if (seq === 'true') {
-    storage.removeItem('statsSequence');
+    localStorage.removeItem('statsSequence');
     let delay = 3000;
     [2, 3, 4, 5, 6].forEach(mode => {
       setTimeout(() => selectMode(mode), delay);

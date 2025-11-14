@@ -1,7 +1,5 @@
 // Versus mode logic
 
-const storage = window.playtalkStorage;
-
 const colorStops = [
   [0, '#ff0000'],
   [2000, '#ff3b00'],
@@ -93,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let reconhecimento = null;
   let modoAtual = 0;
   let gameStart = 0;
-  let versusLog = JSON.parse(storage.getItem('versusLog') || '[]');
+  let versusLog = JSON.parse(localStorage.getItem('versusLog') || '[]');
 
   const fraseEl = document.getElementById('versus-phrase');
   const userImg = document.querySelector('#player-user .player-img');
@@ -281,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
       recTime,
       gameTime: Date.now() - gameStart
     });
-    storage.setItem('versusLog', JSON.stringify(versusLog));
+    localStorage.setItem('versusLog', JSON.stringify(versusLog));
     updateBars();
     setTimeout(nextFrase, 1000);
   }

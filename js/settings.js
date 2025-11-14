@@ -1,5 +1,4 @@
 (function() {
-  const storage = window.playtalkStorage;
   const DEFAULT_SETTINGS = {
     theme: 'light',
     pointsPerHit: 4000,
@@ -8,7 +7,7 @@
   };
 
   function loadSettings() {
-    const stored = storage.getItem('playtalkSettings');
+    const stored = localStorage.getItem('playtalkSettings');
     if (!stored) return { ...DEFAULT_SETTINGS };
     try {
       const parsed = JSON.parse(stored);
@@ -20,7 +19,7 @@
   }
 
   function saveSettings(settings) {
-    storage.setItem('playtalkSettings', JSON.stringify(settings));
+    localStorage.setItem('playtalkSettings', JSON.stringify(settings));
   }
 
   function applyTheme(theme) {

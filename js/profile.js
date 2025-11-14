@@ -1,5 +1,4 @@
 function initProfilePage(context = {}) {
-  const storage = window.playtalkStorage;
   const scope = context && context.container ? context.container : document;
   const authAPI = window.playtalkAuth || null;
   let currentUser = null;
@@ -198,14 +197,14 @@ function initProfilePage(context = {}) {
   const storageKey = `profile:${username}`;
   let profileData = {};
   try {
-    const stored = storage.getItem(storageKey);
+    const stored = localStorage.getItem(storageKey);
     profileData = stored ? JSON.parse(stored) : {};
   } catch (error) {
     console.warn('Não foi possível carregar os dados de perfil salvos.', error);
     profileData = {};
   }
 
-  const storedAvatar = storage.getItem('avatar');
+  const storedAvatar = localStorage.getItem('avatar');
   if (!profileData.photo && storedAvatar) {
     profileData.photo = storedAvatar;
   }
@@ -220,15 +219,15 @@ function initProfilePage(context = {}) {
 
   function persistAvatarValue(photoData) {
     if (photoData && typeof photoData === 'string' && photoData.length) {
-      storage.setItem('avatar', photoData);
+      localStorage.setItem('avatar', photoData);
     } else {
-      storage.removeItem('avatar');
+      localStorage.removeItem('avatar');
     }
   }
 
   function saveProfile() {
     try {
-      storage.setItem(storageKey, JSON.stringify(profileData));
+      localStorage.setItem(storageKey, JSON.stringify(profileData));
       persistAvatarValue(profileData.photo);
     } catch (error) {
       console.warn('Não foi possível salvar o perfil.', error);
@@ -236,7 +235,7 @@ function initProfilePage(context = {}) {
   }
 
   const storedDisplayName = (() => {
-    const saved = storage.getItem('displayName');
+    const saved = localStorage.getItem('displayName');
     if (saved && saved.trim()) {
       return saved.trim();
     }
@@ -258,7 +257,7 @@ function initProfilePage(context = {}) {
   persistAvatarValue(profileData.photo);
   updatePublishButtonState();
 
-  const storedShare = storage.getItem('shareResults');
+  const storedShare = localStorage.getItem('shareResults');
   const shareEnabled = storedShare !== null
     ? storedShare === 'true'
     : Boolean(profileData.shareResults);
@@ -268,10 +267,10 @@ function initProfilePage(context = {}) {
     shareCheckbox.checked = shareEnabled;
   }
   if (storedShare === null) {
-    storage.setItem('shareResults', shareEnabled ? 'true' : 'false');
+    localStorage.setItem('shareResults', shareEnabled ? 'true' : 'false');
   }
-  if (storedDisplayName && !storage.getItem('displayName')) {
-    storage.setItem('displayName', storedDisplayName);
+  if (storedDisplayName && !localStorage.getItem('displayName')) {
+    localStorage.setItem('displayName', storedDisplayName);
   }
 
   let persistTimeout = null;
@@ -307,7 +306,7 @@ function initProfilePage(context = {}) {
     nameField.addEventListener('input', () => {
       const value = nameField.value.trim();
       profileData.name = value;
-      storage.setItem('displayName', value);
+      localStorage.setItem('displayName', value);
       schedulePersist();
     });
   }
@@ -316,7 +315,7 @@ function initProfilePage(context = {}) {
     shareCheckbox.addEventListener('change', () => {
       const enabled = shareCheckbox.checked;
       profileData.shareResults = enabled;
-      storage.setItem('shareResults', enabled ? 'true' : 'false');
+      localStorage.setItem('shareResults', enabled ? 'true' : 'false');
       persistProfileChanges();
     });
   }

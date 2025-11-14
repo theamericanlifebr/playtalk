@@ -1,4 +1,3 @@
-const storage = window.playtalkStorage;
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   theme: 'light',
@@ -26,27 +25,6 @@ const MODE_SCORE_FACTORS = {
 const ROUND_OPTIONS = [12, 18, 24, 36];
 const DEFAULT_ROUND_SIZE = ROUND_OPTIONS[0];
 const MAX_PROGRESS_POINTS = ROUND_OPTIONS[ROUND_OPTIONS.length - 1];
-const COLOR_STOP_RATIOS = [
-  [0, '#ff0000'],
-  [0.08, '#ff3b00'],
-  [0.16, '#ff7f00'],
-  [0.24, '#ffb300'],
-  [0.32, '#ffe000'],
-  [0.4, '#ffff66'],
-  [0.48, '#ccff66'],
-  [0.56, '#99ff99'],
-  [0.64, '#00cc66'],
-  [0.72, '#00994d'],
-  [0.8, '#00ffff'],
-  [0.88, '#66ccff'],
-  [0.96, '#0099ff'],
-  [1, '#0099ff']
-];
-
-const COLOR_STOPS = COLOR_STOP_RATIOS.map(([ratio, color]) => [
-  Math.round(ratio * MAX_PROGRESS_POINTS * 100) / 100,
-  color
-]);
 
 const MODE_DETAILS = {
   1: {
@@ -82,12 +60,21 @@ const MODE_DETAILS = {
 };
 
 const MEDAL_RULES = [
-  { min: 0, max: 35, image: 'medalhas/gesso.png', label: 'Medalha de Gesso', levelDelta: -1, status: 'Você perdeu um nível.' },
-  { min: 36, max: 66, image: 'medalhas/chumbo.png', label: 'Medalha de Chumbo', levelDelta: -1, status: 'Você perdeu um nível.' },
-  { min: 67, max: 75, image: 'medalhas/bronze.png', label: 'Medalha de Bronze', levelDelta: 0, status: 'Você permanece no nível.' },
-  { min: 76, max: 82, image: 'medalhas/prata.png', label: 'Medalha de Prata', levelDelta: 0, status: 'Você permanece no nível.' },
-  { min: 83, max: 89, image: 'medalhas/ouro.png', label: 'Medalha de Ouro', levelDelta: 1, status: 'Você subiu de nível!' },
+  { min: 0, max: 25, image: 'medalhas/gesso.png', label: 'Medalha de Gesso', levelDelta: -1, status: 'Você perdeu um nível.' },
+  { min: 26, max: 50, image: 'medalhas/chumbo.png', label: 'Medalha de Chumbo', levelDelta: -1, status: 'Você perdeu um nível.' },
+  { min: 51, max: 70, image: 'medalhas/bronze.png', label: 'Medalha de Bronze', levelDelta: 0, status: 'Você permanece no nível.' },
+  { min: 71, max: 80, image: 'medalhas/prata.png', label: 'Medalha de Prata', levelDelta: 0, status: 'Você permanece no nível.' },
+  { min: 81, max: 89, image: 'medalhas/ouro.png', label: 'Medalha de Ouro', levelDelta: 1, status: 'Você subiu de nível!' },
   { min: 90, max: 100, image: 'medalhas/diamante.png', label: 'Medalha de Diamante', levelDelta: 1, status: 'Você subiu de nível!' }
+];
+
+const MEDAL_COLOR_RULES = [
+  { max: 25, color: '#b0bec5' },
+  { max: 50, color: '#78909c' },
+  { max: 70, color: '#cd7f32' },
+  { max: 80, color: '#c0c0c0' },
+  { max: 89, color: '#d4af37' },
+  { max: 100, color: '#b9f2ff' }
 ];
 
 const MEDAL_LABEL_TO_KEY = {
@@ -125,7 +112,7 @@ function normalizeMedalCounts(entry) {
 }
 
 function getMedalForAccuracy(accuracy) {
-  const perc = Math.max(0, Math.min(100, accuracy));
+  const perc = Math.max(0, Math.min(100, Math.round(accuracy)));
   for (const medal of MEDAL_RULES) {
     if (perc >= medal.min && perc <= medal.max) {
       return medal;
@@ -187,37 +174,15 @@ function applyScoreMultiplier(baseValue, mode) {
   return Math.max(0, Math.round(numeric * multiplier));
 }
 
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [int >> 16 & 255, int >> 8 & 255, int & 255];
-}
-
-function rgbToHex(r, g, b) {
-  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
 function calcularCor(pontos) {
-  const max = COLOR_STOPS[COLOR_STOPS.length - 1][0];
-  const p = Math.max(0, Math.min(pontos, max));
-  for (let i = 0; i < COLOR_STOPS.length - 1; i++) {
-    const [p1, c1] = COLOR_STOPS[i];
-    const [p2, c2] = COLOR_STOPS[i + 1];
-    if (p >= p1 && p <= p2) {
-      const ratio = (p - p1) / (p2 - p1);
-      const [r1, g1, b1] = hexToRgb(c1);
-      const [r2, g2, b2] = hexToRgb(c2);
-      const r = Math.round(r1 + ratio * (r2 - r1));
-      const g = Math.round(g1 + ratio * (g2 - g1));
-      const b = Math.round(b1 + ratio * (b2 - b1));
-      return rgbToHex(r, g, b);
-    }
-  }
-  return COLOR_STOPS[COLOR_STOPS.length - 1][1];
+  const ratio = Math.max(0, Math.min(1, pontos / MAX_PROGRESS_POINTS));
+  return colorFromPercent(ratio * 100);
 }
 
 function colorFromPercent(perc) {
-  const max = COLOR_STOPS[COLOR_STOPS.length - 1][0];
-  return calcularCor((perc / 100) * max);
+  const safePerc = Math.max(0, Math.min(100, perc));
+  const rule = MEDAL_COLOR_RULES.find(({ max }) => safePerc <= max) || MEDAL_COLOR_RULES[MEDAL_COLOR_RULES.length - 1];
+  return rule.color;
 }
 
 function sanitizePhraseForBalance(text) {
@@ -515,7 +480,7 @@ function setRoundSelection(mode, size) {
 }
 
 function persistRoundStateCache() {
-  storage.setItem(ROUND_STATE_KEY, JSON.stringify(roundStateCache));
+  localStorage.setItem(ROUND_STATE_KEY, JSON.stringify(roundStateCache));
 }
 
 function sanitizeStoredPhrases(list) {
@@ -719,7 +684,7 @@ function saveGeneralProgress(options = {}) {
   } else {
     generalProgress.xp = normalizedXp;
   }
-  storage.setItem(GENERAL_PROGRESS_KEY, JSON.stringify(generalProgress));
+  localStorage.setItem(GENERAL_PROGRESS_KEY, JSON.stringify(generalProgress));
   if (!options || options.emit !== false) {
     dispatchGeneralProgressUpdate();
   }
@@ -735,7 +700,7 @@ function saveModeProgress(options = {}) {
       : Math.max(0, Math.floor(entry.xp));
     normalized[key] = { level: cappedLevel, xp: cappedXp };
   });
-  storage.setItem(MODE_PROGRESS_KEY, JSON.stringify(normalized));
+  localStorage.setItem(MODE_PROGRESS_KEY, JSON.stringify(normalized));
   if (!options || options.emit !== false) {
     Object.keys(normalized).forEach(modeKey => dispatchModeProgressUpdate(Number(modeKey)));
   }
@@ -779,7 +744,7 @@ function loadProgressFromStorage() {
       generalProgress.xp = normalizedXp;
     }
   } else {
-    const legacyLevel = parseInt(storage.getItem('pastaAtual'), 10);
+    const legacyLevel = parseInt(localStorage.getItem('pastaAtual'), 10);
     const fallbackLevel = Number.isFinite(legacyLevel) && legacyLevel > 0 ? legacyLevel : 1;
     const legacyProgress = parseJSONStorage('levelProgress', null);
     if (legacyProgress && Number.isFinite(legacyProgress.level)) {
@@ -861,11 +826,11 @@ let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
 let roundStateCache = {};
-let medalHistory = parseJSONStorage('medalHistory', []);
-let monthlyPerformance = normalizeMonthlyPerformanceSnapshot(parseJSONStorage('monthlyPerformance', {}));
-saveMonthlyPerformance();
-let currentStreak = parseInt(storage.getItem('currentStreak') || '0', 10) || 0;
-let bestStreak = parseInt(storage.getItem('bestStreak') || '0', 10) || 0;
+let medalLog = [];
+let bestCpm = 0;
+let bestSequentialCorrect = 0;
+let currentSequentialCorrect = 0;
+let monthlyAccuracy = {};
 
 function cloneFallback(value) {
   if (Array.isArray(value)) {
@@ -878,7 +843,7 @@ function cloneFallback(value) {
 }
 
 function parseJSONStorage(key, fallback) {
-  const raw = storage.getItem(key);
+  const raw = localStorage.getItem(key);
   if (!raw) {
     return cloneFallback(fallback);
   }
@@ -891,59 +856,73 @@ function parseJSONStorage(key, fallback) {
   }
 }
 
-function saveMedalHistory() {
-  storage.setItem('medalHistory', JSON.stringify(medalHistory));
+function ensureMedalLogLimit() {
+  if (medalLog.length > 500) {
+    medalLog = medalLog.slice(-500);
+  }
 }
 
-function recordMedalHistory(medalType) {
-  if (!medalType) {
+function loadMedalLog() {
+  const parsed = parseJSONStorage('medalLog', []);
+  medalLog = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  const originalLength = medalLog.length;
+  ensureMedalLogLimit();
+  if (medalLog.length !== originalLength) {
+    localStorage.setItem('medalLog', JSON.stringify(medalLog));
+  }
+}
+
+function saveMedalLog() {
+  ensureMedalLogLimit();
+  localStorage.setItem('medalLog', JSON.stringify(medalLog));
+  document.dispatchEvent(new CustomEvent('playtalk:aura-log-changed'));
+}
+
+function loadSequentialStats() {
+  bestSequentialCorrect = parseInt(localStorage.getItem('bestSequentialCorrect') || '0', 10) || 0;
+  currentSequentialCorrect = parseInt(localStorage.getItem('currentSequentialCorrect') || '0', 10) || 0;
+}
+
+function persistSequentialStats() {
+  localStorage.setItem('bestSequentialCorrect', String(bestSequentialCorrect));
+  localStorage.setItem('currentSequentialCorrect', String(currentSequentialCorrect));
+}
+
+function loadBestCpm() {
+  const raw = parseFloat(localStorage.getItem('bestCpm') || '0');
+  bestCpm = Number.isFinite(raw) && raw > 0 ? raw : 0;
+}
+
+function persistBestCpm() {
+  localStorage.setItem('bestCpm', String(Math.max(0, Math.round(bestCpm * 100) / 100)));
+}
+
+function pruneMonthlyAccuracy() {
+  const entries = Object.entries(monthlyAccuracy || {});
+  if (entries.length <= 24) {
     return;
   }
-  const entry = { type: medalType, earnedAt: new Date().toISOString() };
-  medalHistory.push(entry);
-  const max = (window.playtalkAura && window.playtalkAura.MAX_HISTORY) || 500;
-  if (medalHistory.length > max) {
-    medalHistory.splice(0, medalHistory.length - max);
+  entries.sort((a, b) => a[0].localeCompare(b[0]));
+  const kept = entries.slice(-24);
+  monthlyAccuracy = kept.reduce((acc, [key, value]) => {
+    acc[key] = value;
+    return acc;
+  }, {});
+}
+
+function loadMonthlyAccuracy() {
+  const parsed = parseJSONStorage('monthlyAccuracy', {});
+  monthlyAccuracy = parsed && typeof parsed === 'object' ? parsed : {};
+  const before = JSON.stringify(monthlyAccuracy);
+  pruneMonthlyAccuracy();
+  if (before !== JSON.stringify(monthlyAccuracy)) {
+    localStorage.setItem('monthlyAccuracy', JSON.stringify(monthlyAccuracy));
   }
-  saveMedalHistory();
 }
 
-function getCurrentMonthKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}`;
-}
-
-function normalizeMonthlyPerformanceSnapshot(raw) {
-  const currentKey = getCurrentMonthKey();
-  let entry = raw && typeof raw === 'object' ? raw[currentKey] : null;
-  if (!entry || typeof entry !== 'object') {
-    entry = { correct: 0, attempts: 0 };
-  } else {
-    entry = {
-      correct: Math.max(0, Number(entry.correct) || 0),
-      attempts: Math.max(0, Number(entry.attempts) || 0)
-    };
-  }
-  return { [currentKey]: entry };
-}
-
-function saveMonthlyPerformance() {
-  storage.setItem('monthlyPerformance', JSON.stringify(monthlyPerformance));
-}
-
-function recordMonthlyPerformanceSummary(mode, correct, wrong) {
-  if (![3, 4, 5, 6].includes(Number(mode))) {
-    return;
-  }
-  const currentKey = getCurrentMonthKey();
-  const entry = monthlyPerformance[currentKey] || { correct: 0, attempts: 0 };
-  const normalizedCorrect = Math.max(0, Number(correct) || 0);
-  const normalizedWrong = Math.max(0, Number(wrong) || 0);
-  entry.correct += normalizedCorrect;
-  entry.attempts += normalizedCorrect + normalizedWrong;
-  monthlyPerformance = { [currentKey]: entry };
-  saveMonthlyPerformance();
+function persistMonthlyAccuracy() {
+  pruneMonthlyAccuracy();
+  localStorage.setItem('monthlyAccuracy', JSON.stringify(monthlyAccuracy));
 }
 
 function getAllModesUnlockedState() {
@@ -971,7 +950,7 @@ function ensureUnlockedModesStructure(raw) {
       });
     }
   }
-  storage.setItem('unlockedModes', JSON.stringify(normalized));
+  localStorage.setItem('unlockedModes', JSON.stringify(normalized));
   return normalized;
 }
 
@@ -980,28 +959,27 @@ function loadModeStatsFromStorage() {
   const legacy = parseJSONStorage('mode1Stats', null);
   if (legacy && !stats[1]) {
     stats[1] = legacy;
-    storage.removeItem('mode1Stats');
-    storage.setItem('modeStats', JSON.stringify(stats));
+    localStorage.removeItem('mode1Stats');
+    localStorage.setItem('modeStats', JSON.stringify(stats));
   }
   return stats;
 }
 
 function reloadPersistentProgress(initialLoad = false) {
   refreshUserSettings();
-  acertosTotais = parseInt(storage.getItem('acertosTotais') || '0', 10);
-  errosTotais = parseInt(storage.getItem('errosTotais') || '0', 10);
-  tentativasTotais = parseInt(storage.getItem('tentativasTotais') || '0', 10);
+  acertosTotais = parseInt(localStorage.getItem('acertosTotais') || '0', 10);
+  errosTotais = parseInt(localStorage.getItem('errosTotais') || '0', 10);
+  tentativasTotais = parseInt(localStorage.getItem('tentativasTotais') || '0', 10);
   loadProgressFromStorage();
   roundStateCache = parseJSONStorage(ROUND_STATE_KEY, {});
   unlockedModes = ensureUnlockedModesStructure(parseJSONStorage('unlockedModes', {}));
   points = 0;
-  medalHistory = parseJSONStorage('medalHistory', []);
-  monthlyPerformance = normalizeMonthlyPerformanceSnapshot(parseJSONStorage('monthlyPerformance', {}));
-  saveMonthlyPerformance();
-  currentStreak = parseInt(storage.getItem('currentStreak') || '0', 10) || 0;
-  bestStreak = parseInt(storage.getItem('bestStreak') || '0', 10) || 0;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
+  loadMedalLog();
+  loadSequentialStats();
+  loadBestCpm();
+  loadMonthlyAccuracy();
   if (initialLoad) {
     updateLevelIcon({ scope: 'general' });
   } else {
@@ -1201,11 +1179,7 @@ function ensureModeStats(mode) {
 }
 
 function saveModeStats() {
-  storage.setItem('modeStats', JSON.stringify(modeStats));
-  if (typeof currentUser === 'object' && currentUser) {
-    currentUser.stats = modeStats;
-    storage.setItem('currentUser', JSON.stringify(currentUser));
-  }
+  localStorage.setItem('modeStats', JSON.stringify(modeStats));
   if (typeof saveUserPerformance === 'function') {
     saveUserPerformance(modeStats);
   }
@@ -1213,9 +1187,9 @@ function saveModeStats() {
 }
 
 function saveTotals() {
-  storage.setItem('acertosTotais', acertosTotais);
-  storage.setItem('errosTotais', errosTotais);
-  storage.setItem('tentativasTotais', tentativasTotais);
+  localStorage.setItem('acertosTotais', acertosTotais);
+  localStorage.setItem('errosTotais', errosTotais);
+  localStorage.setItem('tentativasTotais', tentativasTotais);
 }
 
 saveTotals();
@@ -1347,6 +1321,11 @@ function reportLastError() {
   const expectedChars = countCorrectCharacters(lastExpected || '', lastExpected || '');
   roundCorrectChars += expectedChars;
   saveTotals();
+  currentSequentialCorrect += 1;
+  if (currentSequentialCorrect > bestSequentialCorrect) {
+    bestSequentialCorrect = currentSequentialCorrect;
+  }
+  persistSequentialStats();
   atualizarBarraProgresso();
   const stats = ensureModeStats(selectedMode);
   stats.correctChars += expectedChars;
@@ -1434,7 +1413,7 @@ function updateLevelIcon(options = {}) {
 
 function unlockMode(mode, duration = 1000) {
   unlockedModes[mode] = true;
-  storage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
   document.querySelectorAll(`#menu-modes img[data-mode="${mode}"], #mode-buttons img[data-mode="${mode}"]`).forEach(img => {
     img.style.transition = `opacity ${duration}ms linear`;
     img.style.opacity = '1';
@@ -1463,7 +1442,7 @@ function performMenuLevelUp() {
   generalProgress.xp = 0;
   saveGeneralProgress();
   unlockedModes = getAllModesUnlockedState();
-  storage.setItem('unlockedModes', JSON.stringify(unlockedModes));
+  localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
   document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
     img.src = modeImages[6];
   });
@@ -1490,7 +1469,7 @@ function enforceStarClick() {
 }
 
 function startStatsSequence() {
-  storage.setItem('statsSequence', 'true');
+  localStorage.setItem('statsSequence', 'true');
   window.location.href = 'play.html';
 }
 
@@ -1991,17 +1970,16 @@ function verificarResposta() {
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
-    currentStreak += 1;
-    if (currentStreak > bestStreak) {
-      bestStreak = currentStreak;
-      storage.setItem('bestStreak', String(bestStreak));
-    }
-    storage.setItem('currentStreak', String(currentStreak));
     points = Math.min(roundTarget, points + 1);
     saveTotals();
     const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
     grantExperience(reward, selectedMode);
     consecutiveErrors = 0;
+    currentSequentialCorrect += 1;
+    if (currentSequentialCorrect > bestSequentialCorrect) {
+      bestSequentialCorrect = currentSequentialCorrect;
+    }
+    persistSequentialStats();
     resultado.textContent = '';
     persistCurrentRoundState();
     flashSuccess(() => {
@@ -2022,6 +2000,8 @@ function verificarResposta() {
     lastInput = resposta;
     lastFolder = pastaAtual;
     saveTotals();
+    currentSequentialCorrect = 0;
+    persistSequentialStats();
     lastWasError = true;
     resultado.textContent = "";
     resultado.style.color = "red";
@@ -2033,8 +2013,6 @@ function verificarResposta() {
       falar(esperado, esperadoLang);
     }
     consecutiveErrors++;
-    currentStreak = 0;
-    storage.setItem('currentStreak', '0');
     persistCurrentRoundState();
     flashError(esperado, () => {
       input.disabled = false;
@@ -2065,29 +2043,17 @@ function continuar() {
 function atualizarBarraProgresso() {
   updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
+  const track = document.getElementById('barra-progresso');
   const limite = Math.max(1, getCurrentThreshold());
   const currentPoints = Math.max(0, Math.min(points, limite));
   const accuracyRatio = currentPoints / limite;
   const perc = accuracyRatio * 100;
-  let segmentRatio = accuracyRatio;
-  const medal = getMedalForAccuracy(perc);
-  if (medal) {
-    const currentIndex = MEDAL_RULES.indexOf(medal);
-    if (currentIndex >= 0) {
-      const start = Number.isFinite(medal.min) ? medal.min : 0;
-      const nextMedal = MEDAL_RULES[currentIndex + 1];
-      if (nextMedal) {
-        const end = nextMedal.min;
-        const span = Math.max(1, end - start);
-        segmentRatio = Math.max(0, Math.min(1, (perc - start) / span));
-      } else {
-        segmentRatio = 1;
-      }
-    }
-  }
   if (filled) {
-    filled.style.width = (segmentRatio * 100) + '%';
+    filled.style.width = `${Math.max(0, Math.min(100, perc))}%`;
     filled.style.backgroundColor = colorFromPercent(perc);
+  }
+  if (track) {
+    track.setAttribute('aria-valuenow', Math.round(Math.max(0, Math.min(100, perc))));
   }
   updateModeMedalIcon(accuracyRatio);
 }
@@ -2119,7 +2085,15 @@ function finishMode() {
   const medalKey = medal && MEDAL_LABEL_TO_KEY[medal.label];
   if (medalKey) {
     stats.medals[medalKey] += 1;
-    recordMedalHistory(medalKey);
+    medalLog.push({
+      medal: medalKey,
+      timestamp: Date.now(),
+      mode: selectedMode,
+      accuracy,
+      correct,
+      total: attemptsForAccuracy
+    });
+    saveMedalLog();
   }
   saveModeStats();
   const progress = getModeProgress(selectedMode);
@@ -2135,8 +2109,6 @@ function finishMode() {
   dispatchModeProgressUpdate(selectedMode);
   updateModeIcons();
 
-  recordMonthlyPerformanceSummary(selectedMode, correct, wrong);
-
   openPostGameScreen({
     correct,
     wrong,
@@ -2146,6 +2118,22 @@ function finishMode() {
     previousLevel,
     newLevel: nextLevel
   });
+
+  if (cpm > bestCpm) {
+    bestCpm = cpm;
+    persistBestCpm();
+  }
+
+  if ([3, 4, 5, 6].includes(selectedMode)) {
+    const now = new Date();
+    const monthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+    if (!monthlyAccuracy[monthKey]) {
+      monthlyAccuracy[monthKey] = { correct: 0, total: 0 };
+    }
+    monthlyAccuracy[monthKey].correct += correct;
+    monthlyAccuracy[monthKey].total += attemptsForAccuracy;
+    persistMonthlyAccuracy();
+  }
 }
 
 function nextMode() {
@@ -2175,8 +2163,8 @@ function goHome() {
   consecutiveErrors = 0;
   bloqueado = false;
   if (sessionStart) {
-    const total = parseInt(storage.getItem('totalTime') || '0', 10);
-    storage.setItem('totalTime', total + (Date.now() - sessionStart));
+    const total = parseInt(localStorage.getItem('totalTime') || '0', 10);
+    localStorage.setItem('totalTime', total + (Date.now() - sessionStart));
     sessionStart = null;
   }
   recordModeTime(selectedMode);
@@ -2356,11 +2344,6 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 } else {
   window.addEventListener('load', bootstrapHomePage, { once: true });
 }
-
-window.playtalkGame = window.playtalkGame || {};
-window.playtalkGame.reloadPersistentProgress = function(initial = false) {
-  reloadPersistentProgress(initial);
-};
 
 if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
   window.registerPlaytalkPage('page-home', bootstrapHomePage);

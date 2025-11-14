@@ -1,5 +1,4 @@
 (function() {
-  const storage = window.playtalkStorage;
   function formatTime(ms) {
     const sec = Math.floor(ms / 1000);
     const min = Math.floor(sec / 60);
@@ -32,7 +31,7 @@
       return;
     }
     container.innerHTML = '';
-    const statsData = JSON.parse(storage.getItem('modeStats') || '{}');
+    const statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
     for (let i = 1; i <= 6; i++) {
       const stats = statsData[i] || {};
       const totalTime = stats.totalTime || 0;
