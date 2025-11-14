@@ -194,14 +194,18 @@ function initProfilePage(context = {}) {
     usernameField.value = username;
   }
 
-  const profileData = {
-    name: '',
-    photo: '',
-    shareResults: false
-  };
+  const storageKey = `profile:${username}`;
+  let profileData = {};
+  try {
+    const stored = localStorage.getItem(storageKey);
+    profileData = stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.warn('Não foi possível carregar os dados de perfil salvos.', error);
+    profileData = {};
+  }
 
   const storedAvatar = localStorage.getItem('avatar');
-  if (storedAvatar) {
+  if (!profileData.photo && storedAvatar) {
     profileData.photo = storedAvatar;
   }
 
@@ -211,6 +215,23 @@ function initProfilePage(context = {}) {
     if (!publishButton) return;
     const hasPendingPhoto = pendingPhotoData && pendingPhotoData !== profileData.photo;
     publishButton.disabled = !hasPendingPhoto;
+  }
+
+  function persistAvatarValue(photoData) {
+    if (photoData && typeof photoData === 'string' && photoData.length) {
+      localStorage.setItem('avatar', photoData);
+    } else {
+      localStorage.removeItem('avatar');
+    }
+  }
+
+  function saveProfile() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(profileData));
+      persistAvatarValue(profileData.photo);
+    } catch (error) {
+      console.warn('Não foi possível salvar o perfil.', error);
+    }
   }
 
   const storedDisplayName = (() => {
@@ -233,6 +254,7 @@ function initProfilePage(context = {}) {
     updatePhotoPreview(profileData.photo);
   }
 
+  persistAvatarValue(profileData.photo);
   updatePublishButtonState();
 
   const storedShare = localStorage.getItem('shareResults');
@@ -260,6 +282,7 @@ function initProfilePage(context = {}) {
   }
 
   function persistProfileChanges({ emitEvent = true } = {}) {
+    saveProfile();
     if (authAPI && typeof authAPI.persistProgress === 'function') {
       authAPI.persistProgress();
     }
@@ -358,11 +381,6 @@ function initProfilePage(context = {}) {
       profileData.photo = pendingPhotoData;
       pendingPhotoData = null;
       updatePhotoPreview(profileData.photo);
-      if (profileData.photo) {
-        localStorage.setItem('avatar', profileData.photo);
-      } else {
-        localStorage.removeItem('avatar');
-      }
       persistProfileChanges();
       updatePublishButtonState();
     });
