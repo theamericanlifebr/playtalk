@@ -1,4 +1,5 @@
 (function() {
+  const SETTINGS_STORAGE_KEY = 'playtalkSettings';
   const DEFAULT_SETTINGS = {
     theme: 'light',
     pointsPerHit: 4000,
@@ -6,20 +7,50 @@
     startingPoints: 0
   };
 
+  function normalizeSettings(value) {
+    if (!value || typeof value !== 'object') {
+      return { ...DEFAULT_SETTINGS };
+    }
+    return {
+      ...DEFAULT_SETTINGS,
+      ...value
+    };
+  }
+
   function loadSettings() {
-    const stored = localStorage.getItem('playtalkSettings');
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (!stored) return { ...DEFAULT_SETTINGS };
     try {
       const parsed = JSON.parse(stored);
-      return { ...DEFAULT_SETTINGS, ...parsed };
+      return normalizeSettings(parsed);
     } catch (err) {
       console.warn('Configurações inválidas, revertendo para padrão.', err);
       return { ...DEFAULT_SETTINGS };
     }
   }
 
+  function notifySettingsChange(settings) {
+    try {
+      document.dispatchEvent(new CustomEvent('playtalk:settings-change', {
+        detail: { settings: { ...settings } }
+      }));
+    } catch (error) {
+      console.warn('Não foi possível emitir evento de configurações:', error);
+    }
+  }
+
   function saveSettings(settings) {
-    localStorage.setItem('playtalkSettings', JSON.stringify(settings));
+    const normalized = normalizeSettings(settings);
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(normalized));
+    } catch (err) {
+      console.warn('Não foi possível salvar as configurações.', err);
+    }
+    notifySettingsChange(normalized);
+    if (window.playtalkAuth && typeof window.playtalkAuth.persistProgress === 'function') {
+      window.playtalkAuth.persistProgress();
+    }
+    return normalized;
   }
 
   function applyTheme(theme) {
@@ -43,6 +74,13 @@
     applyTheme(settings.theme);
   }
 
+  function handleThemeSync(event) {
+    const key = event && (event.key || (event.detail && event.detail.key));
+    if (!key || key === SETTINGS_STORAGE_KEY) {
+      requestAnimationFrame(applyStoredTheme);
+    }
+  }
+
   window.playtalkSettings = {
     DEFAULT_SETTINGS,
     loadSettings,
@@ -51,6 +89,9 @@
     applyStoredTheme
   };
 
+  window.addEventListener('storage', handleThemeSync);
+  window.addEventListener('playtalk:storage-change', handleThemeSync);
+  document.addEventListener('playtalk:settings-change', () => handleThemeSync({ key: SETTINGS_STORAGE_KEY }));
   document.addEventListener('DOMContentLoaded', applyStoredTheme, { once: true });
 })();
 

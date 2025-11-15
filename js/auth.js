@@ -15,14 +15,28 @@
     completedModes: { type: 'json', default: {} },
     unlockedModes: { type: 'json', default: {} },
     modeIntroShown: { type: 'json', default: {} },
+    playtalkSettings: {
+      type: 'json',
+      default: {
+        theme: 'light',
+        pointsPerHit: 4000,
+        pointsLossPerSecond: 0,
+        startingPoints: 0
+      }
+    },
     generalProgress: { type: 'json', default: { level: 1, xp: 0 } },
     modeProgress: { type: 'json', default: {} },
+    pastaAtual: { type: 'number', default: 1 },
     tutorialDone: { type: 'boolean', default: false },
     ilifeDone: { type: 'boolean', default: false },
     levelDetails: { type: 'json', default: [] },
     totalTime: { type: 'number', default: 0 },
-    shareResults: { type: 'boolean', default: false },
-    avatar: { type: 'string', default: DEFAULT_AVATAR_URL }
+    shareResults: { type: 'boolean', default: true },
+    avatar: { type: 'string', default: DEFAULT_AVATAR_URL },
+    medalHistory: { type: 'json', default: [] },
+    currentStreak: { type: 'number', default: 0 },
+    bestStreak: { type: 'number', default: 0 },
+    monthlyStats: { type: 'json', default: { month: '', totalAttempts: 0, eligibleAttempts: 0, correctAttempts: 0 } }
   };
 
   let cachedCurrentUser = null;
@@ -30,6 +44,55 @@
   let closeLoginFlowHandler = null;
   let closeUserMenu = null;
   let teardownUserMenu = null;
+
+  function safeParseJSON(value, fallback) {
+    if (value === undefined || value === null || value === '') {
+      return fallback;
+    }
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      console.warn('Conteúdo JSON inválido, usando padrão.', error);
+      return fallback;
+    }
+  }
+
+  function readMedalHistoryFromStorage() {
+    const raw = localStorage.getItem('medalHistory');
+    const parsed = safeParseJSON(raw, []);
+    return Array.isArray(parsed) ? parsed : [];
+  }
+
+  function getAuraGradientFromHistory(history) {
+    if (!Array.isArray(history) || history.length < 10) {
+      return null;
+    }
+    if (!window.playtalkAura || typeof window.playtalkAura.gradientFor !== 'function') {
+      return null;
+    }
+    try {
+      return window.playtalkAura.gradientFor(history);
+    } catch (error) {
+      console.warn('Não foi possível calcular a aura score:', error);
+      return null;
+    }
+  }
+
+  function updateHeaderAura() {
+    const avatarContainer = document.getElementById('header-avatar-container');
+    if (!avatarContainer) {
+      return;
+    }
+    const history = readMedalHistoryFromStorage();
+    const gradient = getAuraGradientFromHistory(history);
+    if (gradient) {
+      avatarContainer.classList.add('has-aura');
+      avatarContainer.style.setProperty('--aura-gradient', gradient);
+    } else {
+      avatarContainer.classList.remove('has-aura');
+      avatarContainer.style.removeProperty('--aura-gradient');
+    }
+  }
 
   function normalizeBalanceValue(raw) {
     if (raw === null || raw === undefined) {
@@ -392,6 +455,7 @@
     const displayName = user
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
+    const storedLevel = Number(localStorage.getItem('pastaAtual')) || 1;
     let avatarUrl = DEFAULT_AVATAR_URL;
     const storedAvatar = localStorage.getItem('avatar');
     if (storedAvatar && storedAvatar.trim()) {
@@ -405,12 +469,12 @@
       nameEl.title = displayName;
     }
     if (levelEl) {
-      levelEl.textContent = 'Nível 1';
+      levelEl.textContent = `Nível ${Math.max(1, storedLevel)}`;
     }
 
     if (avatarContainer) {
-      avatarContainer.style.setProperty('--avatar-progress', '0deg');
-      avatarContainer.title = 'Nível central fixo no nível 1.';
+      avatarContainer.dataset.level = String(Math.max(1, storedLevel));
+      avatarContainer.title = `Nível ${Math.max(1, storedLevel)}`;
     }
 
     if (avatarEl) {
@@ -440,6 +504,7 @@
     if (user && typeof closeLoginFlowHandler === 'function') {
       closeLoginFlowHandler();
     }
+    updateHeaderAura();
   }
 
   function clearProgressStorage() {
@@ -754,6 +819,23 @@
     });
   }
 
+  function setupHeaderNavigation() {
+    const avatarContainer = document.getElementById('header-avatar-container');
+    if (!avatarContainer || avatarContainer.dataset.homeNavBound === 'true') {
+      return;
+    }
+    avatarContainer.dataset.homeNavBound = 'true';
+    avatarContainer.style.cursor = 'pointer';
+    avatarContainer.addEventListener('click', () => {
+      if (window.location.pathname.endsWith('index.html')) {
+        window.location.hash = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+  }
+
   async function init() {
     readStoredCurrentUser();
     const user = cachedCurrentUser;
@@ -765,6 +847,8 @@
     updateAuthStatus();
     setupUserMenu();
     setupLoginFlow();
+    setupHeaderNavigation();
+    updateHeaderAura();
 
     window.addEventListener('beforeunload', () => {
       updateUserSnapshot({ useBeacon: true });
@@ -1080,7 +1164,7 @@
       return;
     }
 
-    const watchedKeys = ['generalProgress', 'modeProgress', 'displayName', 'avatar'];
+    const watchedKeys = ['generalProgress', 'modeProgress', 'displayName', 'avatar', 'medalHistory', 'pastaAtual'];
     if (event.key && watchedKeys.includes(event.key)) {
       updateAuthStatus();
       return;
@@ -1107,4 +1191,8 @@
       }
     }
   };
+
+  document.addEventListener('playtalk:medal-history-change', () => {
+    updateHeaderAura();
+  });
 })();
