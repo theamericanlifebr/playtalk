@@ -40,7 +40,76 @@
       Carregando ranking...
     </section>
 
-  <section id="ranking-list" class="ranking-list" aria-label="Ranking global de jogadores"></section>
+    <section class="ranking-overview">
+      <p>
+        Agora o ranking apresenta seis visões complementares que alternam automaticamente a cada seis segundos. As
+        medições consideram progresso de nível, velocidade de digitação, saldo total de pontos de experiência,
+        distribuição das medalhas (AuraScore), desempenho mensal e acertos sequenciais.
+      </p>
+    </section>
+
+    <section class="ranking-carousel" aria-live="polite">
+      <div class="ranking-panels" id="ranking-panels">
+        <article class="ranking-panel" data-ranking-id="level" aria-hidden="true">
+          <header class="ranking-panel__header">
+            <p class="ranking-panel__eyebrow">Ranking 1</p>
+            <h2>Nível atual</h2>
+            <p class="ranking-panel__description">Classificação oficial pelo nível vigente com base na experiência
+              acumulada e avanço de pasta.</p>
+          </header>
+          <ol class="ranking-panel__list" aria-label="Ranking global de nível"></ol>
+        </article>
+
+        <article class="ranking-panel" data-ranking-id="speed" aria-hidden="true">
+          <header class="ranking-panel__header">
+            <p class="ranking-panel__eyebrow">Ranking 2</p>
+            <h2>Os mais rápidos</h2>
+            <p class="ranking-panel__description">Jogadores com maior média de CPM considerando os modos cronometrados.</p>
+          </header>
+          <ol class="ranking-panel__list" aria-label="Ranking dos mais rápidos"></ol>
+        </article>
+
+        <article class="ranking-panel" data-ranking-id="points" aria-hidden="true">
+          <header class="ranking-panel__header">
+            <p class="ranking-panel__eyebrow">Ranking 3</p>
+            <h2>Mais pontos</h2>
+            <p class="ranking-panel__description">Total de pontos de experiência acumulados em frases concluídas.</p>
+          </header>
+          <ol class="ranking-panel__list" aria-label="Ranking de pontos"></ol>
+        </article>
+
+        <article class="ranking-panel" data-ranking-id="aura" aria-hidden="true">
+          <header class="ranking-panel__header">
+            <p class="ranking-panel__eyebrow">Ranking 4</p>
+            <h2>AuraScore</h2>
+            <p class="ranking-panel__description">Somente quem possui pelo menos 10 medalhas aparece com a proporção das
+              três medalhas mais comuns refletida na borda do avatar.</p>
+          </header>
+          <ol class="ranking-panel__list" aria-label="Ranking de AuraScore"></ol>
+        </article>
+
+        <article class="ranking-panel" data-ranking-id="monthly" aria-hidden="true">
+          <header class="ranking-panel__header">
+            <p class="ranking-panel__eyebrow">Ranking 5</p>
+            <h2>Melhores do mês</h2>
+            <p class="ranking-panel__description">Precisão geral dos modos 3, 4, 5 e 6. Indicador reinicia todo dia 1 à
+              meia-noite.</p>
+          </header>
+          <ol class="ranking-panel__list" aria-label="Ranking mensal"></ol>
+        </article>
+
+        <article class="ranking-panel" data-ranking-id="streak" aria-hidden="true">
+          <header class="ranking-panel__header">
+            <p class="ranking-panel__eyebrow">Ranking 6</p>
+            <h2>Acertos sequenciais</h2>
+            <p class="ranking-panel__description">Quem mais encaixou frases consecutivas sem errar em nenhuma modalidade.</p>
+          </header>
+          <ol class="ranking-panel__list" aria-label="Ranking de acertos em sequência"></ol>
+        </article>
+      </div>
+
+      <div class="ranking-carousel__indicators" id="ranking-indicators" role="tablist" aria-label="Categorias de ranking"></div>
+    </section>
   </main>
 
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
