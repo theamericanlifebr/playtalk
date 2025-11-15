@@ -18,18 +18,34 @@ const PROGRESS_SCHEMA = {
   errosTotais: { type: 'number', default: 0 },
   tentativasTotais: { type: 'number', default: 0 },
   points: { type: 'number', default: 0 },
+  playerBalance: { type: 'number', default: 0 },
   displayName: { type: 'string', default: '' },
   modeStats: { type: 'json', default: {} },
   completedModes: { type: 'json', default: {} },
   unlockedModes: { type: 'json', default: {} },
   modeIntroShown: { type: 'json', default: {} },
+  playtalkSettings: {
+    type: 'json',
+    default: {
+      theme: 'light',
+      pointsPerHit: 4000,
+      pointsLossPerSecond: 0,
+      startingPoints: 0
+    }
+  },
+  generalProgress: { type: 'json', default: { level: 1, xp: 0 } },
+  modeProgress: { type: 'json', default: {} },
   pastaAtual: { type: 'number', default: 1 },
   tutorialDone: { type: 'boolean', default: false },
   ilifeDone: { type: 'boolean', default: false },
   levelDetails: { type: 'json', default: [] },
   totalTime: { type: 'number', default: 0 },
-  shareResults: { type: 'boolean', default: false },
-  avatar: { type: 'string', default: '' }
+  shareResults: { type: 'boolean', default: true },
+  avatar: { type: 'string', default: '' },
+  medalHistory: { type: 'json', default: [] },
+  currentStreak: { type: 'number', default: 0 },
+  bestStreak: { type: 'number', default: 0 },
+  monthlyStats: { type: 'json', default: { month: '', totalAttempts: 0, eligibleAttempts: 0, correctAttempts: 0 } }
 };
 
 const staticDir = (() => {
