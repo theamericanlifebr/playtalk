@@ -1,5 +1,5 @@
 (function () {
-  const VIEW_ORDER = ['home', 'settings', 'stats', 'social', 'ranking', 'profile'];
+  const VIEW_ORDER = ['home', 'settings', 'stats', 'social', 'profile'];
   const body = document.body;
   const viewStack = document.getElementById('view-stack');
   if (!body || !viewStack) {
