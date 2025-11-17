@@ -290,6 +290,11 @@ function buildPlayerSnapshot(key, entry) {
   );
   const fastCpm = recentPhraseCount > 0 && recentStats.totalTime > 0 ? recentCpm : cpm;
 
+  const totalPoints = Math.max(
+    normalizePositiveInteger(data.points),
+    totals.correctPhrases
+  );
+
   return {
     key,
     username: normalized.username || key,
@@ -297,7 +302,7 @@ function buildPlayerSnapshot(key, entry) {
     avatar: parseAvatar(data.avatar),
     cpm,
     accuracy,
-    points: normalizePositiveInteger(data.points),
+    points: totalPoints,
     diamantes: totals.diamantes,
     bestStreak,
     currentStreak: normalizePositiveInteger(data.currentStreak),
@@ -346,6 +351,7 @@ function computeRankings(users = {}) {
   });
 
   const fast = limitEntries(sortEntries(snapshots, [
+    { key: 'cpm', direction: 'desc' },
     { key: 'fastCpm', direction: 'desc' },
     { key: 'recentPhraseCount', direction: 'desc' },
     { key: 'accuracy', direction: 'desc' },
