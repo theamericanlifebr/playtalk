@@ -5,8 +5,14 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const DATA_DIR = path.join(__dirname, 'data');
-const USERS_DB_PATH = path.join(DATA_DIR, 'users.json');
+const DEFAULT_DATA_DIR = path.join(__dirname, 'data');
+const DATA_ROOT = process.env.PLAYTALK_DATA_DIR
+  ? path.resolve(process.env.PLAYTALK_DATA_DIR)
+  : DEFAULT_DATA_DIR;
+const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
+  ? path.resolve(process.env.PLAYTALK_USERS_DB)
+  : path.join(DATA_ROOT, 'users.json');
+const DATA_DIR = path.dirname(USERS_DB_PATH);
 
 const DEFAULT_USER = {
   username: 'PlayTalk',
