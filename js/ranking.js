@@ -131,29 +131,6 @@
     return row;
   }
 
-  function updateBannerAvatars(sectionKey, entries = []) {
-    const banner = document.querySelector(`[data-ranking-banner="${sectionKey}"]`);
-    if (!banner) {
-      return;
-    }
-    const avatarContainer = banner.querySelector('[data-banner-avatars]');
-    if (!avatarContainer) {
-      return;
-    }
-    const slots = Array.from(avatarContainer.querySelectorAll('[data-avatar-slot]'));
-    slots.forEach((slot, index) => {
-      const player = entries[index];
-      const img = slot.querySelector('img');
-      const name = player ? (player.displayName || player.username || 'Jogador') : 'Aguardando jogador';
-      const avatarUrl = player && player.avatar ? player.avatar : DEFAULT_AVATAR_URL;
-      if (img) {
-        img.src = avatarUrl;
-        img.alt = player ? `Foto de ${name}` : 'Aguardando jogador';
-      }
-      slot.dataset.empty = player ? 'false' : 'true';
-    });
-  }
-
   function setUpdatedAt(timestamp, target) {
     if (!target) {
       return;
@@ -205,7 +182,6 @@
       }
       const entries = Array.isArray(data[sectionKey]) ? data[sectionKey] : [];
       elements.list.innerHTML = '';
-      updateBannerAvatars(sectionKey, entries);
       if (!entries.length) {
         if (elements.empty) {
           elements.empty.hidden = false;
@@ -247,7 +223,6 @@
     const nav = $('[data-ranking-carousel-nav]', scope);
     const track = $('[data-ranking-carousel-track]', scope);
     const viewport = $('[data-ranking-carousel-viewport]', scope);
-    const bannerTrack = $('[data-ranking-banner-track]', scope);
     if (!nav || !track) {
       return;
     }
@@ -258,12 +233,6 @@
     const navButtons = CAROUSEL_SECTIONS
       .map(sectionKey => nav.querySelector(`[data-ranking-nav="${sectionKey}"]`))
       .filter(Boolean);
-
-    const bannerCards = bannerTrack
-      ? CAROUSEL_SECTIONS
-        .map(sectionKey => bannerTrack.querySelector(`[data-ranking-banner="${sectionKey}"]`))
-        .filter(Boolean)
-      : [];
 
     if (!cards.length || !navButtons.length) {
       return;
@@ -284,17 +253,6 @@
       currentIndex = indexByKey.get(initialKey);
     }
 
-    function syncBanner(index) {
-      if (!bannerTrack || !bannerCards.length) {
-        return;
-      }
-      bannerTrack.style.setProperty('--ranking-banner-index', String(index));
-      bannerCards.forEach((banner, bannerIndex) => {
-        banner.classList.toggle('is-active', bannerIndex === index);
-        banner.setAttribute('aria-hidden', bannerIndex === index ? 'false' : 'true');
-      });
-    }
-
     function applyState() {
       track.style.setProperty('--ranking-carousel-index', String(currentIndex));
       cards.forEach((card, index) => {
@@ -309,7 +267,6 @@
         button.classList.toggle('is-active', isActive);
         button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
-      syncBanner(currentIndex);
     }
 
     function goToIndex(index) {

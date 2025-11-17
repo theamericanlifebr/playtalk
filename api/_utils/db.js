@@ -3,14 +3,8 @@ const path = require('path');
 
 const fsPromises = fs.promises;
 
-const DEFAULT_DATA_DIR = path.join(process.cwd(), 'data');
-const DATA_ROOT = process.env.PLAYTALK_DATA_DIR
-  ? path.resolve(process.env.PLAYTALK_DATA_DIR)
-  : DEFAULT_DATA_DIR;
-const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
-  ? path.resolve(process.env.PLAYTALK_USERS_DB)
-  : path.join(DATA_ROOT, 'users.json');
-const DATA_DIR = path.dirname(USERS_DB_PATH);
+const DATA_DIR = path.join(process.cwd(), 'data');
+const USERS_DB_PATH = path.join(DATA_DIR, 'users.json');
 
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
