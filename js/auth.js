@@ -466,7 +466,7 @@
 
   function updateAuthStatus() {
     const loginBtn = document.getElementById('login-btn');
-    const logoutButtons = Array.from(document.querySelectorAll('[data-role="logout"]'));
+    const accountSwitchButtons = Array.from(document.querySelectorAll('[data-role="account-switch"]'));
     const nameEl = document.getElementById('header-username');
     const avatarEl = document.getElementById('header-avatar');
     const user = readStoredCurrentUser();
@@ -503,15 +503,12 @@
     if (loginBtn) {
       loginBtn.style.display = user ? 'none' : 'inline-flex';
     }
-    logoutButtons.forEach(button => {
-      const isProfilePage = Boolean(button.closest('.page-profile'));
-      if (user) {
-        button.disabled = false;
-        button.style.display = 'inline-flex';
-      } else {
-        button.disabled = true;
-        button.style.display = isProfilePage ? 'inline-flex' : 'none';
-      }
+    accountSwitchButtons.forEach(button => {
+      button.textContent = 'Trocar de conta';
+      button.disabled = false;
+      button.style.display = 'inline-flex';
+      button.setAttribute('aria-label', 'Trocar de conta');
+      button.classList.toggle('account-switch-button--active', Boolean(user));
     });
     applyBalanceToUI(readStoredBalance());
     if (!user && typeof closeUserMenu === 'function') {
@@ -556,7 +553,7 @@
     }
   }
 
-  async function handleLogout() {
+  async function handleLogout({ stayOnPage = false } = {}) {
     await updateUserSnapshot();
     setCurrentUser(null);
     clearProgressStorage();
@@ -564,7 +561,7 @@
     updateAuthStatus();
     dispatchUserChange();
     const onProfilePage = document.body && document.body.classList.contains('page-profile');
-    if (onProfilePage) {
+    if (onProfilePage && !stayOnPage) {
       window.location.href = 'index.html';
       return;
     }
@@ -700,20 +697,13 @@
 
   function setupLoginFlow() {
     const loginBtn = document.getElementById('login-btn');
-    const logoutButtons = Array.from(document.querySelectorAll('[data-role="logout"]'));
+    const accountSwitchButtons = Array.from(document.querySelectorAll('[data-role="account-switch"]'));
     const flow = document.getElementById('login-flow');
     const form = document.getElementById('login-flow-form');
     const errorEl = document.getElementById('login-flow-error');
     const usernameInput = document.getElementById('login-flow-username');
     const passwordInput = document.getElementById('login-flow-password');
     const confirmInput = document.getElementById('login-flow-confirm');
-
-    logoutButtons.forEach(button => {
-      button.addEventListener('click', (event) => {
-        event.preventDefault();
-        handleLogout();
-      });
-    });
 
     if (!flow || !form || !usernameInput || !passwordInput || !confirmInput) {
       openLoginFlowHandler = null;
@@ -771,9 +761,23 @@
     openLoginFlowHandler = openFlow;
     closeLoginFlowHandler = closeFlow;
 
+    const triggerOpenFlow = () => openFlow();
+
     if (loginBtn) {
-      loginBtn.addEventListener('click', () => openFlow());
+      loginBtn.addEventListener('click', triggerOpenFlow);
     }
+
+    accountSwitchButtons.forEach(button => {
+      button.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const user = readStoredCurrentUser();
+        if (user) {
+          await handleLogout({ stayOnPage: true });
+          return;
+        }
+        triggerOpenFlow();
+      });
+    });
 
     form.querySelectorAll('.login-flow__submit[data-action="next"]').forEach(button => {
       button.addEventListener('click', (event) => {

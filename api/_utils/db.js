@@ -1,10 +1,11 @@
 const fs = require('fs');
-const path = require('path');
+const {
+  DATA_DIR,
+  USERS_DB_PATH,
+  ensureDatabaseFile
+} = require('../../config/dataStorage');
 
 const fsPromises = fs.promises;
-
-const DATA_DIR = path.join(process.cwd(), 'data');
-const USERS_DB_PATH = path.join(DATA_DIR, 'users.json');
 
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
@@ -66,12 +67,8 @@ function ensureUserDefaults(user) {
   return user;
 }
 
-async function ensureDataDirectory() {
-  await fsPromises.mkdir(DATA_DIR, { recursive: true });
-}
-
 async function readDatabase() {
-  await ensureDataDirectory();
+  await ensureDatabaseFile();
   try {
     const raw = await fsPromises.readFile(USERS_DB_PATH, 'utf8');
     const parsed = JSON.parse(raw);
@@ -88,7 +85,7 @@ async function readDatabase() {
 }
 
 async function writeDatabase(data) {
-  await ensureDataDirectory();
+  await ensureDatabaseFile();
   const payload = {
     users: data.users || {},
     updatedAt: new Date().toISOString()
