@@ -36,10 +36,7 @@
         return `${numberFormatter.format(Math.max(0, entry.points || 0))} pts`;
       },
       detail(entry) {
-        const pieces = [];
-        pieces.push(`${cpmFormatter.format(Math.max(0, entry.cpm || 0))} cpm`);
-        pieces.push(`${percentFormatter.format(Math.max(0, Math.min(100, entry.accuracy || 0)))} de precisão`);
-        return pieces.join(' • ');
+        return `${numberFormatter.format(Math.max(0, entry.points || 0))} pts totais`;
       }
     },
     diamonds: {
@@ -47,7 +44,7 @@
         return `${numberFormatter.format(Math.max(0, entry.diamantes || 0))}`;
       },
       detail(entry) {
-        return `${numberFormatter.format(Math.max(0, entry.points || 0))} pts acumulados`;
+        return '';
       }
     },
     streak: {
@@ -114,11 +111,14 @@
     const name = document.createElement('strong');
     name.className = 'ranking-row__name';
     name.textContent = entry.displayName || entry.username || 'Jogador';
-    const meta = document.createElement('span');
-    meta.className = 'ranking-row__meta';
-    meta.textContent = typeof config.detail === 'function' ? config.detail(entry) : '';
     info.appendChild(name);
-    info.appendChild(meta);
+    const detailText = typeof config.detail === 'function' ? config.detail(entry) : '';
+    if (detailText) {
+      const meta = document.createElement('span');
+      meta.className = 'ranking-row__meta';
+      meta.textContent = detailText;
+      info.appendChild(meta);
+    }
 
     const value = document.createElement('div');
     value.className = 'ranking-row__value';
