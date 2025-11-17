@@ -18,6 +18,7 @@ const PROGRESS_SCHEMA = {
   errosTotais: { type: 'number', default: 0 },
   tentativasTotais: { type: 'number', default: 0 },
   points: { type: 'number', default: 0 },
+  lifetimePoints: { type: 'number', default: 0 },
   playerBalance: { type: 'number', default: 0 },
   displayName: { type: 'string', default: '' },
   modeStats: { type: 'json', default: {} },
@@ -289,6 +290,13 @@ function buildPlayerSnapshot(key, entry) {
     normalizePositiveInteger(data.currentStreak)
   );
   const fastCpm = recentPhraseCount > 0 && recentStats.totalTime > 0 ? recentCpm : cpm;
+  const monthlyPoints = computeMonthlyPoints(data.monthlyStats);
+  const totalPoints = Math.max(
+    normalizePositiveInteger(data.lifetimePoints),
+    normalizePositiveInteger(data.points),
+    totals.correctPhrases,
+    monthlyPoints
+  );
 
   return {
     key,
@@ -297,11 +305,11 @@ function buildPlayerSnapshot(key, entry) {
     avatar: parseAvatar(data.avatar),
     cpm,
     accuracy,
-    points: normalizePositiveInteger(data.points),
+    points: totalPoints,
     diamantes: totals.diamantes,
     bestStreak,
     currentStreak: normalizePositiveInteger(data.currentStreak),
-    monthlyPoints: computeMonthlyPoints(data.monthlyStats),
+    monthlyPoints,
     totalPhrases: totals.totalPhrases,
     correctPhrases: totals.correctPhrases,
     totalTime: totals.totalTime,
@@ -346,6 +354,7 @@ function computeRankings(users = {}) {
   });
 
   const fast = limitEntries(sortEntries(snapshots, [
+    { key: 'cpm', direction: 'desc' },
     { key: 'fastCpm', direction: 'desc' },
     { key: 'recentPhraseCount', direction: 'desc' },
     { key: 'accuracy', direction: 'desc' },

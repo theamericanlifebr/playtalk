@@ -1015,6 +1015,31 @@ function loadMonthlyStatsFromStorage() {
   return stats;
 }
 
+function readLifetimePointsFromStorage() {
+  const stored = parseInt(localStorage.getItem('lifetimePoints') || '0', 10);
+  return normalizePositiveInteger(stored);
+}
+
+function persistLifetimePoints(points, { emitEvent = true } = {}) {
+  const normalized = normalizePositiveInteger(points);
+  localStorage.setItem('lifetimePoints', String(normalized));
+  if (emitEvent) {
+    document.dispatchEvent(new CustomEvent('playtalk:lifetime-points-change', {
+      detail: { points: normalized }
+    }));
+  }
+  return normalized;
+}
+
+function addLifetimePoints(delta = 0, options = {}) {
+  if (!Number.isFinite(delta) || delta <= 0) {
+    return readLifetimePointsFromStorage();
+  }
+  const normalizedDelta = normalizePositiveInteger(delta);
+  const current = readLifetimePointsFromStorage();
+  return persistLifetimePoints(current + normalizedDelta, options);
+}
+
 function persistMonthlyStats(stats, { emitEvent = true } = {}) {
   monthlyStats = stats;
   localStorage.setItem('monthlyStats', JSON.stringify(stats));
@@ -1042,6 +1067,7 @@ function updateMonthlyStatsProgress({ totalAttempts = 0, eligibleAttempts = 0, c
   monthlyStats.eligibleAttempts += normalizePositiveInteger(eligibleAttempts);
   monthlyStats.correctAttempts += normalizePositiveInteger(correctAttempts);
   persistMonthlyStats(monthlyStats);
+  addLifetimePoints(correctAttempts);
 }
 
 function cloneFallback(value) {
