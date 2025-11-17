@@ -10,27 +10,6 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.OPENAI_TOKEN || '').trim();
-const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
-const OPENAI_IMAGE_ENDPOINT = process.env.OPENAI_IMAGE_ENDPOINT || 'https://api.openai.com/v1/images/edits';
-const OPENAI_AVATAR_PROMPT = process.env.OPENAI_AVATAR_PROMPT
-  || 'transformar a imagem em cartoon, estilo animação de filme 2025';
-const AVATAR_COOLDOWN_MS = Number.isFinite(Number(process.env.AVATAR_COOLDOWN_MS))
-  ? Number(process.env.AVATAR_COOLDOWN_MS)
-  : 3 * 24 * 60 * 60 * 1000;
-const ALLOWED_AVATAR_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-const MAX_AVATAR_IMAGE_BYTES = 4 * 1024 * 1024;
-
-let FormDataImpl = globalThis.FormData;
-let BlobImpl = globalThis.Blob;
-if (!FormDataImpl || !BlobImpl) {
-  try {
-    ({ FormData: FormDataImpl, Blob: BlobImpl } = require('undici'));
-  } catch (error) {
-    console.warn('FormData API indisponível, uploads não funcionarão corretamente.', error);
-  }
-}
-
 const DEFAULT_USER = {
   username: 'PlayTalk',
   password: 'tatatata'
@@ -65,7 +44,6 @@ const PROGRESS_SCHEMA = {
   totalTime: { type: 'number', default: 0 },
   shareResults: { type: 'boolean', default: true },
   avatar: { type: 'string', default: '' },
-  avatarTransformedAt: { type: 'string', default: '' },
   medalHistory: { type: 'json', default: [] },
   currentStreak: { type: 'number', default: 0 },
   bestStreak: { type: 'number', default: 0 },
@@ -258,106 +236,6 @@ function parseAvatar(value) {
     return value.trim();
   }
   return DEFAULT_AVATAR_URL;
-}
-
-function parseDataUrlImagePayload(dataUrl) {
-  if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
-    const error = new Error('Imagem inválida.');
-    error.code = 'AVATAR_INVALID_IMAGE';
-    throw error;
-  }
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) {
-    const error = new Error('Formato da imagem não suportado.');
-    error.code = 'AVATAR_INVALID_IMAGE';
-    throw error;
-  }
-  const mimeType = match[1].toLowerCase();
-  if (!ALLOWED_AVATAR_MIME_TYPES.has(mimeType)) {
-    const error = new Error('Formato da imagem não suportado.');
-    error.code = 'AVATAR_INVALID_IMAGE';
-    throw error;
-  }
-  const base64Payload = match[2];
-  if (!base64Payload) {
-    const error = new Error('Conteúdo da imagem vazio.');
-    error.code = 'AVATAR_INVALID_IMAGE';
-    throw error;
-  }
-  const buffer = Buffer.from(base64Payload, 'base64');
-  if (!buffer || !buffer.length) {
-    const error = new Error('Não foi possível ler a imagem.');
-    error.code = 'AVATAR_INVALID_IMAGE';
-    throw error;
-  }
-  if (buffer.length > MAX_AVATAR_IMAGE_BYTES) {
-    const error = new Error('A imagem enviada é muito grande.');
-    error.code = 'AVATAR_INVALID_IMAGE';
-    throw error;
-  }
-  return { buffer, mimeType };
-}
-
-async function requestStylizedAvatar(imageDataUrl) {
-  if (!OPENAI_API_KEY) {
-    const error = new Error('Serviço de avatar indisponível.');
-    error.code = 'AVATAR_SERVICE_UNAVAILABLE';
-    throw error;
-  }
-  if (!FormDataImpl || !BlobImpl) {
-    const error = new Error('Upload de imagens não suportado no servidor.');
-    error.code = 'AVATAR_SERVICE_UNAVAILABLE';
-    throw error;
-  }
-
-  const { buffer, mimeType } = parseDataUrlImagePayload(imageDataUrl);
-  const form = new FormDataImpl();
-  form.append('model', OPENAI_IMAGE_MODEL);
-  form.append('prompt', OPENAI_AVATAR_PROMPT);
-  form.append('size', '512x512');
-  form.append('image', new BlobImpl([buffer], { type: mimeType }), 'avatar-upload');
-
-  const response = await fetch(OPENAI_IMAGE_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`
-    },
-    body: form
-  });
-
-  let payload;
-  try {
-    payload = await response.json();
-  } catch (error) {
-    payload = null;
-  }
-
-  if (!response.ok) {
-    const message = payload && payload.error && payload.error.message
-      ? payload.error.message
-      : 'Não foi possível gerar o avatar estilizado.';
-    const error = new Error(message);
-    error.code = 'AVATAR_OPENAI_ERROR';
-    error.statusCode = response.status;
-    throw error;
-  }
-
-  const result = payload && Array.isArray(payload.data) && payload.data[0]
-    ? payload.data[0]
-    : null;
-  if (!result || !result.b64_json) {
-    const error = new Error('Resposta inválida da OpenAI.');
-    error.code = 'AVATAR_OPENAI_ERROR';
-    error.statusCode = 502;
-    throw error;
-  }
-
-  return `data:image/png;base64,${result.b64_json}`;
-}
-
-function getNextAvatarWindow(fromTimestamp = Date.now()) {
-  const base = typeof fromTimestamp === 'number' ? fromTimestamp : Date.now();
-  return new Date(base + AVATAR_COOLDOWN_MS).toISOString();
 }
 
 function parseDisplayName(entry) {
@@ -700,76 +578,6 @@ app.post('/api/users/update', async (req, res) => {
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro ao atualizar usuário.' });
-  }
-});
-
-app.post('/api/users/avatar', async (req, res) => {
-  const { key, password, image } = req.body || {};
-
-  if (!key || typeof image !== 'string' || !image.trim()) {
-    res.status(400).json({ success: false, message: 'Requisição inválida.' });
-    return;
-  }
-
-  try {
-    const database = await readDatabase();
-    const entry = database.users[key];
-
-    if (!entry) {
-      res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-      return;
-    }
-
-    if (entry.password && entry.password !== password) {
-      res.status(403).json({ success: false, message: 'Credenciais inválidas.' });
-      return;
-    }
-
-    ensureUserDefaults(entry);
-
-    const now = Date.now();
-    const lastTransform = entry.data && entry.data.avatarTransformedAt
-      ? Date.parse(entry.data.avatarTransformedAt)
-      : NaN;
-    if (Number.isFinite(lastTransform) && now - lastTransform < AVATAR_COOLDOWN_MS) {
-      const nextAllowedAt = new Date(lastTransform + AVATAR_COOLDOWN_MS).toISOString();
-      res.status(429).json({
-        success: false,
-        message: 'Você só pode gerar uma nova imagem a cada 3 dias.',
-        nextAllowedAt
-      });
-      return;
-    }
-
-    const stylizedAvatar = await requestStylizedAvatar(image);
-    entry.data.avatar = stylizedAvatar;
-    entry.data.avatarTransformedAt = new Date(now).toISOString();
-
-    await writeDatabase(database);
-
-    res.json({
-      success: true,
-      avatar: entry.data.avatar,
-      nextAllowedAt: getNextAvatarWindow(now)
-    });
-  } catch (error) {
-    if (error && error.code === 'AVATAR_INVALID_IMAGE') {
-      res.status(400).json({ success: false, message: error.message || 'Imagem inválida.' });
-      return;
-    }
-    if (error && error.code === 'AVATAR_SERVICE_UNAVAILABLE') {
-      res.status(503).json({ success: false, message: error.message || 'Serviço de avatar indisponível.' });
-      return;
-    }
-    if (error && error.code === 'AVATAR_OPENAI_ERROR') {
-      const status = error.statusCode && Number.isFinite(error.statusCode)
-        ? Math.max(400, Math.min(502, error.statusCode))
-        : 502;
-      res.status(status).json({ success: false, message: error.message || 'Falha ao gerar avatar.' });
-      return;
-    }
-    console.error('Erro ao gerar avatar estilizado:', error);
-    res.status(500).json({ success: false, message: 'Erro interno ao gerar avatar.' });
   }
 });
 
