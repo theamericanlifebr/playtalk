@@ -36,7 +36,11 @@
     medalHistory: { type: 'json', default: [] },
     currentStreak: { type: 'number', default: 0 },
     bestStreak: { type: 'number', default: 0 },
-    monthlyStats: { type: 'json', default: { month: '', totalAttempts: 0, eligibleAttempts: 0, correctAttempts: 0 } }
+    monthlyStats: { type: 'json', default: { month: '', totalAttempts: 0, eligibleAttempts: 0, correctAttempts: 0 } },
+    recentPhraseStats: {
+      type: 'json',
+      default: { entries: [], totalChars: 0, totalTime: 0 }
+    }
   };
 
   let cachedCurrentUser = null;
@@ -897,6 +901,7 @@
       'index.html': { hash: '#home', scripts: ['js/main.js'], classes: ['page-home'] },
       'fun.html': { hash: '#fun', scripts: ['js/fun-page.js'], classes: ['page-fun'] },
       'play.html': { hash: '#play', scripts: ['js/play.js'], classes: ['page-play'] },
+      'ranking.html': { hash: '#ranking', scripts: ['js/ranking.js'], classes: ['page-ranking'] },
       'custom.html': { hash: '#custom', scripts: ['js/custom-page.js'], classes: ['page-custom'] },
       'perfil.html': { hash: '#perfil', scripts: ['js/profile.js'], classes: ['page-profile'] }
     };

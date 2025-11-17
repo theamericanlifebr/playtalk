@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-  <title>Ranking removido</title>
+  <title>Ranking PlayTalk</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/settings.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body>
+<body class="page-ranking">
   <header class="site-header" id="global-header">
     <div class="site-header__profile">
       <div class="site-header__avatar-container" id="header-avatar-container">
@@ -31,12 +31,93 @@
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
-  <main class="container-screen" data-page-transition aria-label="Ranking removido">
-    <header class="section-header">
-      <h1>Ranking desativado</h1>
-      <p>O ranking foi removido e esta seção permanece vazia.</p>
+  <main class="container-screen container-screen--ranking" data-page-transition aria-label="Ranking global">
+    <header class="section-header ranking-hero">
+      <div class="ranking-hero__icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" role="img" focusable="false">
+          <path d="M14 6a2 2 0 0 0-2 2v4H7a2 2 0 0 0-2 2v4a9 9 0 0 0 9 9 9.06 9.06 0 0 0 8 4.3V38h-4a2 2 0 0 0-2 2v4h20v-4a2 2 0 0 0-2-2h-4v-6.7a9.06 9.06 0 0 0 8-4.3 9 9 0 0 0 9-9v-4a2 2 0 0 0-2-2h-5V8a2 2 0 0 0-2-2Zm2 4h16v2a4 4 0 0 0 4 4h5v2a5 5 0 0 1-5 5H16a5 5 0 0 1-5-5v-2h5a4 4 0 0 0 4-4Zm6 18a9.07 9.07 0 0 0 4 0v6h-4Z"/>
+        </svg>
+      </div>
+      <div class="ranking-hero__content">
+        <h1>Ranking PlayTalk</h1>
+        <p>Os seis rankings públicos mostram os 30 primeiros colocados com base nos dados exibidos em <strong>Play &gt; Estatísticas</strong>. Para aparecer aqui, basta jogar, atingir os critérios do ranking e manter o compartilhamento de resultados ativado no perfil.</p>
+        <p class="ranking-note">Os números são atualizados sempre que você finaliza um modo de jogo e vê a tela de pós-jogo.</p>
+      </div>
+      <div class="ranking-actions">
+        <span class="ranking-updated" data-ranking-updated>Carregando...</span>
+        <button type="button" class="ranking-refresh" data-ranking-refresh>Atualizar agora</button>
+      </div>
     </header>
-    <section aria-label="Conteúdo removido"></section>
+    <p class="ranking-error" data-ranking-error role="alert" hidden></p>
+    <section class="ranking-grid">
+      <article class="ranking-card" data-ranking-section="fast">
+        <div class="ranking-card__header">
+          <div>
+            <h2>Os mais rápidos</h2>
+            <p>Média de caracteres por minuto considerando as últimas 500 frases concluídas.</p>
+          </div>
+          <span class="ranking-tag">cpm</span>
+        </div>
+        <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
+        <p class="ranking-empty" data-ranking-empty hidden>Ninguém apareceu por aqui ainda.</p>
+      </article>
+      <article class="ranking-card" data-ranking-section="points">
+        <div class="ranking-card__header">
+          <div>
+            <h2>Pontos totais</h2>
+            <p>Quem mais acumulou pontos em toda a jornada.</p>
+          </div>
+          <span class="ranking-tag">pts</span>
+        </div>
+        <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
+        <p class="ranking-empty" data-ranking-empty hidden>Nenhum jogador compartilhou pontos ainda.</p>
+      </article>
+      <article class="ranking-card" data-ranking-section="diamonds">
+        <div class="ranking-card__header">
+          <div>
+            <h2>Medalhas diamante</h2>
+            <p>Quantidade total de medalhas diamante somadas em todos os modos.</p>
+          </div>
+          <span class="ranking-tag">medalhas</span>
+        </div>
+        <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
+        <p class="ranking-empty" data-ranking-empty hidden>Ainda não temos diamantes compartilhados.</p>
+      </article>
+      <article class="ranking-card" data-ranking-section="streak">
+        <div class="ranking-card__header">
+          <div>
+            <h2>Sequências perfeitas</h2>
+            <p>Jogadores com maiores sequências de acertos consecutivos (o mesmo número visto em Estatísticas).</p>
+          </div>
+          <span class="ranking-tag">sequência</span>
+        </div>
+        <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
+        <p class="ranking-empty" data-ranking-empty hidden>Sem sequências registradas até o momento.</p>
+      </article>
+      <article class="ranking-card" data-ranking-section="monthly">
+        <div class="ranking-card__header">
+          <div>
+            <h2>Os melhores do mês</h2>
+            <p>Pontuação mensal reinicia todo dia 1 às 00h00.</p>
+          </div>
+          <span class="ranking-tag">mês</span>
+        </div>
+        <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
+        <p class="ranking-empty" data-ranking-empty hidden>Ninguém pontuou neste mês ainda.</p>
+      </article>
+      <article class="ranking-card" data-ranking-section="legends">
+        <div class="ranking-card__header">
+          <div>
+            <h2>Os melhores</h2>
+            <p>Somente para quem passa de 200 cpm, 80% de precisão e 10 medalhas diamante.</p>
+          </div>
+          <span class="ranking-tag">elite</span>
+        </div>
+        <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
+        <p class="ranking-empty" data-ranking-empty hidden>A elite ainda está vazia. Continue jogando!</p>
+      </article>
+    </section>
+    <p class="ranking-footer-note">Os dados exibidos refletem apenas os jogadores que decidiram compartilhar os resultados no perfil.</p>
   </main>
 
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
@@ -84,13 +165,19 @@
         </span>
         <span class="sr-only">Estatísticas</span>
       </a>
-      <a href="custom.html" class="nav-item" aria-label="Social" data-nav-index="3">
+      <a href="ranking.html" class="nav-item active" aria-label="Ranking" data-nav-index="3" aria-current="page">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" role="img" focusable="false"><path d="M14 6a2 2 0 0 0-2 2v4H7a2 2 0 0 0-2 2v4a9 9 0 0 0 9 9 9.06 9.06 0 0 0 8 4.3V38h-4a2 2 0 0 0-2 2v4h20v-4a2 2 0 0 0-2-2h-4v-6.7a9.06 9.06 0 0 0 8-4.3 9 9 0 0 0 9-9v-4a2 2 0 0 0-2-2h-5V8a2 2 0 0 0-2-2Zm2 4h16v2a4 4 0 0 0 4 4h5v2a5 5 0 0 1-5 5H16a5 5 0 0 1-5-5v-2h5a4 4 0 0 0 4-4Zm6 18a9.07 9.07 0 0 0 4 0v6h-4Z"/></svg>
+        </span>
+        <span class="sr-only">Ranking</span>
+      </a>
+      <a href="custom.html" class="nav-item" aria-label="Social" data-nav-index="4">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M4 4h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4l-4 4-4-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/></svg>
         </span>
         <span class="sr-only">Social</span>
       </a>
-      <a href="perfil.html" class="nav-item" aria-label="Perfil" data-nav-index="4">
+      <a href="perfil.html" class="nav-item" aria-label="Perfil" data-nav-index="5">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
         </span>
@@ -98,5 +185,6 @@
       </a>
     </nav>
   </footer>
+  <script src="js/ranking.js"></script>
 </body>
 </html>

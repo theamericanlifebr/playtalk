@@ -99,6 +99,7 @@ const MEDAL_LABEL_TO_KEY = {
 };
 
 const MEDAL_KEYS = ['diamante', 'ouro', 'prata', 'bronze', 'chumbo', 'gesso'];
+const RECENT_PHRASE_LIMIT = 500;
 
 function createEmptyMedalCounts() {
   return {
@@ -121,6 +122,85 @@ function normalizeMedalCounts(entry) {
     base[key] = Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
   });
   return base;
+}
+
+function createEmptyRecentPhraseStats() {
+  return { entries: [], totalChars: 0, totalTime: 0 };
+}
+
+function normalizeRecentPhraseStatsValue(value) {
+  if (!value || typeof value !== 'object') {
+    return createEmptyRecentPhraseStats();
+  }
+  const normalized = createEmptyRecentPhraseStats();
+  const sourceEntries = Array.isArray(value.entries)
+    ? value.entries
+    : Array.isArray(value)
+      ? value
+      : [];
+  sourceEntries.forEach((entry) => {
+    if (normalized.entries.length >= RECENT_PHRASE_LIMIT) {
+      return;
+    }
+    let chars = 0;
+    let duration = 0;
+    if (Array.isArray(entry)) {
+      chars = entry[0];
+      duration = entry[1];
+    } else if (entry && typeof entry === 'object') {
+      chars = entry.chars ?? entry.c ?? 0;
+      duration = entry.time ?? entry.t ?? 0;
+    }
+    const rawChars = Number.isFinite(chars) ? Math.floor(chars) : 0;
+    const rawDuration = Number.isFinite(duration) ? Math.floor(duration) : 0;
+    if (!rawChars && !rawDuration) {
+      return;
+    }
+    const normalizedChars = Math.max(0, rawChars);
+    const normalizedDuration = Math.max(1, rawDuration);
+    normalized.entries.push([normalizedChars, normalizedDuration]);
+    normalized.totalChars += normalizedChars;
+    normalized.totalTime += normalizedDuration;
+  });
+  if (!normalized.entries.length) {
+    normalized.totalChars = Math.max(0, Math.floor(Number(value.totalChars) || 0));
+    normalized.totalTime = Math.max(0, Math.floor(Number(value.totalTime) || 0));
+  }
+  return normalized;
+}
+
+function loadRecentPhraseStatsFromStorage() {
+  const stored = parseJSONStorage('recentPhraseStats', null);
+  const normalized = normalizeRecentPhraseStatsValue(stored);
+  localStorage.setItem('recentPhraseStats', JSON.stringify(normalized));
+  return normalized;
+}
+
+function addRecentPhraseSample(chars, duration) {
+  if (!recentPhraseStats || typeof recentPhraseStats !== 'object') {
+    recentPhraseStats = createEmptyRecentPhraseStats();
+  }
+  if (!Array.isArray(recentPhraseStats.entries)) {
+    recentPhraseStats.entries = [];
+  }
+  const rawChars = Math.max(0, Math.floor(Number(chars) || 0));
+  const rawDuration = Math.max(0, Math.floor(Number(duration) || 0));
+  if (!rawChars && !rawDuration) {
+    return;
+  }
+  const normalizedChars = rawChars;
+  const normalizedDuration = Math.max(1, rawDuration);
+  while (recentPhraseStats.entries.length >= RECENT_PHRASE_LIMIT) {
+    const removed = recentPhraseStats.entries.shift();
+    if (removed) {
+      recentPhraseStats.totalChars = Math.max(0, (recentPhraseStats.totalChars || 0) - removed[0]);
+      recentPhraseStats.totalTime = Math.max(0, (recentPhraseStats.totalTime || 0) - removed[1]);
+    }
+  }
+  recentPhraseStats.entries.push([normalizedChars, normalizedDuration]);
+  recentPhraseStats.totalChars = Math.max(0, (recentPhraseStats.totalChars || 0) + normalizedChars);
+  recentPhraseStats.totalTime = Math.max(0, (recentPhraseStats.totalTime || 0) + normalizedDuration);
+  localStorage.setItem('recentPhraseStats', JSON.stringify(recentPhraseStats));
 }
 
 function getMedalForAccuracy(accuracy) {
@@ -486,7 +566,7 @@ let roundAttempts = 0;
 let roundWrongCount = 0;
 let roundCorrectChars = 0;
 let roundStartTime = 0;
-let lastPhraseTimestamp = 0;
+let phraseStartTime = 0;
 let roundActive = false;
 let pendingModeStart = null;
 const roundSelections = {};
@@ -641,7 +721,7 @@ function resetRoundState() {
   roundWrongCount = 0;
   roundCorrectChars = 0;
   roundStartTime = 0;
-  lastPhraseTimestamp = 0;
+  phraseStartTime = 0;
   roundActive = false;
 }
 
@@ -860,6 +940,109 @@ let sessionStart = null;
 let modeStats = {};
 let modeStartTimes = {};
 let roundStateCache = {};
+let currentStreak = 0;
+let bestStreak = 0;
+let monthlyStats = null;
+let recentPhraseStats = createEmptyRecentPhraseStats();
+
+function normalizePositiveInteger(value, fallback = 0) {
+  if (!Number.isFinite(value)) {
+    return Math.max(0, Math.floor(fallback));
+  }
+  return Math.max(0, Math.floor(value));
+}
+
+function saveStreakState({ emitEvent = true } = {}) {
+  localStorage.setItem('currentStreak', String(currentStreak));
+  localStorage.setItem('bestStreak', String(bestStreak));
+  if (emitEvent) {
+    document.dispatchEvent(new CustomEvent('playtalk:streak-change', {
+      detail: { current: currentStreak, best: bestStreak }
+    }));
+  }
+}
+
+function loadStreakState() {
+  currentStreak = normalizePositiveInteger(parseInt(localStorage.getItem('currentStreak') || '0', 10));
+  const storedBest = normalizePositiveInteger(parseInt(localStorage.getItem('bestStreak') || '0', 10));
+  bestStreak = Math.max(currentStreak, storedBest);
+  saveStreakState({ emitEvent: false });
+}
+
+function handleCorrectStreak() {
+  currentStreak += 1;
+  if (currentStreak > bestStreak) {
+    bestStreak = currentStreak;
+  }
+  saveStreakState();
+}
+
+function handleWrongStreak() {
+  if (currentStreak === 0) {
+    return;
+  }
+  currentStreak = 0;
+  saveStreakState();
+}
+
+function getCurrentMonthKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+function loadMonthlyStatsFromStorage() {
+  const stored = parseJSONStorage('monthlyStats', null);
+  const currentKey = getCurrentMonthKey();
+  const stats = {
+    month: currentKey,
+    totalAttempts: 0,
+    eligibleAttempts: 0,
+    correctAttempts: 0
+  };
+  if (stored && typeof stored === 'object') {
+    stats.month = typeof stored.month === 'string' ? stored.month : currentKey;
+    stats.totalAttempts = normalizePositiveInteger(stored.totalAttempts);
+    stats.eligibleAttempts = normalizePositiveInteger(stored.eligibleAttempts);
+    stats.correctAttempts = normalizePositiveInteger(stored.correctAttempts);
+  }
+  if (stats.month !== currentKey) {
+    stats.month = currentKey;
+    stats.totalAttempts = 0;
+    stats.eligibleAttempts = 0;
+    stats.correctAttempts = 0;
+  }
+  return stats;
+}
+
+function persistMonthlyStats(stats, { emitEvent = true } = {}) {
+  monthlyStats = stats;
+  localStorage.setItem('monthlyStats', JSON.stringify(stats));
+  if (emitEvent) {
+    document.dispatchEvent(new CustomEvent('playtalk:monthly-stats-change', {
+      detail: { ...stats }
+    }));
+  }
+}
+
+function updateMonthlyStatsProgress({ totalAttempts = 0, eligibleAttempts = 0, correctAttempts = 0 } = {}) {
+  if (!monthlyStats) {
+    monthlyStats = loadMonthlyStatsFromStorage();
+  }
+  const currentKey = getCurrentMonthKey();
+  if (monthlyStats.month !== currentKey) {
+    monthlyStats = {
+      month: currentKey,
+      totalAttempts: 0,
+      eligibleAttempts: 0,
+      correctAttempts: 0
+    };
+  }
+  monthlyStats.totalAttempts += normalizePositiveInteger(totalAttempts);
+  monthlyStats.eligibleAttempts += normalizePositiveInteger(eligibleAttempts);
+  monthlyStats.correctAttempts += normalizePositiveInteger(correctAttempts);
+  persistMonthlyStats(monthlyStats);
+}
 
 function cloneFallback(value) {
   if (Array.isArray(value)) {
@@ -936,6 +1119,9 @@ function reloadPersistentProgress(initialLoad = false) {
   points = 0;
   modeStats = loadModeStatsFromStorage();
   Object.keys(modeStats).forEach(key => ensureModeStats(Number(key)));
+  recentPhraseStats = loadRecentPhraseStatsFromStorage();
+  loadStreakState();
+  monthlyStats = loadMonthlyStatsFromStorage();
   if (initialLoad) {
     updateLevelIcon({ scope: 'general' });
   } else {
@@ -1819,6 +2005,7 @@ function mostrarFrase() {
   bloqueado = false;
   const timerEl = document.getElementById('timer');
   const start = Date.now();
+  phraseStartTime = start;
   timerEl.textContent = 'Tempo: 0s';
   timerInterval = setInterval(() => {
     const secs = Math.floor((Date.now() - start) / 1000);
@@ -1914,6 +2101,9 @@ function verificarResposta() {
   stats.totalChars += expectedChars;
   stats.correctChars += correctChars;
   roundCorrectChars += correctChars;
+  const phraseDuration = phraseStartTime ? Date.now() - phraseStartTime : 0;
+  addRecentPhraseSample(correctChars, phraseDuration);
+  phraseStartTime = 0;
   if (!roundActive) {
     roundActive = true;
   }
@@ -1927,6 +2117,7 @@ function verificarResposta() {
     acertosTotais++;
     points = Math.min(roundTarget, points + 1);
     saveTotals();
+    handleCorrectStreak();
     const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
     grantExperience(reward, selectedMode);
     consecutiveErrors = 0;
@@ -1938,6 +2129,7 @@ function verificarResposta() {
     });
   } else {
     stats.wrong++;
+    handleWrongStreak();
     const wr = stats.wrongRanking;
     const existing = wr.find(e => e.expected === expectedPhrase && e.input === resposta && e.folder === pastaAtual);
     if (existing) existing.count++;
@@ -2059,6 +2251,14 @@ function finishMode() {
   updateLevelIcon({ scope: 'mode' });
   dispatchModeProgressUpdate(selectedMode);
   updateModeIcons();
+  updateMonthlyStatsProgress({
+    totalAttempts,
+    eligibleAttempts: roundTarget,
+    correctAttempts: correct
+  });
+  if (window.playtalkAuth && typeof window.playtalkAuth.persistProgress === 'function') {
+    window.playtalkAuth.persistProgress();
+  }
 
   openPostGameScreen({
     correct,
