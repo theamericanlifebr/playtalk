@@ -11,6 +11,21 @@ function initProfilePage(context = {}) {
     }
   }
 
+  document.addEventListener('playtalk:user-change', (event) => {
+    if (event && event.detail && event.detail.user) {
+      currentUser = event.detail.user;
+      return;
+    }
+    if (authAPI && typeof authAPI.getCurrentUser === 'function') {
+      try {
+        currentUser = authAPI.getCurrentUser();
+      } catch (error) {
+        console.warn('Não foi possível atualizar o usuário atual:', error);
+        currentUser = null;
+      }
+    }
+  });
+
   const usernameField = scope.querySelector('#profile-username');
   const nameField = scope.querySelector('#profile-name');
   const photoInput = scope.querySelector('#profile-photo');
@@ -79,7 +94,7 @@ function initProfilePage(context = {}) {
           const offsetY = (size - drawHeight) / 2;
           context.clearRect(0, 0, size, size);
           context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
-          const dataUrl = canvas.toDataURL('image/webp', 0.82);
+          const dataUrl = canvas.toDataURL('image/png');
           URL.revokeObjectURL(objectUrl);
           resolve(dataUrl);
         } catch (error) {
@@ -93,6 +108,79 @@ function initProfilePage(context = {}) {
       };
       image.src = objectUrl;
     });
+  }
+
+  function resolveApiUrl(path) {
+    const base = window.playtalkAuthApiBase || '';
+    if (!base) {
+      return path;
+    }
+    if (/^https?:\/\//i.test(path)) {
+      return path;
+    }
+    const normalizedBase = /^https?:\/\//i.test(base)
+      ? base.replace(/\/$/, '')
+      : `${window.location.origin.replace(/\/$/, '')}/${base.replace(/^\//, '')}`;
+    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+    return `${normalizedBase}/${normalizedPath}`;
+  }
+
+  async function requestAvatarTransformation(imageData) {
+    if (!currentUser || !currentUser.key || !currentUser.password) {
+      const error = new Error('Entre na sua conta para trocar o avatar.');
+      error.code = 'AUTH_REQUIRED';
+      throw error;
+    }
+
+    const response = await fetch(resolveApiUrl('/api/users/avatar'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        key: currentUser.key,
+        password: currentUser.password,
+        image: imageData
+      })
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = null;
+    }
+
+    if (!response.ok || !payload || !payload.success) {
+      const message = payload && payload.message
+        ? payload.message
+        : 'Não foi possível gerar o avatar estilizado.';
+      const error = new Error(message);
+      error.code = payload && payload.code ? payload.code : 'AVATAR_ERROR';
+      error.status = response.status;
+      throw error;
+    }
+
+    return payload;
+  }
+
+  function formatNextAvatarTime(nextAllowedAt) {
+    if (!nextAllowedAt) {
+      return '';
+    }
+    try {
+      const date = new Date(nextAllowedAt);
+      if (Number.isNaN(date.getTime())) {
+        return '';
+      }
+      return date.toLocaleString('pt-BR', {
+        dateStyle: 'short',
+        timeStyle: 'short'
+      });
+    } catch (error) {
+      console.warn('Não foi possível formatar a data de atualização do avatar.', error);
+      return '';
+    }
   }
 
   function setPhotoProgress(value) {
@@ -320,6 +408,19 @@ function initProfilePage(context = {}) {
     });
   }
 
+  function applyAvatarResult(photoData, options = {}) {
+    if (!photoData || photoData === profileData.photo) {
+      pendingPhotoData = null;
+      updatePublishButtonState();
+      return;
+    }
+    profileData.photo = photoData;
+    pendingPhotoData = null;
+    updatePhotoPreview(profileData.photo);
+    persistProfileChanges(options);
+    updatePublishButtonState();
+  }
+
   if (photoInput) {
     photoInput.addEventListener('change', async event => {
       const inputEl = event.target;
@@ -344,23 +445,44 @@ function initProfilePage(context = {}) {
         return;
       }
 
+      if (!currentUser || !currentUser.key || !currentUser.password) {
+        alert('Entre na sua conta para trocar o avatar.');
+        if (inputEl && typeof inputEl.value === 'string') {
+          inputEl.value = '';
+        }
+        return;
+      }
+
       showPhotoProgress();
       setPhotoProgress(10);
       setPhotoStatusMessage('Processando foto...');
 
       try {
-        setPhotoProgress(35);
+        setPhotoProgress(30);
         const compressedData = await compressImage(file);
-        setPhotoProgress(85);
-        pendingPhotoData = compressedData;
-        updatePhotoPreview(pendingPhotoData);
-        updatePublishButtonState();
+        setPhotoProgress(55);
+        setPhotoStatusMessage('Gerando avatar estilizado...');
+        const response = await requestAvatarTransformation(compressedData);
+        const stylizedPhoto = response && response.avatar ? response.avatar : null;
+        if (!stylizedPhoto) {
+          throw new Error('O servidor não retornou a imagem gerada.');
+        }
+        pendingPhotoData = stylizedPhoto;
+        updatePhotoPreview(stylizedPhoto);
+        applyAvatarResult(stylizedPhoto);
         setPhotoProgress(100);
-        hidePhotoProgress(200);
+        const formattedTime = formatNextAvatarTime(response && response.nextAllowedAt);
+        const successMessage = formattedTime
+          ? `Avatar atualizado! Próxima atualização em ${formattedTime}.`
+          : 'Avatar atualizado!';
+        hidePhotoProgress(200, { message: successMessage });
       } catch (error) {
         console.warn('Não foi possível processar a foto selecionada.', error);
-        hidePhotoProgress(0, { message: 'Falha ao processar foto', success: false });
-        alert('Não foi possível processar sua imagem. Tente novamente com outro arquivo.');
+        const message = error && error.message
+          ? error.message
+          : 'Não foi possível processar sua imagem. Tente novamente.';
+        hidePhotoProgress(0, { message, success: false });
+        alert(message);
       } finally {
         if (inputEl && typeof inputEl.value === 'string') {
           inputEl.value = '';
@@ -372,17 +494,14 @@ function initProfilePage(context = {}) {
   if (publishButton) {
     publishButton.addEventListener('click', () => {
       if (!pendingPhotoData || pendingPhotoData === profileData.photo) {
+        updatePublishButtonState();
         return;
       }
       if (persistTimeout) {
         clearTimeout(persistTimeout);
         persistTimeout = null;
       }
-      profileData.photo = pendingPhotoData;
-      pendingPhotoData = null;
-      updatePhotoPreview(profileData.photo);
-      persistProfileChanges();
-      updatePublishButtonState();
+      applyAvatarResult(pendingPhotoData);
     });
   }
 }
