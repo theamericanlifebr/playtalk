@@ -505,14 +505,13 @@
     }
     logoutButtons.forEach(button => {
       const isProfilePage = Boolean(button.closest('.page-profile'));
-      const isSwitchButton = button.dataset.switchAccount === 'true';
       if (user) {
         button.disabled = false;
         button.style.display = 'inline-flex';
-        return;
+      } else {
+        button.disabled = true;
+        button.style.display = isProfilePage ? 'inline-flex' : 'none';
       }
-      button.disabled = !isSwitchButton;
-      button.style.display = isProfilePage ? 'inline-flex' : 'none';
     });
     applyBalanceToUI(readStoredBalance());
     if (!user && typeof closeUserMenu === 'function') {
@@ -557,19 +556,15 @@
     }
   }
 
-  async function handleLogout(options = {}) {
-    const { stayOnPage = false } = options;
-    const current = readStoredCurrentUser();
-    if (current) {
-      await updateUserSnapshot();
-    }
+  async function handleLogout() {
+    await updateUserSnapshot();
     setCurrentUser(null);
     clearProgressStorage();
     resetBalance();
     updateAuthStatus();
     dispatchUserChange();
     const onProfilePage = document.body && document.body.classList.contains('page-profile');
-    if (onProfilePage && !stayOnPage) {
+    if (onProfilePage) {
       window.location.href = 'index.html';
       return;
     }
@@ -716,8 +711,7 @@
     logoutButtons.forEach(button => {
       button.addEventListener('click', (event) => {
         event.preventDefault();
-        const stayOnPage = button.dataset.switchAccount === 'true';
-        handleLogout({ stayOnPage });
+        handleLogout();
       });
     });
 
