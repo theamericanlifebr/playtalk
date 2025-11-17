@@ -32,22 +32,245 @@
     </div>
   </header>
   <main class="container-screen container-screen--ranking" data-page-transition aria-label="Ranking global">
-    <header class="section-header ranking-hero">
-      <div class="ranking-hero__icon" aria-hidden="true">
-        <svg viewBox="0 0 48 48" role="img" focusable="false">
-          <path d="M14 6a2 2 0 0 0-2 2v4H7a2 2 0 0 0-2 2v4a9 9 0 0 0 9 9 9.06 9.06 0 0 0 8 4.3V38h-4a2 2 0 0 0-2 2v4h20v-4a2 2 0 0 0-2-2h-4v-6.7a9.06 9.06 0 0 0 8-4.3 9 9 0 0 0 9-9v-4a2 2 0 0 0-2-2h-5V8a2 2 0 0 0-2-2Zm2 4h16v2a4 4 0 0 0 4 4h5v2a5 5 0 0 1-5 5H16a5 5 0 0 1-5-5v-2h5a4 4 0 0 0 4-4Zm6 18a9.07 9.07 0 0 0 4 0v6h-4Z"/>
-        </svg>
+    <section class="ranking-banner" aria-label="Capas temáticas dos rankings">
+      <div class="ranking-banner__viewport" data-ranking-banner-viewport>
+        <div class="ranking-banner__track" data-ranking-banner-track>
+          <article class="ranking-banner__card is-active" data-banner="fast" data-banner-label="Os mais rápidos" aria-hidden="false">
+            <div class="ranking-banner__surface">
+              <span class="ranking-banner__eyebrow">Ranking em destaque</span>
+              <h1 class="ranking-banner__title">Os mais rápidos</h1>
+              <p class="ranking-banner__tagline">Velocidade gremista em cada caractere.</p>
+              <span class="ranking-banner__updated" data-ranking-updated aria-live="polite">Sincronizando...</span>
+            </div>
+            <div class="ranking-banner__avatars" aria-label="Top 3 do ranking Os mais rápidos">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Primeiro destaque do ranking Os mais rápidos" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Segundo destaque do ranking Os mais rápidos" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Terceiro destaque do ranking Os mais rápidos" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__card" data-banner="points" data-banner-label="Pontos totais" aria-hidden="true">
+            <div class="ranking-banner__surface">
+              <span class="ranking-banner__eyebrow">Ranking em destaque</span>
+              <h1 class="ranking-banner__title">Pontos totais</h1>
+              <p class="ranking-banner__tagline">Constância absoluta do início ao fim.</p>
+            </div>
+            <div class="ranking-banner__avatars" aria-label="Top 3 do ranking Pontos totais">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Primeiro destaque do ranking Pontos totais" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Segundo destaque do ranking Pontos totais" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Terceiro destaque do ranking Pontos totais" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__card" data-banner="diamonds" data-banner-label="Medalhas diamante" aria-hidden="true">
+            <div class="ranking-banner__surface">
+              <span class="ranking-banner__eyebrow">Ranking em destaque</span>
+              <h1 class="ranking-banner__title">Medalhas diamante</h1>
+              <p class="ranking-banner__tagline">Brilho máximo com aura celeste.</p>
+            </div>
+            <div class="ranking-banner__avatars" aria-label="Top 3 do ranking Medalhas diamante">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Primeiro destaque do ranking Medalhas diamante" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Segundo destaque do ranking Medalhas diamante" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Terceiro destaque do ranking Medalhas diamante" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__card" data-banner="streak" data-banner-label="Sequências perfeitas" aria-hidden="true">
+            <div class="ranking-banner__surface">
+              <span class="ranking-banner__eyebrow">Ranking em destaque</span>
+              <h1 class="ranking-banner__title">Sequências perfeitas</h1>
+              <p class="ranking-banner__tagline">Foco total sem perder o ritmo.</p>
+            </div>
+            <div class="ranking-banner__avatars" aria-label="Top 3 do ranking Sequências perfeitas">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Primeiro destaque do ranking Sequências perfeitas" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Segundo destaque do ranking Sequências perfeitas" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Terceiro destaque do ranking Sequências perfeitas" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__card" data-banner="monthly" data-banner-label="Melhores do mês" aria-hidden="true">
+            <div class="ranking-banner__surface">
+              <span class="ranking-banner__eyebrow">Ranking em destaque</span>
+              <h1 class="ranking-banner__title">Melhores do mês</h1>
+              <p class="ranking-banner__tagline">Novo começo, mesmo ritmo azul.</p>
+            </div>
+            <div class="ranking-banner__avatars" aria-label="Top 3 do ranking Melhores do mês">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Primeiro destaque do ranking Melhores do mês" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Segundo destaque do ranking Melhores do mês" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Terceiro destaque do ranking Melhores do mês" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__card" data-banner="legends" data-banner-label="Os melhores" aria-hidden="true">
+            <div class="ranking-banner__surface">
+              <span class="ranking-banner__eyebrow">Ranking em destaque</span>
+              <h1 class="ranking-banner__title">Os melhores</h1>
+              <p class="ranking-banner__tagline">Elite azul com energia lendária.</p>
+            </div>
+            <div class="ranking-banner__avatars" aria-label="Top 3 do ranking Os melhores">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Primeiro destaque do ranking Os melhores" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Segundo destaque do ranking Os melhores" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Terceiro destaque do ranking Os melhores" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+        </div>
       </div>
-      <div class="ranking-hero__content">
-        <h1>Ranking PlayTalk</h1>
-        <p>Os seis rankings públicos mostram os 30 primeiros colocados com base nos dados exibidos em <strong>Play &gt; Estatísticas</strong>. Para aparecer aqui, basta jogar, atingir os critérios do ranking e manter o compartilhamento de resultados ativado no perfil.</p>
-        <p class="ranking-note">Os números são atualizados sempre que você finaliza um modo de jogo e vê a tela de pós-jogo.</p>
+      <div class="ranking-banner__thumbs" aria-label="Miniaturas sincronizadas" aria-hidden="true">
+        <div class="ranking-banner__thumb-track" data-ranking-banner-thumb-track>
+          <article class="ranking-banner__thumb is-active" data-banner-thumb="fast" data-banner-label="Os mais rápidos" aria-hidden="false">
+            <h2 class="ranking-banner__thumb-title">Os mais rápidos</h2>
+            <div class="ranking-banner__avatars ranking-banner__avatars--mini">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 1 da miniatura Os mais rápidos" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 2 da miniatura Os mais rápidos" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 3 da miniatura Os mais rápidos" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__thumb" data-banner-thumb="points" data-banner-label="Pontos totais" aria-hidden="true">
+            <h2 class="ranking-banner__thumb-title">Pontos totais</h2>
+            <div class="ranking-banner__avatars ranking-banner__avatars--mini">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 1 da miniatura Pontos totais" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 2 da miniatura Pontos totais" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 3 da miniatura Pontos totais" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__thumb" data-banner-thumb="diamonds" data-banner-label="Medalhas diamante" aria-hidden="true">
+            <h2 class="ranking-banner__thumb-title">Medalhas diamante</h2>
+            <div class="ranking-banner__avatars ranking-banner__avatars--mini">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 1 da miniatura Medalhas diamante" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 2 da miniatura Medalhas diamante" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 3 da miniatura Medalhas diamante" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__thumb" data-banner-thumb="streak" data-banner-label="Sequências perfeitas" aria-hidden="true">
+            <h2 class="ranking-banner__thumb-title">Sequências perfeitas</h2>
+            <div class="ranking-banner__avatars ranking-banner__avatars--mini">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 1 da miniatura Sequências perfeitas" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 2 da miniatura Sequências perfeitas" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 3 da miniatura Sequências perfeitas" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__thumb" data-banner-thumb="monthly" data-banner-label="Melhores do mês" aria-hidden="true">
+            <h2 class="ranking-banner__thumb-title">Melhores do mês</h2>
+            <div class="ranking-banner__avatars ranking-banner__avatars--mini">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 1 da miniatura Melhores do mês" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 2 da miniatura Melhores do mês" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 3 da miniatura Melhores do mês" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+          <article class="ranking-banner__thumb" data-banner-thumb="legends" data-banner-label="Os melhores" aria-hidden="true">
+            <h2 class="ranking-banner__thumb-title">Os melhores</h2>
+            <div class="ranking-banner__avatars ranking-banner__avatars--mini">
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 1 da miniatura Os melhores" loading="lazy">
+                <figcaption class="sr-only">Top 1</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 2 da miniatura Os melhores" loading="lazy">
+                <figcaption class="sr-only">Top 2</figcaption>
+              </figure>
+              <figure class="ranking-banner__avatar" data-banner-avatar>
+                <img src="photos/avatar-placeholder.svg" alt="Top 3 da miniatura Os melhores" loading="lazy">
+                <figcaption class="sr-only">Top 3</figcaption>
+              </figure>
+            </div>
+          </article>
+        </div>
       </div>
-      <div class="ranking-actions">
-        <span class="ranking-updated" data-ranking-updated>Carregando...</span>
-        <button type="button" class="ranking-refresh" data-ranking-refresh>Atualizar agora</button>
-      </div>
-    </header>
+    </section>
     <p class="ranking-error" data-ranking-error role="alert" hidden></p>
     <section class="ranking-carousel" aria-label="Rankings públicos">
       <nav class="ranking-carousel__nav" data-ranking-carousel-nav aria-label="Selecionar ranking">
@@ -55,37 +278,37 @@
           <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
             <path d="M16 3a13 13 0 1 0 13 13A13 13 0 0 0 16 3Zm0 2a11 11 0 1 1-11 11A11 11 0 0 1 16 5Zm1 3h-2v7.59l-4.3 4.3 1.42 1.42L17 16.41Z"/>
           </svg>
-          <span>Rápidos</span>
+          <span class="sr-only">Rápidos</span>
         </button>
         <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="points" aria-label="Pontos totais" aria-pressed="false">
           <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
             <path d="M15.29 4.29 6 13.59l1.41 1.41L15 7.41V28h2V7.41l7.59 7.59L26 13.59 16.71 4.29a1 1 0 0 0-1.42 0Z"/>
           </svg>
-          <span>Pontos</span>
+          <span class="sr-only">Pontos</span>
         </button>
         <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="diamonds" aria-label="Medalhas diamante" aria-pressed="false">
           <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
             <path d="M9.41 5 5 11.41 16 27l11-15.59L22.59 5Zm1.18 2h10.82l2.67 3.77L16 23.12 7.74 10.77ZM12 11l4 8 4-8Z"/>
           </svg>
-          <span>Medalhas</span>
+          <span class="sr-only">Medalhas</span>
         </button>
         <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="streak" aria-label="Sequências perfeitas" aria-pressed="false">
           <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
             <path d="M15 7v8H7v2h8v8h2v-8h8v-2h-8V7Z"/>
           </svg>
-          <span>Sequências</span>
+          <span class="sr-only">Sequências</span>
         </button>
         <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="monthly" aria-label="Os melhores do mês" aria-pressed="false">
           <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
             <path d="M6 26h6v-9H6Zm2-7h2v5H8Zm12 7h6v-9h-6Zm2-7h2v5h-2ZM13 26h6V6h-6Z"/>
           </svg>
-          <span>Mensal</span>
+          <span class="sr-only">Mensal</span>
         </button>
         <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="legends" aria-label="Os melhores" aria-pressed="false">
           <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
             <path d="M25 4H7L3 9l13 19 13-19Zm-2.35 2-1.2 4h-11l-1.2-4ZM16 24.12 7.74 11h16.52Z"/>
           </svg>
-          <span>Melhores</span>
+          <span class="sr-only">Melhores</span>
         </button>
       </nav>
       <div class="ranking-carousel__viewport" data-ranking-carousel-viewport>

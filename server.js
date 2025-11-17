@@ -1,12 +1,14 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const {
+  DATA_DIR,
+  USERS_DB_PATH,
+  ensureDatabaseFileSync
+} = require('./config/dataStorage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-const DATA_DIR = path.join(__dirname, 'data');
-const USERS_DB_PATH = path.join(DATA_DIR, 'users.json');
 
 const DEFAULT_USER = {
   username: 'PlayTalk',
@@ -74,19 +76,6 @@ const staticDir = (() => {
 
   return __dirname;
 })();
-
-function ensureDataDirectory() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(USERS_DB_PATH)) {
-    const initialData = {
-      users: {},
-      updatedAt: new Date().toISOString()
-    };
-    fs.writeFileSync(USERS_DB_PATH, JSON.stringify(initialData, null, 2));
-  }
-}
 
 function normalizeKey(username = '') {
   return username.trim().toLowerCase();
@@ -403,7 +392,7 @@ function computeRankings(users = {}) {
   return { fast, points, diamonds, streak, monthly, legends };
 }
 
-ensureDataDirectory();
+ensureDatabaseFileSync();
 
 async function ensureDefaultUser() {
   try {
