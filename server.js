@@ -1,14 +1,18 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const {
-  DATA_DIR,
-  USERS_DB_PATH,
-  ensureDatabaseFileSync
-} = require('./config/dataStorage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const DEFAULT_DATA_DIR = path.join(__dirname, 'data');
+const DATA_ROOT = process.env.PLAYTALK_DATA_DIR
+  ? path.resolve(process.env.PLAYTALK_DATA_DIR)
+  : DEFAULT_DATA_DIR;
+const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
+  ? path.resolve(process.env.PLAYTALK_USERS_DB)
+  : path.join(DATA_ROOT, 'users.json');
+const DATA_DIR = path.dirname(USERS_DB_PATH);
 
 const DEFAULT_USER = {
   username: 'PlayTalk',
@@ -76,6 +80,19 @@ const staticDir = (() => {
 
   return __dirname;
 })();
+
+function ensureDataDirectory() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(USERS_DB_PATH)) {
+    const initialData = {
+      users: {},
+      updatedAt: new Date().toISOString()
+    };
+    fs.writeFileSync(USERS_DB_PATH, JSON.stringify(initialData, null, 2));
+  }
+}
 
 function normalizeKey(username = '') {
   return username.trim().toLowerCase();
@@ -392,7 +409,7 @@ function computeRankings(users = {}) {
   return { fast, points, diamonds, streak, monthly, legends };
 }
 
-ensureDatabaseFileSync();
+ensureDataDirectory();
 
 async function ensureDefaultUser() {
   try {

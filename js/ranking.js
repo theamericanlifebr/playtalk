@@ -131,29 +131,26 @@
     return row;
   }
 
-  function updateBannerAvatars(data = {}) {
-    CAROUSEL_SECTIONS.forEach((sectionKey) => {
-      const entries = Array.isArray(data[sectionKey]) ? data[sectionKey].slice(0, 3) : [];
-      const targets = document.querySelectorAll(`[data-banner="${sectionKey}"], [data-banner-thumb="${sectionKey}"]`);
-      targets.forEach((banner) => {
-        const label = banner.getAttribute('data-banner-label') || sectionKey;
-        const avatars = banner.querySelectorAll('[data-banner-avatar]');
-        avatars.forEach((avatarEl, index) => {
-          const img = avatarEl.querySelector('img');
-          if (!img) {
-            return;
-          }
-          const entry = entries[index];
-          if (entry) {
-            img.src = entry.avatar || DEFAULT_AVATAR_URL;
-            const playerName = entry.displayName || entry.username || 'Jogador';
-            img.alt = `${playerName} no ranking ${label}`;
-          } else {
-            img.src = DEFAULT_AVATAR_URL;
-            img.alt = `Slot disponível no ranking ${label}`;
-          }
-        });
-      });
+  function updateBannerAvatars(sectionKey, entries = []) {
+    const banner = document.querySelector(`[data-ranking-banner="${sectionKey}"]`);
+    if (!banner) {
+      return;
+    }
+    const avatarContainer = banner.querySelector('[data-banner-avatars]');
+    if (!avatarContainer) {
+      return;
+    }
+    const slots = Array.from(avatarContainer.querySelectorAll('[data-avatar-slot]'));
+    slots.forEach((slot, index) => {
+      const player = entries[index];
+      const img = slot.querySelector('img');
+      const name = player ? (player.displayName || player.username || 'Jogador') : 'Aguardando jogador';
+      const avatarUrl = player && player.avatar ? player.avatar : DEFAULT_AVATAR_URL;
+      if (img) {
+        img.src = avatarUrl;
+        img.alt = player ? `Foto de ${name}` : 'Aguardando jogador';
+      }
+      slot.dataset.empty = player ? 'false' : 'true';
     });
   }
 
@@ -208,6 +205,7 @@
       }
       const entries = Array.isArray(data[sectionKey]) ? data[sectionKey] : [];
       elements.list.innerHTML = '';
+      updateBannerAvatars(sectionKey, entries);
       if (!entries.length) {
         if (elements.empty) {
           elements.empty.hidden = false;
@@ -221,7 +219,6 @@
         elements.list.appendChild(createRankingRow(entry, index, config));
       });
     });
-    updateBannerAvatars(data);
   }
 
   async function loadRankings({ refreshButton, updatedLabel, errorEl } = {}) {
@@ -251,7 +248,6 @@
     const track = $('[data-ranking-carousel-track]', scope);
     const viewport = $('[data-ranking-carousel-viewport]', scope);
     const bannerTrack = $('[data-ranking-banner-track]', scope);
-    const bannerThumbTrack = $('[data-ranking-banner-thumb-track]', scope);
     if (!nav || !track) {
       return;
     }
@@ -262,11 +258,11 @@
     const navButtons = CAROUSEL_SECTIONS
       .map(sectionKey => nav.querySelector(`[data-ranking-nav="${sectionKey}"]`))
       .filter(Boolean);
+
     const bannerCards = bannerTrack
-      ? CAROUSEL_SECTIONS.map(sectionKey => bannerTrack.querySelector(`[data-banner="${sectionKey}"]`)).filter(Boolean)
-      : [];
-    const bannerThumbs = bannerThumbTrack
-      ? CAROUSEL_SECTIONS.map(sectionKey => bannerThumbTrack.querySelector(`[data-banner-thumb="${sectionKey}"]`)).filter(Boolean)
+      ? CAROUSEL_SECTIONS
+        .map(sectionKey => bannerTrack.querySelector(`[data-ranking-banner="${sectionKey}"]`))
+        .filter(Boolean)
       : [];
 
     if (!cards.length || !navButtons.length) {
@@ -288,6 +284,17 @@
       currentIndex = indexByKey.get(initialKey);
     }
 
+    function syncBanner(index) {
+      if (!bannerTrack || !bannerCards.length) {
+        return;
+      }
+      bannerTrack.style.setProperty('--ranking-banner-index', String(index));
+      bannerCards.forEach((banner, bannerIndex) => {
+        banner.classList.toggle('is-active', bannerIndex === index);
+        banner.setAttribute('aria-hidden', bannerIndex === index ? 'false' : 'true');
+      });
+    }
+
     function applyState() {
       track.style.setProperty('--ranking-carousel-index', String(currentIndex));
       cards.forEach((card, index) => {
@@ -302,22 +309,7 @@
         button.classList.toggle('is-active', isActive);
         button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
-      if (bannerTrack && bannerCards.length) {
-        bannerTrack.style.setProperty('--banner-index', String(currentIndex));
-        bannerCards.forEach((card, index) => {
-          const isActive = index === currentIndex;
-          card.classList.toggle('is-active', isActive);
-          card.setAttribute('aria-hidden', isActive ? 'false' : 'true');
-        });
-      }
-      if (bannerThumbTrack && bannerThumbs.length) {
-        bannerThumbTrack.style.setProperty('--banner-index', String(currentIndex));
-        bannerThumbs.forEach((thumb, index) => {
-          const isActive = index === currentIndex;
-          thumb.classList.toggle('is-active', isActive);
-          thumb.setAttribute('aria-hidden', isActive ? 'false' : 'true');
-        });
-      }
+      syncBanner(currentIndex);
     }
 
     function goToIndex(index) {
@@ -358,15 +350,6 @@
           const delta = event.key === 'ArrowRight' ? 1 : -1;
           const nextIndex = goToIndex(currentIndex + delta);
           focusButtonForIndex(nextIndex);
-        }
-      });
-    });
-
-    bannerThumbs.forEach((thumb) => {
-      thumb.addEventListener('click', () => {
-        const key = thumb.dataset.bannerThumb;
-        if (key) {
-          goToKey(key);
         }
       });
     });

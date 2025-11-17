@@ -1,11 +1,16 @@
 const fs = require('fs');
-const {
-  DATA_DIR,
-  USERS_DB_PATH,
-  ensureDatabaseFile
-} = require('../../config/dataStorage');
+const path = require('path');
 
 const fsPromises = fs.promises;
+
+const DEFAULT_DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_ROOT = process.env.PLAYTALK_DATA_DIR
+  ? path.resolve(process.env.PLAYTALK_DATA_DIR)
+  : DEFAULT_DATA_DIR;
+const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
+  ? path.resolve(process.env.PLAYTALK_USERS_DB)
+  : path.join(DATA_ROOT, 'users.json');
+const DATA_DIR = path.dirname(USERS_DB_PATH);
 
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
@@ -67,8 +72,12 @@ function ensureUserDefaults(user) {
   return user;
 }
 
+async function ensureDataDirectory() {
+  await fsPromises.mkdir(DATA_DIR, { recursive: true });
+}
+
 async function readDatabase() {
-  await ensureDatabaseFile();
+  await ensureDataDirectory();
   try {
     const raw = await fsPromises.readFile(USERS_DB_PATH, 'utf8');
     const parsed = JSON.parse(raw);
@@ -85,7 +94,7 @@ async function readDatabase() {
 }
 
 async function writeDatabase(data) {
-  await ensureDatabaseFile();
+  await ensureDataDirectory();
   const payload = {
     users: data.users || {},
     updatedAt: new Date().toISOString()
