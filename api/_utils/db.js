@@ -23,7 +23,11 @@ const PROGRESS_SCHEMA = {
   levelDetails: { type: 'json', default: [] },
   totalTime: { type: 'number', default: 0 },
   shareResults: { type: 'boolean', default: false },
-  avatar: { type: 'string', default: '' }
+  avatar: { type: 'string', default: '' },
+  recentPhraseStats: {
+    type: 'json',
+    default: { entries: [], totalChars: 0, totalTime: 0 }
+  }
 };
 
 function normalizeKey(username = '') {

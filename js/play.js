@@ -104,9 +104,12 @@ function formatCpm(value) {
   return safe.toLocaleString('pt-BR');
 }
 
-function createMetricCard(label, value, accentPercent) {
+function createMetricCard(label, value, accentPercent, options = {}) {
   const card = document.createElement('div');
   card.className = 'stat-metric';
+  if (options.modifier) {
+    card.classList.add(options.modifier);
+  }
   const labelEl = document.createElement('span');
   labelEl.className = 'stat-metric__label';
   labelEl.textContent = label;
@@ -119,6 +122,12 @@ function createMetricCard(label, value, accentPercent) {
   }
   card.appendChild(labelEl);
   card.appendChild(valueEl);
+  if (options.detail) {
+    const detailEl = document.createElement('span');
+    detailEl.className = 'stat-metric__detail';
+    detailEl.textContent = options.detail;
+    card.appendChild(detailEl);
+  }
   return card;
 }
 
@@ -127,6 +136,15 @@ function createMetricsSection(summary = {}) {
   section.className = 'stats-metrics';
   section.appendChild(createMetricCard('Velocidade', `${formatCpm(summary.cpm)} cpm`));
   section.appendChild(createMetricCard('Precisão', formatPercent(summary.accuracyPerc), summary.accuracyPerc));
+  if (Number.isFinite(summary.bestStreak) || Number.isFinite(summary.currentStreak)) {
+    const best = Math.max(0, Math.floor(Number.isFinite(summary.bestStreak) ? summary.bestStreak : 0));
+    const current = Math.max(0, Math.floor(Number.isFinite(summary.currentStreak) ? summary.currentStreak : 0));
+    const detail = `Atual: ${formatInteger(current)}`;
+    section.appendChild(createMetricCard('Melhor sequência', formatInteger(best), undefined, {
+      modifier: 'stat-metric--streak',
+      detail
+    }));
+  }
   return section;
 }
 
@@ -320,6 +338,8 @@ function initPlayPage(context = {}) {
     const noReportPerc = totals.totalPhrases
       ? (100 - (totals.report / totals.totalPhrases * 100))
       : 100;
+    const currentStreak = Math.max(0, parseInt(localStorage.getItem('currentStreak') || '0', 10));
+    const bestStreak = Math.max(currentStreak, Math.max(0, parseInt(localStorage.getItem('bestStreak') || '0', 10)));
     return {
       totalPhrases: totals.totalPhrases,
       correctPhrases: totals.correctPhrases,
@@ -328,7 +348,9 @@ function initPlayPage(context = {}) {
       accuracyPerc,
       cpm,
       noReportPerc,
-      medals: totals.medals
+      medals: totals.medals,
+      bestStreak,
+      currentStreak
     };
   }
 
