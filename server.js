@@ -14,7 +14,7 @@ const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || 
 const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
 const OPENAI_IMAGE_ENDPOINT = process.env.OPENAI_IMAGE_ENDPOINT || 'https://api.openai.com/v1/images/edits';
 const OPENAI_AVATAR_PROMPT = process.env.OPENAI_AVATAR_PROMPT
-  || 'transformar a imagem em cartoon, estilo animação de filme 2025, fundo transparente';
+  || 'transformar a imagem em cartoon, estilo animação de filme 2025';
 const AVATAR_COOLDOWN_MS = Number.isFinite(Number(process.env.AVATAR_COOLDOWN_MS))
   ? Number(process.env.AVATAR_COOLDOWN_MS)
   : 3 * 24 * 60 * 60 * 1000;
@@ -314,7 +314,7 @@ async function requestStylizedAvatar(imageDataUrl) {
   const form = new FormDataImpl();
   form.append('model', OPENAI_IMAGE_MODEL);
   form.append('prompt', OPENAI_AVATAR_PROMPT);
-  form.append('size', '1024x1024');
+  form.append('size', '512x512');
   form.append('image', new BlobImpl([buffer], { type: mimeType }), 'avatar-upload');
 
   const response = await fetch(OPENAI_IMAGE_ENDPOINT, {
