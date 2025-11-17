@@ -1,9 +1,15 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { Blob } = require('buffer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.trim() : '';
+const OPENAI_TRANSCRIPTION_MODEL = process.env.OPENAI_TRANSCRIBE_MODEL
+  ? process.env.OPENAI_TRANSCRIBE_MODEL.trim()
+  : 'gpt-4o-mini-transcribe';
+const OPENAI_TRANSCRIPTION_URL = 'https://api.openai.com/v1/audio/transcriptions';
 
 const DEFAULT_DATA_DIR = path.join(__dirname, 'data');
 const DATA_ROOT = process.env.PLAYTALK_DATA_DIR
@@ -409,6 +415,39 @@ function computeRankings(users = {}) {
   return { fast, points, diamonds, streak, monthly, legends };
 }
 
+async function transcribeAudioWithOpenAI(audioBuffer, mimeType, language) {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not configured.');
+  }
+
+  const normalizedMime = typeof mimeType === 'string' && mimeType.trim()
+    ? mimeType.trim()
+    : 'audio/webm';
+  const blob = new Blob([audioBuffer], { type: normalizedMime });
+  const formData = new FormData();
+  formData.append('model', OPENAI_TRANSCRIPTION_MODEL);
+  formData.append('response_format', 'json');
+  formData.append('file', blob, `audio-${Date.now()}.webm`);
+  if (language) {
+    formData.append('language', language);
+  }
+
+  const response = await fetch(OPENAI_TRANSCRIPTION_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`
+    },
+    body: formData
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`OpenAI transcription failed (${response.status}): ${errorBody}`);
+  }
+
+  return response.json();
+}
+
 ensureDataDirectory();
 
 async function ensureDefaultUser() {
@@ -433,7 +472,7 @@ async function ensureDefaultUser() {
 
 ensureDefaultUser();
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '20mb' }));
 app.use(express.static(staticDir));
 
 app.use((req, res, next) => {
@@ -442,6 +481,41 @@ app.use((req, res, next) => {
     return;
   }
   next();
+});
+
+app.post('/api/transcribe', async (req, res) => {
+  if (!OPENAI_API_KEY) {
+    res.status(503).json({ success: false, message: 'Serviço de voz indisponível.' });
+    return;
+  }
+
+  const { audio, mimeType, language } = req.body || {};
+  if (!audio || typeof audio !== 'string') {
+    res.status(400).json({ success: false, message: 'Áudio inválido.' });
+    return;
+  }
+
+  try {
+    const sanitized = audio.replace(/^data:[^;]+;base64,/, '').replace(/\s/g, '');
+    const buffer = Buffer.from(sanitized, 'base64');
+    if (!buffer.length) {
+      res.status(400).json({ success: false, message: 'Conteúdo de áudio vazio.' });
+      return;
+    }
+    const langCode = typeof language === 'string' && language.trim()
+      ? language.trim()
+      : undefined;
+    const transcription = await transcribeAudioWithOpenAI(buffer, mimeType, langCode);
+    const text = typeof transcription.text === 'string' ? transcription.text.trim() : '';
+    if (!text) {
+      res.status(502).json({ success: false, message: 'Transcrição vazia.' });
+      return;
+    }
+    res.json({ success: true, text });
+  } catch (error) {
+    console.error('Erro ao transcrever áudio:', error);
+    res.status(502).json({ success: false, message: 'Erro ao transcrever áudio.' });
+  }
 });
 
 app.get('/api/users', async (req, res) => {
