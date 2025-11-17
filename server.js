@@ -519,7 +519,7 @@ async function stylizePhotoWithDalle(imageDataUrl) {
   formData.append('model', OPENAI_IMAGE_MODEL);
   formData.append('prompt', 'Transform the person in the reference photo into a cinematic 2025 children\'s movie hero. Keep recognizable face, semi-realistic animation lighting, soft colors, expressive eyes, and deliver only the character with a transparent background in PNG.');
   formData.append('image', blob, `avatar-${Date.now()}.png`);
-  formData.append('size', '512x512');
+  formData.append('size', '1024x1024');
   formData.append('background', 'transparent');
   const response = await fetch(OPENAI_IMAGE_EDIT_URL, {
     method: 'POST',
