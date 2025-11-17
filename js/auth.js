@@ -437,6 +437,22 @@
     return progress.level;
   }
 
+  function applyLevelToHeader(level, ratio = 0) {
+    const normalizedLevel = Number.isFinite(level) && level > 0 ? Math.floor(level) : 1;
+    const normalizedRatio = Number.isFinite(ratio) ? Math.max(0, Math.min(1, ratio)) : 0;
+    const levelEl = document.getElementById('header-level');
+    if (levelEl) {
+      levelEl.textContent = `Nível ${normalizedLevel}`;
+    }
+    const avatarContainer = document.getElementById('header-avatar-container');
+    if (avatarContainer) {
+      avatarContainer.dataset.level = String(normalizedLevel);
+      avatarContainer.title = `Nível ${normalizedLevel}`;
+      const progressDegrees = (normalizedRatio * 360).toFixed(1);
+      avatarContainer.style.setProperty('--avatar-progress', `${progressDegrees}deg`);
+    }
+  }
+
   function getDisplayName(user) {
     const stored = localStorage.getItem('displayName');
     if (stored && stored.trim()) {
@@ -452,14 +468,17 @@
     const loginBtn = document.getElementById('login-btn');
     const logoutButtons = Array.from(document.querySelectorAll('[data-role="logout"]'));
     const nameEl = document.getElementById('header-username');
-    const levelEl = document.getElementById('header-level');
     const avatarEl = document.getElementById('header-avatar');
-    const avatarContainer = document.getElementById('header-avatar-container');
     const user = readStoredCurrentUser();
     const displayName = user
       ? (getDisplayName(user) || user.username || 'Jogador')
       : 'Visitante';
-    const storedLevel = Number(localStorage.getItem('pastaAtual')) || 1;
+    const levelProgress = readLevelProgress();
+    const storedLevel = levelProgress.level || 1;
+    const requiredForLevel = getLevelRequirement(storedLevel);
+    const levelRatio = requiredForLevel > 0
+      ? Math.max(0, Math.min(1, (levelProgress.xp || 0) / requiredForLevel))
+      : 0;
     let avatarUrl = DEFAULT_AVATAR_URL;
     const storedAvatar = localStorage.getItem('avatar');
     if (storedAvatar && storedAvatar.trim()) {
@@ -472,14 +491,7 @@
       nameEl.textContent = displayName;
       nameEl.title = displayName;
     }
-    if (levelEl) {
-      levelEl.textContent = `Nível ${Math.max(1, storedLevel)}`;
-    }
-
-    if (avatarContainer) {
-      avatarContainer.dataset.level = String(Math.max(1, storedLevel));
-      avatarContainer.title = `Nível ${Math.max(1, storedLevel)}`;
-    }
+    applyLevelToHeader(storedLevel, levelRatio);
 
     if (avatarEl) {
       if (avatarEl.getAttribute('src') !== avatarUrl) {
@@ -1148,19 +1160,12 @@
 
   document.addEventListener('playtalk:level-progress', event => {
     const detail = event && event.detail ? event.detail : null;
-    if (detail) {
-      const levelEl = document.getElementById('header-level');
-      if (levelEl) {
-        levelEl.textContent = 'Nível 1';
-      }
-      const avatarContainer = document.getElementById('header-avatar-container');
-      if (avatarContainer) {
-        avatarContainer.style.setProperty('--avatar-progress', '0deg');
-        avatarContainer.title = 'Nível central fixo no nível 1.';
-      }
-    } else {
+    if (!detail) {
       updateAuthStatus();
+      return;
     }
+    const ratio = Number.isFinite(detail.ratio) ? detail.ratio : 0;
+    applyLevelToHeader(detail.level, ratio);
   });
 
   window.addEventListener('storage', (event) => {

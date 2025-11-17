@@ -2,6 +2,7 @@
   const API_ENDPOINT = '/api/rankings';
   const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
   const MAX_POSITION = 30;
+  const CAROUSEL_SECTIONS = ['fast', 'points', 'diamonds', 'streak', 'monthly', 'legends'];
   let isLoading = false;
   let controller = null;
 
@@ -12,10 +13,10 @@
   const SECTION_CONFIG = {
     fast: {
       value(entry) {
-        const fastValue = entry && Number.isFinite(entry.fastCpm)
-          ? entry.fastCpm
-          : entry && Number.isFinite(entry.cpm)
-            ? entry.cpm
+        const fastValue = entry && Number.isFinite(entry.cpm)
+          ? entry.cpm
+          : entry && Number.isFinite(entry.fastCpm)
+            ? entry.fastCpm
             : 0;
         return `${cpmFormatter.format(Math.max(0, fastValue || 0))} cpm`;
       },
@@ -218,6 +219,129 @@
     }
   }
 
+  function initRankingCarousel(scope) {
+    const nav = $('[data-ranking-carousel-nav]', scope);
+    const track = $('[data-ranking-carousel-track]', scope);
+    const viewport = $('[data-ranking-carousel-viewport]', scope);
+    if (!nav || !track) {
+      return;
+    }
+
+    const cards = CAROUSEL_SECTIONS
+      .map(sectionKey => track.querySelector(`[data-ranking-section="${sectionKey}"]`))
+      .filter(Boolean);
+    const navButtons = CAROUSEL_SECTIONS
+      .map(sectionKey => nav.querySelector(`[data-ranking-nav="${sectionKey}"]`))
+      .filter(Boolean);
+
+    if (!cards.length || !navButtons.length) {
+      return;
+    }
+
+    const indexByKey = new Map();
+    cards.forEach((card, index) => {
+      const key = card.getAttribute('data-ranking-section');
+      if (key) {
+        indexByKey.set(key, index);
+      }
+    });
+
+    let currentIndex = 0;
+    const initialKey = navButtons.find(button => button.classList.contains('is-active'))?.dataset.rankingNav
+      || cards[0].dataset.rankingSection;
+    if (initialKey && indexByKey.has(initialKey)) {
+      currentIndex = indexByKey.get(initialKey);
+    }
+
+    function applyState() {
+      track.style.setProperty('--ranking-carousel-index', String(currentIndex));
+      cards.forEach((card, index) => {
+        const isActive = index === currentIndex;
+        card.classList.toggle('is-active', isActive);
+        card.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+      });
+      navButtons.forEach((button) => {
+        const targetKey = button.dataset.rankingNav;
+        const targetIndex = targetKey ? indexByKey.get(targetKey) : null;
+        const isActive = targetIndex === currentIndex;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+    }
+
+    function goToIndex(index) {
+      const normalized = Math.max(0, Math.min(index, cards.length - 1));
+      if (normalized === currentIndex) {
+        applyState();
+        return normalized;
+      }
+      currentIndex = normalized;
+      applyState();
+      return normalized;
+    }
+
+    function goToKey(key) {
+      if (!key || !indexByKey.has(key)) {
+        return;
+      }
+      goToIndex(indexByKey.get(key));
+    }
+
+    function focusButtonForIndex(index) {
+      const target = navButtons.find(button => {
+        const key = button.dataset.rankingNav;
+        return key && indexByKey.get(key) === index;
+      });
+      if (target) {
+        target.focus();
+      }
+    }
+
+    navButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        goToKey(button.dataset.rankingNav);
+      });
+      button.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+          event.preventDefault();
+          const delta = event.key === 'ArrowRight' ? 1 : -1;
+          const nextIndex = goToIndex(currentIndex + delta);
+          focusButtonForIndex(nextIndex);
+        }
+      });
+    });
+
+    if (viewport) {
+      let startX = 0;
+      let tracking = false;
+      viewport.addEventListener('pointerdown', (event) => {
+        if (!event.isPrimary) {
+          return;
+        }
+        tracking = true;
+        startX = event.clientX;
+      });
+      viewport.addEventListener('pointerup', (event) => {
+        if (!tracking || !event.isPrimary) {
+          return;
+        }
+        const delta = event.clientX - startX;
+        if (Math.abs(delta) > 40) {
+          goToIndex(currentIndex + (delta < 0 ? 1 : -1));
+        }
+        tracking = false;
+      });
+      viewport.addEventListener('pointerleave', () => {
+        tracking = false;
+      });
+      viewport.addEventListener('pointercancel', () => {
+        tracking = false;
+      });
+    }
+
+    applyState();
+  }
+
   function initRankingPage() {
     const scope = document.querySelector('.container-screen--ranking');
     if (!scope) {
@@ -226,6 +350,8 @@
     const refreshButton = $('[data-ranking-refresh]', scope);
     const updatedLabel = $('[data-ranking-updated]', scope);
     const errorEl = $('[data-ranking-error]', scope);
+
+    initRankingCarousel(scope);
 
     if (refreshButton) {
       refreshButton.addEventListener('click', () => {
