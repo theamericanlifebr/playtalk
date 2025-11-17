@@ -483,12 +483,9 @@ let reconhecimentoRodando = false;
 let listeningForCommand = false;
 let microphonePaused = false;
 
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  reconhecimento = new SpeechRecognition();
+if (window.OpenAISpeechRecognizer) {
+  reconhecimento = new OpenAISpeechRecognizer({ segmentMs: 4000, minBytes: 2048 });
   reconhecimento.lang = 'en-US';
-  reconhecimento.continuous = true;
-  reconhecimento.interimResults = false;
 
   reconhecimento.onstart = () => {
     reconhecimentoRodando = true;
@@ -529,13 +526,12 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   };
 
   reconhecimento.onerror = (event) => {
-    console.error('Erro no reconhecimento de voz:', event.error);
+    console.error('Erro no reconhecimento de voz:', event.error, event.details || '');
     if (event.error === 'not-allowed') alert('Permissão do microfone negada.');
   };
 
   reconhecimento.onend = () => {
     reconhecimentoRodando = false;
-    if (reconhecimentoAtivo) reconhecimento.start(); // reinicia se estiver ativo
   };
 } else {
   alert('Reconhecimento de voz não é suportado neste navegador. Use o Chrome.');
@@ -543,7 +539,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
 
 setInterval(() => {
-  if (reconhecimentoAtivo && !reconhecimentoRodando) {
+  if (reconhecimento && reconhecimentoAtivo && !reconhecimentoRodando) {
     try { reconhecimento.start(); } catch (e) {}
   }
 }, 4000);

@@ -97,19 +97,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const userImg = document.querySelector('#player-user .player-img');
   const botImg = document.getElementById('bot-avatar');
 
-  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    reconhecimento = new SpeechRecognition();
+  if (window.OpenAISpeechRecognizer) {
+    reconhecimento = new OpenAISpeechRecognizer({ segmentMs: 4000, minBytes: 2048 });
     reconhecimento.lang = 'en-US';
-    reconhecimento.continuous = true;
-    reconhecimento.interimResults = false;
     reconhecimento.onresult = (e) => {
       const transcript = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
       verificar(transcript);
     };
-    reconhecimento.onerror = (e) => console.error('Erro no reconhecimento de voz:', e.error);
+    reconhecimento.onerror = (event) => {
+      console.error('Erro no reconhecimento de voz:', event.error, event.details || '');
+    };
     reconhecimento.onend = () => {
-      if (modoAtual) try { reconhecimento.start(); } catch (err) {}
+      if (modoAtual) {
+        setTimeout(() => {
+          try { reconhecimento.start(); } catch (err) {}
+        }, 500);
+      }
     };
   } else {
     alert('Reconhecimento de voz não suportado.');
