@@ -4,6 +4,7 @@
       this._lang = options.lang || 'en-US';
       this.segmentMs = options.segmentMs || 3500;
       this.minBytes = options.minBytes || 2048;
+      this.volumeThresholdDb = typeof options.volumeThresholdDb === 'number' ? options.volumeThresholdDb : 0;
       this.onstart = null;
       this.onresult = null;
       this.onerror = null;
@@ -16,6 +17,13 @@
       this.chunks = [];
       this.pendingPromise = Promise.resolve();
       this.currentMimeType = 'audio/webm';
+      this.audioContext = null;
+      this.analyser = null;
+      this.sourceNode = null;
+      this.volumeDataArray = null;
+      this.volumeMonitorId = null;
+      this.currentVolumeDb = 0;
+      this.segmentLoudEnough = false;
     }
 
     get lang() {
@@ -38,6 +46,8 @@
       try {
         this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         this.active = true;
+        this.segmentLoudEnough = false;
+        await this.setupAudioMonitoring();
         if (typeof this.onstart === 'function') {
           this.onstart();
         }
@@ -67,6 +77,7 @@
         return;
       }
       this.releaseStream();
+      this.teardownAudioContext();
       if (typeof this.onend === 'function') {
         this.onend();
       }
@@ -77,6 +88,7 @@
         return;
       }
       this.chunks = [];
+      this.segmentLoudEnough = false;
       const options = {};
       const preferredTypes = [
         'audio/webm;codecs=opus',
@@ -112,15 +124,18 @@
       this.recorder.onstop = () => {
         const blob = this.buildBlob();
         this.recorder = null;
+        const loudEnough = this.segmentLoudEnough;
+        this.segmentLoudEnough = false;
         if (this.active) {
           this.beginSegment();
         } else {
           this.releaseStream();
+          this.teardownAudioContext();
           if (typeof this.onend === 'function') {
             this.onend();
           }
         }
-        if (blob && blob.size >= this.minBytes) {
+        if (blob && blob.size >= this.minBytes && loudEnough) {
           this.queueChunk(blob);
         }
       };
@@ -160,6 +175,77 @@
       if (this.recordingTimer) {
         clearTimeout(this.recordingTimer);
         this.recordingTimer = null;
+      }
+    }
+
+    async setupAudioMonitoring() {
+      if (!this.stream || this.audioContext) {
+        return;
+      }
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (typeof AudioContextClass !== 'function') {
+        return;
+      }
+      try {
+        this.audioContext = new AudioContextClass();
+        if (this.audioContext.state === 'suspended' && typeof this.audioContext.resume === 'function') {
+          await this.audioContext.resume().catch(() => {});
+        }
+        this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 2048;
+        this.sourceNode.connect(this.analyser);
+        this.volumeDataArray = new Float32Array(this.analyser.fftSize);
+        this.monitorVolume();
+      } catch (error) {
+        console.warn('Falha ao inicializar monitoramento do microfone:', error);
+        this.teardownAudioContext();
+      }
+    }
+
+    monitorVolume() {
+      if (!this.analyser || !this.volumeDataArray) {
+        return;
+      }
+      const analyze = () => {
+        if (!this.analyser || !this.volumeDataArray) {
+          return;
+        }
+        this.analyser.getFloatTimeDomainData(this.volumeDataArray);
+        let sumSquares = 0;
+        for (let i = 0; i < this.volumeDataArray.length; i++) {
+          const sample = this.volumeDataArray[i] || 0;
+          sumSquares += sample * sample;
+        }
+        const rms = Math.sqrt(sumSquares / this.volumeDataArray.length) || 0;
+        const approxDb = Math.max(0, 20 * Math.log10(Math.max(rms, 1e-8)) + 100);
+        this.currentVolumeDb = approxDb;
+        if (approxDb >= this.volumeThresholdDb) {
+          this.segmentLoudEnough = true;
+        }
+        this.volumeMonitorId = window.requestAnimationFrame(analyze);
+      };
+      this.volumeMonitorId = window.requestAnimationFrame(analyze);
+    }
+
+    stopVolumeMonitoring() {
+      if (this.volumeMonitorId) {
+        window.cancelAnimationFrame(this.volumeMonitorId);
+        this.volumeMonitorId = null;
+      }
+    }
+
+    teardownAudioContext() {
+      this.stopVolumeMonitoring();
+      if (this.sourceNode) {
+        try { this.sourceNode.disconnect(); } catch (e) {}
+        this.sourceNode = null;
+      }
+      this.analyser = null;
+      this.volumeDataArray = null;
+      if (this.audioContext) {
+        try { this.audioContext.close(); } catch (e) {}
+        this.audioContext = null;
       }
     }
 

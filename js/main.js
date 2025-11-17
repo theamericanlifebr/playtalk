@@ -482,9 +482,10 @@ let reconhecimentoAtivo = false;
 let reconhecimentoRodando = false;
 let listeningForCommand = false;
 let microphonePaused = false;
+let speechPauseToken = 0;
 
 if (window.OpenAISpeechRecognizer) {
-  reconhecimento = new OpenAISpeechRecognizer({ segmentMs: 4000, minBytes: 2048 });
+  reconhecimento = new OpenAISpeechRecognizer({ segmentMs: 4000, minBytes: 2048, volumeThresholdDb: 50 });
   reconhecimento.lang = 'en-US';
 
   reconhecimento.onstart = () => {
@@ -539,7 +540,7 @@ if (window.OpenAISpeechRecognizer) {
 
 
 setInterval(() => {
-  if (reconhecimento && reconhecimentoAtivo && !reconhecimentoRodando) {
+  if (reconhecimento && reconhecimentoAtivo && !reconhecimentoRodando && !microphonePaused) {
     try { reconhecimento.start(); } catch (e) {}
   }
 }, 4000);
@@ -569,6 +570,23 @@ const roundSelections = {};
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
+
+function setMicrophoneSpeechState(active, token = null) {
+  if (active) {
+    speechPauseToken = token || Date.now();
+  } else if (token !== null && token !== speechPauseToken) {
+    return;
+  }
+  microphonePaused = active;
+  if (!reconhecimento) {
+    return;
+  }
+  if (active) {
+    try { reconhecimento.stop(); } catch (e) {}
+  } else if (reconhecimentoAtivo && !reconhecimentoRodando) {
+    try { reconhecimento.start(); } catch (e) {}
+  }
+}
 
 function getCurrentThreshold() {
   return roundTarget;
@@ -1816,6 +1834,7 @@ function beginGame() {
     if (texto) texto.style.opacity = '1';
     updateLevelIcon({ scope: 'mode' });
     updateModeIcons();
+    let recognitionLanguage = 'en-US';
     switch (selectedMode) {
       case 1:
         mostrarTexto = 'pt';
@@ -1841,6 +1860,7 @@ function beginGame() {
         mostrarTexto = 'none';
         voz = 'en';
         esperadoLang = 'pt';
+        recognitionLanguage = 'pt-BR';
         break;
       case 6:
         mostrarTexto = 'pt';
@@ -1849,7 +1869,7 @@ function beginGame() {
         break;
     }
     if (reconhecimento) {
-      reconhecimento.lang = esperadoLang === 'pt' ? 'pt-BR' : 'en-US';
+      reconhecimento.lang = recognitionLanguage;
     }
     const restored = restoreRoundState(getStoredRoundState(selectedMode));
     if (reconhecimento) {
@@ -1868,6 +1888,12 @@ function beginGame() {
 function falar(texto, lang) {
   const utter = new SpeechSynthesisUtterance(texto);
   utter.lang = lang === 'pt' ? 'pt-BR' : 'en-US';
+  const token = Date.now();
+  const stopSpeaking = () => setMicrophoneSpeechState(false, token);
+  utter.onstart = () => setMicrophoneSpeechState(true, token);
+  utter.onend = stopSpeaking;
+  utter.onerror = stopSpeaking;
+  setMicrophoneSpeechState(true, token);
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
 }
