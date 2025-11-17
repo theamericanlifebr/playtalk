@@ -10,6 +10,14 @@ const OPENAI_TRANSCRIPTION_MODEL = process.env.OPENAI_TRANSCRIBE_MODEL
   ? process.env.OPENAI_TRANSCRIBE_MODEL.trim()
   : 'gpt-4o-mini-transcribe';
 const OPENAI_TRANSCRIPTION_URL = 'https://api.openai.com/v1/audio/transcriptions';
+const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL
+  ? process.env.OPENAI_TTS_MODEL.trim()
+  : 'gpt-4o-mini-tts';
+const OPENAI_TTS_URL = 'https://api.openai.com/v1/audio/speech';
+const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL
+  ? process.env.OPENAI_IMAGE_MODEL.trim()
+  : 'gpt-image-1';
+const OPENAI_IMAGE_EDIT_URL = 'https://api.openai.com/v1/images/edits';
 
 const DEFAULT_DATA_DIR = path.join(__dirname, 'data');
 const DATA_ROOT = process.env.PLAYTALK_DATA_DIR
@@ -448,6 +456,99 @@ async function transcribeAudioWithOpenAI(audioBuffer, mimeType, language) {
   return response.json();
 }
 
+async function synthesizeSpeechWithOpenAI({ text, voice, format, language }) {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not configured.');
+  }
+  const normalizedText = typeof text === 'string' ? text.trim() : '';
+  if (!normalizedText) {
+    throw new Error('Texto inválido.');
+  }
+  const normalizedVoice = typeof voice === 'string' && voice.trim() ? voice.trim() : 'alloy';
+  const normalizedFormat = typeof format === 'string' && format.trim() ? format.trim() : 'mp3';
+  const payload = {
+    model: OPENAI_TTS_MODEL,
+    voice: normalizedVoice,
+    input: normalizedText,
+    format: normalizedFormat
+  };
+  if (language && typeof language === 'string' && language.trim()) {
+    payload.language = language.trim();
+  }
+  const response = await fetch(OPENAI_TTS_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`OpenAI TTS failed (${response.status}): ${errorBody}`);
+  }
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const base64Audio = buffer.toString('base64');
+  return {
+    audio: `data:audio/${normalizedFormat};base64,${base64Audio}`,
+    format: normalizedFormat,
+    voice: normalizedVoice
+  };
+}
+
+async function stylizePhotoWithDalle(imageDataUrl) {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not configured.');
+  }
+  const rawImage = typeof imageDataUrl === 'string' ? imageDataUrl.trim() : '';
+  if (!rawImage) {
+    throw new Error('Imagem inválida.');
+  }
+  const base64Payload = rawImage.replace(/^data:[^;]+;base64,/, '').replace(/\s/g, '');
+  if (!base64Payload) {
+    throw new Error('Imagem inválida.');
+  }
+  const buffer = Buffer.from(base64Payload, 'base64');
+  if (!buffer.length) {
+    throw new Error('Imagem vazia.');
+  }
+  const match = /^data:([^;]+);/i.exec(rawImage);
+  const mimeType = match && match[1] ? match[1] : 'image/png';
+  const blob = new Blob([buffer], { type: mimeType });
+  const formData = new FormData();
+  formData.append('model', OPENAI_IMAGE_MODEL);
+  formData.append('prompt', 'Transform the person in the reference photo into a cinematic 2025 children\'s movie hero. Keep recognizable face, semi-realistic animation lighting, soft colors, expressive eyes, and deliver only the character with a transparent background in PNG.');
+  formData.append('image', blob, `avatar-${Date.now()}.png`);
+  formData.append('size', '512x512');
+  formData.append('background', 'transparent');
+  const response = await fetch(OPENAI_IMAGE_EDIT_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`
+    },
+    body: formData
+  });
+  const bodyText = await response.text();
+  let parsed = null;
+  try {
+    parsed = JSON.parse(bodyText);
+  } catch (error) {
+    parsed = null;
+  }
+  if (!response.ok || !parsed) {
+    const message = parsed && parsed.error && parsed.error.message
+      ? parsed.error.message
+      : bodyText || 'Falha ao gerar imagem.';
+    throw new Error(message);
+  }
+  const firstImage = Array.isArray(parsed.data) && parsed.data[0] ? parsed.data[0] : null;
+  const base64 = firstImage && firstImage.b64_json;
+  if (!base64) {
+    throw new Error('Imagem não retornada pela OpenAI.');
+  }
+  return `data:image/png;base64,${base64}`;
+}
+
 ensureDataDirectory();
 
 async function ensureDefaultUser() {
@@ -515,6 +616,54 @@ app.post('/api/transcribe', async (req, res) => {
   } catch (error) {
     console.error('Erro ao transcrever áudio:', error);
     res.status(502).json({ success: false, message: 'Erro ao transcrever áudio.' });
+  }
+});
+
+app.post('/api/tts', async (req, res) => {
+  if (!OPENAI_API_KEY) {
+    res.status(503).json({ success: false, message: 'Serviço de voz indisponível.' });
+    return;
+  }
+  const { text, voice, format, language } = req.body || {};
+  const normalizedText = typeof text === 'string' ? text.trim() : '';
+  if (!normalizedText) {
+    res.status(400).json({ success: false, message: 'Texto inválido.' });
+    return;
+  }
+  if (normalizedText.length > 600) {
+    res.status(400).json({ success: false, message: 'Texto muito longo para síntese.' });
+    return;
+  }
+  try {
+    const result = await synthesizeSpeechWithOpenAI({ text: normalizedText, voice, format, language });
+    res.json({ success: true, audio: result.audio, format: result.format, voice: result.voice });
+  } catch (error) {
+    console.error('Erro ao gerar fala com OpenAI:', error);
+    res.status(502).json({ success: false, message: 'Erro ao gerar áudio.' });
+  }
+});
+
+app.post('/api/photos/stylize', async (req, res) => {
+  if (!OPENAI_API_KEY) {
+    res.status(503).json({ success: false, message: 'Serviço de imagem indisponível.' });
+    return;
+  }
+  const { image } = req.body || {};
+  const imageData = typeof image === 'string' ? image.trim() : '';
+  if (!imageData) {
+    res.status(400).json({ success: false, message: 'Imagem inválida.' });
+    return;
+  }
+  if (imageData.length > 8 * 1024 * 1024) {
+    res.status(400).json({ success: false, message: 'Imagem muito grande.' });
+    return;
+  }
+  try {
+    const styled = await stylizePhotoWithDalle(imageData);
+    res.json({ success: true, photo: styled });
+  } catch (error) {
+    console.error('Erro ao estilizar foto com OpenAI:', error);
+    res.status(502).json({ success: false, message: 'Erro ao transformar a foto.' });
   }
 });
 
