@@ -5,6 +5,9 @@
       this.segmentMs = options.segmentMs || 3500;
       this.minBytes = options.minBytes || 2048;
       this.volumeThresholdDb = typeof options.volumeThresholdDb === 'number' ? options.volumeThresholdDb : 0;
+      this.silenceCutoffMs = typeof options.silenceCutoffMs === 'number'
+        ? Math.max(200, options.silenceCutoffMs)
+        : 900;
       this.onstart = null;
       this.onresult = null;
       this.onerror = null;
@@ -24,6 +27,8 @@
       this.volumeMonitorId = null;
       this.currentVolumeDb = 0;
       this.segmentLoudEnough = false;
+      this.lastLoudTimestamp = 0;
+      this.forceStopPending = false;
     }
 
     get lang() {
@@ -89,6 +94,8 @@
       }
       this.chunks = [];
       this.segmentLoudEnough = false;
+      this.lastLoudTimestamp = 0;
+      this.forceStopPending = false;
       const options = {};
       const preferredTypes = [
         'audio/webm;codecs=opus',
@@ -126,6 +133,7 @@
         this.recorder = null;
         const loudEnough = this.segmentLoudEnough;
         this.segmentLoudEnough = false;
+        this.forceStopPending = false;
         if (this.active) {
           this.beginSegment();
         } else {
@@ -222,6 +230,24 @@
         this.currentVolumeDb = approxDb;
         if (approxDb >= this.volumeThresholdDb) {
           this.segmentLoudEnough = true;
+          this.lastLoudTimestamp = (typeof performance !== 'undefined' && performance.now)
+            ? performance.now()
+            : Date.now();
+        } else if (
+          this.segmentLoudEnough &&
+          this.silenceCutoffMs > 0 &&
+          this.recorder &&
+          this.recorder.state === 'recording'
+        ) {
+          const now = (typeof performance !== 'undefined' && performance.now)
+            ? performance.now()
+            : Date.now();
+          if (!this.lastLoudTimestamp) {
+            this.lastLoudTimestamp = now;
+          }
+          if (now - this.lastLoudTimestamp >= this.silenceCutoffMs) {
+            this.forceSegmentStop();
+          }
         }
         this.volumeMonitorId = window.requestAnimationFrame(analyze);
       };
@@ -246,6 +272,19 @@
       if (this.audioContext) {
         try { this.audioContext.close(); } catch (e) {}
         this.audioContext = null;
+      }
+    }
+
+    forceSegmentStop() {
+      if (!this.recorder || this.recorder.state !== 'recording' || this.forceStopPending) {
+        return;
+      }
+      this.forceStopPending = true;
+      try {
+        this.recorder.stop();
+      } catch (error) {
+        console.warn('Erro ao encerrar segmento por silêncio:', error);
+        this.forceStopPending = false;
       }
     }
 

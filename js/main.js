@@ -485,7 +485,12 @@ let microphonePaused = false;
 let speechPauseToken = 0;
 
 if (window.OpenAISpeechRecognizer) {
-  reconhecimento = new OpenAISpeechRecognizer({ segmentMs: 4000, minBytes: 2048, volumeThresholdDb: 50 });
+  reconhecimento = new OpenAISpeechRecognizer({
+    segmentMs: 2400,
+    minBytes: 2048,
+    volumeThresholdDb: 46,
+    silenceCutoffMs: 800
+  });
   reconhecimento.lang = 'en-US';
 
   reconhecimento.onstart = () => {
@@ -1885,17 +1890,43 @@ function beginGame() {
   pendingModeStart = null;
 }
 
-function falar(texto, lang) {
+function speakWithBrowserVoice(texto, locale) {
+  if (typeof window === 'undefined' || typeof window.SpeechSynthesisUtterance !== 'function') {
+    return;
+  }
   const utter = new SpeechSynthesisUtterance(texto);
-  utter.lang = lang === 'pt' ? 'pt-BR' : 'en-US';
+  utter.lang = locale;
   const token = Date.now();
   const stopSpeaking = () => setMicrophoneSpeechState(false, token);
   utter.onstart = () => setMicrophoneSpeechState(true, token);
   utter.onend = stopSpeaking;
   utter.onerror = stopSpeaking;
-  setMicrophoneSpeechState(true, token);
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utter);
+  if (typeof window.speechSynthesis !== 'undefined') {
+    setMicrophoneSpeechState(true, token);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+function falar(texto, lang) {
+  if (!texto) {
+    return;
+  }
+  const locale = lang === 'pt' ? 'pt-BR' : 'en-US';
+  const engine = window.playtalkVoiceEngine;
+  if (engine && typeof engine.play === 'function') {
+    const token = Date.now();
+    setMicrophoneSpeechState(true, token);
+    engine.play({ text: texto, lang, mode: selectedMode })
+      .then(() => setMicrophoneSpeechState(false, token))
+      .catch((error) => {
+        console.warn('Falha ao gerar voz pela OpenAI:', error);
+        setMicrophoneSpeechState(false, token);
+        speakWithBrowserVoice(texto, locale);
+      });
+    return;
+  }
+  speakWithBrowserVoice(texto, locale);
 }
 
 function togglePt() {
