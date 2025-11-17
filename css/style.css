@@ -2,6 +2,7 @@
   --nav-height: 72px;
   --header-height: 56px;
   --container-max-width: 1180px;
+  --ranking-carousel-max-width: 960px;
 }
 
 html,
@@ -98,6 +99,7 @@ body.page-ranking {
 .container-screen--ranking {
   align-items: stretch;
   gap: 24px;
+  width: min(100%, var(--ranking-carousel-max-width));
 }
 
 .ranking-hero {
@@ -179,6 +181,8 @@ body.page-ranking {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  align-items: center;
+  width: 100%;
 }
 
 .ranking-carousel__nav {
@@ -189,6 +193,10 @@ body.page-ranking {
   border-radius: 24px;
   padding: 12px;
   box-shadow: 0 10px 20px rgba(11, 61, 145, 0.1);
+  width: 100%;
+  max-width: var(--ranking-carousel-max-width);
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .ranking-carousel__nav-button {
@@ -233,17 +241,24 @@ body.page-ranking {
 
 .ranking-carousel__viewport {
   width: 100%;
+  max-width: var(--ranking-carousel-max-width);
   overflow: hidden;
   border-radius: 32px;
+  margin: 0 auto;
+  position: relative;
+  touch-action: pan-y;
 }
 
 .ranking-grid {
   --ranking-carousel-index: 0;
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
   gap: 0;
   width: 100%;
-  transform: translateX(calc(var(--ranking-carousel-index) * -100%));
+  transform: translate3d(calc(var(--ranking-carousel-index) * -100%), 0, 0);
   transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .ranking-card {
@@ -254,8 +269,9 @@ body.page-ranking {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 100%;
-  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .ranking-card__header {
