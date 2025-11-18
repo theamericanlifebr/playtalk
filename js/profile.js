@@ -95,6 +95,25 @@ function initProfilePage(context = {}) {
     });
   }
 
+  async function stylizePhotoWithOpenAI(base64Image) {
+    const response = await fetch('/api/photos/stylize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64Image })
+    });
+    let data = null;
+    try {
+      data = await response.json();
+    } catch (error) {
+      data = null;
+    }
+    if (!response.ok || !data || !data.success || !data.photo) {
+      const message = data && data.message ? data.message : 'Falha ao transformar a foto.';
+      throw new Error(message);
+    }
+    return data.photo;
+  }
+
   function setPhotoProgress(value) {
     if (!photoPreview) {
       return;
@@ -349,19 +368,22 @@ function initProfilePage(context = {}) {
       setPhotoStatusMessage('Processando foto...');
 
       try {
-        setPhotoProgress(60);
+        setPhotoProgress(35);
         const compressedData = await compressImage(file);
-        pendingPhotoData = compressedData;
+        setPhotoStatusMessage('Criando avatar animado...');
+        setPhotoProgress(60);
+        const stylizedPhoto = await stylizePhotoWithOpenAI(compressedData);
+        pendingPhotoData = stylizedPhoto;
         updatePhotoPreview(pendingPhotoData);
         updatePublishButtonState();
         setPhotoProgress(100);
-        hidePhotoProgress(200, { message: 'Foto pronta!' });
+        hidePhotoProgress(200, { message: 'Avatar pronto!' });
       } catch (error) {
         console.warn('Não foi possível processar a foto selecionada.', error);
         const message = error && error.message ? error.message : 'Falha ao processar foto';
         hidePhotoProgress(0, { message, success: false });
         alert(error && error.message
-          ? `Não foi possível processar sua imagem: ${error.message}`
+          ? `Não foi possível estilizar sua imagem: ${error.message}`
           : 'Não foi possível processar sua imagem. Tente novamente com outro arquivo.');
       } finally {
         if (inputEl && typeof inputEl.value === 'string') {
