@@ -98,20 +98,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const userImg = document.querySelector('#player-user .player-img');
   const botImg = document.getElementById('bot-avatar');
 
-  if (window.OpenAISpeechRecognizer) {
-    reconhecimento = new OpenAISpeechRecognizer({
-      segmentMs: 2400,
-      minBytes: 2048,
-      volumeThresholdDb: 46,
-      silenceCutoffMs: 800
-    });
+  const NativeSpeechRecognition = typeof window !== 'undefined'
+    ? (window.SpeechRecognition || window.webkitSpeechRecognition || null)
+    : null;
+
+  if (NativeSpeechRecognition) {
+    reconhecimento = new NativeSpeechRecognition();
     reconhecimento.lang = 'en-US';
-    reconhecimento.onresult = (e) => {
-      const transcript = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
-      verificar(transcript);
+    reconhecimento.continuous = true;
+    reconhecimento.interimResults = false;
+    reconhecimento.onresult = (event) => {
+      if (!event.results || !event.results.length) {
+        return;
+      }
+      const result = event.results[event.resultIndex] || event.results[event.results.length - 1];
+      if (!result || !result[0]) {
+        return;
+      }
+      const transcript = (result[0].transcript || '').trim().toLowerCase();
+      if (transcript) {
+        verificar(transcript);
+      }
     };
     reconhecimento.onerror = (event) => {
-      console.error('Erro no reconhecimento de voz:', event.error, event.details || '');
+      const code = event && event.error ? event.error : 'unknown-error';
+      console.error('Erro no reconhecimento de voz:', code);
     };
     reconhecimento.onend = () => {
       if (aguardandoVoz) {
@@ -120,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modoAtual) {
         setTimeout(() => {
           try { reconhecimento.start(); } catch (err) {}
-        }, 500);
+        }, 400);
       }
     };
   } else {
@@ -250,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function tocarVozDoModo(text) {
+  function tocarVozDoModo(text) {
     aguardandoVoz = true;
     if (reconhecimento) {
       try { reconhecimento.stop(); } catch (err) {}
@@ -262,16 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
       aguardandoVoz = false;
       reiniciarReconhecimento();
     };
-    const engine = window.playtalkVoiceEngine;
-    if (engine && typeof engine.play === 'function') {
-      try {
-        await engine.play({ text, lang: 'en', mode: modoAtual || 5 });
-        finalizar();
-        return;
-      } catch (error) {
-        console.warn('Falha ao reproduzir voz do modo Versus pela OpenAI:', error);
-      }
-    }
     falarComSpeechSynthesis(text, finalizar);
   }
 

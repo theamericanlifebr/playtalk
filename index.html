@@ -32,16 +32,62 @@
       </div>
     </header>
   <main id="home-main" class="container-screen container-screen--home" data-page-transition>
-    <div id="menu">
-      <div id="menu-modes">
-        <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
-        <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" alt="Modo 2">
-        <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" alt="Modo 3">
-        <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" alt="Modo 4">
-        <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" alt="Modo 5">
-        <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" alt="Modo 6">
+    <section class="mode-hub" aria-label="Seleção de modos do PlayTalk">
+      <div id="menu" class="mode-hub__panel">
+        <div class="mode-hub__logo" role="img" aria-label="PlayTalk Nova Era">
+          <svg viewBox="0 0 160 160" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="hubGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#50c9ff" />
+                <stop offset="100%" stop-color="#7f5dff" />
+              </linearGradient>
+            </defs>
+            <circle cx="80" cy="80" r="76" stroke="url(#hubGradient)" stroke-width="6" fill="none" />
+            <path d="M40 108L52 52l28 20 28-20 12 56-40 22z" fill="url(#hubGradient)" opacity="0.8" />
+            <path d="M40 52h80M60 38l20 12 20-12" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7" />
+          </svg>
+        </div>
+        <p class="mode-hub__tagline">Seis caminhos para evoluir seu inglês, alinhados em um painel fixo e imersivo.</p>
+        <div id="menu-modes" class="mode-grid">
+          <button type="button" class="mode-card" data-mode="1">
+            <div class="mode-card__image">
+              <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1 - Vocabulary">
+            </div>
+            <span class="mode-card__label">Vocabulary</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="2">
+            <div class="mode-card__image">
+              <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" alt="Modo 2 - Meaning">
+            </div>
+            <span class="mode-card__label">Meaning</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="3">
+            <div class="mode-card__image">
+              <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" alt="Modo 3 - Listening">
+            </div>
+            <span class="mode-card__label">Listening</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="4">
+            <div class="mode-card__image">
+              <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" alt="Modo 4 - Reading">
+            </div>
+            <span class="mode-card__label">Reading</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="5">
+            <div class="mode-card__image">
+              <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" alt="Modo 5 - Translating">
+            </div>
+            <span class="mode-card__label">Translating</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="6">
+            <div class="mode-card__image">
+              <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" alt="Modo 6 - Thinking">
+            </div>
+            <span class="mode-card__label">Thinking</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
 
     <div id="visor" class="container-screen container-screen--visor">
       <!-- conteúdo visual aqui -->
@@ -151,11 +197,15 @@
 
   <footer class="page-footer">
     <nav id="main-nav">
-      <a href="index.html" id="home-link" class="nav-item active" aria-label="Home" data-nav-index="0">
+      <a href="index.html" id="home-link" class="nav-item active" aria-label="Painel de modos" data-nav-index="0">
         <span class="nav-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+          <svg viewBox="0 0 32 32" role="img" focusable="false">
+            <path d="M6 7.5h20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 4l8 5 8-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 12l2.2 11.5L16 28l7.8-4.5L26 12l-10 6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
         </span>
-        <span class="sr-only">Home</span>
+        <span class="sr-only">Painel de modos</span>
       </a>
       <a href="fun.html" class="nav-item" aria-label="Opções de jogo" data-nav-index="1">
         <span class="nav-icon" aria-hidden="true">
@@ -193,8 +243,6 @@
   <audio id="somErro" src="gamesounds/error.mp3"></audio>
   <audio id="somLock" src="gamesounds/lock.wav"></audio>
 
-  <script src="js/openai-recognizer.js" defer></script>
-  <script src="js/openai-voices.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 </html>
