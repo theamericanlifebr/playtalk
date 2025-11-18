@@ -484,24 +484,32 @@ let listeningForCommand = false;
 let microphonePaused = false;
 let speechPauseToken = 0;
 
-if (window.OpenAISpeechRecognizer) {
-  reconhecimento = new OpenAISpeechRecognizer({
-    segmentMs: 2400,
-    minBytes: 2048,
-    volumeThresholdDb: 46,
-    silenceCutoffMs: 800
-  });
+const NativeSpeechRecognition = typeof window !== 'undefined'
+  ? (window.SpeechRecognition || window.webkitSpeechRecognition || null)
+  : null;
+
+if (NativeSpeechRecognition) {
+  reconhecimento = new NativeSpeechRecognition();
   reconhecimento.lang = 'en-US';
+  reconhecimento.continuous = true;
+  reconhecimento.interimResults = false;
 
   reconhecimento.onstart = () => {
     reconhecimentoRodando = true;
   };
 
   reconhecimento.onresult = (event) => {
-    if (microphonePaused) {
+    if (microphonePaused || !event.results || !event.results.length) {
       return;
     }
-    const transcript = event.results[event.results.length - 1][0].transcript.trim();
+    const result = event.results[event.resultIndex] || event.results[event.results.length - 1];
+    if (!result || !result[0]) {
+      return;
+    }
+    const transcript = result[0].transcript.trim();
+    if (!transcript) {
+      return;
+    }
     const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (awaitingRetry && (normCmd.includes('try again') || normCmd.includes('tentar de novo'))) {
       awaitingRetry = false;
@@ -525,19 +533,28 @@ if (window.OpenAISpeechRecognizer) {
       ) {
         reportLastError();
       } else {
-        document.getElementById("pt").value = transcript;
+        const answerField = document.getElementById('pt');
+        if (answerField) {
+          answerField.value = transcript;
+        }
         verificarResposta();
       }
     }
   };
 
   reconhecimento.onerror = (event) => {
-    console.error('Erro no reconhecimento de voz:', event.error, event.details || '');
-    if (event.error === 'not-allowed') alert('Permissão do microfone negada.');
+    const errorCode = event && event.error ? event.error : 'unknown-error';
+    console.error('Erro no reconhecimento de voz:', errorCode, event && event.message ? event.message : '');
+    if (errorCode === 'not-allowed') {
+      alert('Permissão do microfone negada.');
+    }
   };
 
   reconhecimento.onend = () => {
     reconhecimentoRodando = false;
+    if (reconhecimentoAtivo && !microphonePaused) {
+      try { reconhecimento.start(); } catch (error) {}
+    }
   };
 } else {
   alert('Reconhecimento de voz não é suportado neste navegador. Use o Chrome.');
@@ -1913,19 +1930,6 @@ function falar(texto, lang) {
     return;
   }
   const locale = lang === 'pt' ? 'pt-BR' : 'en-US';
-  const engine = window.playtalkVoiceEngine;
-  if (engine && typeof engine.play === 'function') {
-    const token = Date.now();
-    setMicrophoneSpeechState(true, token);
-    engine.play({ text: texto, lang, mode: selectedMode })
-      .then(() => setMicrophoneSpeechState(false, token))
-      .catch((error) => {
-        console.warn('Falha ao gerar voz pela OpenAI:', error);
-        setMicrophoneSpeechState(false, token);
-        speakWithBrowserVoice(texto, locale);
-      });
-    return;
-  }
   speakWithBrowserVoice(texto, locale);
 }
 
@@ -2408,24 +2412,35 @@ async function initGame() {
   const levelIcon = document.getElementById('nivel-indicador');
   if (levelIcon) levelIcon.style.display = 'block';
 
-  document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
-    img.addEventListener('click', () => {
-      stopCurrentGame();
-      const modo = parseInt(img.dataset.mode, 10);
-      if (!unlockedModes[modo]) {
-        const lock = document.getElementById('somLock');
-        if (lock) {
-          lock.currentTime = 0;
-          const playPromise = lock.play();
-          if (playPromise && typeof playPromise.catch === 'function') {
-            playPromise.catch(() => {});
-          }
+  const handleModeTrigger = (event) => {
+    const trigger = event.target.closest('[data-mode]');
+    if (!trigger || !event.currentTarget.contains(trigger)) {
+      return;
+    }
+    const modo = parseInt(trigger.dataset.mode, 10);
+    if (!Number.isFinite(modo)) {
+      return;
+    }
+    stopCurrentGame();
+    if (!unlockedModes[modo]) {
+      const lock = document.getElementById('somLock');
+      if (lock) {
+        lock.currentTime = 0;
+        const playPromise = lock.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
         }
-        return;
       }
-      startGame(modo);
+      return;
+    }
+    startGame(modo);
+  };
+
+  [document.getElementById('mode-buttons'), document.getElementById('menu-modes')]
+    .filter(Boolean)
+    .forEach(container => {
+      container.addEventListener('click', handleModeTrigger);
     });
-  });
 
   setupModeIconInteractions();
 
