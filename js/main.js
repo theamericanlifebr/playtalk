@@ -1,9 +1,7 @@
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   theme: 'light',
-  pointsPerHit: 4000,
-  pointsLossPerSecond: 0,
-  startingPoints: 0
+  retryWrongPhrases: false
 };
 
 const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
@@ -2010,6 +2008,98 @@ function embaralhar(array) {
   return array.sort(() => Math.random() - 0.5);
 }
 
+function allocatePhraseCounts(total, plan) {
+  const safeTotal = Math.max(1, Math.floor(total));
+  const normalizedPlan = plan
+    .map(entry => ({ key: entry.key, ratio: Number(entry.ratio) }))
+    .filter(entry => entry.key && Number.isFinite(entry.ratio) && entry.ratio > 0);
+  if (!normalizedPlan.length) {
+    return {};
+  }
+  const ratioSum = normalizedPlan.reduce((sum, entry) => sum + entry.ratio, 0);
+  const weighted = normalizedPlan.map(entry => ({
+    ...entry,
+    raw: (safeTotal * entry.ratio) / ratioSum
+  }));
+  const baseCounts = weighted.map(entry => Math.floor(entry.raw));
+  let remainder = safeTotal - baseCounts.reduce((sum, value) => sum + value, 0);
+  const fractions = weighted
+    .map((entry, index) => ({ index, fraction: entry.raw - Math.floor(entry.raw) }))
+    .sort((a, b) => b.fraction - a.fraction);
+  let cursor = 0;
+  while (remainder > 0 && fractions.length) {
+    const { index } = fractions[cursor % fractions.length];
+    baseCounts[index] += 1;
+    remainder -= 1;
+    cursor += 1;
+  }
+  const counts = {};
+  weighted.forEach((entry, index) => {
+    counts[entry.key] = (counts[entry.key] || 0) + baseCounts[index];
+  });
+  return counts;
+}
+
+function normalizeWrongRankingEntry(entry) {
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+  const folder = Number(entry.folder);
+  if (!Number.isFinite(folder)) {
+    return null;
+  }
+  const expected = typeof entry.expected === 'string' ? entry.expected : '';
+  const phrase = typeof entry.phrase === 'string' ? entry.phrase : expected;
+  const pt = typeof entry.pt === 'string' ? entry.pt : '';
+  let en = [];
+  if (Array.isArray(entry.en)) {
+    en = entry.en.map(value => String(value || '').trim()).filter(Boolean);
+  }
+  return { folder, expected, phrase, pt, en };
+}
+
+function resolveLibraryPhrase(libraryEntries, expected) {
+  if (!expected) {
+    return null;
+  }
+  const match = libraryEntries.find(item => {
+    const [pt, enList] = ensurePhraseTuple(item);
+    return pt === expected || enList.includes(expected);
+  });
+  return match ? ensurePhraseTuple(match) : null;
+}
+
+function getWrongPhrasePool(mode, folder) {
+  const stats = ensureModeStats(mode);
+  const entries = Array.isArray(stats.wrongRanking) ? stats.wrongRanking : [];
+  const library = getModeLibrary(mode);
+  const folderLibrary = Array.isArray(library[folder]) ? library[folder] : [];
+  const seen = new Set();
+  const pool = [];
+
+  entries.forEach(entry => {
+    const normalized = normalizeWrongRankingEntry(entry);
+    if (!normalized || normalized.folder !== folder) {
+      return;
+    }
+    let phraseTuple = ensurePhraseTuple([normalized.pt, normalized.en]);
+    const hasContent = getPtFromPhrase(phraseTuple) || getPrimaryEnFromPhrase(phraseTuple);
+    if (!hasContent) {
+      phraseTuple = resolveLibraryPhrase(folderLibrary, normalized.expected || normalized.phrase);
+    }
+    if (!phraseTuple) {
+      return;
+    }
+    const key = `${getPtFromPhrase(phraseTuple)}#${getPrimaryEnFromPhrase(phraseTuple)}`;
+    if (key.trim() && !seen.has(key)) {
+      seen.add(key);
+      pool.push(ensurePhraseTuple(phraseTuple));
+    }
+  });
+
+  return pool;
+}
+
 function carregarFrases() {
   const library = getModeLibrary(selectedMode);
   const levelToUse = resolveModeLevel(selectedMode);
@@ -2025,25 +2115,73 @@ function carregarFrases() {
     });
 
   const totalNecessario = Math.max(1, roundTarget);
-  const qtdPrincipais = levelToUse === 1
-    ? totalNecessario
-    : Math.max(1, Math.round(totalNecessario * 0.7));
-  const qtdAnteriores = Math.max(0, totalNecessario - qtdPrincipais);
-  let selecionadas = [].concat(
-    embaralhar(principais).slice(0, qtdPrincipais),
-    embaralhar(anteriores).slice(0, qtdAnteriores)
-  );
+  const erradas = userSettings.retryWrongPhrases
+    ? getWrongPhrasePool(selectedMode, levelToUse)
+    : [];
+
+  const allocationPlan = userSettings.retryWrongPhrases
+    ? [
+        { key: 'principais', ratio: 0.75 },
+        { key: 'erradas', ratio: 0.15 },
+        { key: 'anteriores', ratio: 0.10 }
+      ]
+    : [
+        { key: 'principais', ratio: 0.75 },
+        { key: 'anteriores', ratio: 0.25 }
+      ];
+
+  const desiredCounts = allocatePhraseCounts(totalNecessario, allocationPlan);
+  const pools = {
+    principais: embaralhar([...principais]),
+    anteriores: embaralhar([...anteriores]),
+    erradas: embaralhar([...erradas])
+  };
+  const originalPools = {
+    principais: [...principais],
+    anteriores: [...anteriores],
+    erradas: [...erradas]
+  };
+
+  const selecionadas = [];
+
+  function consumeFromPool(key, amount, { allowReuse = false } = {}) {
+    if (amount <= 0) return 0;
+    const pool = pools[key];
+    let remaining = amount;
+    if (Array.isArray(pool) && pool.length) {
+      const take = pool.splice(0, Math.min(remaining, pool.length));
+      selecionadas.push(...take);
+      remaining -= take.length;
+    }
+    if (allowReuse && remaining > 0) {
+      const source = originalPools[key];
+      if (Array.isArray(source) && source.length) {
+        const refill = embaralhar([...source]).slice(0, Math.min(remaining, source.length));
+        selecionadas.push(...refill);
+        remaining -= refill.length;
+      }
+    }
+    return remaining;
+  }
+
+  let leftover = 0;
+  Object.entries(desiredCounts).forEach(([key, amount]) => {
+    leftover += consumeFromPool(key, amount);
+  });
+
+  const fallbackOrder = ['principais', 'erradas', 'anteriores'];
+  fallbackOrder.forEach(key => {
+    if (leftover > 0) {
+      leftover = consumeFromPool(key, leftover, { allowReuse: true });
+    }
+  });
 
   if (!selecionadas.length && principais.length) {
-    selecionadas = [...principais];
+    selecionadas.push(...embaralhar([...principais]).slice(0, totalNecessario));
   }
 
   if (!selecionadas.length) {
-    selecionadas = [['', '']];
-  }
-
-  while (selecionadas.length < totalNecessario && principais.length) {
-    selecionadas = selecionadas.concat(embaralhar(principais).slice(0, totalNecessario - selecionadas.length));
+    selecionadas.push(['', '']);
   }
 
   frasesArr = embaralhar(selecionadas).slice(0, totalNecessario);
@@ -2234,8 +2372,22 @@ function verificarResposta() {
     handleWrongStreak();
     const wr = stats.wrongRanking;
     const existing = wr.find(e => e.expected === expectedPhrase && e.input === resposta && e.folder === pastaAtual);
-    if (existing) existing.count++;
-    else wr.push({ expected: expectedPhrase, input: resposta, folder: pastaAtual, count: 1 });
+    if (existing) {
+      existing.count++;
+      if (!existing.phrase) existing.phrase = expectedPhrase;
+      if (!existing.pt) existing.pt = pt;
+      if (!Array.isArray(existing.en) || !existing.en.length) existing.en = enVariants;
+    } else {
+      wr.push({
+        expected: expectedPhrase,
+        input: resposta,
+        folder: pastaAtual,
+        count: 1,
+        phrase: expectedPhrase,
+        pt,
+        en: enVariants
+      });
+    }
     saveModeStats();
     document.getElementById("somErro").play();
     errosTotais++;

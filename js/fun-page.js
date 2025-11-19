@@ -7,9 +7,7 @@
       return;
     }
     const radios = Array.from(form.querySelectorAll('input[name="theme"]'));
-    const pointsPerHit = scope.querySelector('#pointsPerHit');
-    const pointsLossPerSecond = scope.querySelector('#pointsLossPerSecond');
-    const startingPoints = scope.querySelector('#startingPoints');
+    const retryWrongCheckbox = scope.querySelector('#retryWrongPhrases');
     const feedback = scope.querySelector('#fun-feedback');
 
     function load() {
@@ -18,14 +16,8 @@
       radios.forEach(radio => {
         radio.checked = radio.value === theme;
       });
-      if (pointsPerHit) {
-        pointsPerHit.value = settings.pointsPerHit ?? (api ? api.DEFAULT_SETTINGS.pointsPerHit : 0);
-      }
-      if (pointsLossPerSecond) {
-        pointsLossPerSecond.value = settings.pointsLossPerSecond ?? (api ? api.DEFAULT_SETTINGS.pointsLossPerSecond : 0);
-      }
-      if (startingPoints) {
-        startingPoints.value = settings.startingPoints ?? (api ? api.DEFAULT_SETTINGS.startingPoints : 0);
+      if (retryWrongCheckbox) {
+        retryWrongCheckbox.checked = Boolean(settings.retryWrongPhrases);
       }
     }
 
@@ -35,9 +27,7 @@
       const theme = selected ? selected.value : 'light';
       const settings = {
         theme,
-        pointsPerHit: pointsPerHit ? Number(pointsPerHit.value) || 0 : 0,
-        pointsLossPerSecond: pointsLossPerSecond ? Number(pointsLossPerSecond.value) || 0 : 0,
-        startingPoints: startingPoints ? Number(startingPoints.value) || 0 : 0
+        retryWrongPhrases: retryWrongCheckbox ? retryWrongCheckbox.checked : false
       };
       if (api) {
         api.saveSettings(settings);

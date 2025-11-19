@@ -2,19 +2,22 @@
   const SETTINGS_STORAGE_KEY = 'playtalkSettings';
   const DEFAULT_SETTINGS = {
     theme: 'light',
-    pointsPerHit: 4000,
-    pointsLossPerSecond: 0,
-    startingPoints: 0
+    retryWrongPhrases: false
   };
 
   function normalizeSettings(value) {
+    const base = { ...DEFAULT_SETTINGS };
     if (!value || typeof value !== 'object') {
-      return { ...DEFAULT_SETTINGS };
+      return base;
     }
-    return {
-      ...DEFAULT_SETTINGS,
-      ...value
-    };
+    const normalized = { ...base };
+    if (typeof value.theme === 'string') {
+      normalized.theme = value.theme;
+    }
+    if (typeof value.retryWrongPhrases === 'boolean') {
+      normalized.retryWrongPhrases = value.retryWrongPhrases;
+    }
+    return normalized;
   }
 
   function loadSettings() {
