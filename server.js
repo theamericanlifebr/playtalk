@@ -40,9 +40,7 @@ const PROGRESS_SCHEMA = {
     type: 'json',
     default: {
       theme: 'light',
-      pointsPerHit: 4000,
-      pointsLossPerSecond: 0,
-      startingPoints: 0
+      retryWrongPhrases: false
     }
   },
   generalProgress: { type: 'json', default: { level: 1, xp: 0 } },

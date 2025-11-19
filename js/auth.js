@@ -19,9 +19,7 @@
       type: 'json',
       default: {
         theme: 'light',
-        pointsPerHit: 4000,
-        pointsLossPerSecond: 0,
-        startingPoints: 0
+        retryWrongPhrases: false
       }
     },
     generalProgress: { type: 'json', default: { level: 1, xp: 0 } },
@@ -575,6 +573,10 @@
     }
     if (typeof openLoginFlowHandler === 'function') {
       openLoginFlowHandler();
+      return;
+    }
+    if (!stayOnPage) {
+      window.location.href = 'login.html';
     }
   }
   async function completeLoginFlow({ username, password }) {
@@ -717,6 +719,11 @@
     if (!flow || !form || !usernameInput || !passwordInput) {
       openLoginFlowHandler = null;
       closeLoginFlowHandler = null;
+      if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+          window.location.href = 'login.html';
+        });
+      }
       return;
     }
 
@@ -785,7 +792,13 @@
         await completeLoginFlow({ username, password });
         setError('');
         setStatus('Tudo pronto! Bem-vindo ao PlayTalk.');
-        setTimeout(() => closeFlow(), 800);
+        const onLoginPage = document.body && document.body.classList.contains('page-login');
+        setTimeout(() => {
+          closeFlow();
+          if (onLoginPage) {
+            window.location.href = 'index.html';
+          }
+        }, 800);
       } catch (err) {
         console.error('Erro ao concluir fluxo de acesso:', err);
         const message = err && err.message ? err.message : 'Não foi possível concluir o acesso.';
@@ -826,6 +839,7 @@
   async function init() {
     readStoredCurrentUser();
     const user = cachedCurrentUser;
+    const isLoginPage = document.body && document.body.classList.contains('page-login');
 
     if (user) {
       applyUserDataToStorage(user);
@@ -841,8 +855,13 @@
       updateUserSnapshot({ useBeacon: true });
     });
 
-    if (!user && typeof openLoginFlowHandler === 'function') {
-      openLoginFlowHandler();
+    if (!user) {
+      if (typeof openLoginFlowHandler === 'function') {
+        openLoginFlowHandler();
+      } else if (!isLoginPage) {
+        window.location.href = 'login.html';
+        return;
+      }
     }
 
     if (user && user.username && user.password) {

@@ -2605,6 +2605,16 @@ body.theme-blue #fun-container {
   font-size: 16px;
 }
 
+.fun-field--inline {
+  flex-direction: row;
+  align-items: center;
+}
+
+.fun-field--inline input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
 .fun-field input {
   padding: 10px 12px;
   border-radius: 10px;

@@ -6,9 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const api = window.playtalkSettings;
   const radios = Array.from(form.querySelectorAll('input[name="theme"]'));
-  const pointsPerHit = document.getElementById('pointsPerHit');
-  const pointsLossPerSecond = document.getElementById('pointsLossPerSecond');
-  const startingPoints = document.getElementById('startingPoints');
+  const retryWrongCheckbox = document.getElementById('retryWrongPhrases');
   const feedback = document.getElementById('fun-feedback');
 
   function applySettingsToForm(settings) {
@@ -19,14 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     radios.forEach(radio => {
       radio.checked = radio.value === theme;
     });
-    if (pointsPerHit) {
-      pointsPerHit.value = settings.pointsPerHit ?? (api && api.DEFAULT_SETTINGS.pointsPerHit) ?? 0;
-    }
-    if (pointsLossPerSecond) {
-      pointsLossPerSecond.value = settings.pointsLossPerSecond ?? (api && api.DEFAULT_SETTINGS.pointsLossPerSecond) ?? 0;
-    }
-    if (startingPoints) {
-      startingPoints.value = settings.startingPoints ?? (api && api.DEFAULT_SETTINGS.startingPoints) ?? 0;
+    if (retryWrongCheckbox) {
+      retryWrongCheckbox.checked = Boolean(settings.retryWrongPhrases);
     }
   }
 
@@ -49,9 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedTheme = (radios.find(radio => radio.checked) || {}).value || 'light';
     const settings = {
       theme: selectedTheme,
-      pointsPerHit: Number(pointsPerHit && pointsPerHit.value) || 0,
-      pointsLossPerSecond: Number(pointsLossPerSecond && pointsLossPerSecond.value) || 0,
-      startingPoints: Number(startingPoints && startingPoints.value) || 0
+      retryWrongPhrases: Boolean(retryWrongCheckbox && retryWrongCheckbox.checked)
     };
 
     if (api) {
