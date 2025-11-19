@@ -834,6 +834,20 @@ app.post('/api/users/update', async (req, res) => {
   }
 });
 
+app.post("/api/email/webhook", (req, res) => {
+  try {
+    console.log("Webhook recebeu:", req.body);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Erro no webhook:", err);
+    res.sendStatus(500);
+  }
+});
+
+
+
+
+
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Serving static content from ${staticDir}`);
