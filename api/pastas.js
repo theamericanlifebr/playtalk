@@ -4,6 +4,16 @@ const path = require('path');
 const PHRASES_DIR = path.join(process.cwd(), 'data', 'phrases');
 const CONFIG_PATH = path.join(PHRASES_DIR, 'config.json');
 
+function normalizePhraseEntry(phrase) {
+  if (typeof phrase !== 'string') {
+    return { pt: '', en: [] };
+  }
+  const parts = phrase.split('#').map((part) => part.trim());
+  const pt = parts.shift() || '';
+  const en = parts.filter(Boolean);
+  return { pt, en };
+}
+
 async function loadPhraseLibrary() {
   const rawConfig = await fs.readFile(CONFIG_PATH, 'utf8');
   const config = JSON.parse(rawConfig);
@@ -12,25 +22,30 @@ async function loadPhraseLibrary() {
 
   await Promise.all(
     Object.entries(modesConfig).map(async ([modeKey, modeConfig]) => {
-      const levelPaths = Array.isArray(modeConfig.levels) ? modeConfig.levels : [];
+      const filePath = modeConfig && typeof modeConfig.file === 'string' ? modeConfig.file : null;
       const levels = [];
 
-      for (const levelPath of levelPaths) {
-        const absolutePath = path.join(process.cwd(), levelPath);
+      if (filePath) {
+        const absolutePath = path.join(process.cwd(), filePath);
         try {
-          const rawLevel = await fs.readFile(absolutePath, 'utf8');
-          const levelData = JSON.parse(rawLevel);
-          const levelNumber = Number.isFinite(levelData.level)
-            ? Math.max(1, Math.floor(levelData.level))
-            : levels.length + 1;
-          const entries = Array.isArray(levelData.entries) ? levelData.entries : [];
-          levels.push({ level: levelNumber, entries });
+          const rawMode = await fs.readFile(absolutePath, 'utf8');
+          const modeData = JSON.parse(rawMode);
+          const rawLevels = modeData && typeof modeData === 'object' && modeData.levels ? modeData.levels : {};
+          Object.entries(rawLevels).forEach(([levelKey, entries]) => {
+            const levelNumber = Number.isFinite(parseInt(levelKey, 10))
+              ? Math.max(1, Math.floor(parseInt(levelKey, 10)))
+              : levels.length + 1;
+            const normalizedEntries = Array.isArray(entries)
+              ? entries.map(normalizePhraseEntry)
+              : [];
+            levels.push({ level: levelNumber, entries: normalizedEntries });
+          });
         } catch (error) {
-          console.warn(`Não foi possível carregar o arquivo de nível ${levelPath}:`, error);
-          levels.push({ level: levels.length + 1, entries: [] });
+          console.warn(`Não foi possível carregar o arquivo de nível ${filePath}:`, error);
         }
       }
 
+      levels.sort((a, b) => a.level - b.level);
       modes[modeKey] = { levels };
     })
   );

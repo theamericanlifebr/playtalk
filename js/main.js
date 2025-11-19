@@ -222,6 +222,48 @@ const phraseLibrary = {
   loaded: false
 };
 
+function normalizePhraseLine(line) {
+  if (typeof line !== 'string') {
+    return ['', []];
+  }
+  const parts = line.split('#').map(part => part.trim());
+  const pt = parts.shift() || '';
+  const en = parts.filter(Boolean);
+  return [pt, en];
+}
+
+function ensurePhraseTuple(entry) {
+  if (typeof entry === 'string') {
+    return normalizePhraseLine(entry);
+  }
+  if (!Array.isArray(entry)) {
+    return ['', []];
+  }
+  const pt = typeof entry[0] === 'string' ? entry[0] : String(entry[0] ?? '');
+  const enRaw = entry[1];
+  let enList = [];
+  if (Array.isArray(enRaw)) {
+    enList = enRaw.map(value => String(value ?? '').trim()).filter(Boolean);
+  } else if (typeof enRaw === 'string') {
+    const trimmed = enRaw.trim();
+    enList = trimmed ? [trimmed] : [];
+  }
+  return [pt, enList];
+}
+
+function getPtFromPhrase(entry) {
+  return ensurePhraseTuple(entry)[0];
+}
+
+function getEnVariantsFromPhrase(entry) {
+  return ensurePhraseTuple(entry)[1];
+}
+
+function getPrimaryEnFromPhrase(entry) {
+  const variants = getEnVariantsFromPhrase(entry);
+  return variants[0] || '';
+}
+
 let generalProgress = { level: 1, xp: 0 };
 let modeProgress = {};
 
@@ -397,34 +439,47 @@ async function carregarPastas() {
 
     const fetches = [];
     modeEntries.forEach(([modeKey, modeConfig]) => {
-      const levelPaths = Array.isArray(modeConfig.levels) ? modeConfig.levels : [];
+      const filePath = modeConfig && typeof modeConfig.file === 'string' ? modeConfig.file : '';
       phraseLibrary.modes[modeKey] = {};
-      phraseLibrary.maxLevels[modeKey] = levelPaths.length;
-      levelPaths.forEach((levelPath, index) => {
-        fetches.push(
-          fetch(levelPath)
-            .then(levelResponse => {
-              if (!levelResponse.ok) {
-                throw new Error(`Falha ao carregar ${levelPath}`);
-              }
-              return levelResponse.json();
-            })
-            .then(levelData => {
-              const levelNumber = Number.isFinite(levelData.level)
-                ? Math.max(1, Math.floor(levelData.level))
-                : index + 1;
-              const entries = Array.isArray(levelData.entries) ? levelData.entries : [];
-              phraseLibrary.modes[modeKey][levelNumber] = entries.map(entry => [
-                typeof entry.pt === 'string' ? entry.pt : '',
-                typeof entry.en === 'string' ? entry.en : ''
-              ]);
-            })
-            .catch(err => {
-              console.error('Erro ao carregar nível de frases:', err);
-              phraseLibrary.modes[modeKey][index + 1] = [];
-            })
-        );
-      });
+      phraseLibrary.maxLevels[modeKey] = 0;
+
+      if (!filePath) {
+        return;
+      }
+
+      fetches.push(
+        fetch(filePath)
+          .then(levelResponse => {
+            if (!levelResponse.ok) {
+              throw new Error(`Falha ao carregar ${filePath}`);
+            }
+            return levelResponse.json();
+          })
+          .then(modeData => {
+            const rawLevels = modeData && modeData.levels ? modeData.levels : {};
+            const normalizedLevels = [];
+            Object.entries(rawLevels).forEach(([levelKey, entries]) => {
+              const parsedLevel = parseInt(levelKey, 10);
+              const levelNumber = Number.isFinite(parsedLevel)
+                ? Math.max(1, Math.floor(parsedLevel))
+                : normalizedLevels.length + 1;
+              const normalizedEntries = Array.isArray(entries)
+                ? entries.map(normalizePhraseLine)
+                : [];
+              normalizedLevels.push([levelNumber, normalizedEntries]);
+            });
+            normalizedLevels.sort((a, b) => a[0] - b[0]);
+            normalizedLevels.forEach(([levelNumber, entries]) => {
+              phraseLibrary.modes[modeKey][levelNumber] = entries.map(ensurePhraseTuple);
+            });
+            const levelNumbers = normalizedLevels.map(([levelNumber]) => levelNumber);
+            const maxLevel = levelNumbers.length ? Math.max(...levelNumbers) : normalizedLevels.length;
+            phraseLibrary.maxLevels[modeKey] = Math.max(phraseLibrary.maxLevels[modeKey] || 0, maxLevel);
+          })
+          .catch(err => {
+            console.error('Erro ao carregar nível de frases:', err);
+          })
+      );
     });
 
     await Promise.all(fetches);
@@ -622,8 +677,8 @@ function sanitizeStoredPhrases(list) {
     return [];
   }
   return list
-    .map(entry => Array.isArray(entry) ? [String(entry[0] ?? ''), String(entry[1] ?? '')] : ['', ''])
-    .filter(entry => entry.length === 2);
+    .map(entry => ensurePhraseTuple(entry))
+    .filter(entry => Array.isArray(entry) && entry.length === 2);
 }
 
 function getStoredRoundState(mode) {
@@ -1939,14 +1994,14 @@ function falarFrase() {
     return;
   }
   if (frasesArr[fraseIndex]) {
-    const [, en] = frasesArr[fraseIndex];
+    const en = getPrimaryEnFromPhrase(frasesArr[fraseIndex]);
     falar(en, 'en');
   }
 }
 
 function falarPt() {
   if (frasesArr[fraseIndex]) {
-    const [pt] = frasesArr[fraseIndex];
+    const pt = getPtFromPhrase(frasesArr[fraseIndex]);
     falar(pt, 'pt');
   }
 }
@@ -2031,7 +2086,8 @@ function mostrarFrase() {
   if (fraseIndex >= frasesArr.length) {
     fraseIndex = fraseIndex % Math.max(1, frasesArr.length);
   }
-  const [pt, en] = frasesArr[fraseIndex];
+  const pt = getPtFromPhrase(frasesArr[fraseIndex]);
+  const en = getPrimaryEnFromPhrase(frasesArr[fraseIndex]);
   const texto = document.getElementById("texto-exibicao");
   if (mostrarTexto === 'pt') texto.textContent = pt;
   else if (mostrarTexto === 'en') texto.textContent = en;
@@ -2128,17 +2184,19 @@ function verificarResposta() {
   const stats = ensureModeStats(selectedMode);
   stats.totalPhrases++;
 
-  const currentEntry = Array.isArray(frasesArr[fraseIndex]) ? frasesArr[fraseIndex] : ['', ''];
-  const [pt, en] = currentEntry;
-  const esperado = esperadoLang === 'pt' ? pt : en;
-  const expectedPhrase = esperado || '';
+  const currentEntry = Array.isArray(frasesArr[fraseIndex]) ? frasesArr[fraseIndex] : ['', []];
+  const pt = getPtFromPhrase(currentEntry);
+  const enVariants = getEnVariantsFromPhrase(currentEntry);
+  const expectedOptions = esperadoLang === 'pt' ? [pt] : (enVariants.length ? enVariants : ['']);
+  const expectedPhrase = expectedOptions[0] || '';
   const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
   let normalizadoResp = norm(resposta);
-  const normalizadoEsp = norm(esperado || '');
-  const correto =
-    normalizadoResp === normalizadoEsp ||
-    ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
-    ehQuaseCorretoPalavras(resposta, esperado || '');
+  const correto = expectedOptions.some(opcao => {
+    const normalizadoEsp = norm(opcao || '');
+    return normalizadoResp === normalizadoEsp ||
+      ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
+      ehQuaseCorretoPalavras(resposta, opcao || '');
+  });
 
   const expectedChars = countCorrectCharacters(expectedPhrase, expectedPhrase);
   const correctChars = countCorrectCharacters(expectedPhrase, resposta);
@@ -2194,11 +2252,11 @@ function verificarResposta() {
     bloqueado = true;
     microphonePaused = true;
     if (selectedMode !== 1) {
-      falar(esperado, esperadoLang);
+      falar(expectedPhrase, esperadoLang);
     }
     consecutiveErrors++;
     persistCurrentRoundState();
-    flashError(esperado, () => {
+      flashError(expectedPhrase, () => {
       input.disabled = false;
       bloqueado = false;
       microphonePaused = false;
@@ -2470,8 +2528,10 @@ async function initGame() {
     if (e.key === 'r') falarFrase();
     if (e.key.toLowerCase() === 'h') toggleDarkMode();
     if (e.key.toLowerCase() === 'i') {
-      const [pt, en] = frasesArr[fraseIndex] || ['',''];
-      const esperado = esperadoLang === 'pt' ? pt : en;
+      const currentEntry = frasesArr[fraseIndex] || ['', []];
+      const esperado = esperadoLang === 'pt'
+        ? getPtFromPhrase(currentEntry)
+        : getPrimaryEnFromPhrase(currentEntry);
       document.getElementById('pt').value = esperado;
       verificarResposta();
       return;
