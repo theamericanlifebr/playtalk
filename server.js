@@ -24,7 +24,7 @@ const DEFAULT_USER = {
 };
 
 const EMAIL_CODE_EXPIRATION_MINUTES = Number(process.env.PLAYTALK_EMAIL_CODE_EXPIRATION || 15);
-const EMAIL_SENDER = process.env.PLAYTALK_EMAIL_FROM || 'PlayTalk <no-reply@playtalk.life>';
+const EMAIL_SENDER = process.env.PLAYTALK_EMAIL_FROM || 'PlayTalk <delivered@resend.dev>';
 const EMAIL_WEBHOOK = process.env.PLAYTALK_EMAIL_WEBHOOK || '';
 const RESEND_API_KEY = process.env.PLAYTALK_RESEND_API_KEY || '';
 const RESEND_API_URL = process.env.PLAYTALK_RESEND_API_URL || 'https://api.resend.com/emails';
