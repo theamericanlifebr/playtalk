@@ -18,7 +18,11 @@ const DEFAULT_USER = {
   password: 'tatatata',
   email: '',
   emailVerified: false,
-  emailVerifiedAt: null
+  emailVerifiedAt: null,
+  emailVerificationCode: null,
+  emailVerificationExpiresAt: null,
+  emailVerificationAttempts: 0,
+  emailVerificationLastSentAt: null
 };
 
 const PROGRESS_SCHEMA = {
@@ -61,6 +65,13 @@ const PROGRESS_SCHEMA = {
 };
 
 const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
+const DEFAULT_VERIFICATION_EXPIRATION_MINUTES = 10;
+const DEFAULT_VERIFICATION_CODE_LENGTH = 4;
+const DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS = 60;
+const DEFAULT_VERIFICATION_MAX_ATTEMPTS = 5;
+const RESEND_API_KEY = process.env.PLAYTALK_RESEND_API_KEY || '';
+const RESEND_API_URL = process.env.PLAYTALK_RESEND_API_URL || 'https://api.resend.com/emails';
+const RESEND_EMAIL_FROM = process.env.PLAYTALK_EMAIL_FROM || 'PlayTalk <onboarding@resend.dev>';
 const GENERAL_MODE_KEYS = ['2', '3', '4', '5', '6'];
 const MAX_RANKING_ENTRIES = 30;
 const LEGEND_REQUIREMENTS = { cpm: 200, accuracy: 80, diamonds: 10 };
@@ -158,6 +169,21 @@ function ensureUserDefaults(user) {
     user.emailVerifiedAt = null;
   }
 
+  if (!('emailVerificationCode' in user)) {
+    user.emailVerificationCode = null;
+  }
+  if (!('emailVerificationExpiresAt' in user)) {
+    user.emailVerificationExpiresAt = null;
+  }
+  if (!('emailVerificationAttempts' in user)) {
+    user.emailVerificationAttempts = 0;
+  } else {
+    user.emailVerificationAttempts = normalizePositiveInteger(user.emailVerificationAttempts);
+  }
+  if (!('emailVerificationLastSentAt' in user)) {
+    user.emailVerificationLastSentAt = null;
+  }
+
   if (!user.data || typeof user.data !== 'object') {
     user.data = createDefaultData();
     return user;
@@ -208,6 +234,70 @@ function aggregateModeStats(modeStats = {}) {
     totals.diamantes += normalizePositiveInteger(medals.diamante);
   });
   return totals;
+}
+
+function createVerificationCode(length = DEFAULT_VERIFICATION_CODE_LENGTH) {
+  const digits = '0123456789';
+  let result = '';
+  for (let i = 0; i < length; i += 1) {
+    const randomIndex = Math.floor(Math.random() * digits.length);
+    result += digits[randomIndex];
+  }
+  return result;
+}
+
+function computeVerificationExpiry(minutes = DEFAULT_VERIFICATION_EXPIRATION_MINUTES) {
+  const expiresAt = new Date();
+  expiresAt.setMinutes(expiresAt.getMinutes() + minutes);
+  return expiresAt.toISOString();
+}
+
+function parseDate(dateString) {
+  const timestamp = Date.parse(dateString);
+  return Number.isNaN(timestamp) ? null : new Date(timestamp);
+}
+
+function canSendNewVerification(user) {
+  if (!user.emailVerificationLastSentAt) {
+    return true;
+  }
+
+  const lastSent = parseDate(user.emailVerificationLastSentAt);
+  if (!lastSent) {
+    return true;
+  }
+
+  const now = Date.now();
+  const elapsedSeconds = Math.floor((now - lastSent.getTime()) / 1000);
+  return elapsedSeconds >= DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS;
+}
+
+async function sendVerificationEmail(to, code) {
+  if (!RESEND_API_KEY) {
+    throw new Error('PLAYTALK_RESEND_API_KEY não configurada.');
+  }
+
+  const response = await fetch(RESEND_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${RESEND_API_KEY}`
+    },
+    body: JSON.stringify({
+      from: RESEND_EMAIL_FROM,
+      to: [to],
+      subject: 'Código de confirmação PlayTalk',
+      html: [
+        `<p>Seu código de confirmação de 4 dígitos é <strong>${code}</strong>.</p>`,
+        `<p>Ele expira em ${DEFAULT_VERIFICATION_EXPIRATION_MINUTES} minutos.</p>`
+      ].join('')
+    })
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Falha ao enviar e-mail: ${response.status} - ${text}`);
+  }
 }
 
 function createEmptyRecentPhraseStats() {
@@ -489,6 +579,144 @@ app.get('/api/rankings', async (req, res) => {
   } catch (error) {
     console.error('Erro ao montar rankings:', error);
     res.status(500).json({ success: false, message: 'Erro ao carregar rankings.' });
+  }
+});
+
+app.post('/api/email/verification-code', async (req, res) => {
+  const { key, email } = req.body || {};
+
+  if (!key) {
+    res.status(400).json({ success: false, message: 'Usuário inválido.' });
+    return;
+  }
+
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    res.status(400).json({ success: false, message: 'Informe um e-mail válido.', field: 'email' });
+    return;
+  }
+
+  const normalizedEmail = email.trim();
+
+  try {
+    const database = await readDatabase();
+    const entry = database.users[key];
+
+    if (!entry) {
+      res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+      return;
+    }
+
+    ensureUserDefaults(entry);
+
+    if (!canSendNewVerification(entry)) {
+      res.status(429).json({
+        success: false,
+        message: 'Aguarde antes de solicitar um novo código.',
+        retryAfterSeconds: DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS
+      });
+      return;
+    }
+
+    const code = createVerificationCode();
+
+    entry.email = normalizedEmail;
+    entry.emailVerified = false;
+    entry.emailVerifiedAt = null;
+    entry.emailVerificationCode = code;
+    entry.emailVerificationExpiresAt = computeVerificationExpiry();
+    entry.emailVerificationAttempts = 0;
+    entry.emailVerificationLastSentAt = new Date().toISOString();
+
+    await sendVerificationEmail(normalizedEmail, code);
+    await writeDatabase(database);
+
+    res.json({
+      success: true,
+      message: 'Código de verificação enviado.',
+      email: entry.email,
+      emailVerified: Boolean(entry.emailVerified),
+      emailVerifiedAt: entry.emailVerifiedAt,
+      expiresAt: entry.emailVerificationExpiresAt,
+      retryAfterSeconds: DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS
+    });
+  } catch (error) {
+    console.error('Erro ao enviar código de verificação:', error);
+    res.status(500).json({ success: false, message: 'Erro ao enviar código de verificação.' });
+  }
+});
+
+app.post('/api/email/verify', async (req, res) => {
+  const { key, code } = req.body || {};
+
+  if (!key || !code) {
+    res.status(400).json({ success: false, message: 'Usuário e código são obrigatórios.' });
+    return;
+  }
+
+  try {
+    const database = await readDatabase();
+    const entry = database.users[key];
+
+    if (!entry) {
+      res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+      return;
+    }
+
+    ensureUserDefaults(entry);
+
+    if (!entry.emailVerificationCode || !entry.emailVerificationExpiresAt) {
+      res.status(400).json({ success: false, message: 'Nenhum código ativo. Solicite um novo envio.' });
+      return;
+    }
+
+    const expiryDate = parseDate(entry.emailVerificationExpiresAt);
+    if (!expiryDate || expiryDate.getTime() < Date.now()) {
+      entry.emailVerificationCode = null;
+      entry.emailVerificationExpiresAt = null;
+      await writeDatabase(database);
+      res.status(400).json({ success: false, message: 'Código expirado. Solicite um novo envio.' });
+      return;
+    }
+
+    if (entry.emailVerificationAttempts >= DEFAULT_VERIFICATION_MAX_ATTEMPTS) {
+      entry.emailVerificationCode = null;
+      entry.emailVerificationExpiresAt = null;
+      await writeDatabase(database);
+      res.status(429).json({ success: false, message: 'Muitas tentativas. Solicite um novo código.' });
+      return;
+    }
+
+    if (String(code).trim() !== String(entry.emailVerificationCode)) {
+      entry.emailVerificationAttempts += 1;
+      await writeDatabase(database);
+      const attemptsLeft = Math.max(0, DEFAULT_VERIFICATION_MAX_ATTEMPTS - entry.emailVerificationAttempts);
+      res.status(400).json({
+        success: false,
+        message: 'Código inválido.',
+        attemptsLeft
+      });
+      return;
+    }
+
+    entry.emailVerified = true;
+    entry.emailVerifiedAt = new Date().toISOString();
+    entry.emailVerificationCode = null;
+    entry.emailVerificationExpiresAt = null;
+    entry.emailVerificationAttempts = 0;
+    entry.emailVerificationLastSentAt = null;
+
+    await writeDatabase(database);
+
+    res.json({
+      success: true,
+      message: 'E-mail verificado com sucesso.',
+      email: entry.email || '',
+      emailVerified: true,
+      emailVerifiedAt: entry.emailVerifiedAt
+    });
+  } catch (error) {
+    console.error('Erro ao verificar código:', error);
+    res.status(500).json({ success: false, message: 'Erro ao verificar código.' });
   }
 });
 

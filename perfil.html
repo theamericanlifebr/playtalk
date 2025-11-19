@@ -96,6 +96,39 @@
         </label>
         <p class="profile-share-description">Ao compartilhar, seu nível e desempenho poderão aparecer nos rankings públicos e no seu perfil.</p>
       </div>
+      <section class="profile-verification" aria-labelledby="profile-verification-title">
+        <div class="profile-verification__header">
+          <h2 id="profile-verification-title">E-mail e senha de 4 dígitos</h2>
+          <p class="profile-verification__description">Defina seu e-mail e confirme o código enviado para ele.</p>
+        </div>
+        <div class="profile-field profile-field--stacked">
+          <label for="profile-email">E-mail do usuário</label>
+          <div class="profile-inline-group">
+            <input type="email" id="profile-email" name="profile-email" autocomplete="email" placeholder="seu@email.com">
+            <button type="button" id="profile-email-send" class="profile-verify-button">Enviar código</button>
+          </div>
+          <p id="profile-email-hint" class="profile-hint">Usamos este e-mail para enviar sua senha de 4 dígitos.</p>
+        </div>
+        <div class="profile-field profile-field--stacked">
+          <label for="profile-email-code">Senha de 4 dígitos</label>
+          <div class="profile-inline-group">
+            <input
+              type="text"
+              id="profile-email-code"
+              name="profile-email-code"
+              inputmode="numeric"
+              pattern="\d{4}"
+              maxlength="4"
+              autocomplete="one-time-code"
+              placeholder="0000"
+            >
+            <button type="button" id="profile-email-verify" class="profile-verify-button profile-verify-button--secondary">
+              Confirmar
+            </button>
+          </div>
+          <p id="profile-verification-status" class="profile-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
     </form>
     <div class="profile-actions">
       <button

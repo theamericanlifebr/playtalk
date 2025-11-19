@@ -357,6 +357,18 @@
     window.currentUser = cachedCurrentUser;
   }
 
+  function updateCurrentUser(updates = {}) {
+    const user = readStoredCurrentUser();
+    if (!user) {
+      return null;
+    }
+    const nextUser = { ...user, ...(updates || {}) };
+    setCurrentUser(nextUser);
+    updateAuthStatus();
+    dispatchUserChange();
+    return nextUser;
+  }
+
   async function loginRequest(username, password) {
     const response = await apiRequest('/api/users/login', {
       method: 'POST',
@@ -1169,7 +1181,8 @@
       if (typeof openLoginFlowHandler === 'function') {
         openLoginFlowHandler();
       }
-    }
+    },
+    updateCurrentUser
   };
 
   document.addEventListener('playtalk:medal-history-change', () => {
