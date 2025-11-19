@@ -484,8 +484,9 @@ let listeningForCommand = false;
 let microphonePaused = false;
 let speechPauseToken = 0;
 
-if (window.OpenAISpeechRecognizer) {
-  reconhecimento = new OpenAISpeechRecognizer({
+const SpeechRecognizerClass = window.KitSpeechRecognizer || window.OpenAISpeechRecognizer;
+if (SpeechRecognizerClass) {
+  reconhecimento = new SpeechRecognizerClass({
     segmentMs: 2400,
     minBytes: 2048,
     volumeThresholdDb: 46,
@@ -1574,14 +1575,14 @@ function updateLevelIcon(options = {}) {
 function unlockMode(mode, duration = 1000) {
   unlockedModes[mode] = true;
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-  document.querySelectorAll(`#menu-modes img[data-mode="${mode}"], #mode-buttons img[data-mode="${mode}"]`).forEach(img => {
+  document.querySelectorAll(`#menu-modes [data-mode="${mode}"], #mode-buttons [data-mode="${mode}"]`).forEach(img => {
     img.style.transition = `opacity ${duration}ms linear`;
     img.style.opacity = '1';
   });
 }
 
 function updateModeIcons() {
-  document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
+  document.querySelectorAll('#mode-buttons [data-mode], #menu-modes [data-mode]').forEach(img => {
     img.style.opacity = '1';
     img.style.pointerEvents = 'auto';
   });
@@ -1603,8 +1604,11 @@ function performMenuLevelUp() {
   saveGeneralProgress();
   unlockedModes = getAllModesUnlockedState();
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-  document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]').forEach(img => {
-    img.src = modeImages[6];
+  document.querySelectorAll('#menu-modes [data-mode="6"], #mode-buttons [data-mode="6"]').forEach(el => {
+    const target = el.tagName === 'IMG' ? el : el.querySelector('img');
+    if (target) {
+      target.src = modeImages[6];
+    }
   });
   updateLevelIcon();
   updateModeIcons();
@@ -1612,9 +1616,9 @@ function performMenuLevelUp() {
 }
 
 function enforceStarClick() {
-  const all = document.querySelectorAll('#menu-modes img, #mode-buttons img, #top-nav a');
+  const all = document.querySelectorAll('#menu-modes [data-mode], #mode-buttons [data-mode], #top-nav a');
   all.forEach(el => { el.style.pointerEvents = 'none'; });
-  const stars = document.querySelectorAll('#menu-modes img[data-mode="6"], #mode-buttons img[data-mode="6"]');
+  const stars = document.querySelectorAll('#menu-modes [data-mode="6"], #mode-buttons [data-mode="6"]');
   if (!stars.length) {
     all.forEach(el => { el.style.pointerEvents = ''; });
     return;
@@ -1913,19 +1917,6 @@ function falar(texto, lang) {
     return;
   }
   const locale = lang === 'pt' ? 'pt-BR' : 'en-US';
-  const engine = window.playtalkVoiceEngine;
-  if (engine && typeof engine.play === 'function') {
-    const token = Date.now();
-    setMicrophoneSpeechState(true, token);
-    engine.play({ text: texto, lang, mode: selectedMode })
-      .then(() => setMicrophoneSpeechState(false, token))
-      .catch((error) => {
-        console.warn('Falha ao gerar voz pela OpenAI:', error);
-        setMicrophoneSpeechState(false, token);
-        speakWithBrowserVoice(texto, locale);
-      });
-    return;
-  }
   speakWithBrowserVoice(texto, locale);
 }
 
@@ -2408,7 +2399,7 @@ async function initGame() {
   const levelIcon = document.getElementById('nivel-indicador');
   if (levelIcon) levelIcon.style.display = 'block';
 
-  document.querySelectorAll('#mode-buttons img, #menu-modes img').forEach(img => {
+  document.querySelectorAll('#mode-buttons [data-mode], #menu-modes [data-mode]').forEach(img => {
     img.addEventListener('click', () => {
       stopCurrentGame();
       const modo = parseInt(img.dataset.mode, 10);
@@ -2511,7 +2502,7 @@ async function bootstrapHomePage() {
     });
   });
   const homeLink = document.getElementById('home-link');
-  if (homeLink) {
+  if (homeLink && homeLink.dataset.external !== 'true') {
     homeLink.addEventListener('click', (e) => {
       e.preventDefault();
       stopCurrentGame();

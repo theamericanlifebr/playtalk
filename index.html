@@ -34,12 +34,30 @@
   <main id="home-main" class="container-screen container-screen--home" data-page-transition>
     <div id="menu">
       <div id="menu-modes">
-        <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" alt="Modo 1">
-        <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" alt="Modo 2">
-        <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" alt="Modo 3">
-        <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" alt="Modo 4">
-        <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" alt="Modo 5">
-        <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" alt="Modo 6">
+        <button type="button" class="menu-mode" data-mode="1">
+          <img src="selos%20modos%20de%20jogo/modo1.png" alt="Modo Vocabulary" />
+          <span class="menu-mode__label">Vocabulary</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="2">
+          <img src="selos%20modos%20de%20jogo/modo2.png" alt="Modo Meaning" />
+          <span class="menu-mode__label">Meaning</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="3">
+          <img src="selos%20modos%20de%20jogo/modo3.png" alt="Modo Listening" />
+          <span class="menu-mode__label">Listening</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="4">
+          <img src="selos%20modos%20de%20jogo/modo4.png" alt="Modo Reading" />
+          <span class="menu-mode__label">Reading</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="5">
+          <img src="selos%20modos%20de%20jogo/modo5.png" alt="Modo Translating" />
+          <span class="menu-mode__label">Translating</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="6">
+          <img src="selos%20modos%20de%20jogo/modo6.png" alt="Modo Thinking" />
+          <span class="menu-mode__label">Thinking</span>
+        </button>
       </div>
     </div>
 
@@ -151,7 +169,15 @@
 
   <footer class="page-footer">
     <nav id="main-nav">
-      <a href="index.html" id="home-link" class="nav-item active" aria-label="Home" data-nav-index="0">
+      <a
+        href="https://www.playtalk.life/index.html"
+        id="home-link"
+        class="nav-item active"
+        aria-label="Home"
+        data-nav-index="0"
+        data-external="true"
+        rel="noopener"
+      >
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
         </span>
@@ -193,8 +219,7 @@
   <audio id="somErro" src="gamesounds/error.mp3"></audio>
   <audio id="somLock" src="gamesounds/lock.wav"></audio>
 
-  <script src="js/openai-recognizer.js" defer></script>
-  <script src="js/openai-voices.js" defer></script>
+  <script src="js/kit-speech.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 </html>
