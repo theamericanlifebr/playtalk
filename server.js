@@ -1,8 +1,6 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('node:crypto');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -22,12 +20,6 @@ const DEFAULT_USER = {
   emailVerified: false,
   emailVerifiedAt: null
 };
-
-const EMAIL_CODE_EXPIRATION_MINUTES = Number(process.env.PLAYTALK_EMAIL_CODE_EXPIRATION || 15);
-const EMAIL_SENDER = process.env.PLAYTALK_EMAIL_FROM || 'PlayTalk <delivered@resend.dev>';
-const EMAIL_WEBHOOK = process.env.PLAYTALK_EMAIL_WEBHOOK || '';
-const RESEND_API_KEY = process.env.PLAYTALK_RESEND_API_KEY || '';
-const RESEND_API_URL = process.env.PLAYTALK_RESEND_API_URL || 'https://api.resend.com/emails';
 
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
@@ -98,7 +90,6 @@ function ensureDataDirectory() {
   if (!fs.existsSync(USERS_DB_PATH)) {
     const initialData = {
       users: {},
-      pendingVerifications: {},
       updatedAt: new Date().toISOString()
     };
     fs.writeFileSync(USERS_DB_PATH, JSON.stringify(initialData, null, 2));
@@ -107,133 +98,6 @@ function ensureDataDirectory() {
 
 function normalizeKey(username = '') {
   return username.trim().toLowerCase();
-}
-
-function normalizeEmail(email = '') {
-  return email.trim().toLowerCase();
-}
-
-function isValidEmail(value = '') {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
-
-function generateVerificationCode() {
-  return crypto.randomInt(0, 10000).toString().padStart(4, '0');
-}
-
-async function sendVerificationEmail({ to, code, username }) {
-  const safeName = (username && username.trim()) || 'jogador';
-  const subject = 'Código de ativação Playtalk';
-  const text = `Bem-vindo ao PlayTalk, ${safeName}! Seu código de confirmação é ${code}. Use-o em até ${EMAIL_CODE_EXPIRATION_MINUTES} minutos para liberar o app.`;
-  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#0f172a;">`
-    + `<p>Bem-vindo ao <strong>PlayTalk</strong>, ${safeName}!</p>`
-    + `<p>Use o código abaixo para confirmar seu cadastro e destravar os desafios da fluência:</p>`
-    + `<p style="font-size:32px;font-weight:bold;letter-spacing:4px;">${code}</p>`
-    + `<p>Este código expira em ${EMAIL_CODE_EXPIRATION_MINUTES} minutos.</p>`
-    + `<p>Boas práticas e bons jogos!<br>Equipe PlayTalk</p>`
-    + '</body></html>';
-
-  const payload = {
-    to,
-    from: EMAIL_SENDER,
-    subject,
-    text,
-    html,
-    code
-  };
-
-  try {
-    // 1. Primeiro tenta enviar pelo Resend
-    if (RESEND_API_KEY) {
-      console.log('[PlayTalk][email] Enviando via Resend...');
-      await sendEmailThroughResend(payload);
-      console.log('[PlayTalk][email] Envio Resend OK.');
-    } else {
-      console.warn('[PlayTalk][email] RESEND_API_KEY ausente. Não é possível enviar emails reais.');
-    }
-
-    // 2. Se houver webhook configurado, envia também pra ele (log / callback)
-    if (EMAIL_WEBHOOK) {
-      console.log('[PlayTalk][email] Enviando payload ao webhook...');
-      await sendEmailThroughWebhook(payload);
-    }
-
-  } catch (err) {
-    console.error('[PlayTalk][email] ERRO no envio:', err);
-    throw err;
-  }
-}
-
-
-async function sendEmailThroughWebhook(payload) {
-  const response = await fetch(EMAIL_WEBHOOK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    let body = '';
-    try {
-      body = await response.text();
-    } catch (err) {
-      body = err?.message || '';
-    }
-    const detail = body ? `: ${body}` : '';
-    throw new Error(`Falha ao enviar webhook de e-mail (${response.status})${detail}`);
-  }
-}
-
-async function sendEmailThroughResend(payload) {
-  const response = await fetch(RESEND_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${RESEND_API_KEY}`
-    },
-    body: JSON.stringify({
-      from: payload.from,
-      to: [payload.to],
-      subject: payload.subject,
-      text: payload.text,
-      html: payload.html
-    })
-  });
-
-  if (!response.ok) {
-    let body = '';
-    try {
-      body = await response.text();
-    } catch (err) {
-      body = err?.message || '';
-    }
-    const detail = body ? `: ${body}` : '';
-    throw new Error(`Falha ao enviar e-mail via Resend (${response.status})${detail}`);
-  }
-}
-
-function removeExpiredVerifications(database) {
-  if (!database.pendingVerifications || typeof database.pendingVerifications !== 'object') {
-    database.pendingVerifications = {};
-    return;
-  }
-  const now = Date.now();
-  Object.entries(database.pendingVerifications).forEach(([key, entry]) => {
-    if (!entry || !entry.expiresAt) {
-      delete database.pendingVerifications[key];
-      return;
-    }
-    const expiresAt = new Date(entry.expiresAt).getTime();
-    if (!Number.isFinite(expiresAt) || expiresAt <= now) {
-      delete database.pendingVerifications[key];
-    }
-  });
-}
-
-function isEmailAlreadyUsed(database, normalizedEmail) {
-  if (!normalizedEmail) return false;
-  const users = database.users || {};
-  return Object.values(users).some((entry) => normalizeEmail(entry.email || '') === normalizedEmail);
 }
 
 function getDefaultValue(schema) {
@@ -261,13 +125,10 @@ async function readDatabase() {
     if (!parsed.users || typeof parsed.users !== 'object') {
       parsed.users = {};
     }
-    if (!parsed.pendingVerifications || typeof parsed.pendingVerifications !== 'object') {
-      parsed.pendingVerifications = {};
-    }
     return parsed;
   } catch (error) {
     if (error.code === 'ENOENT') {
-      return { users: {}, pendingVerifications: {}, updatedAt: new Date().toISOString() };
+      return { users: {}, updatedAt: new Date().toISOString() };
     }
     throw error;
   }
@@ -276,7 +137,6 @@ async function readDatabase() {
 async function writeDatabase(data) {
   const payload = {
     users: data.users || {},
-    pendingVerifications: data.pendingVerifications || {},
     updatedAt: new Date().toISOString()
   };
   await fs.promises.writeFile(USERS_DB_PATH, JSON.stringify(payload, null, 2));
@@ -632,54 +492,8 @@ app.get('/api/rankings', async (req, res) => {
   }
 });
 
-app.post('/api/users/send-verification', async (req, res) => {
-  const { email, username } = req.body || {};
-  if (!email || !isValidEmail(email)) {
-    res.status(400).json({ success: false, message: 'Informe um e-mail válido.', field: 'email' });
-    return;
-  }
-
-  const normalizedEmail = normalizeEmail(email);
-  try {
-    const database = await readDatabase();
-    removeExpiredVerifications(database);
-
-    if (isEmailAlreadyUsed(database, normalizedEmail)) {
-      res.status(409).json({ success: false, message: 'Este e-mail já está em uso.', field: 'email' });
-      return;
-    }
-
-    const expiresAt = new Date(Date.now() + EMAIL_CODE_EXPIRATION_MINUTES * 60 * 1000).toISOString();
-    const pendingEntry = {
-      email: email.trim(),
-      username: (username && username.trim()) || '',
-      code: generateVerificationCode(),
-      requestedAt: new Date().toISOString(),
-      expiresAt
-    };
-
-    database.pendingVerifications[normalizedEmail] = pendingEntry;
-    await writeDatabase(database);
-
-    try {
-      await sendVerificationEmail({ to: pendingEntry.email, code: pendingEntry.code, username: pendingEntry.username });
-    } catch (error) {
-      delete database.pendingVerifications[normalizedEmail];
-      await writeDatabase(database);
-      console.error('Erro ao enviar confirmação de e-mail:', error);
-      res.status(500).json({ success: false, message: 'Não foi possível enviar o e-mail de confirmação.', field: 'email' });
-      return;
-    }
-
-    res.json({ success: true, expiresAt });
-  } catch (error) {
-    console.error('Erro ao preparar verificação de e-mail:', error);
-    res.status(500).json({ success: false, message: 'Erro ao enviar a confirmação de e-mail.', field: 'email' });
-  }
-});
-
 app.post('/api/users/register', async (req, res) => {
-  const { username, password, email, verificationCode } = req.body || {};
+  const { username, password } = req.body || {};
 
   if (!username) {
     res.status(400).json({ success: false, message: 'Informe um nome de usuário.', field: 'username' });
@@ -689,52 +503,23 @@ app.post('/api/users/register', async (req, res) => {
     res.status(400).json({ success: false, message: 'Informe uma senha.', field: 'password' });
     return;
   }
-  if (!email || !isValidEmail(email)) {
-    res.status(400).json({ success: false, message: 'Informe um e-mail válido.', field: 'email' });
-    return;
-  }
-  if (!verificationCode || !/^\d{4}$/.test(String(verificationCode).trim())) {
-    res.status(400).json({ success: false, message: 'Código de confirmação inválido.', field: 'verify' });
-    return;
-  }
 
   const key = normalizeKey(username);
-  const emailKey = normalizeEmail(email);
-  const normalizedCode = String(verificationCode).trim();
 
   try {
     const database = await readDatabase();
-    removeExpiredVerifications(database);
 
     if (database.users[key]) {
       res.status(409).json({ success: false, message: 'Usuário já existe.' });
       return;
     }
 
-    if (isEmailAlreadyUsed(database, emailKey)) {
-      res.status(409).json({ success: false, message: 'E-mail já cadastrado.', field: 'email' });
-      return;
-    }
-
-    const pendingEntry = database.pendingVerifications[emailKey];
-    if (!pendingEntry) {
-      res.status(400).json({ success: false, message: 'Solicite um novo código de confirmação.', field: 'email' });
-      return;
-    }
-
-    if (pendingEntry.code !== normalizedCode) {
-      res.status(400).json({ success: false, message: 'Código de confirmação inválido.', field: 'verify' });
-      return;
-    }
-
-    delete database.pendingVerifications[emailKey];
-
     const user = ensureUserDefaults({
       username: username.trim(),
       password,
-      email: email.trim(),
-      emailVerified: true,
-      emailVerifiedAt: new Date().toISOString(),
+      email: '',
+      emailVerified: false,
+      emailVerifiedAt: null,
       data: createDefaultData()
     });
 
@@ -844,20 +629,6 @@ app.post('/api/users/update', async (req, res) => {
     res.status(500).json({ success: false, message: 'Erro ao atualizar usuário.' });
   }
 });
-
-app.post("/api/email/webhook", (req, res) => {
-  try {
-    console.log("Webhook recebeu:", req.body);
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("Erro no webhook:", err);
-    res.sendStatus(500);
-  }
-});
-
-
-
-
 
 if (require.main === module) {
   app.listen(PORT, () => {
