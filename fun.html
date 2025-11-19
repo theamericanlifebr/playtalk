@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-  <title>Fun</title>
+  <title>PlayTalk | Fun</title>
+  <meta
+    name="description"
+    content="PlayTalk, o app da fluência, transforma desafios de vocabulário, listening e speaking em uma jornada gamificada para dominar o inglês."
+  >
+  <link rel="icon" type="image/png" href="selos%20modos%20de%20jogo/logoitalk2.png">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/settings.js"></script>
@@ -63,24 +68,44 @@
   </main>
   <div id="login-flow" class="login-flow hidden" role="dialog" aria-modal="true" aria-labelledby="login-flow-title" aria-hidden="true">
     <div class="login-flow__panel">
-      <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo American Life" class="login-flow__logo" width="70" height="70">
+      <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Logo PlayTalk" class="login-flow__logo" width="70" height="70">
       <h1 id="login-flow-title" class="login-flow__title">Bem-vindo</h1>
       <form id="login-flow-form" class="login-flow__form" autocomplete="off" novalidate>
         <div class="login-flow__step login-flow__step--active" data-step="username">
           <label for="login-flow-username">Nome de usuário</label>
-          <input type="text" id="login-flow-username" name="login-flow-username" maxlength="40" required>
+          <input type="text" id="login-flow-username" name="login-flow-username" maxlength="40" autocomplete="username" required>
           <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
         </div>
         <div class="login-flow__step" data-step="password">
           <label for="login-flow-password">Senha</label>
-          <input type="password" id="login-flow-password" name="login-flow-password" required>
+          <input type="password" id="login-flow-password" name="login-flow-password" autocomplete="new-password" required>
           <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
         </div>
         <div class="login-flow__step" data-step="confirm">
           <label for="login-flow-confirm">Confirmar senha</label>
-          <input type="password" id="login-flow-confirm" name="login-flow-confirm" required>
-          <button type="submit" class="login-flow__submit">Criar conta</button>
+          <input type="password" id="login-flow-confirm" name="login-flow-confirm" autocomplete="new-password" required>
+          <button type="button" class="login-flow__submit" data-action="next">Continuar</button>
         </div>
+        <div class="login-flow__step" data-step="email">
+          <label for="login-flow-email">Email</label>
+          <input type="email" id="login-flow-email" name="login-flow-email" autocomplete="email" required>
+          <button type="button" class="login-flow__submit" data-action="next">Enviar código</button>
+        </div>
+        <div class="login-flow__step" data-step="verify">
+          <label for="login-flow-code">Código de confirmação</label>
+          <input
+            type="text"
+            id="login-flow-code"
+            name="login-flow-code"
+            inputmode="numeric"
+            pattern="\d{4}"
+            maxlength="4"
+            autocomplete="one-time-code"
+            required
+          >
+          <button type="submit" class="login-flow__submit">Confirmar cadastro</button>
+        </div>
+        <p id="login-flow-status" class="login-flow__status" role="status" aria-live="polite"></p>
         <p id="login-flow-error" class="login-flow__error" role="alert"></p>
       </form>
     </div>

@@ -1177,12 +1177,28 @@ body.dark-mode .login-flow__submit {
   color: #c62828;
 }
 
+.login-flow__status {
+  min-height: 18px;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+  color: #0f8a5f;
+}
+
 body.dark-mode .login-flow__error {
   color: #ff8a80;
 }
 
 body.theme-blue .login-flow__error {
   color: #ffd1d1;
+}
+
+body.dark-mode .login-flow__status {
+  color: #4de1aa;
+}
+
+body.theme-blue .login-flow__status {
+  color: #1ec97f;
 }
 
 @media (max-width: 480px) {

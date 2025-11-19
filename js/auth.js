@@ -270,6 +270,19 @@
     return data;
   }
 
+  function isValidEmail(value = '') {
+    const normalized = value.trim();
+    if (!normalized) {
+      return false;
+    }
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return EMAIL_REGEX.test(normalized);
+  }
+
+  function isValidVerificationCode(value = '') {
+    return /^\d{4}$/.test(String(value).trim());
+  }
+
   function parseValue(raw, schema) {
     if (raw === null || raw === undefined) return undefined;
     switch (schema.type) {
@@ -368,15 +381,26 @@
     return response.user;
   }
 
-  async function registerRequest(username, password) {
+  async function registerRequest(username, password, email, verificationCode) {
     const response = await apiRequest('/api/users/register', {
       method: 'POST',
-      body: { username, password }
+      body: { username, password, email, verificationCode }
     });
     if (!response || !response.success || !response.user) {
       throw new Error((response && response.message) || 'Não foi possível registrar.');
     }
     return response.user;
+  }
+
+  async function requestEmailVerificationCode(username, email) {
+    const response = await apiRequest('/api/users/send-verification', {
+      method: 'POST',
+      body: { username, email }
+    });
+    if (!response || response.success !== true) {
+      throw new Error((response && response.message) || 'Não foi possível enviar o código.');
+    }
+    return response;
   }
 
   async function updateUserRequest(payload) {
@@ -577,9 +601,19 @@
       openLoginFlowHandler();
     }
   }
-  async function completeLoginFlow({ username, password, confirm }) {
-    if (!username || !password || !confirm) {
+  async function completeLoginFlow({ username, password, confirm, email, verificationCode }) {
+    if (!username || !password || !confirm || !email || !verificationCode) {
       throw new Error('Preencha todos os campos.');
+    }
+    if (!isValidEmail(email)) {
+      const error = new Error('Informe um e-mail válido.');
+      error.step = 'email';
+      throw error;
+    }
+    if (!isValidVerificationCode(verificationCode)) {
+      const error = new Error('Informe o código de 4 dígitos enviado por e-mail.');
+      error.step = 'verify';
+      throw error;
     }
     if (password !== confirm) {
       const error = new Error('As senhas não coincidem.');
@@ -588,13 +622,15 @@
     }
 
     try {
-      const user = await registerRequest(username, password);
+      const user = await registerRequest(username, password, email, verificationCode);
       setCurrentUser(user);
       applyUserDataToStorage(user);
       updateAuthStatus();
       dispatchUserChange();
     } catch (err) {
-      if (err && err.message && /existe|cadastr/i.test(err.message)) {
+      const field = (err && err.data && err.data.field) || err.step;
+      const status = err && err.response && err.response.status;
+      if (status === 409 || (err && err.message && /existe|cadastr/i.test(err.message))) {
         try {
           const user = await loginRequest(username, password);
           setCurrentUser(user);
@@ -608,7 +644,7 @@
         }
       }
       if (err) {
-        err.step = err.step || 'confirm';
+        err.step = field || 'verify';
       }
       throw err;
     }
@@ -709,9 +745,12 @@
     const flow = document.getElementById('login-flow');
     const form = document.getElementById('login-flow-form');
     const errorEl = document.getElementById('login-flow-error');
+    const statusEl = document.getElementById('login-flow-status');
     const usernameInput = document.getElementById('login-flow-username');
     const passwordInput = document.getElementById('login-flow-password');
     const confirmInput = document.getElementById('login-flow-confirm');
+    const emailInput = document.getElementById('login-flow-email');
+    const codeInput = document.getElementById('login-flow-code');
 
     logoutButtons.forEach(button => {
       button.addEventListener('click', (event) => {
@@ -721,7 +760,7 @@
       });
     });
 
-    if (!flow || !form || !usernameInput || !passwordInput || !confirmInput) {
+    if (!flow || !form || !usernameInput || !passwordInput || !confirmInput || !emailInput || !codeInput) {
       openLoginFlowHandler = null;
       closeLoginFlowHandler = null;
       return;
@@ -738,6 +777,15 @@
       if (errorEl) {
         errorEl.textContent = message || '';
       }
+      if (message && statusEl) {
+        statusEl.textContent = '';
+      }
+    }
+
+    function setStatus(message) {
+      if (statusEl) {
+        statusEl.textContent = message || '';
+      }
     }
 
     function showStep(stepName) {
@@ -749,14 +797,19 @@
         usernameInput.focus();
       } else if (stepName === 'password') {
         passwordInput.focus();
-      } else {
+      } else if (stepName === 'confirm') {
         confirmInput.focus();
+      } else if (stepName === 'email') {
+        emailInput.focus();
+      } else {
+        codeInput.focus();
       }
     }
 
     function resetFlow() {
       form.reset();
       setError('');
+      setStatus('');
       showStep('username');
     }
 
@@ -772,6 +825,7 @@
       flow.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('login-flow-open');
       setError('');
+      setStatus('');
     }
 
     openLoginFlowHandler = openFlow;
@@ -782,7 +836,7 @@
     }
 
     form.querySelectorAll('.login-flow__submit[data-action="next"]').forEach(button => {
-      button.addEventListener('click', (event) => {
+      button.addEventListener('click', async (event) => {
         event.preventDefault();
         const step = button.closest('.login-flow__step');
         if (!step) return;
@@ -805,6 +859,43 @@
           }
           setError('');
           showStep('confirm');
+        } else if (stepName === 'confirm') {
+          if (passwordInput.value !== confirmInput.value) {
+            setError('As senhas devem ser iguais.');
+            confirmInput.focus();
+            return;
+          }
+          setError('');
+          showStep('email');
+        } else if (stepName === 'email') {
+          const emailValue = emailInput.value.trim();
+          const usernameValue = usernameInput.value.trim();
+          if (!emailValue || !isValidEmail(emailValue)) {
+            setError('Informe um e-mail válido.');
+            emailInput.focus();
+            return;
+          }
+          if (!usernameValue) {
+            setError('Informe um nome de usuário antes de validar o e-mail.');
+            showStep('username');
+            return;
+          }
+          setError('');
+          setStatus('');
+          const originalText = button.textContent;
+          button.disabled = true;
+          button.textContent = 'Enviando...';
+          try {
+            await requestEmailVerificationCode(usernameValue, emailValue);
+            setStatus(`Enviamos um código para ${emailValue}.`);
+            showStep('verify');
+          } catch (err) {
+            const message = (err && err.message) || 'Não foi possível enviar o código.';
+            setError(message);
+          } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+          }
         }
       });
     });
@@ -814,11 +905,20 @@
       const username = usernameInput.value.trim();
       const password = passwordInput.value;
       const confirm = confirmInput.value;
+      const email = emailInput.value.trim();
+      const verificationCode = codeInput.value.trim();
+
+      if (!verificationCode || !isValidVerificationCode(verificationCode)) {
+        setError('Digite o código de 4 dígitos que enviamos por e-mail.');
+        codeInput.focus();
+        return;
+      }
 
       try {
-        await completeLoginFlow({ username, password, confirm });
+        await completeLoginFlow({ username, password, confirm, email, verificationCode });
         setError('');
-        closeFlow();
+        setStatus('Cadastro confirmado! Bem-vindo ao PlayTalk.');
+        setTimeout(() => closeFlow(), 1200);
       } catch (err) {
         console.error('Erro ao concluir fluxo de acesso:', err);
         const message = err && err.message ? err.message : 'Não foi possível concluir o acesso.';
@@ -830,6 +930,12 @@
         } else if (stepName === 'username') {
           showStep('username');
           usernameInput.select();
+        } else if (stepName === 'email') {
+          showStep('email');
+          emailInput.focus();
+        } else if (stepName === 'verify') {
+          showStep('verify');
+          codeInput.focus();
         }
       }
     });
