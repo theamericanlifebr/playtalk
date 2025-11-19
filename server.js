@@ -132,6 +132,7 @@ async function sendVerificationEmail({ to, code, username }) {
     + `<p>Este código expira em ${EMAIL_CODE_EXPIRATION_MINUTES} minutos.</p>`
     + `<p>Boas práticas e bons jogos!<br>Equipe PlayTalk</p>`
     + '</body></html>';
+
   const payload = {
     to,
     from: EMAIL_SENDER,
@@ -141,18 +142,28 @@ async function sendVerificationEmail({ to, code, username }) {
     code
   };
 
-  if (EMAIL_WEBHOOK && typeof fetch === 'function') {
-    await sendEmailThroughWebhook(payload);
-    return;
-  }
+  try {
+    // 1. Primeiro tenta enviar pelo Resend
+    if (RESEND_API_KEY) {
+      console.log('[PlayTalk][email] Enviando via Resend...');
+      await sendEmailThroughResend(payload);
+      console.log('[PlayTalk][email] Envio Resend OK.');
+    } else {
+      console.warn('[PlayTalk][email] RESEND_API_KEY ausente. Não é possível enviar emails reais.');
+    }
 
-  if (RESEND_API_KEY && typeof fetch === 'function') {
-    await sendEmailThroughResend(payload);
-    return;
-  }
+    // 2. Se houver webhook configurado, envia também pra ele (log / callback)
+    if (EMAIL_WEBHOOK) {
+      console.log('[PlayTalk][email] Enviando payload ao webhook...');
+      await sendEmailThroughWebhook(payload);
+    }
 
-  console.log('[PlayTalk][email]', JSON.stringify(payload, null, 2));
+  } catch (err) {
+    console.error('[PlayTalk][email] ERRO no envio:', err);
+    throw err;
+  }
 }
+
 
 async function sendEmailThroughWebhook(payload) {
   const response = await fetch(EMAIL_WEBHOOK, {
