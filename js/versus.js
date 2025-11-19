@@ -98,8 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const userImg = document.querySelector('#player-user .player-img');
   const botImg = document.getElementById('bot-avatar');
 
-  if (window.OpenAISpeechRecognizer) {
-    reconhecimento = new OpenAISpeechRecognizer({
+  const VersusRecognizer = window.KitSpeechRecognizer || window.OpenAISpeechRecognizer;
+  if (VersusRecognizer) {
+    reconhecimento = new VersusRecognizer({
       segmentMs: 2400,
       minBytes: 2048,
       volumeThresholdDb: 46,
@@ -262,16 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
       aguardandoVoz = false;
       reiniciarReconhecimento();
     };
-    const engine = window.playtalkVoiceEngine;
-    if (engine && typeof engine.play === 'function') {
-      try {
-        await engine.play({ text, lang: 'en', mode: modoAtual || 5 });
-        finalizar();
-        return;
-      } catch (error) {
-        console.warn('Falha ao reproduzir voz do modo Versus pela OpenAI:', error);
-      }
-    }
     falarComSpeechSynthesis(text, finalizar);
   }
 

@@ -1270,14 +1270,51 @@ body.dark-mode #clock {
   width: min(720px, 100%);
 }
 
-#menu-modes img {
+.menu-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(220px, 100%);
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: center;
+}
+
+.menu-mode:focus-visible {
+  outline: 3px solid rgba(11, 61, 145, 0.8);
+  outline-offset: 6px;
+  border-radius: 20px;
+}
+
+body.dark-mode .menu-mode:focus-visible,
+body.theme-blue .menu-mode:focus-visible {
+  outline-color: rgba(255, 255, 255, 0.85);
+}
+
+.menu-mode img {
   width: min(207px, 100%);
   aspect-ratio: 1 / 1;
   height: auto;
   object-fit: contain;
-  cursor: pointer;
   opacity: 1;
   transition: opacity 0.2s linear;
+}
+
+.menu-mode__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #0b3d91;
+}
+
+body.dark-mode .menu-mode__label,
+body.theme-blue .menu-mode__label {
+  color: #f0f6ff;
 }
 
 
