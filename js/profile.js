@@ -13,6 +13,8 @@ function initProfilePage(context = {}) {
 
   const usernameField = scope.querySelector('#profile-username');
   const nameField = scope.querySelector('#profile-name');
+  const emailField = scope.querySelector('#profile-email');
+  const passcodeField = scope.querySelector('#profile-passcode');
   const photoInput = scope.querySelector('#profile-photo');
   const photoPreview = scope.querySelector('#profile-photo-preview');
   const photoImage = scope.querySelector('#profile-photo-image');
@@ -44,6 +46,13 @@ function initProfilePage(context = {}) {
     }
     const lastDot = filename.lastIndexOf('.');
     return lastDot === -1 ? '' : filename.slice(lastDot).toLowerCase();
+  }
+
+  function normalizePasscode(value) {
+    if (!value) {
+      return '';
+    }
+    return String(value).replace(/\D/g, '').slice(0, 4);
   }
 
   function isAllowedFileType(file) {
@@ -250,6 +259,18 @@ function initProfilePage(context = {}) {
     profileData.name = storedDisplayName;
   }
 
+  const storedEmail = profileData.email && profileData.email.trim()
+    ? profileData.email.trim()
+    : '';
+  if (emailField && storedEmail) {
+    emailField.value = storedEmail;
+  }
+
+  const storedPasscode = profileData.passcode ? normalizePasscode(profileData.passcode) : '';
+  if (passcodeField && storedPasscode) {
+    passcodeField.value = storedPasscode;
+  }
+
   if (photoPreview) {
     updatePhotoPreview(profileData.photo);
   }
@@ -302,12 +323,53 @@ function initProfilePage(context = {}) {
     }, 400);
   }
 
+  function updatePasscodeValidity() {
+    if (!passcodeField) {
+      return;
+    }
+    const digits = normalizePasscode(passcodeField.value);
+    if (passcodeField.value !== digits) {
+      passcodeField.value = digits;
+    }
+    if (!digits) {
+      passcodeField.setCustomValidity('');
+    } else if (digits.length !== 4) {
+      passcodeField.setCustomValidity('Use exatamente 4 dígitos para confirmar sua senha.');
+    } else {
+      passcodeField.setCustomValidity('');
+    }
+  }
+
   if (nameField) {
     nameField.addEventListener('input', () => {
       const value = nameField.value.trim();
       profileData.name = value;
       localStorage.setItem('displayName', value);
       schedulePersist();
+    });
+  }
+
+  if (emailField) {
+    emailField.addEventListener('input', () => {
+      const value = emailField.value.trim();
+      profileData.email = value;
+      schedulePersist();
+    });
+  }
+
+  if (passcodeField) {
+    updatePasscodeValidity();
+    passcodeField.addEventListener('input', () => {
+      const digits = normalizePasscode(passcodeField.value);
+      if (passcodeField.value !== digits) {
+        passcodeField.value = digits;
+      }
+      profileData.passcode = digits;
+      updatePasscodeValidity();
+      schedulePersist();
+    });
+    passcodeField.addEventListener('blur', () => {
+      updatePasscodeValidity();
     });
   }
 
