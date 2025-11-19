@@ -26,6 +26,8 @@ const DEFAULT_USER = {
 const EMAIL_CODE_EXPIRATION_MINUTES = Number(process.env.PLAYTALK_EMAIL_CODE_EXPIRATION || 15);
 const EMAIL_SENDER = process.env.PLAYTALK_EMAIL_FROM || 'PlayTalk <no-reply@playtalk.life>';
 const EMAIL_WEBHOOK = process.env.PLAYTALK_EMAIL_WEBHOOK || '';
+const RESEND_API_KEY = process.env.PLAYTALK_RESEND_API_KEY || '';
+const RESEND_API_URL = process.env.PLAYTALK_RESEND_API_URL || 'https://api.resend.com/emails';
 
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
@@ -121,7 +123,7 @@ function generateVerificationCode() {
 
 async function sendVerificationEmail({ to, code, username }) {
   const safeName = (username && username.trim()) || 'jogador';
-  const subject = 'PlayTalk - Confirmação de e-mail';
+  const subject = 'Código de ativação Playtalk';
   const text = `Bem-vindo ao PlayTalk, ${safeName}! Seu código de confirmação é ${code}. Use-o em até ${EMAIL_CODE_EXPIRATION_MINUTES} minutos para liberar o app.`;
   const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#0f172a;">`
     + `<p>Bem-vindo ao <strong>PlayTalk</strong>, ${safeName}!</p>`
@@ -140,18 +142,63 @@ async function sendVerificationEmail({ to, code, username }) {
   };
 
   if (EMAIL_WEBHOOK && typeof fetch === 'function') {
-    const response = await fetch(EMAIL_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!response.ok) {
-      throw new Error(`Falha ao enviar webhook de e-mail (${response.status})`);
-    }
+    await sendEmailThroughWebhook(payload);
+    return;
+  }
+
+  if (RESEND_API_KEY && typeof fetch === 'function') {
+    await sendEmailThroughResend(payload);
     return;
   }
 
   console.log('[PlayTalk][email]', JSON.stringify(payload, null, 2));
+}
+
+async function sendEmailThroughWebhook(payload) {
+  const response = await fetch(EMAIL_WEBHOOK, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    let body = '';
+    try {
+      body = await response.text();
+    } catch (err) {
+      body = err?.message || '';
+    }
+    const detail = body ? `: ${body}` : '';
+    throw new Error(`Falha ao enviar webhook de e-mail (${response.status})${detail}`);
+  }
+}
+
+async function sendEmailThroughResend(payload) {
+  const response = await fetch(RESEND_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${RESEND_API_KEY}`
+    },
+    body: JSON.stringify({
+      from: payload.from,
+      to: [payload.to],
+      subject: payload.subject,
+      text: payload.text,
+      html: payload.html
+    })
+  });
+
+  if (!response.ok) {
+    let body = '';
+    try {
+      body = await response.text();
+    } catch (err) {
+      body = err?.message || '';
+    }
+    const detail = body ? `: ${body}` : '';
+    throw new Error(`Falha ao enviar e-mail via Resend (${response.status})${detail}`);
+  }
 }
 
 function removeExpiredVerifications(database) {
