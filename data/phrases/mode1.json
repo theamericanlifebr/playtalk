@@ -331,6 +331,151 @@
       "Ela não vai rir#She will not laugh",
       "Ele não vai dançar#He will not dance",
       "Ela não vai dançar#She will not dance"
-    ]
+    ],
+
+    "31": [
+  "Estou lendo agora#I am reading now",
+  "Ele está sorrindo#He is smiling",
+  "Ela está dormindo#She is sleeping",
+  "Nós estamos indo#We are going",
+  "Você está esperando#You are waiting",
+  "Eles estão vindo#They are coming",
+  "Ele não está aqui#He is not here",
+  "Ela não está bem#She is not well",
+  "Estamos estudando#We are studying",
+  "Vocês estão prontos#You are ready",
+  "Estou escrevendo#I am writing",
+  "Ela está andando#She is walking"
+],
+"32": [
+  "Você vai agora#You go now",
+  "Nós vamos depois#We go later",
+  "Eles vão juntos#They go together",
+  "Ele volta logo#He returns soon",
+  "Ela vem rápido#She comes fast",
+  "Você anda bem#You walk well",
+  "Nós corremos já#We run now",
+  "Eles vêm depois#They come later",
+  "Ele ri muito#He laughs a lot",
+  "Ela dorme bem#She sleeps well",
+  "Eu espero aqui#I wait here",
+  "Nós saímos já#We leave now"
+],
+"33": [
+  "Você pode ver#You can see",
+  "Ela pode rir#She can laugh",
+  "Ele pode vir#He can come",
+  "Podemos tentar#We can try",
+  "Vocês podem ir#You can go",
+  "Eles podem correr#They can run",
+  "Ela não pode ir#She can't go",
+  "Ele não pode ver#He can't see",
+  "Você não pode rir#You can't laugh",
+  "Não posso dormir#I can't sleep",
+  "Não podemos ir#We can't go",
+  "Eles não podem vir#They can't come"
+],
+"34": [
+  "Eu gosto disso#I like this",
+  "Ela gosta disso#She likes this",
+  "Ele gosta daqui#He likes here",
+  "Nós gostamos disso#We like this",
+  "Vocês gostam disso#You like this",
+  "Eles gostam disso#They like this",
+  "Eu não gosto disso#I don't like this",
+  "Ela não gosta disso#She doesn't like this",
+  "Ele não gosta disso#He doesn't like this",
+  "Não gostamos disso#We don't like this",
+  "Eles não gostam disso#They don't like this",
+  "Você gosta disso#You like this"
+],
+"35": [
+  "Estou em casa#I am at home",
+  "Ela está na escola#She is at school",
+  "Ele está no carro#He is in the car",
+  "Estamos na rua#We are on the street",
+  "Você está no parque#You are in the park",
+  "Eles estão aqui#They are here",
+  "Ela está aí#She is there",
+  "Ele está longe#He is far",
+  "Estamos perto#We are near",
+  "Você está dentro#You are inside",
+  "Eles estão fora#They are outside",
+  "Estou no trabalho#I am at work"
+],
+"36": [
+  "Agora estou bem#Now I am fine",
+  "Hoje estou feliz#Today I am happy",
+  "Agora estou cansado#Now I am tired",
+  "Ela está nervosa#She is nervous",
+  "Ele está calmo#He is calm",
+  "Estamos ocupados#We are busy",
+  "Eles estão prontos#They are ready",
+  "Você está atrasado#You are late",
+  "Estamos livres#We are free",
+  "Ela está triste#She is sad",
+  "Ele está doente#He is sick",
+  "Vocês estão bem#You are fine"
+],
+"37": [
+  "Eu vou tentar#I will try",
+  "Você vai voltar#You will return",
+  "Ele vai esperar#He will wait",
+  "Ela vai correr#She will run",
+  "Nós vamos ler#We will read",
+  "Eles vão sair#They will leave",
+  "Você não vai vir#You will not come",
+  "Eu não vou correr#I will not run",
+  "Ela não vai falar#She will not speak",
+  "Ele não vai rir#He will not laugh",
+  "Não vamos parar#We will not stop",
+  "Eles não vão entrar#They will not enter"
+],
+"38": [
+  "Estou com fome#I am hungry",
+  "Ele está com sede#He is thirsty",
+  "Ela está com sono#She is sleepy",
+  "Estamos com medo#We are afraid",
+  "Você está com raiva#You are angry",
+  "Eles estão bem#They are fine",
+  "Estou com calor#I am hot",
+  "Ela está com frio#She is cold",
+  "Ele está com dor#He is in pain",
+  "Estamos animados#We are excited",
+  "Eles estão tristes#They are sad",
+  "Você está calmo#You are calm"
+],
+"39": [
+  "Posso entrar?#Can I come in?",
+  "Você pode sair#You can leave",
+  "Ele pode falar#He can talk",
+  "Ela pode ajudar#She can help",
+  "Podemos começar#We can start",
+  "Eles podem vir#They can come",
+  "Não posso falar#I can't talk",
+  "Você não pode ver#You can't see",
+  "Ele não pode vir#He can't come",
+  "Ela não pode correr#She can't run",
+  "Não podemos parar#We can't stop",
+  "Eles não podem rir#They can't laugh"
+],
+"40": [
+  "Você está aqui#You are here",
+  "Ele está lá#He is there",
+  "Ela está aqui#She is here",
+  "Estamos ali#We are there",
+  "Eles estão longe#They are far",
+  "Você está dentro#You are inside",
+  "Ele está fora#He is outside",
+  "Ela está em cima#She is upstairs",
+  "Estamos embaixo#We are downstairs",
+  "Você está perto#You are near",
+  "Eles estão dentro#They are inside",
+  "Estamos ao lado#We are beside"
+]
+
+
+
+    
   }
 }
