@@ -625,6 +625,12 @@ const preGameLevelSelection = {};
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
+const DURATION_ANCHORS = [
+  { length: 5, offset: -2200 },
+  { length: 18, offset: 0 },
+  { length: 24, offset: 500 },
+  { length: 30, offset: 1000 }
+];
 
 function setMicrophoneSpeechState(active, token = null) {
   if (active) {
@@ -657,8 +663,32 @@ function setRoundSelection(mode, size) {
   roundSelections[String(mode)] = size;
 }
 
+function interpolateDurationOffset(chars) {
+  const count = Math.max(0, Math.floor(Number(chars) || 0));
+  if (!DURATION_ANCHORS.length) {
+    return 0;
+  }
+  if (count <= DURATION_ANCHORS[0].length) {
+    return DURATION_ANCHORS[0].offset;
+  }
+  for (let i = 1; i < DURATION_ANCHORS.length; i++) {
+    const prev = DURATION_ANCHORS[i - 1];
+    const current = DURATION_ANCHORS[i];
+    if (count <= current.length) {
+      const span = Math.max(1, current.length - prev.length);
+      const ratio = (count - prev.length) / span;
+      return prev.offset + ratio * (current.offset - prev.offset);
+    }
+  }
+  return DURATION_ANCHORS[DURATION_ANCHORS.length - 1].offset;
+}
 
-
+function getAdjustedDurationMs(chars, durationMs) {
+  const rawDuration = Math.max(0, Math.floor(Number(durationMs) || 0));
+  const offsetMs = Math.round(interpolateDurationOffset(chars));
+  const adjusted = rawDuration + offsetMs;
+  return Math.max(1, adjusted);
+}
 
 function persistRoundStateCache() {
   localStorage.setItem(ROUND_STATE_KEY, JSON.stringify(roundStateCache));
