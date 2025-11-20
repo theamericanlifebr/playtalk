@@ -556,7 +556,7 @@
   }
 
   async function handleLogout(options = {}) {
-    const { stayOnPage = false } = options;
+    const { stayOnPage = false, redirectToLogin = false } = options;
     const current = readStoredCurrentUser();
     if (current) {
       await updateUserSnapshot();
@@ -569,6 +569,10 @@
     const onProfilePage = document.body && document.body.classList.contains('page-profile');
     if (onProfilePage && !stayOnPage) {
       window.location.href = 'index.html';
+      return;
+    }
+    if (redirectToLogin) {
+      window.location.href = 'login.html';
       return;
     }
     if (typeof openLoginFlowHandler === 'function') {
@@ -712,7 +716,8 @@
       button.addEventListener('click', (event) => {
         event.preventDefault();
         const stayOnPage = button.dataset.switchAccount === 'true';
-        handleLogout({ stayOnPage });
+        const redirectToLogin = button.dataset.switchAccount === 'true';
+        handleLogout({ stayOnPage, redirectToLogin });
       });
     });
 

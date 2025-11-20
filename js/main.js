@@ -20,9 +20,9 @@ const MODE_SCORE_FACTORS = {
   6: 1.25
 };
 
-const ROUND_OPTIONS = [12, 18, 24, 36];
+const ROUND_OPTIONS = [12];
 const DEFAULT_ROUND_SIZE = ROUND_OPTIONS[0];
-const MAX_PROGRESS_POINTS = ROUND_OPTIONS[ROUND_OPTIONS.length - 1];
+const MAX_PROGRESS_POINTS = DEFAULT_ROUND_SIZE;
 const COLOR_STOP_RATIOS = [
   [0, '#ff0000'],
   [0.08, '#ff3b00'],
@@ -79,11 +79,9 @@ const MODE_DETAILS = {
 };
 
 const MEDAL_RULES = [
-  { min: 0, max: 35, image: 'medalhas/gesso.png', label: 'Medalha de Gesso', levelDelta: -1, status: 'Você perdeu um nível.' },
-  { min: 36, max: 66, image: 'medalhas/chumbo.png', label: 'Medalha de Chumbo', levelDelta: -1, status: 'Você perdeu um nível.' },
-  { min: 67, max: 75, image: 'medalhas/bronze.png', label: 'Medalha de Bronze', levelDelta: 0, status: 'Você permanece no nível.' },
-  { min: 76, max: 82, image: 'medalhas/prata.png', label: 'Medalha de Prata', levelDelta: 0, status: 'Você permanece no nível.' },
-  { min: 83, max: 89, image: 'medalhas/ouro.png', label: 'Medalha de Ouro', levelDelta: 1, status: 'Você subiu de nível!' },
+  { min: 0, max: 45, image: 'medalhas/bronze.png', label: 'Medalha de Bronze', levelDelta: 0, status: 'Você permanece no nível.' },
+  { min: 46, max: 77, image: 'medalhas/prata.png', label: 'Medalha de Prata', levelDelta: 0, status: 'Você permanece no nível.' },
+  { min: 78, max: 89, image: 'medalhas/ouro.png', label: 'Medalha de Ouro', levelDelta: 1, status: 'Você subiu de nível!' },
   { min: 90, max: 100, image: 'medalhas/diamante.png', label: 'Medalha de Diamante', levelDelta: 1, status: 'Você subiu de nível!' }
 ];
 
@@ -91,12 +89,10 @@ const MEDAL_LABEL_TO_KEY = {
   'Medalha de Diamante': 'diamante',
   'Medalha de Ouro': 'ouro',
   'Medalha de Prata': 'prata',
-  'Medalha de Bronze': 'bronze',
-  'Medalha de Chumbo': 'chumbo',
-  'Medalha de Gesso': 'gesso'
+  'Medalha de Bronze': 'bronze'
 };
 
-const MEDAL_KEYS = ['diamante', 'ouro', 'prata', 'bronze', 'chumbo', 'gesso'];
+const MEDAL_KEYS = ['diamante', 'ouro', 'prata', 'bronze'];
 const RECENT_PHRASE_LIMIT = 500;
 
 function createEmptyMedalCounts() {
@@ -104,9 +100,7 @@ function createEmptyMedalCounts() {
     diamante: 0,
     ouro: 0,
     prata: 0,
-    bronze: 0,
-    chumbo: 0,
-    gesso: 0
+    bronze: 0
   };
 }
 
@@ -626,6 +620,7 @@ let phraseStartTime = 0;
 let roundActive = false;
 let pendingModeStart = null;
 const roundSelections = {};
+const preGameLevelSelection = {};
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
@@ -752,7 +747,7 @@ function persistCurrentRoundState() {
     fraseIndex: clampedIndex,
     frases: sanitizedPhrases,
     roundActive: Boolean(roundActive),
-    level: Math.max(1, Math.floor(pastaAtual || resolveModeLevel(selectedMode) || 1)),
+    level: Math.max(1, Math.floor(pastaAtual || getSelectedPreGameLevel(selectedMode) || 1)),
     elapsedMs: roundStartTime ? Math.max(0, Date.now() - roundStartTime) : 0
   };
   saveRoundStateForMode(selectedMode, snapshot);
@@ -770,9 +765,7 @@ function restoreRoundState(saved, expectedLevel) {
   if (!sanitizedPhrases.length) {
     return false;
   }
-  const storedTarget = Number.isFinite(saved.roundTarget) && saved.roundTarget > 0
-    ? Math.floor(saved.roundTarget)
-    : DEFAULT_ROUND_SIZE;
+  const storedTarget = DEFAULT_ROUND_SIZE;
   roundTarget = storedTarget;
   setRoundSelection(selectedMode, storedTarget);
   frasesArr = sanitizedPhrases;
@@ -789,6 +782,9 @@ function restoreRoundState(saved, expectedLevel) {
   }
   roundActive = true;
   pastaAtual = storedLevel || expectedLevel || pastaAtual;
+  if (pastaAtual) {
+    setSelectedPreGameLevel(selectedMode, pastaAtual);
+  }
   if (roundAttempts >= roundTarget) {
     clearRoundState(selectedMode);
     return false;
@@ -1011,6 +1007,34 @@ function resolveModeLevel(mode) {
     }
   }
   return levels[0];
+}
+
+function getAvailableLevelBounds(mode) {
+  const levels = getModeLevels(mode);
+  if (!levels.length) {
+    return { min: 1, max: 1 };
+  }
+  return { min: levels[0], max: levels[levels.length - 1] };
+}
+
+function getSelectedPreGameLevel(mode) {
+  const key = String(mode);
+  if (!Number.isFinite(preGameLevelSelection[key])) {
+    preGameLevelSelection[key] = resolveModeLevel(mode);
+  }
+  return preGameLevelSelection[key];
+}
+
+function setSelectedPreGameLevel(mode, level) {
+  const { min, max } = getAvailableLevelBounds(mode);
+  const normalized = Math.max(min, Math.min(max, Math.floor(level) || min));
+  preGameLevelSelection[String(mode)] = normalized;
+  return normalized;
+}
+
+function stepSelectedPreGameLevel(mode, delta) {
+  const current = getSelectedPreGameLevel(mode);
+  return setSelectedPreGameLevel(mode, current + delta);
 }
 
 let unlockedModes = {};
@@ -1254,24 +1278,6 @@ function getModeDetail(mode) {
   };
 }
 
-function updatePreGameRoundButtons(mode, selectedSize) {
-  const buttons = document.querySelectorAll('#pre-game-screen .pre-game-round__option');
-  buttons.forEach(button => {
-    if (!button.dataset.round) {
-      return;
-    }
-    const value = parseInt(button.dataset.round, 10);
-    if (!Number.isFinite(value)) {
-      return;
-    }
-    if (value === selectedSize) {
-      button.classList.add('is-selected');
-    } else {
-      button.classList.remove('is-selected');
-    }
-  });
-}
-
 function updatePreGameScreen(mode) {
   const overlay = document.getElementById('pre-game-screen');
   if (!overlay) {
@@ -1289,14 +1295,19 @@ function updatePreGameScreen(mode) {
     logoEl.alt = `Logo do ${detail.title}`;
   }
   if (levelEl) {
-    const level = resolveModeLevel(mode);
+    const level = setSelectedPreGameLevel(mode, getSelectedPreGameLevel(mode));
     levelEl.textContent = `Pasta ${level}`;
   }
-  const selectedSize = getRoundSelection(mode);
-  updatePreGameRoundButtons(mode, selectedSize);
+  const bounds = getAvailableLevelBounds(mode);
+  overlay.querySelectorAll('.pre-game-level__control').forEach(control => {
+    const dir = control.dataset.direction === 'up' ? 1 : -1;
+    const target = getSelectedPreGameLevel(mode) + dir;
+    const clamped = Math.max(bounds.min, Math.min(bounds.max, target));
+    control.disabled = clamped === getSelectedPreGameLevel(mode);
+  });
   const startBtn = document.getElementById('pre-game-start');
   if (startBtn) {
-    const targetLevel = resolveModeLevel(mode);
+    const targetLevel = getSelectedPreGameLevel(mode);
     const savedRound = getStoredRoundState(mode, targetLevel);
     const hasResume = Boolean(
       savedRound &&
@@ -1887,13 +1898,14 @@ function beginGame() {
   closePostGameScreen();
   resetRoundState();
   roundTarget = getRoundSelection(selectedMode);
-  const targetLevel = resolveModeLevel(selectedMode);
+  const targetLevel = getSelectedPreGameLevel(selectedMode);
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
   consecutiveErrors = 0;
   paused = false;
   roundStartTime = Date.now();
   roundActive = true;
+  pastaAtual = targetLevel;
   const start = () => {
     const visor = document.getElementById('visor');
     if (visor) visor.style.display = 'flex';
@@ -2115,7 +2127,7 @@ function getWrongPhrasePool(mode, folder) {
 
 function carregarFrases() {
   const library = getModeLibrary(selectedMode);
-  const levelToUse = resolveModeLevel(selectedMode);
+  const levelToUse = getSelectedPreGameLevel(selectedMode);
   pastaAtual = levelToUse;
   const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
   const anteriores = [];
@@ -2498,14 +2510,15 @@ function finishMode() {
   }
   saveModeStats();
   const progress = getModeProgress(selectedMode);
-  const previousLevel = progress.level;
+  const baseLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode));
+  const previousLevel = baseLevel;
   let nextLevel = previousLevel + medal.levelDelta;
   nextLevel = Math.max(1, Math.min(MAX_LEVEL_CAP, nextLevel));
   progress.level = nextLevel;
   progress.xp = 0;
   modeProgress[String(selectedMode)] = progress;
   saveModeProgress({ emit: true });
-  pastaAtual = resolveModeLevel(selectedMode);
+  pastaAtual = setSelectedPreGameLevel(selectedMode, nextLevel);
   updateLevelIcon({ scope: 'mode' });
   dispatchModeProgressUpdate(selectedMode);
   updateModeIcons();
@@ -2651,16 +2664,12 @@ async function initGame() {
     });
   }
 
-  document.querySelectorAll('#pre-game-screen .pre-game-round__option').forEach(button => {
+  document.querySelectorAll('#pre-game-screen .pre-game-level__control').forEach(button => {
     button.addEventListener('click', () => {
-      const value = parseInt(button.dataset.round, 10);
-      if (!Number.isFinite(value)) {
-        return;
-      }
       const mode = pendingModeStart ?? selectedMode;
-      setRoundSelection(mode, value);
-      roundTarget = value;
-      updatePreGameRoundButtons(mode, value);
+      const delta = button.dataset.direction === 'up' ? 1 : -1;
+      stepSelectedPreGameLevel(mode, delta);
+      updatePreGameScreen(mode);
     });
   });
 

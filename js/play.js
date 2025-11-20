@@ -52,9 +52,7 @@ const MEDAL_CONFIG = [
   { key: 'diamante', label: 'Diamante', icon: 'medalhas/diamante.png' },
   { key: 'ouro', label: 'Ouro', icon: 'medalhas/ouro.png' },
   { key: 'prata', label: 'Prata', icon: 'medalhas/prata.png' },
-  { key: 'bronze', label: 'Bronze', icon: 'medalhas/bronze.png' },
-  { key: 'chumbo', label: 'Chumbo', icon: 'medalhas/chumbo.png' },
-  { key: 'gesso', label: 'Gesso', icon: 'medalhas/gesso.png' }
+  { key: 'bronze', label: 'Bronze', icon: 'medalhas/bronze.png' }
 ];
 
 function getEmptyMedalCounts() {
@@ -62,9 +60,7 @@ function getEmptyMedalCounts() {
     diamante: 0,
     ouro: 0,
     prata: 0,
-    bronze: 0,
-    chumbo: 0,
-    gesso: 0
+    bronze: 0
   };
 }
 
