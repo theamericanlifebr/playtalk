@@ -2105,14 +2105,7 @@ function carregarFrases() {
   const levelToUse = resolveModeLevel(selectedMode);
   pastaAtual = levelToUse;
   const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
-  let anteriores = [];
-  getModeLevels(selectedMode)
-    .filter(level => level < levelToUse)
-    .forEach(level => {
-      if (Array.isArray(library[level])) {
-        anteriores = anteriores.concat(library[level]);
-      }
-    });
+  const anteriores = [];
 
   const totalNecessario = Math.max(1, roundTarget);
   const erradas = userSettings.retryWrongPhrases
@@ -2121,13 +2114,11 @@ function carregarFrases() {
 
   const allocationPlan = userSettings.retryWrongPhrases
     ? [
-        { key: 'principais', ratio: 0.75 },
-        { key: 'erradas', ratio: 0.15 },
-        { key: 'anteriores', ratio: 0.10 }
+        { key: 'principais', ratio: 0.85 },
+        { key: 'erradas', ratio: 0.15 }
       ]
     : [
-        { key: 'principais', ratio: 0.75 },
-        { key: 'anteriores', ratio: 0.25 }
+        { key: 'principais', ratio: 1 }
       ];
 
   const desiredCounts = allocatePhraseCounts(totalNecessario, allocationPlan);
