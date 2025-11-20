@@ -135,6 +135,116 @@
       "Você não pensa#You don't think"
     ],
     "13": [
+      "Eu tenho#I have",
+      "Eu quero#I want",
+      "Eu preciso#I need",
+      "Eu como#I eat",
+      "Eu bebo#I drink",
+      "Eu jogo#I play",
+      "Eu estudo#I study",
+      "Eu leio#I read",
+      "Eu trabalho#I work"
+    ],
+    "14": [
+      "Você tem#You have",
+      "Você quer#You want",
+      "Você precisa#You need",
+      "Você come#You eat",
+      "Você bebe#You drink",
+      "Você joga#You play",
+      "Você estuda#You study",
+      "Você lê#You read",
+      "Você trabalha#You work"
+    ],
+    "15": [
+      "Ele tem#He has",
+      "Ela tem#She has",
+      "Ele quer#He wants",
+      "Ela quer#She wants",
+      "Ele precisa#He needs",
+      "Ela precisa#She needs",
+      "Ele come#He eats",
+      "Ela bebe#She drinks",
+      "Ele joga#He plays"
+    ],
+    "16": [
+      "Nós temos#We have",
+      "Nós queremos#We want",
+      "Nós precisamos#We need",
+      "Nós jogamos#We play",
+      "Nós estudamos#We study",
+      "Nós trabalhamos#We work",
+      "Eles têm#They have",
+      "Eles querem#They want",
+      "Eles jogam#They play"
+    ],
+    "17": [
+      "Eu tenho um cão#I have a dog",
+      "Eu tenho um gato#I have a cat",
+      "Eu tenho um livro#I have a book",
+      "Eu tenho um jogo#I have a game",
+      "Você tem um cão#You have a dog",
+      "Você tem um gato#You have a cat",
+      "Você tem um livro#You have a book",
+      "Você tem um jogo#You have a game",
+      "Nós temos um cão#We have a dog"
+    ],
+    "18": [
+      "Eu quero água#I want water",
+      "Eu quero pão#I want bread",
+      "Eu quero leite#I want milk",
+      "Eu quero café#I want coffee",
+      "Você quer água#You want water",
+      "Você quer pão#You want bread",
+      "Você quer leite#You want milk",
+      "Você quer café#You want coffee",
+      "Eles querem água#They want water"
+    ],
+    "19": [
+      "Eu como pão#I eat bread",
+      "Eu bebo água#I drink water",
+      "Eu bebo leite#I drink milk",
+      "Você come pão#You eat bread",
+      "Você bebe água#You drink water",
+      "Você bebe leite#You drink milk",
+      "Ele come pão#He eats bread",
+      "Ela bebe água#She drinks water",
+      "Eles bebem água#They drink water"
+    ],
+    "20": [
+      "Eu jogo bola#I play ball",
+      "Eu leio um livro#I read a book",
+      "Eu estudo hoje#I study today",
+      "Eu trabalho hoje#I work today",
+      "Você joga bola#You play ball",
+      "Você lê um livro#You read a book",
+      "Você estuda hoje#You study today",
+      "Você trabalha hoje#You work today",
+      "Nós jogamos bola#We play ball"
+    ],
+    "21": [
+      "Eu estou bem#I am fine",
+      "Eu estou feliz#I am happy",
+      "Eu estou triste#I am sad",
+      "Você está bem#You are fine",
+      "Você está feliz#You are happy",
+      "Você está triste#You are sad",
+      "Ele está feliz#He is happy",
+      "Ela está triste#She is sad",
+      "Eles estão bem#They are fine"
+    ],
+    "22": [
+      "Isso é bom#This is good",
+      "Isso é ruim#This is bad",
+      "Isso é grande#This is big",
+      "Isso é pequeno#This is small",
+      "Isso é novo#This is new",
+      "Isso é velho#This is old",
+      "Está quente#It is hot",
+      "Está frio#It is cold",
+      "Está ok#It is OK"
+    ],
+    "23": [
       "Ele não sabe#He doesn't know",
       "Ela não sabe#She doesn't know",
       "Ele não corre#He doesn't run",
@@ -145,7 +255,7 @@
       "Ela não gosta#She doesn't like",
       "Ele não vê#He doesn't see"
     ],
-    "14": [
+    "24": [
       "Ela não vê#She doesn't see",
       "Nós não corremos#We don't run",
       "Nós não andamos#We don't walk",
@@ -156,7 +266,7 @@
       "Nós não gostamos#We don't like",
       "Eles não gostam#They don't like"
     ],
-    "15": [
+    "25": [
       "Eu vou andar#I will walk",
       "Eu vou correr#I will run",
       "Eu vou rir#I will laugh",
@@ -167,7 +277,7 @@
       "Eu vou pensar#I will think",
       "Eu vou gostar#I will like"
     ],
-    "16": [
+    "26": [
       "Você vai andar#You will walk",
       "Você vai correr#You will run",
       "Você vai rir#You will laugh",
@@ -178,7 +288,7 @@
       "Você vai pensar#You will think",
       "Você vai gostar#You will like"
     ],
-    "17": [
+    "27": [
       "Ele vai andar#He will walk",
       "Ela vai andar#She will walk",
       "Ele vai correr#He will run",
@@ -189,7 +299,7 @@
       "Ela vai dormir#She will sleep",
       "Ele vai ver#He will see"
     ],
-    "18": [
+    "28": [
       "Ela vai ver#She will see",
       "Nós vamos andar#We will walk",
       "Nós vamos correr#We will run",
@@ -200,7 +310,7 @@
       "Nós vamos ver#We will see",
       "Eles vão ver#They will see"
     ],
-    "19": [
+    "29": [
       "Eu não vou lá#I will not go",
       "Eu não vou ver#I will not see",
       "Eu não vou rir#I will not laugh",
@@ -211,7 +321,7 @@
       "Você não vai rir#You will not laugh",
       "Você não vai dançar#You will not dance"
     ],
-    "20": [
+    "30": [
       "Você não vai dormir#You will not sleep",
       "Ele não vai lá#He will not go",
       "Ela não vai lá#She will not go",
