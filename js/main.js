@@ -618,12 +618,19 @@ let roundCorrectChars = 0;
 let roundStartTime = 0;
 let phraseStartTime = 0;
 let roundActive = false;
+let roundAdjustedTimeMs = 0;
 let pendingModeStart = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
+const DURATION_ANCHORS = [
+  { length: 5, offset: -2200 },
+  { length: 18, offset: 0 },
+  { length: 24, offset: 500 },
+  { length: 30, offset: 1000 }
+];
 
 function setMicrophoneSpeechState(active, token = null) {
   if (active) {
@@ -631,13 +638,8 @@ function setMicrophoneSpeechState(active, token = null) {
   } else if (token !== null && token !== speechPauseToken) {
     return;
   }
-  microphonePaused = active;
-  if (!reconhecimento) {
-    return;
-  }
-  if (active) {
-    try { reconhecimento.stop(); } catch (e) {}
-  } else if (reconhecimentoAtivo && !reconhecimentoRodando) {
+  microphonePaused = false;
+  if (reconhecimento && reconhecimentoAtivo && !reconhecimentoRodando) {
     try { reconhecimento.start(); } catch (e) {}
   }
 }
@@ -659,6 +661,33 @@ function setRoundSelection(mode, size) {
     return;
   }
   roundSelections[String(mode)] = size;
+}
+
+function interpolateDurationOffset(chars) {
+  const count = Math.max(0, Math.floor(Number(chars) || 0));
+  if (!DURATION_ANCHORS.length) {
+    return 0;
+  }
+  if (count <= DURATION_ANCHORS[0].length) {
+    return DURATION_ANCHORS[0].offset;
+  }
+  for (let i = 1; i < DURATION_ANCHORS.length; i++) {
+    const prev = DURATION_ANCHORS[i - 1];
+    const current = DURATION_ANCHORS[i];
+    if (count <= current.length) {
+      const span = Math.max(1, current.length - prev.length);
+      const ratio = (count - prev.length) / span;
+      return prev.offset + ratio * (current.offset - prev.offset);
+    }
+  }
+  return DURATION_ANCHORS[DURATION_ANCHORS.length - 1].offset;
+}
+
+function getAdjustedDurationMs(chars, durationMs) {
+  const rawDuration = Math.max(0, Math.floor(Number(durationMs) || 0));
+  const offsetMs = Math.round(interpolateDurationOffset(chars));
+  const adjusted = rawDuration + offsetMs;
+  return Math.max(1, adjusted);
 }
 
 function persistRoundStateCache() {
@@ -698,7 +727,8 @@ function getStoredRoundState(mode, expectedLevel) {
     frases,
     roundActive: Boolean(entry.roundActive),
     level: storedLevel,
-    elapsedMs: Number.isFinite(entry.elapsedMs) ? entry.elapsedMs : 0
+    elapsedMs: Number.isFinite(entry.elapsedMs) ? entry.elapsedMs : 0,
+    adjustedMs: Number.isFinite(entry.adjustedMs) ? entry.adjustedMs : null
   };
 }
 
@@ -748,7 +778,8 @@ function persistCurrentRoundState() {
     frases: sanitizedPhrases,
     roundActive: Boolean(roundActive),
     level: Math.max(1, Math.floor(pastaAtual || getSelectedPreGameLevel(selectedMode) || 1)),
-    elapsedMs: roundStartTime ? Math.max(0, Date.now() - roundStartTime) : 0
+    elapsedMs: roundStartTime ? Math.max(0, Date.now() - roundStartTime) : 0,
+    adjustedMs: Math.max(0, Math.floor(roundAdjustedTimeMs))
   };
   saveRoundStateForMode(selectedMode, snapshot);
 }
@@ -765,7 +796,9 @@ function restoreRoundState(saved, expectedLevel) {
   if (!sanitizedPhrases.length) {
     return false;
   }
-  const storedTarget = DEFAULT_ROUND_SIZE;
+  const storedTarget = Number.isFinite(saved.roundTarget)
+    ? Math.max(1, Math.floor(saved.roundTarget))
+    : DEFAULT_ROUND_SIZE;
   roundTarget = storedTarget;
   setRoundSelection(selectedMode, storedTarget);
   frasesArr = sanitizedPhrases;
@@ -780,6 +813,8 @@ function restoreRoundState(saved, expectedLevel) {
   if (!Number.isFinite(roundStartTime) || roundStartTime <= 0) {
     roundStartTime = Date.now();
   }
+  const savedAdjusted = Number.isFinite(saved.adjustedMs) ? Math.max(0, Math.floor(saved.adjustedMs)) : null;
+  roundAdjustedTimeMs = savedAdjusted !== null ? savedAdjusted : elapsedMs;
   roundActive = true;
   pastaAtual = storedLevel || expectedLevel || pastaAtual;
   if (pastaAtual) {
@@ -803,6 +838,7 @@ function resetRoundState() {
   roundStartTime = 0;
   phraseStartTime = 0;
   roundActive = false;
+  roundAdjustedTimeMs = 0;
 }
 
 function getXPRequirement(level) {
@@ -1294,27 +1330,34 @@ function updatePreGameScreen(mode) {
     logoEl.src = detail.logo;
     logoEl.alt = `Logo do ${detail.title}`;
   }
+  const savedRound = getStoredRoundState(mode, getSelectedPreGameLevel(mode)) || getStoredRoundState(mode);
+  if (savedRound && Number.isFinite(savedRound.level)) {
+    setSelectedPreGameLevel(mode, savedRound.level);
+  }
+  if (savedRound && Number.isFinite(savedRound.roundTarget)) {
+    setRoundSelection(mode, Math.max(1, Math.floor(savedRound.roundTarget)));
+  }
   if (levelEl) {
     const level = setSelectedPreGameLevel(mode, getSelectedPreGameLevel(mode));
     levelEl.textContent = `Pasta ${level}`;
   }
+  const targetLevel = getSelectedPreGameLevel(mode);
+  const hasResume = Boolean(
+    savedRound &&
+    Number.isFinite(savedRound.roundTarget) &&
+    Number.isFinite(savedRound.roundAttempts) &&
+    savedRound.roundAttempts < savedRound.roundTarget &&
+    (!Number.isFinite(targetLevel) || savedRound.level === targetLevel)
+  );
   const bounds = getAvailableLevelBounds(mode);
   overlay.querySelectorAll('.pre-game-level__control').forEach(control => {
     const dir = control.dataset.direction === 'up' ? 1 : -1;
     const target = getSelectedPreGameLevel(mode) + dir;
     const clamped = Math.max(bounds.min, Math.min(bounds.max, target));
-    control.disabled = clamped === getSelectedPreGameLevel(mode);
+    control.disabled = hasResume || clamped === getSelectedPreGameLevel(mode);
   });
   const startBtn = document.getElementById('pre-game-start');
   if (startBtn) {
-    const targetLevel = getSelectedPreGameLevel(mode);
-    const savedRound = getStoredRoundState(mode, targetLevel);
-    const hasResume = Boolean(
-      savedRound &&
-      Number.isFinite(savedRound.roundTarget) &&
-      Number.isFinite(savedRound.roundAttempts) &&
-      savedRound.roundAttempts < savedRound.roundTarget
-    );
     startBtn.textContent = hasResume ? 'Continuar' : 'Jogar';
     startBtn.classList.toggle('game-overlay__primary--continue', hasResume);
     startBtn.setAttribute('data-resume', hasResume ? 'true' : 'false');
@@ -2343,6 +2386,7 @@ function verificarResposta() {
   const enVariants = getEnVariantsFromPhrase(currentEntry);
   const expectedOptions = esperadoLang === 'pt' ? [pt] : (enVariants.length ? enVariants : ['']);
   const expectedPhrase = expectedOptions[0] || '';
+  const phraseLength = expectedPhrase ? expectedPhrase.length : 0;
   const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
   let normalizadoResp = norm(resposta);
   const correto = expectedOptions.some(opcao => {
@@ -2358,7 +2402,9 @@ function verificarResposta() {
   stats.correctChars += correctChars;
   roundCorrectChars += correctChars;
   const phraseDuration = phraseStartTime ? Date.now() - phraseStartTime : 0;
-  addRecentPhraseSample(correctChars, phraseDuration);
+  const adjustedDuration = getAdjustedDurationMs(phraseLength, phraseDuration);
+  roundAdjustedTimeMs = Math.max(0, roundAdjustedTimeMs + adjustedDuration);
+  addRecentPhraseSample(correctChars, adjustedDuration);
   phraseStartTime = 0;
   if (!roundActive) {
     roundActive = true;
@@ -2418,7 +2464,6 @@ function verificarResposta() {
     input.value = '';
     input.disabled = true;
     bloqueado = true;
-    microphonePaused = true;
     if (selectedMode !== 1) {
       falar(expectedPhrase, esperadoLang);
     }
@@ -2427,7 +2472,6 @@ function verificarResposta() {
       flashError(expectedPhrase, () => {
       input.disabled = false;
       bloqueado = false;
-      microphonePaused = false;
       if (reachedRoundEnd) {
         finishMode();
       } else {
@@ -2498,7 +2542,9 @@ function finishMode() {
   const wrong = Math.max(0, totalAttempts - correct);
   const attemptsForAccuracy = correct + wrong;
   const accuracy = attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
-  const elapsedMs = roundStartTime ? Date.now() - roundStartTime : 0;
+  const elapsedMs = roundAdjustedTimeMs > 0
+    ? roundAdjustedTimeMs
+    : (roundStartTime ? Date.now() - roundStartTime : 0);
   const minutes = elapsedMs > 0 ? (elapsedMs / 60000) : 0;
   const cpm = minutes > 0 ? (roundCorrectChars / minutes) : 0;
 
