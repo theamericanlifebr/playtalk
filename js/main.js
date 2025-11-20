@@ -679,10 +679,14 @@ function sanitizeStoredPhrases(list) {
     .filter(entry => Array.isArray(entry) && entry.length === 2);
 }
 
-function getStoredRoundState(mode) {
+function getStoredRoundState(mode, expectedLevel) {
   const key = String(mode);
   const entry = roundStateCache && typeof roundStateCache === 'object' ? roundStateCache[key] : null;
   if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+  const storedLevel = Number.isFinite(entry.level) && entry.level > 0 ? Math.floor(entry.level) : null;
+  if (Number.isFinite(expectedLevel) && expectedLevel > 0 && storedLevel !== Math.floor(expectedLevel)) {
     return null;
   }
   const frases = sanitizeStoredPhrases(entry.frases);
@@ -698,6 +702,7 @@ function getStoredRoundState(mode) {
     fraseIndex: Number.isFinite(entry.fraseIndex) ? entry.fraseIndex : 0,
     frases,
     roundActive: Boolean(entry.roundActive),
+    level: storedLevel,
     elapsedMs: Number.isFinite(entry.elapsedMs) ? entry.elapsedMs : 0
   };
 }
@@ -747,13 +752,18 @@ function persistCurrentRoundState() {
     fraseIndex: clampedIndex,
     frases: sanitizedPhrases,
     roundActive: Boolean(roundActive),
+    level: Math.max(1, Math.floor(pastaAtual || resolveModeLevel(selectedMode) || 1)),
     elapsedMs: roundStartTime ? Math.max(0, Date.now() - roundStartTime) : 0
   };
   saveRoundStateForMode(selectedMode, snapshot);
 }
 
-function restoreRoundState(saved) {
+function restoreRoundState(saved, expectedLevel) {
   if (!saved) {
+    return false;
+  }
+  const storedLevel = Number.isFinite(saved.level) && saved.level > 0 ? Math.floor(saved.level) : null;
+  if (Number.isFinite(expectedLevel) && expectedLevel > 0 && storedLevel !== Math.floor(expectedLevel)) {
     return false;
   }
   const sanitizedPhrases = sanitizeStoredPhrases(saved.frases);
@@ -778,6 +788,7 @@ function restoreRoundState(saved) {
     roundStartTime = Date.now();
   }
   roundActive = true;
+  pastaAtual = storedLevel || expectedLevel || pastaAtual;
   if (roundAttempts >= roundTarget) {
     clearRoundState(selectedMode);
     return false;
@@ -1285,7 +1296,8 @@ function updatePreGameScreen(mode) {
   updatePreGameRoundButtons(mode, selectedSize);
   const startBtn = document.getElementById('pre-game-start');
   if (startBtn) {
-    const savedRound = getStoredRoundState(mode);
+    const targetLevel = resolveModeLevel(mode);
+    const savedRound = getStoredRoundState(mode, targetLevel);
     const hasResume = Boolean(
       savedRound &&
       Number.isFinite(savedRound.roundTarget) &&
@@ -1875,6 +1887,7 @@ function beginGame() {
   closePostGameScreen();
   resetRoundState();
   roundTarget = getRoundSelection(selectedMode);
+  const targetLevel = resolveModeLevel(selectedMode);
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
   consecutiveErrors = 0;
@@ -1933,7 +1946,7 @@ function beginGame() {
     if (reconhecimento) {
       reconhecimento.lang = recognitionLanguage;
     }
-    const restored = restoreRoundState(getStoredRoundState(selectedMode));
+    const restored = restoreRoundState(getStoredRoundState(selectedMode, targetLevel), targetLevel);
     if (reconhecimento) {
       reconhecimentoAtivo = true;
       reconhecimento.start();
