@@ -15,8 +15,6 @@ const colorStops = [
   [25000, '#0099ff']
 ];
 
-const PHRASE_TIME_OFFSET_MS = 1700;
-
 function hexToRgb(hex) {
   const int = parseInt(hex.slice(1), 16);
   return [int >> 16 & 255, int >> 8 & 255, int & 255];
@@ -104,13 +102,6 @@ function formatCpm(value) {
   const number = Number(value);
   const safe = Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;
   return safe.toLocaleString('pt-BR');
-}
-
-function computeEffectiveMinutes(totalTimeMs, phraseCount) {
-  const safePhrases = Math.max(0, Math.floor(Number(phraseCount) || 0));
-  const rawTime = Math.max(0, Math.floor(Number(totalTimeMs) || 0));
-  const effectiveTime = Math.max(0, rawTime - safePhrases * PHRASE_TIME_OFFSET_MS);
-  return effectiveTime > 0 ? (effectiveTime / 60000) : 0;
 }
 
 function createMetricCard(label, value, accentPercent, options = {}) {
@@ -300,7 +291,7 @@ function initPlayPage(context = {}) {
     const totalChars = stats.totalChars || 0;
     const correctChars = stats.correctChars || 0;
     const accuracyPerc = totalPhrases ? (correctPhrases / totalPhrases * 100) : 0;
-    const minutes = computeEffectiveMinutes(totalTime, totalPhrases);
+    const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
     const cpm = minutes > 0 ? (correctChars / minutes) : 0;
     const noReportPerc = totalPhrases ? (100 - (report / totalPhrases * 100)) : 100;
     return {
@@ -342,7 +333,7 @@ function initPlayPage(context = {}) {
     const accuracyPerc = totals.totalPhrases
       ? (totals.correctPhrases / totals.totalPhrases) * 100
       : 0;
-    const minutes = computeEffectiveMinutes(totals.totalTime, totals.totalPhrases);
+    const minutes = totals.totalTime > 0 ? (totals.totalTime / 60000) : 0;
     const cpm = minutes > 0 ? (totals.correctChars / minutes) : 0;
     const noReportPerc = totals.totalPhrases
       ? (100 - (totals.report / totals.totalPhrases * 100))
