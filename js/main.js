@@ -98,6 +98,7 @@ const MEDAL_LABEL_TO_KEY = {
 
 const MEDAL_KEYS = ['diamante', 'ouro', 'prata', 'bronze', 'chumbo', 'gesso'];
 const RECENT_PHRASE_LIMIT = 500;
+const PHRASE_TIME_OFFSET_MS = 1700;
 
 function createEmptyMedalCounts() {
   return {
@@ -199,6 +200,13 @@ function addRecentPhraseSample(chars, duration) {
   recentPhraseStats.totalChars = Math.max(0, (recentPhraseStats.totalChars || 0) + normalizedChars);
   recentPhraseStats.totalTime = Math.max(0, (recentPhraseStats.totalTime || 0) + normalizedDuration);
   localStorage.setItem('recentPhraseStats', JSON.stringify(recentPhraseStats));
+}
+
+function computeEffectiveMinutes(totalTimeMs, phraseCount) {
+  const safePhrases = Math.max(0, Math.floor(Number(phraseCount) || 0));
+  const rawTime = Math.max(0, Math.floor(Number(totalTimeMs) || 0));
+  const effectiveTime = Math.max(0, rawTime - safePhrases * PHRASE_TIME_OFFSET_MS);
+  return effectiveTime > 0 ? (effectiveTime / 60000) : 0;
 }
 
 function getMedalForAccuracy(accuracy) {
@@ -1761,7 +1769,7 @@ function calcModeStats(mode) {
   if (avg >= MAX_TIME) timePerc = 0;
   if ([2, 3, 6].includes(mode) && total) timePerc += 20;
   const notReportPerc = total ? (100 - (report / total * 100)) : 100;
-  const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
+  const minutes = computeEffectiveMinutes(totalTime, total);
   const cpm = minutes > 0 ? (correctChars / minutes) : 0;
   return { accPerc, timePerc, avg, notReportPerc, cpm, total, correct, totalChars, correctChars };
 }
@@ -1789,7 +1797,7 @@ function calcGeneralStats() {
   const avg = totalPhrases ? (totalTime / totalPhrases / 1000) : 0;
   const timePerc = timePercCount ? (timePercSum / timePercCount) : 0;
   const notReportPerc = totalPhrases ? (100 - (totalReport / totalPhrases * 100)) : 100;
-  const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
+  const minutes = computeEffectiveMinutes(totalTime, totalPhrases);
   const cpm = minutes > 0 ? (totalCorrectChars / minutes) : 0;
   return {
     accPerc,
@@ -1954,8 +1962,30 @@ function speakWithBrowserVoice(texto, locale) {
   const utter = new SpeechSynthesisUtterance(texto);
   utter.lang = locale;
   const token = Date.now();
-  const stopSpeaking = () => setMicrophoneSpeechState(false, token);
-  utter.onstart = () => setMicrophoneSpeechState(true, token);
+  let resumeTimeout = null;
+  const clearResumeTimeout = () => {
+    if (resumeTimeout) {
+      clearTimeout(resumeTimeout);
+      resumeTimeout = null;
+    }
+  };
+  const stopSpeaking = () => {
+    clearResumeTimeout();
+    setMicrophoneSpeechState(false, token);
+  };
+  const scheduleResume = () => {
+    clearResumeTimeout();
+    const wordCount = texto.trim().split(/\s+/).filter(Boolean).length;
+    const estimatedDuration = Math.max(800, wordCount * 330);
+    const resumeDelay = Math.max(0, estimatedDuration - 500);
+    if (resumeDelay > 0) {
+      resumeTimeout = setTimeout(() => setMicrophoneSpeechState(false, token), resumeDelay);
+    }
+  };
+  utter.onstart = () => {
+    setMicrophoneSpeechState(true, token);
+    scheduleResume();
+  };
   utter.onend = stopSpeaking;
   utter.onerror = stopSpeaking;
   if (typeof window.speechSynthesis !== 'undefined') {
@@ -2474,7 +2504,7 @@ function finishMode() {
   const attemptsForAccuracy = correct + wrong;
   const accuracy = attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
   const elapsedMs = roundStartTime ? Date.now() - roundStartTime : 0;
-  const minutes = elapsedMs > 0 ? (elapsedMs / 60000) : 0;
+  const minutes = computeEffectiveMinutes(elapsedMs, attemptsForAccuracy);
   const cpm = minutes > 0 ? (roundCorrectChars / minutes) : 0;
 
   const medal = getMedalForAccuracy(accuracy);
