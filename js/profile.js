@@ -20,6 +20,11 @@ function initProfilePage(context = {}) {
   const photoStatus = scope.querySelector('#profile-photo-status');
   const publishButton = scope.querySelector('#profile-photo-publish');
   const shareCheckbox = scope.querySelector('#profile-share-results');
+  const backgroundInput = scope.querySelector('#profile-background-upload');
+  const backgroundClearButton = scope.querySelector('#profile-background-clear');
+  const backgroundStatus = scope.querySelector('#profile-background-status');
+
+  const backgroundAPI = window.playtalkBackground || null;
 
   const previewDefaultText = photoPlaceholder && typeof photoPlaceholder.textContent === 'string'
     ? photoPlaceholder.textContent.trim()
@@ -107,6 +112,15 @@ function initProfilePage(context = {}) {
     if (photoStatus) {
       photoStatus.textContent = message || '';
     }
+  }
+
+  function setBackgroundStatus(message, options = {}) {
+    if (!backgroundStatus) {
+      return;
+    }
+    const isError = options && options.error === true;
+    backgroundStatus.textContent = message || '';
+    backgroundStatus.classList.toggle('profile-background__status--error', isError);
   }
 
   function showPhotoProgress() {
@@ -318,6 +332,72 @@ function initProfilePage(context = {}) {
       localStorage.setItem('shareResults', enabled ? 'true' : 'false');
       persistProfileChanges();
     });
+  }
+
+  function refreshBackgroundStatus() {
+    if (!backgroundStatus) {
+      return;
+    }
+    const config = backgroundAPI && typeof backgroundAPI.getConfig === 'function'
+      ? backgroundAPI.getConfig()
+      : null;
+    if (config) {
+      const label = config.name || (config.type === 'video' ? 'Vídeo personalizado' : 'Imagem personalizada');
+      setBackgroundStatus(`Plano de fundo ativo: ${label}`);
+      return;
+    }
+    setBackgroundStatus('Nenhum plano de fundo personalizado.');
+  }
+
+  async function handleBackgroundUpload(event) {
+    const inputEl = event && event.target;
+    const file = inputEl && inputEl.files && inputEl.files[0];
+    if (!backgroundAPI || typeof backgroundAPI.setFromFile !== 'function') {
+      setBackgroundStatus('Não foi possível aplicar o plano de fundo agora.', { error: true });
+      return;
+    }
+    if (!file) {
+      setBackgroundStatus('Escolha um arquivo JPG, PNG ou MP4 para continuar.', { error: true });
+      return;
+    }
+    setBackgroundStatus('Carregando plano de fundo...');
+    try {
+      await backgroundAPI.setFromFile(file);
+      setBackgroundStatus('Plano de fundo aplicado com sucesso!');
+    } catch (error) {
+      setBackgroundStatus(error && error.message ? error.message : 'Não foi possível aplicar o plano de fundo.', {
+        error: true
+      });
+    } finally {
+      if (inputEl) {
+        inputEl.value = '';
+      }
+      refreshBackgroundStatus();
+    }
+  }
+
+  function handleBackgroundClear() {
+    if (!backgroundAPI || typeof backgroundAPI.clear !== 'function') {
+      setBackgroundStatus('Não foi possível limpar o plano de fundo.', { error: true });
+      return;
+    }
+    backgroundAPI.clear();
+    setBackgroundStatus('Plano de fundo removido.');
+    refreshBackgroundStatus();
+  }
+
+  if (backgroundAPI && typeof backgroundAPI.applyStoredBackground === 'function') {
+    backgroundAPI.applyStoredBackground();
+  }
+
+  refreshBackgroundStatus();
+
+  if (backgroundInput) {
+    backgroundInput.addEventListener('change', handleBackgroundUpload);
+  }
+
+  if (backgroundClearButton) {
+    backgroundClearButton.addEventListener('click', handleBackgroundClear);
   }
 
   if (photoInput) {

@@ -87,6 +87,29 @@ body.theme-blue {
   color: #f0f6ff;
 }
 
+body.has-custom-background {
+  background: transparent;
+}
+
+#playtalk-background-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+#playtalk-background-layer video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.02);
+}
+
 body.page-home,
 body.page-play {
   display: flex;
@@ -2178,7 +2201,9 @@ body.theme-blue #profile-container {
 .profile-actions {
   margin-top: 24px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 12px;
 }
 
 .page-profile .logout-button {
@@ -2200,6 +2225,74 @@ body.theme-blue #profile-container {
   font-size: 15px;
   padding: 10px 22px;
   border-radius: 999px;
+}
+
+.logout-button--primary {
+  background: linear-gradient(135deg, #1a66cc, #2f8ae0);
+  color: #fff;
+}
+
+.profile-background {
+  width: 100%;
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(12, 61, 94, 0.04);
+}
+
+body.dark-mode .profile-background,
+body.theme-blue .profile-background {
+  background: rgba(240, 246, 255, 0.08);
+  color: #f0f6ff;
+}
+
+.profile-background__description {
+  margin: 6px 0 14px;
+  color: inherit;
+}
+
+.profile-background__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.profile-upload-label--wide {
+  min-width: 240px;
+  justify-content: center;
+}
+
+.profile-publish-button--ghost {
+  background: transparent;
+  border: 1px solid #1a66cc;
+  color: #1a66cc;
+}
+
+body.dark-mode .profile-publish-button--ghost,
+body.theme-blue .profile-publish-button--ghost {
+  border-color: #9cc7ff;
+  color: #dfeeff;
+}
+
+.profile-background__status {
+  margin: 10px 0 0;
+  min-height: 20px;
+  font-size: 14px;
+  color: #0c3d5e;
+}
+
+.profile-background__status--error {
+  color: #d93025;
+}
+
+body.dark-mode .profile-background__status,
+body.theme-blue .profile-background__status {
+  color: #dfeeff;
+}
+
+body.dark-mode .profile-background__status--error,
+body.theme-blue .profile-background__status--error {
+  color: #ffb7b7;
 }
 
 .profile-report {
