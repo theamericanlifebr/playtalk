@@ -1443,6 +1443,8 @@ function openPostGameScreen(summary) {
   if (cpsEl) cpsEl.textContent = summary.cps.toFixed(2);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
+
+  refreshPreGameResumeState(selectedMode);
 }
 
 function closePostGameScreen() {
@@ -1452,6 +1454,14 @@ function closePostGameScreen() {
   }
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
+}
+
+function refreshPreGameResumeState(mode) {
+  const preGame = document.getElementById('pre-game-screen');
+  if (!preGame) {
+    return;
+  }
+  updatePreGameScreen(mode);
 }
 
 function ensureModeStats(mode) {
