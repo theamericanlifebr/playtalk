@@ -772,11 +772,164 @@
   "The door should stay#The door should stay",
   "Anna could come soon#Anna could come soon",
   "The team should try#The team should try"
-]
+],
 
 
 
 
     
-  }
+  
+
+
+  "61": [
+  "Eu costumava ler#I used to read",
+  "Eu costumava correr#I used to run",
+  "Eu costumava cantar#I used to sing",
+  "Você costumava ler#You used to read",
+  "Você costumava jogar#You used to play",
+  "Ele costumava nadar#He used to swim",
+  "Ela costumava ler#She used to read",
+  "Ana costumava dançar#Ana used to dance",
+  "Nós costumávamos rir#We used to laugh",
+  "Eles costumavam jogar#They used to play",
+  "John costumava estudar#John used to study",
+  "Eu costumava trabalhar#I used to work"
+],
+
+"62": [
+  "Se chover eu fico#If it rains I stay",
+  "Se chover eles dormem#If it rains they sleep",
+  "Se eu corro caio#If I run I fall",
+  "Se você grita ele vem#If you shout he comes",
+  "Se o cão late corro#If the dog barks I run",
+  "Se o gato mia rio#If the cat meows I laugh",
+  "Se eu estudo passo#If I study I pass",
+  "Se Ana fala eles riem#If Ana talks they laugh",
+  "Se John volta saio#If John returns I leave",
+  "Se perdermos aprendemos#If we lose we learn",
+  "Se ganhar sorrio#If I win I smile",
+  "Se chover fico aqui#If it rains I stay here"
+],
+
+"63": [
+  "Se chover vou ficar#If it rains I will stay",
+  "Se chover vou ler#If it rains I will read",
+  "Se você vier eu vou#If you come I will go",
+  "Se ele voltar vou ficar#If he returns I will stay",
+  "Se Ana ligar eu vou#If Ana calls I will go",
+  "Se eu estudar vou passar#If I study I will pass",
+  "Se eu correr vou cair#If I run I will fall",
+  "Se você ficar eu vou#If you stay I will go",
+  "Se chover não vou sair#If it rains I will not go out",
+  "Se o carro quebrar vou parar#If the car breaks I will stop",
+  "Se ela chamar eu vou#If she calls I will go",
+  "Se eu perder vou tentar#If I lose I will try"
+],
+
+"64": [
+  "Eu já vi isso#I have seen this",
+  "Eu nunca vi isso#I have never seen this",
+  "Eu já fui lá#I have been there",
+  "Ela já veio aqui#She has come here",
+  "Nós já comemos#We have eaten",
+  "Eu já trabalhei lá#I have worked there",
+  "Ontem eu comi pão#Yesterday I ate bread",
+  "Ontem ele correu#Yesterday he ran",
+  "Hoje eu já li#Today I have read",
+  "Nunca vi esse gato#I have never seen this cat",
+  "Já ouvi essa música#I have heard this song",
+  "Nunca vi esse filme#I have never seen this movie"
+],
+
+"65": [
+  "O cão que late#The dog that barks",
+  "O gato que mia#The cat that meows",
+  "O carro que para#The car that stops",
+  "O menino que corre#The boy who runs",
+  "A menina que ri#The girl who laughs",
+  "O gato que Ana tem#The cat that Ana has",
+  "O cão que John viu#The dog that John saw",
+  "O livro que li#The book that I read",
+  "A casa que comprei#The house that I bought",
+  "O jogo que quero#The game that I want",
+  "A música que amo#The song that I love",
+  "O filme que vimos#The movie that we saw"
+],
+
+"66": [
+  "Ana, que ama cães#Ana, who loves dogs",
+  "John, que toca bem#John, who plays well",
+  "Lucas, que corre muito#Lucas, who runs a lot",
+  "Ana, que lê muito#Ana, who reads a lot",
+  "O carro, que é novo#The car, which is new",
+  "O gato, que é velho#The cat, which is old",
+  "O livro, que é longo#The book, which is long",
+  "O filme, que é curto#The movie, which is short",
+  "A rua, que é calma#The street, which is calm",
+  "O cão, que eu vi#The dog, which I saw",
+  "A casa, que comprei#The house, which I bought",
+  "O jogo, que John quer#The game, which John wants"
+],
+
+"67": [
+  "Ele é tão alto quanto Ana#He is as tall as Ana",
+  "Ela é tão rápida quanto Ana#She is as fast as Ana",
+  "O cão é tão grande quanto Bob#The dog is as big as Bob",
+  "O gato é tão calmo quanto Ana#The cat is as calm as Ana",
+  "O livro é tão bom quanto esse#The book is as good as this",
+  "O filme é tão ruim quanto esse#The movie is as bad as this",
+  "Ele é tão forte quanto John#He is as strong as John",
+  "Ela é tão calma quanto Ana#She is as calm as Ana",
+  "John é tão alto quanto Lucas#John is as tall as Lucas",
+  "Ana é tão boa quanto ela#Ana is as good as her",
+  "O café é tão bom quanto chá#The coffee is as good as tea",
+  "O cão é tão rápido quanto Ana#The dog is as fast as Ana"
+],
+
+"68": [
+  "Bem melhor que isso#Way better than this",
+  "Bem pior que isso#Way worse than this",
+  "Muito maior que ele#Much bigger than him",
+  "Muito menor que isso#Much smaller than this",
+  "Ele é bem melhor que John#He is way better than John",
+  "Ana é bem melhor que ela#Ana is way better than her",
+  "Este filme é bem pior#This movie is way worse",
+  "Esse jogo é bem melhor#This game is way better",
+  "Esse café é bem melhor#This coffee is way better",
+  "Essa casa é bem maior#This house is much bigger",
+  "Esse gato é bem mais calmo#This cat is much calmer",
+  "O cão é bem mais rápido#The dog is much faster"
+],
+
+"69": [
+  "Você deveria estudar#You ought to study",
+  "Eu deveria dormir cedo#I ought to sleep early",
+  "Ela deveria ler mais#She ought to read more",
+  "Ele deveria sair menos#He ought to go out less",
+  "Nós deveríamos ouvir#We ought to listen",
+  "Eles deveriam tentar#They ought to try",
+  "Você não deveria gritar#You ought not to shout",
+  "Eu não deveria falar#I ought not to speak",
+  "Ele não deveria voltar#He ought not to return",
+  "Ela não deveria correr#She ought not to run",
+  "Nós não deveríamos rir#We ought not to laugh",
+  "Eles não deveriam mentir#They ought not to lie"
+],
+
+"70": [
+  "Vou tentar correr#I will try to run",
+  "Vou tentar dormir#I will try to sleep",
+  "Vou tentar falar#I will try to talk",
+  "Vou tentar voltar#I will try to return",
+  "Eu gosto de ler#I enjoy reading",
+  "Eu gosto de correr#I enjoy running",
+  "Ela gosta de nadar#She enjoys swimming",
+  "Ele gosta de cantar#He enjoys singing",
+  "Ana gosta de dançar#Ana enjoys dancing",
+  "John gosta de ler#John enjoys reading",
+  "Nós gostamos de jogar#We enjoy playing",
+  "Eles gostam de estudar#They enjoy studying"
+]
+
+  
 }
