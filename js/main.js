@@ -2815,6 +2815,7 @@ async function bootstrapHomePage() {
   });
   document.querySelectorAll('#main-nav a.nav-item').forEach(link => {
     link.addEventListener('click', () => {
+      persistCurrentRoundState();
       stopCurrentGame();
       setInplayState(false);
     });
@@ -2823,6 +2824,7 @@ async function bootstrapHomePage() {
   if (homeLink && homeLink.dataset.external !== 'true') {
     homeLink.addEventListener('click', (e) => {
       e.preventDefault();
+      persistCurrentRoundState();
       stopCurrentGame();
       goHome();
     });
