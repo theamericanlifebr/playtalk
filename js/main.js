@@ -619,18 +619,13 @@ let roundStartTime = 0;
 let phraseStartTime = 0;
 let roundActive = false;
 let roundAdjustedTimeMs = 0;
+let inplayActive = false;
 let pendingModeStart = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
-const DURATION_ANCHORS = [
-  { length: 5, offset: -2200 },
-  { length: 18, offset: 0 },
-  { length: 24, offset: 500 },
-  { length: 30, offset: 1000 }
-];
 
 function setMicrophoneSpeechState(active, token = null) {
   if (active) {
@@ -663,31 +658,53 @@ function setRoundSelection(mode, size) {
   roundSelections[String(mode)] = size;
 }
 
-function interpolateDurationOffset(chars) {
-  const count = Math.max(0, Math.floor(Number(chars) || 0));
-  if (!DURATION_ANCHORS.length) {
-    return 0;
+function getComprehensionDelayMs(mode, chars) {
+  const length = Math.max(0, Math.floor(Number(chars) || 0));
+  switch (mode) {
+    case 1:
+      return Math.max(0, Math.round((0.5 + Math.max(0, length - 3) * (1.5 / 37)) * 1000));
+    case 2:
+    case 3:
+      return Math.max(0, 500 + length * 30);
+    case 4:
+      return 500;
+    case 5:
+      return Math.max(0, length * 50);
+    case 6:
+      return Math.max(0, length * 40);
+    default:
+      return 500;
   }
-  if (count <= DURATION_ANCHORS[0].length) {
-    return DURATION_ANCHORS[0].offset;
-  }
-  for (let i = 1; i < DURATION_ANCHORS.length; i++) {
-    const prev = DURATION_ANCHORS[i - 1];
-    const current = DURATION_ANCHORS[i];
-    if (count <= current.length) {
-      const span = Math.max(1, current.length - prev.length);
-      const ratio = (count - prev.length) / span;
-      return prev.offset + ratio * (current.offset - prev.offset);
-    }
-  }
-  return DURATION_ANCHORS[DURATION_ANCHORS.length - 1].offset;
 }
 
-function getAdjustedDurationMs(chars, durationMs) {
-  const rawDuration = Math.max(0, Math.floor(Number(durationMs) || 0));
-  const offsetMs = Math.round(interpolateDurationOffset(chars));
-  const adjusted = rawDuration + offsetMs;
-  return Math.max(1, adjusted);
+function isProgressBarVisible() {
+  const bar = document.getElementById('barra-progresso');
+  return Boolean(bar && bar.offsetParent !== null);
+}
+
+function setInplayState(active) {
+  inplayActive = Boolean(active) && isProgressBarVisible();
+  const header = document.getElementById('global-header');
+  if (header) {
+    header.classList.toggle('site-header--inplay', inplayActive);
+  }
+  document.body.classList.toggle('inplay-active', inplayActive);
+}
+
+function ensureInplayStateFromContext() {
+  setInplayState(isProgressBarVisible());
+}
+
+function isInplayActive() {
+  return inplayActive;
+}
+
+function calculatePhraseDurationMs(startTimestamp) {
+  if (!startTimestamp) {
+    return 0;
+  }
+  const raw = Date.now() - startTimestamp;
+  return Math.max(0, raw - 700);
 }
 
 function persistRoundStateCache() {
@@ -717,10 +734,15 @@ function getStoredRoundState(mode, expectedLevel) {
   if (!frases.length) {
     return null;
   }
+  const roundTarget = Number.isFinite(entry.roundTarget) ? entry.roundTarget : DEFAULT_ROUND_SIZE;
+  const roundAttempts = Number.isFinite(entry.roundAttempts) ? entry.roundAttempts : 0;
+  if (roundAttempts >= roundTarget) {
+    return null;
+  }
   return {
     points: Number.isFinite(entry.points) ? entry.points : 0,
-    roundTarget: Number.isFinite(entry.roundTarget) ? entry.roundTarget : DEFAULT_ROUND_SIZE,
-    roundAttempts: Number.isFinite(entry.roundAttempts) ? entry.roundAttempts : 0,
+    roundTarget,
+    roundAttempts,
     roundWrongCount: Number.isFinite(entry.roundWrongCount) ? entry.roundWrongCount : 0,
     roundCorrectChars: Number.isFinite(entry.roundCorrectChars) ? entry.roundCorrectChars : 0,
     fraseIndex: Number.isFinite(entry.fraseIndex) ? entry.fraseIndex : 0,
@@ -1398,7 +1420,7 @@ function openPostGameScreen(summary) {
   const correctEl = document.getElementById('post-game-correct');
   const wrongEl = document.getElementById('post-game-wrong');
   const accuracyEl = document.getElementById('post-game-accuracy');
-  const cpmEl = document.getElementById('post-game-cpm');
+  const cpsEl = document.getElementById('post-game-cps');
   if (medalEl) {
     medalEl.src = summary.medal.image;
     medalEl.alt = summary.medal.label;
@@ -1418,7 +1440,7 @@ function openPostGameScreen(summary) {
   if (correctEl) correctEl.textContent = summary.correct;
   if (wrongEl) wrongEl.textContent = summary.wrong;
   if (accuracyEl) accuracyEl.textContent = `${summary.accuracy.toFixed(1)}%`;
-  if (cpmEl) cpmEl.textContent = summary.cpm.toFixed(1);
+  if (cpsEl) cpsEl.textContent = summary.cps.toFixed(2);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 }
@@ -1481,10 +1503,7 @@ saveTotals();
 
 function recordModeTime(mode) {
   if (modeStartTimes[mode]) {
-    const stats = ensureModeStats(mode);
-    stats.totalTime += Date.now() - modeStartTimes[mode];
     modeStartTimes[mode] = null;
-    saveModeStats();
   }
 }
 
@@ -1585,12 +1604,14 @@ function triggerDownPlay() {
     const visor = document.getElementById('visor');
     if (visor) visor.style.display = 'none';
     document.body.classList.remove('game-active');
+    setInplayState(false);
     downPlaying = false;
   }, 4000);
 }
 
 function reportLastError() {
   if (!lastWasError) return;
+  if (!isInplayActive()) return;
   lastWasError = false;
   consecutiveErrors = 0;
   const audio = new Audio('gamesounds/report.wav');
@@ -1827,9 +1848,9 @@ function calcModeStats(mode) {
   if (avg >= MAX_TIME) timePerc = 0;
   if ([2, 3, 6].includes(mode) && total) timePerc += 20;
   const notReportPerc = total ? (100 - (report / total * 100)) : 100;
-  const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
-  const cpm = minutes > 0 ? (correctChars / minutes) : 0;
-  return { accPerc, timePerc, avg, notReportPerc, cpm, total, correct, totalChars, correctChars };
+  const seconds = totalTime > 0 ? (totalTime / 1000) : 0;
+  const cps = seconds > 0 ? (correctChars / seconds) : 0;
+  return { accPerc, timePerc, avg, notReportPerc, cps, total, correct, totalChars, correctChars };
 }
 
 function calcGeneralStats() {
@@ -1855,14 +1876,14 @@ function calcGeneralStats() {
   const avg = totalPhrases ? (totalTime / totalPhrases / 1000) : 0;
   const timePerc = timePercCount ? (timePercSum / timePercCount) : 0;
   const notReportPerc = totalPhrases ? (100 - (totalReport / totalPhrases * 100)) : 100;
-  const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
-  const cpm = minutes > 0 ? (totalCorrectChars / minutes) : 0;
+  const seconds = totalTime > 0 ? (totalTime / 1000) : 0;
+  const cps = seconds > 0 ? (totalCorrectChars / seconds) : 0;
   return {
     accPerc,
     timePerc,
     avg,
     notReportPerc,
-    cpm,
+    cps,
     total: totalPhrases,
     correct: totalCorrect,
     totalChars,
@@ -1952,6 +1973,7 @@ function beginGame() {
   const start = () => {
     const visor = document.getElementById('visor');
     if (visor) visor.style.display = 'flex';
+    setInplayState(true);
     const icon = document.getElementById('mode-icon');
     if (icon) {
       icon.dataset.medalSrc = '';
@@ -2169,6 +2191,9 @@ function getWrongPhrasePool(mode, folder) {
 }
 
 function carregarFrases() {
+  if (!isInplayActive()) {
+    return;
+  }
   const library = getModeLibrary(selectedMode);
   const levelToUse = getSelectedPreGameLevel(selectedMode);
   pastaAtual = levelToUse;
@@ -2280,6 +2305,9 @@ function mostrarFrase() {
     finishMode();
     return;
   }
+  if (!isInplayActive()) {
+    return;
+  }
   if (fraseIndex >= frasesArr.length) {
     fraseIndex = fraseIndex % Math.max(1, frasesArr.length);
   }
@@ -2301,13 +2329,14 @@ function mostrarFrase() {
   else if (voz === 'pt') falar(pt, 'pt');
   bloqueado = false;
   const timerEl = document.getElementById('timer');
-  const start = Date.now();
-  phraseStartTime = start;
+  const toleranceMs = getComprehensionDelayMs(selectedMode, expected.length);
+  phraseStartTime = Date.now() + toleranceMs;
   timerEl.textContent = 'Tempo: 0s';
   timerInterval = setInterval(() => {
-    const secs = Math.floor((Date.now() - start) / 1000);
+    const elapsed = Math.max(0, Date.now() - phraseStartTime);
+    const secs = Math.floor(elapsed / 1000);
     timerEl.textContent = `Tempo: ${secs}s`;
-  }, 1000);
+  }, 200);
   if (prizeTimer) clearInterval(prizeTimer);
   prizeStart = Date.now();
   prizeTimer = setInterval(atualizarBarraProgresso, 50);
@@ -2369,6 +2398,7 @@ function handleNoInput() {
 
 function verificarResposta() {
   if (bloqueado) return;
+  if (!isInplayActive()) return;
   if (inputTimeout) clearTimeout(inputTimeout);
   if (timerInterval) clearInterval(timerInterval);
   const input = document.getElementById("pt");
@@ -2401,10 +2431,10 @@ function verificarResposta() {
   stats.totalChars += expectedChars;
   stats.correctChars += correctChars;
   roundCorrectChars += correctChars;
-  const phraseDuration = phraseStartTime ? Date.now() - phraseStartTime : 0;
-  const adjustedDuration = getAdjustedDurationMs(phraseLength, phraseDuration);
-  roundAdjustedTimeMs = Math.max(0, roundAdjustedTimeMs + adjustedDuration);
-  addRecentPhraseSample(correctChars, adjustedDuration);
+  const phraseDuration = calculatePhraseDurationMs(phraseStartTime);
+  roundAdjustedTimeMs = Math.max(0, roundAdjustedTimeMs + phraseDuration);
+  stats.totalTime += phraseDuration;
+  addRecentPhraseSample(correctChars, phraseDuration);
   phraseStartTime = 0;
   if (!roundActive) {
     roundActive = true;
@@ -2495,6 +2525,7 @@ function continuar() {
 }
 
 function atualizarBarraProgresso() {
+  ensureInplayStateFromContext();
   updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
   const limite = Math.max(1, getCurrentThreshold());
@@ -2536,6 +2567,7 @@ function finishMode() {
   if (visor) {
     visor.style.display = 'none';
   }
+  setInplayState(false);
   recordModeTime(selectedMode);
   const totalAttempts = Math.max(roundAttempts, points + roundWrongCount);
   const correct = Math.min(points, roundTarget);
@@ -2545,8 +2577,8 @@ function finishMode() {
   const elapsedMs = roundAdjustedTimeMs > 0
     ? roundAdjustedTimeMs
     : (roundStartTime ? Date.now() - roundStartTime : 0);
-  const minutes = elapsedMs > 0 ? (elapsedMs / 60000) : 0;
-  const cpm = minutes > 0 ? (roundCorrectChars / minutes) : 0;
+  const seconds = elapsedMs > 0 ? (elapsedMs / 1000) : 0;
+  const cps = seconds > 0 ? (roundCorrectChars / seconds) : 0;
 
   const medal = getMedalForAccuracy(accuracy);
   const stats = ensureModeStats(selectedMode);
@@ -2581,7 +2613,7 @@ function finishMode() {
     correct,
     wrong,
     accuracy,
-    cpm,
+    cps,
     medal,
     previousLevel,
     newLevel: nextLevel
@@ -2628,6 +2660,7 @@ function goHome() {
   const menu = document.getElementById('menu');
   if (menu) menu.style.display = 'flex';
   document.body.classList.remove('game-active');
+  setInplayState(false);
   closePreGameScreen();
   closePostGameScreen();
   const icon = document.getElementById('mode-icon');
@@ -2661,6 +2694,7 @@ async function initGame() {
   const menu = document.getElementById('menu');
   if (menu) menu.style.display = 'flex';
   document.body.classList.remove('game-active');
+  setInplayState(false);
   listeningForCommand = false;
   if (reconhecimento) {
     reconhecimentoAtivo = false;
@@ -2770,6 +2804,7 @@ async function bootstrapHomePage() {
   document.querySelectorAll('#main-nav a.nav-item').forEach(link => {
     link.addEventListener('click', () => {
       stopCurrentGame();
+      setInplayState(false);
     });
   });
   const homeLink = document.getElementById('home-link');
@@ -2797,4 +2832,5 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 
 if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
   window.registerPlaytalkPage('page-home', bootstrapHomePage);
+  window.registerPlaytalkPage('page-inplay', bootstrapHomePage);
 }

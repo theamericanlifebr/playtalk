@@ -529,6 +529,22 @@ body.theme-blue .ranking-tag {
   backdrop-filter: blur(8px);
   flex-wrap: wrap;
   box-sizing: border-box;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.site-header--inplay {
+  background: linear-gradient(135deg, #4c97ff 0%, #7db4ff 100%);
+  box-shadow: 0 10px 22px rgba(80, 145, 235, 0.3);
+  animation: headerGlow 6s ease-in-out infinite;
+}
+
+@keyframes headerGlow {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.06);
+  }
 }
 
 .site-header__actions,

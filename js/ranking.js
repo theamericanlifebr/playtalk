@@ -8,17 +8,19 @@
 
   const numberFormatter = new Intl.NumberFormat('pt-BR');
   const percentFormatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const cpmFormatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  const cpsFormatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
   const SECTION_CONFIG = {
     fast: {
       value(entry) {
-        const fastValue = entry && Number.isFinite(entry.cpm)
-          ? entry.cpm
-          : entry && Number.isFinite(entry.fastCpm)
-            ? entry.fastCpm
-            : 0;
-        return `${cpmFormatter.format(Math.max(0, fastValue || 0))} cpm`;
+        const fastValue = entry && Number.isFinite(entry.cps)
+          ? entry.cps
+          : entry && Number.isFinite(entry.fastCps)
+            ? entry.fastCps
+            : entry && Number.isFinite(entry.cpm)
+              ? entry.cpm
+              : 0;
+        return `${cpsFormatter.format(Math.max(0, fastValue || 0))} cps`;
       },
       detail(entry) {
         const accuracyText = `${percentFormatter.format(Math.max(0, Math.min(100, entry.accuracy || 0)))} de precisão`;
@@ -65,7 +67,8 @@
     },
     legends: {
       value(entry) {
-        return `${cpmFormatter.format(Math.max(0, entry.cpm || 0))} cpm`;
+        const value = Number.isFinite(entry.cps) ? entry.cps : (entry.cpm || 0);
+        return `${cpsFormatter.format(Math.max(0, value || 0))} cps`;
       },
       detail(entry) {
         return `${percentFormatter.format(Math.max(0, Math.min(100, entry.accuracy || 0)))} • ${numberFormatter.format(Math.max(0, entry.diamantes || 0))} diamantes`;
