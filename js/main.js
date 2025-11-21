@@ -861,6 +861,8 @@ function resetRoundState() {
   phraseStartTime = 0;
   roundActive = false;
   roundAdjustedTimeMs = 0;
+  frasesArr = [];
+  fraseIndex = 0;
 }
 
 function getXPRequirement(level) {
