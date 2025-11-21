@@ -94,10 +94,12 @@ function formatPercent(value) {
   return safe.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 }
 
-function formatCpm(value) {
+function formatCps(value) {
   const number = Number(value);
-  const safe = Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;
-  return safe.toLocaleString('pt-BR');
+  const safe = Number.isFinite(number)
+    ? Math.max(0, Math.round(number * 100) / 100)
+    : 0;
+  return safe.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function createMetricCard(label, value, accentPercent, options = {}) {
@@ -130,7 +132,7 @@ function createMetricCard(label, value, accentPercent, options = {}) {
 function createMetricsSection(summary = {}) {
   const section = document.createElement('div');
   section.className = 'stats-metrics';
-  section.appendChild(createMetricCard('Velocidade', `${formatCpm(summary.cpm)} cpm`));
+  section.appendChild(createMetricCard('Velocidade', `${formatCps(summary.cps)} cps`));
   section.appendChild(createMetricCard('Precisão', formatPercent(summary.accuracyPerc), summary.accuracyPerc));
   if (Number.isFinite(summary.bestStreak) || Number.isFinite(summary.currentStreak)) {
     const best = Math.max(0, Math.floor(Number.isFinite(summary.bestStreak) ? summary.bestStreak : 0));
@@ -287,8 +289,8 @@ function initPlayPage(context = {}) {
     const totalChars = stats.totalChars || 0;
     const correctChars = stats.correctChars || 0;
     const accuracyPerc = totalPhrases ? (correctPhrases / totalPhrases * 100) : 0;
-    const minutes = totalTime > 0 ? (totalTime / 60000) : 0;
-    const cpm = minutes > 0 ? (correctChars / minutes) : 0;
+    const seconds = totalTime > 0 ? (totalTime / 1000) : 0;
+    const cps = seconds > 0 ? (correctChars / seconds) : 0;
     const noReportPerc = totalPhrases ? (100 - (report / totalPhrases * 100)) : 100;
     return {
       totalPhrases,
@@ -296,7 +298,7 @@ function initPlayPage(context = {}) {
       totalChars,
       correctChars,
       accuracyPerc,
-      cpm,
+      cps,
       noReportPerc,
       medals: normalizeMedals(stats.medals)
     };
@@ -329,8 +331,8 @@ function initPlayPage(context = {}) {
     const accuracyPerc = totals.totalPhrases
       ? (totals.correctPhrases / totals.totalPhrases) * 100
       : 0;
-    const minutes = totals.totalTime > 0 ? (totals.totalTime / 60000) : 0;
-    const cpm = minutes > 0 ? (totals.correctChars / minutes) : 0;
+    const seconds = totals.totalTime > 0 ? (totals.totalTime / 1000) : 0;
+    const cps = seconds > 0 ? (totals.correctChars / seconds) : 0;
     const noReportPerc = totals.totalPhrases
       ? (100 - (totals.report / totals.totalPhrases * 100))
       : 100;
@@ -342,7 +344,7 @@ function initPlayPage(context = {}) {
       totalChars: totals.totalChars,
       correctChars: totals.correctChars,
       accuracyPerc,
-      cpm,
+      cps,
       noReportPerc,
       medals: totals.medals,
       bestStreak,

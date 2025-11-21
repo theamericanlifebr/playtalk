@@ -72,7 +72,7 @@ const RESEND_API_URL = process.env.PLAYTALK_RESEND_API_URL || 'https://api.resen
 const RESEND_EMAIL_FROM = process.env.PLAYTALK_EMAIL_FROM || 'PlayTalk <onboarding@resend.dev>';
 const GENERAL_MODE_KEYS = ['2', '3', '4', '5', '6'];
 const MAX_RANKING_ENTRIES = 30;
-const LEGEND_REQUIREMENTS = { cpm: 200, accuracy: 80, diamonds: 10 };
+const LEGEND_REQUIREMENTS = { cps: 3.5, accuracy: 80, diamonds: 10 };
 const RECENT_PHRASE_LIMIT = 500;
 
 const staticDir = (() => {
@@ -341,12 +341,12 @@ function normalizeRecentPhraseStatsValue(value) {
   return base;
 }
 
-function computeRecentCpm(stats) {
+function computeRecentCps(stats) {
   if (!stats || !stats.totalChars || !stats.totalTime) {
     return 0;
   }
-  const minutes = stats.totalTime / 60000;
-  return minutes > 0 ? stats.totalChars / minutes : 0;
+  const seconds = stats.totalTime / 1000;
+  return seconds > 0 ? stats.totalChars / seconds : 0;
 }
 
 function parseAvatar(value) {
@@ -383,10 +383,10 @@ function buildPlayerSnapshot(key, entry) {
     return null;
   }
   const totals = aggregateModeStats(data.modeStats || {});
-  const minutes = totals.totalTime > 0 ? totals.totalTime / 60000 : 0;
-  const cpm = minutes > 0 ? totals.correctChars / minutes : 0;
+  const seconds = totals.totalTime > 0 ? totals.totalTime / 1000 : 0;
+  const cps = seconds > 0 ? totals.correctChars / seconds : 0;
   const recentStats = normalizeRecentPhraseStatsValue(data.recentPhraseStats || {});
-  const recentCpm = computeRecentCpm(recentStats);
+  const recentCps = computeRecentCps(recentStats);
   const recentPhraseCount = Array.isArray(recentStats.entries) ? recentStats.entries.length : 0;
   const accuracy = totals.totalPhrases > 0
     ? (totals.correctPhrases / totals.totalPhrases) * 100
@@ -395,7 +395,7 @@ function buildPlayerSnapshot(key, entry) {
     normalizePositiveInteger(data.bestStreak),
     normalizePositiveInteger(data.currentStreak)
   );
-  const fastCpm = recentPhraseCount > 0 && recentStats.totalTime > 0 ? recentCpm : cpm;
+  const fastCps = recentPhraseCount > 0 && recentStats.totalTime > 0 ? recentCps : cps;
 
   const totalPoints = Math.max(
     normalizePositiveInteger(data.points),
@@ -407,7 +407,7 @@ function buildPlayerSnapshot(key, entry) {
     username: normalized.username || key,
     displayName: parseDisplayName(normalized),
     avatar: parseAvatar(data.avatar),
-    cpm,
+    cps,
     accuracy,
     points: totalPoints,
     diamantes: totals.diamantes,
@@ -418,7 +418,7 @@ function buildPlayerSnapshot(key, entry) {
     correctPhrases: totals.correctPhrases,
     totalTime: totals.totalTime,
     correctChars: totals.correctChars,
-    fastCpm,
+    fastCps,
     recentPhraseCount,
     recentPhraseWindow: RECENT_PHRASE_LIMIT
   };
@@ -458,8 +458,8 @@ function computeRankings(users = {}) {
   });
 
   const fast = limitEntries(sortEntries(snapshots, [
-    { key: 'cpm', direction: 'desc' },
-    { key: 'fastCpm', direction: 'desc' },
+    { key: 'cps', direction: 'desc' },
+    { key: 'fastCps', direction: 'desc' },
     { key: 'recentPhraseCount', direction: 'desc' },
     { key: 'accuracy', direction: 'desc' },
     { key: 'diamantes', direction: 'desc' },
@@ -468,14 +468,14 @@ function computeRankings(users = {}) {
 
   const points = limitEntries(sortEntries(snapshots, [
     { key: 'points', direction: 'desc' },
-    { key: 'cpm', direction: 'desc' },
+    { key: 'cps', direction: 'desc' },
     { key: 'accuracy', direction: 'desc' }
   ]));
 
   const diamonds = limitEntries(sortEntries(snapshots, [
     { key: 'diamantes', direction: 'desc' },
     { key: 'points', direction: 'desc' },
-    { key: 'cpm', direction: 'desc' }
+    { key: 'cps', direction: 'desc' }
   ]));
 
   const streak = limitEntries(sortEntries(snapshots, [
@@ -489,18 +489,18 @@ function computeRankings(users = {}) {
     [
       { key: 'monthlyPoints', direction: 'desc' },
       { key: 'points', direction: 'desc' },
-      { key: 'cpm', direction: 'desc' }
+      { key: 'cps', direction: 'desc' }
     ]
   ));
 
   const legends = limitEntries(sortEntries(
     snapshots.filter(player => (
-      player.cpm >= LEGEND_REQUIREMENTS.cpm &&
+      player.cps >= LEGEND_REQUIREMENTS.cps &&
       player.accuracy >= LEGEND_REQUIREMENTS.accuracy &&
       player.diamantes >= LEGEND_REQUIREMENTS.diamonds
     )),
     [
-      { key: 'cpm', direction: 'desc' },
+      { key: 'cps', direction: 'desc' },
       { key: 'diamantes', direction: 'desc' },
       { key: 'accuracy', direction: 'desc' },
       { key: 'points', direction: 'desc' }
