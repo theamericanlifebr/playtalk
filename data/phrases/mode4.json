@@ -472,7 +472,308 @@
   "Você está perto#You are near",
   "Eles estão dentro#They are inside",
   "Estamos ao lado#We are beside"
+],
+
+    "41": [
+  "Estou esperando você#I am waiting for you",
+  "Eles estão procurando#They are looking",
+  "Ela está chegando#She is arriving",
+  "Estamos falando agora#We are talking now",
+  "Ele está ouvindo você#He is listening to you",
+  "Estou tentando ver#I am trying to see",
+  "Ela está olhando isso#She is looking at this",
+  "Eles estão vindo aqui#They are coming here",
+  "Você está segurando#You are holding it",
+  "Estou escrevendo aqui#I am writing here",
+  "Ele está usando isso#He is using this",
+  "Estamos andando agora#We are walking now"
+],
+
+"42": [
+  "Ela está sempre aqui#She is always here",
+  "Eles estão nunca prontos#They are never ready",
+  "Estou quase chegando#I am almost arriving",
+  "Você está sempre cedo#You are always early",
+  "Ele está sempre rindo#He is always laughing",
+  "Estou sempre tentando#I am always trying",
+  "Eles estão quase lá#They are almost there",
+  "Ela está sempre lendo#She is always reading",
+  "Estou nunca atrasado#I am never late",
+  "Você está quase indo#You are almost going",
+  "Ela está sempre calma#She is always calm",
+  "Eles estão sempre bem#They are always fine"
+],
+
+"43": [
+  "Estou indo agora#I am going now",
+  "Ela está vindo cedo#She is coming early",
+  "Eles estão saindo já#They are leaving now",
+  "Estou chegando cedo#I am arriving early",
+  "Eles estão voltando#They are coming back",
+  "Ela está saindo tarde#She is leaving late",
+  "Você está indo logo#You are going soon",
+  "Estamos saindo hoje#We are leaving today",
+  "Ele está voltando já#He is coming back now",
+  "Ela está chegando já#She is arriving now",
+  "Estou saindo cedo#I am leaving early",
+  "Eles estão vindo já#They are coming now"
+],
+
+"44": [
+  "Estou só falando#I am just talking",
+  "Ele está só olhando#He is just looking",
+  "Ela está só vendo#She is just seeing",
+  "Estamos só ouvindo#We are just listening",
+  "Eles estão só vindo#They are just coming",
+  "Estou só tentando#I am just trying",
+  "Ela está só lendo#She is just reading",
+  "Ele está só parado#He is just standing",
+  "Você está só vendo#You are just seeing",
+  "Estamos só esperando#We are just waiting",
+  "Ela está só rindo#She is just laughing",
+  "Eles estão só vendo#They are just watching"
+],
+
+"45": [
+  "Não estou ouvindo#I am not hearing",
+  "Eles não estão vindo#They are not coming",
+  "Ela não está vendo#She is not seeing",
+  "Ele não está pronto#He is not ready",
+  "Não estou esperando#I am not waiting",
+  "Você não está indo#You are not going",
+  "Ela não está lendo#She is not reading",
+  "Eles não estão aqui#They are not here",
+  "Ele não está vindo#He is not coming",
+  "Não estou tentando#I am not trying",
+  "Você não está vendo#You are not seeing",
+  "Eles não estão bem#They are not fine"
+],
+
+"46": [
+  "Estou andando aqui#I am walking here",
+  "Eles estão vindo lá#They are coming there",
+  "Ela está indo ali#She is going there",
+  "Estamos indo juntos#We are going together",
+  "Você está vindo cá#You are coming here",
+  "Estou andando fora#I am walking outside",
+  "Ela está vindo cá#She is coming here",
+  "Ele está indo lá#He is going there",
+  "Estamos andando lá#We are walking there",
+  "Eles estão vindo já#They are coming now",
+  "Você está indo lá#You are going there",
+  "Estou indo pra lá#I am going there"
+],
+
+"47": [
+  "Ela está segurando#She is holding it",
+  "Ele está usando isso#He is using this",
+  "Estou carregando isso#I am carrying this",
+  "Eles estão abrindo#They are opening it",
+  "Você está fechando#You are closing it",
+  "Ela está trazendo#She is bringing it",
+  "Ele está levando#He is taking it",
+  "Estamos segurando#We are holding it",
+  "Eles estão empurrando#They are pushing it",
+  "Você está puxando#You are pulling it",
+  "Estou guardando isso#I am keeping it",
+  "Ela está limpando#She is cleaning it"
+],
+
+"48": [
+  "Estou tentando entrar#I am trying to enter",
+  "Eles estão tentando ir#They are trying to go",
+  "Ela está tentando ver#She is trying to see",
+  "Ele está tentando falar#He is trying to talk",
+  "Estou tentando ajudar#I am trying to help",
+  "Você está tentando ir#You are trying to go",
+  "Eles estão tentando achar#They are trying to find",
+  "Ela está tentando abrir#She is trying to open",
+  "Estou tentando correr#I am trying to run",
+  "Ele está tentando ver#He is trying to see",
+  "Estamos tentando sair#We are trying to leave",
+  "Você está tentando ler#You are trying to read"
+],
+
+"49": [
+  "Ela está subindo já#She is going up now",
+  "Estou descendo já#I am going down now",
+  "Eles estão subindo#They are going up",
+  "Estamos descendo#We are going down",
+  "Ele está subindo#He is going up",
+  "Você está descendo#You are going down",
+  "Estou subindo aqui#I am going up here",
+  "Eles estão descendo#They are going down",
+  "Ela está descendo#She is going down",
+  "Ele está subindo já#He is going up now",
+  "Estamos subindo já#We are going up now",
+  "Você está subindo#You are going up"
+],
+
+"50": [
+  "Estamos saindo hoje#We are leaving today",
+  "Estou voltando cedo#I am coming back early",
+  "Ela está voltando já#She is coming back now",
+  "Ele está saindo cedo#He is leaving early",
+  "Eles estão voltando#They are coming back",
+  "Estou indo amanhã#I am going tomorrow",
+  "Ela está indo amanhã#She is going tomorrow",
+  "Você está indo hoje#You are going today",
+  "Estamos voltando já#We are coming back now",
+  "Eles estão saindo já#They are leaving now",
+  "Ele está voltando já#He is coming back now",
+  "Estou saindo amanhã#I am leaving tomorrow"
+],
+
+    "51": [
+  "Você deveria tentar#You should try",
+  "Eles deveriam esperar#They should wait",
+  "Ela deveria ler#She should read",
+  "Eu deveria estudar#I should study",
+  "Nós deveríamos sair#We should leave",
+  "Você deveria ouvir#You should listen",
+  "Ela deveria ver#She should see",
+  "Ele deveria ajudar#He should help",
+  "The book should stay#The book should stay",
+  "John deveria ir#John should go",
+  "Anna deveria vir#Anna should come",
+  "The door should close#The door should close"
+],
+
+"52": [
+  "Você não deveria ir#You shouldn’t go",
+  "Eles não deveriam falar#They shouldn’t talk",
+  "Ela não deveria correr#She shouldn’t run",
+  "Eu não deveria sair#I shouldn’t leave",
+  "Nós não deveríamos rir#We shouldn’t laugh",
+  "Ele não deveria ver#He shouldn’t see",
+  "Você não deveria tocar#You shouldn’t touch",
+  "Ela não deveria abrir#She shouldn’t open",
+  "The phone shouldn’t fall#The phone shouldn’t fall",
+  "The light shouldn’t stay#The light shouldn’t stay on",
+  "Mark não deveria ir#Mark shouldn’t go",
+  "The bag shouldn’t open#The bag shouldn’t open"
+],
+
+"53": [
+  "Eu poderia ajudar#I could help",
+  "Ela poderia vir#She could come",
+  "Eles poderiam correr#They could run",
+  "Você poderia tentar#You could try",
+  "Nós poderíamos ver#We could see",
+  "Ele poderia entrar#He could enter",
+  "Ela poderia ficar#She could stay",
+  "Eles poderiam voltar#They could return",
+  "The box could break#The box could break",
+  "Lucas poderia vir#Lucas could come",
+  "The car could stop#The car could stop",
+  "The cup could fall#The cup could fall"
+],
+
+"54": [
+  "Isso poderia mudar#It could change",
+  "Você poderia perder#You could lose",
+  "Ele poderia falhar#He could fail",
+  "Ela poderia tentar#She could try",
+  "Eles poderiam cair#They could fall",
+  "Poderia funcionar#It could work",
+  "Poderia quebrar#It could break",
+  "Você poderia ganhar#You could win",
+  "The window could open#The window could open",
+  "The food could burn#The food could burn",
+  "Maria poderia rir#Maria could laugh",
+  "The bag could fall#The bag could fall"
+],
+
+"55": [
+  "Ela pode chegar cedo#She may arrive early",
+  "Eles podem estar lá#They might be there",
+  "Pode chover hoje#It may rain today",
+  "Isso pode ajudar#It might help",
+  "Você pode ganhar#You may win",
+  "Ele pode voltar#He might return",
+  "Pode funcionar#It may work",
+  "Eles podem tentar#They may try",
+  "The car may stop#The car may stop",
+  "The key may fall#The key may fall",
+  "Daniel pode entrar#Daniel may enter",
+  "The door may open#The door may open"
+],
+
+"56": [
+  "Você deve parar#You must stop",
+  "Ela deve entrar#She must enter",
+  "Eles devem correr#They must run",
+  "Nós devemos ouvir#We must listen",
+  "Ele deve tentar#He must try",
+  "Você deve voltar#You must return",
+  "Ela deve ficar#She must stay",
+  "Eles devem ajudar#They must help",
+  "The car must stop#The car must stop",
+  "The door must close#The door must close",
+  "The team must win#The team must win",
+  "The light must stay#The light must stay"
+],
+
+"57": [
+  "Você não deve tocar#You must not touch",
+  "Eles não devem correr#They must not run",
+  "Ela não deve abrir#She must not open",
+  "Eu não devo entrar#I must not enter",
+  "Nós não devemos sair#We must not leave",
+  "Ele não deve falar#He must not talk",
+  "Você não deve mexer#You must not move",
+  "Ela não deve voltar#She must not return",
+  "The door must not open#The door must not open",
+  "The box must not fall#The box must not fall",
+  "The car must not move#The car must not move",
+  "The kids must not jump#The kids must not jump"
+],
+
+"58": [
+  "Eu gostaria de água#I would like water",
+  "Ela gostaria de ir#She would like to go",
+  "Eles gostariam disso#They would like this",
+  "Você gostaria disso#You would like this",
+  "Nós gostaríamos disso#We would like this",
+  "Ela gostaria disso#She would like that",
+  "Eu gostaria de pão#I would like bread",
+  "Eles gostariam de ver#They would like to see",
+  "The team would like more#The team would like more",
+  "John would like this#John would like this",
+  "The kids would like that#The kids would like that",
+  "The group would like it#The group would like it"
+],
+
+"59": [
+  "Eu iria com você#I would go with you",
+  "Ela faria isso#She would do that",
+  "Ele viria cedo#He would come early",
+  "Eles tentariam isso#They would try this",
+  "Você faria isso#You would do this",
+  "Nós iríamos juntos#We would go together",
+  "Ela viria depois#She would come later",
+  "Ele ajudaria você#He would help you",
+  "The car would stop#The car would stop",
+  "The door would open#The door would open",
+  "The team would lose#The team would lose",
+  "Lucas would try this#Lucas would try this"
+],
+
+"60": [
+  "Você poderia tentar#You could try this",
+  "Eles deveriam vir cedo#They should come early",
+  "Ela poderia voltar#She could come back",
+  "Eu deveria ajudar#I should help now",
+  "Nós poderíamos ir lá#We could go there",
+  "Ele poderia esperar#He could wait here",
+  "Você deve tentar isso#You must try this",
+  "Ela pode tentar hoje#She may try today",
+  "The car could stop now#The car could stop now",
+  "The door should stay#The door should stay",
+  "Anna could come soon#Anna could come soon",
+  "The team should try#The team should try"
 ]
+
 
 
 
