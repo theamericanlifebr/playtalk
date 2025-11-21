@@ -8,7 +8,23 @@
     }
     const radios = Array.from(form.querySelectorAll('input[name="theme"]'));
     const retryWrongCheckbox = scope.querySelector('#retryWrongPhrases');
+    const headerStartInput = scope.querySelector('#headerColorStart');
+    const headerEndInput = scope.querySelector('#headerColorEnd');
+    const headerGradientToggle = scope.querySelector('#headerGradientEnabled');
+    const phraseColorInput = scope.querySelector('#phraseColor');
     const feedback = scope.querySelector('#fun-feedback');
+
+    function getFormSettings() {
+      const selected = radios.find(radio => radio.checked);
+      return {
+        theme: selected ? selected.value : 'light',
+        retryWrongPhrases: retryWrongCheckbox ? retryWrongCheckbox.checked : false,
+        headerGradientStart: headerStartInput ? headerStartInput.value : undefined,
+        headerGradientEnd: headerEndInput ? headerEndInput.value : undefined,
+        headerGradientEnabled: headerGradientToggle ? headerGradientToggle.checked : true,
+        phraseColor: phraseColorInput ? phraseColorInput.value : ''
+      };
+    }
 
     function load() {
       const settings = api ? api.loadSettings() : {};
@@ -19,19 +35,26 @@
       if (retryWrongCheckbox) {
         retryWrongCheckbox.checked = Boolean(settings.retryWrongPhrases);
       }
+      if (headerStartInput && settings.headerGradientStart) {
+        headerStartInput.value = settings.headerGradientStart;
+      }
+      if (headerEndInput && settings.headerGradientEnd) {
+        headerEndInput.value = settings.headerGradientEnd;
+      }
+      if (headerGradientToggle) {
+        headerGradientToggle.checked = settings.headerGradientEnabled !== false;
+      }
+      if (phraseColorInput && typeof settings.phraseColor === 'string' && settings.phraseColor.trim()) {
+        phraseColorInput.value = settings.phraseColor;
+      }
     }
 
     function save(event) {
       event.preventDefault();
-      const selected = radios.find(radio => radio.checked);
-      const theme = selected ? selected.value : 'light';
-      const settings = {
-        theme,
-        retryWrongPhrases: retryWrongCheckbox ? retryWrongCheckbox.checked : false
-      };
+      const settings = getFormSettings();
       if (api) {
         api.saveSettings(settings);
-        api.applyTheme(settings.theme);
+        api.applyVisualPreferences(settings);
       }
       if (feedback) {
         feedback.textContent = 'Configurações salvas!';
@@ -44,8 +67,18 @@
     radios.forEach(radio => {
       radio.addEventListener('change', () => {
         if (radio.checked && api) {
-          api.applyTheme(radio.value);
+          const settings = getFormSettings();
+          settings.theme = radio.value;
+          api.applyVisualPreferences(settings);
         }
+      });
+    });
+
+    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput].forEach(input => {
+      if (!input) return;
+      input.addEventListener('input', () => {
+        if (!api) return;
+        api.applyVisualPreferences(getFormSettings());
       });
     });
   }

@@ -2,8 +2,24 @@
   const SETTINGS_STORAGE_KEY = 'playtalkSettings';
   const DEFAULT_SETTINGS = {
     theme: 'light',
-    retryWrongPhrases: false
+    retryWrongPhrases: false,
+    headerGradientStart: '#1a66cc',
+    headerGradientEnd: '#357de0',
+    headerGradientEnabled: true,
+    phraseColor: ''
   };
+
+  function normalizeHexColor(value, fallback = '') {
+    if (typeof value !== 'string') return fallback;
+    const trimmed = value.trim();
+    const isValidHex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed);
+    return isValidHex ? trimmed.toLowerCase() : fallback;
+  }
+
+  function getDefaultPhraseColor(theme) {
+    if (theme === 'dark' || theme === 'blue') return '#ffffff';
+    return '#333333';
+  }
 
   function normalizeSettings(value) {
     const base = { ...DEFAULT_SETTINGS };
@@ -16,6 +32,12 @@
     }
     if (typeof value.retryWrongPhrases === 'boolean') {
       normalized.retryWrongPhrases = value.retryWrongPhrases;
+    }
+    if (value && typeof value === 'object') {
+      normalized.headerGradientStart = normalizeHexColor(value.headerGradientStart, DEFAULT_SETTINGS.headerGradientStart);
+      normalized.headerGradientEnd = normalizeHexColor(value.headerGradientEnd, DEFAULT_SETTINGS.headerGradientEnd);
+      normalized.headerGradientEnabled = Boolean(value.headerGradientEnabled);
+      normalized.phraseColor = normalizeHexColor(value.phraseColor, '');
     }
     return normalized;
   }
@@ -49,6 +71,7 @@
     } catch (err) {
       console.warn('Não foi possível salvar as configurações.', err);
     }
+    applyVisualPreferences(normalized);
     notifySettingsChange(normalized);
     if (window.playtalkAuth && typeof window.playtalkAuth.persistProgress === 'function') {
       window.playtalkAuth.persistProgress();
@@ -72,9 +95,36 @@
     }
   }
 
+  function applyHeaderGradient({ headerGradientStart, headerGradientEnd, headerGradientEnabled } = {}) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const start = normalizeHexColor(headerGradientStart, DEFAULT_SETTINGS.headerGradientStart);
+    const end = normalizeHexColor(headerGradientEnd, DEFAULT_SETTINGS.headerGradientEnd);
+    const gradient = headerGradientEnabled === false
+      ? start
+      : `linear-gradient(135deg, ${start} 0%, ${end} 100%)`;
+    doc.style.setProperty('--header-gradient-start', start);
+    doc.style.setProperty('--header-gradient-end', end);
+    doc.style.setProperty('--header-gradient', gradient);
+  }
+
+  function applyPhraseColor(color, theme) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const baseColor = normalizeHexColor(color, '');
+    const finalColor = baseColor || getDefaultPhraseColor(theme);
+    doc.style.setProperty('--phrase-color', finalColor);
+  }
+
+  function applyVisualPreferences(settings = {}) {
+    applyTheme(settings.theme);
+    applyHeaderGradient(settings);
+    applyPhraseColor(settings.phraseColor, settings.theme);
+  }
+
   function applyStoredTheme() {
     const settings = loadSettings();
-    applyTheme(settings.theme);
+    applyVisualPreferences(settings);
   }
 
   function handleThemeSync(event) {
@@ -88,6 +138,9 @@
     DEFAULT_SETTINGS,
     loadSettings,
     saveSettings,
+    applyHeaderGradient,
+    applyPhraseColor,
+    applyVisualPreferences,
     applyTheme,
     applyStoredTheme
   };

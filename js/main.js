@@ -1,7 +1,11 @@
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   theme: 'light',
-  retryWrongPhrases: false
+  retryWrongPhrases: false,
+  headerGradientStart: '#1a66cc',
+  headerGradientEnd: '#357de0',
+  headerGradientEnabled: true,
+  phraseColor: ''
 };
 
 const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
@@ -617,6 +621,7 @@ let roundWrongCount = 0;
 let roundCorrectChars = 0;
 let roundStartTime = 0;
 let phraseStartTime = 0;
+let phraseSwapAudio = null;
 let roundActive = false;
 let roundAdjustedTimeMs = 0;
 let inplayActive = false;
@@ -2309,6 +2314,48 @@ function updateModeMedalIcon(ratio) {
   icon.style.opacity = 1;
 }
 
+function playPhraseSwapSound() {
+  if (typeof Audio === 'undefined') return;
+  if (!phraseSwapAudio) {
+    phraseSwapAudio = new Audio();
+    phraseSwapAudio.preload = 'auto';
+    phraseSwapAudio.src = 'gamesounds/report.mp3';
+    phraseSwapAudio.addEventListener('error', () => {
+      if (phraseSwapAudio && phraseSwapAudio.src.includes('report.mp3')) {
+        phraseSwapAudio.src = 'gamesounds/report.wav';
+        phraseSwapAudio.play().catch(() => {});
+      }
+    }, { once: true });
+  }
+  try {
+    phraseSwapAudio.currentTime = 0;
+    phraseSwapAudio.play();
+  } catch (error) {}
+}
+
+function animatePhraseSwap() {
+  const texto = document.getElementById('texto-exibicao');
+  if (!texto) return;
+  texto.classList.remove('phrase-slide');
+  void texto.offsetWidth;
+  texto.classList.add('phrase-slide');
+  const handleAnimationEnd = () => {
+    texto.classList.remove('phrase-slide');
+    texto.removeEventListener('animationend', handleAnimationEnd);
+  };
+  texto.addEventListener('animationend', handleAnimationEnd);
+  playPhraseSwapSound();
+}
+
+function getPhraseBaseColor(element) {
+  if (!element || typeof window === 'undefined' || typeof window.getComputedStyle !== 'function') {
+    return '#333333';
+  }
+  const style = window.getComputedStyle(element);
+  const cssVar = style.getPropertyValue('--phrase-color');
+  return cssVar && cssVar.trim() ? cssVar.trim() : style.color || '#333333';
+}
+
 function mostrarFrase() {
   refreshUserSettings();
   if (inputTimeout) clearTimeout(inputTimeout);
@@ -2335,6 +2382,7 @@ function mostrarFrase() {
     const expected = esperadoLang === 'pt' ? pt : en;
     texto.dataset.expectedPhrase = expected;
   }
+  animatePhraseSwap();
   document.getElementById("pt").value = '';
   document.getElementById("pt").disabled = false;
   if (voz === 'en') falar(en, 'en');
@@ -2361,12 +2409,14 @@ function flashSuccess(callback) {
   const limite = Math.max(1, getCurrentThreshold());
   const perc = Math.min(100, (points / limite) * 100);
   const color = colorFromPercent(perc);
+  const baseColor = getPhraseBaseColor(texto);
   texto.style.transition = 'color 500ms linear';
   texto.style.color = color;
   setTimeout(() => {
     texto.style.transition = 'color 500ms linear';
-    texto.style.color = '#333';
+    texto.style.color = baseColor;
     setTimeout(() => {
+      texto.style.removeProperty('color');
       document.getElementById('resultado').textContent = '';
       callback();
     }, 500);
@@ -2393,6 +2443,7 @@ function flashError(expected, callback) {
     setTimeout(() => {
       texto.textContent = previousText;
       texto.style.transition = '';
+      texto.style.removeProperty('color');
       if (resultadoEl) {
         resultadoEl.textContent = '';
       }
