@@ -1717,6 +1717,35 @@ body.theme-blue .auth-message {
   transform: translateX(0);
 }
 
+.level-finder-level {
+  display: none;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: clamp(96px, 22vw, 200px);
+  line-height: 1;
+  color: var(--level-finder-color, var(--phrase-color, #333));
+  text-align: center;
+  transform: translateX(-24px);
+  transition: color 320ms ease, opacity 220ms ease, transform 220ms ease;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.level-finder-level.is-visible {
+  display: block;
+  opacity: 1;
+}
+
+.level-finder-level.level-finder-bump {
+  animation: levelFinderBump 420ms ease;
+}
+
+@keyframes levelFinderBump {
+  0% { transform: translateX(-24px) scale(1); }
+  35% { transform: translateX(-24px) scale(1.05); }
+  100% { transform: translateX(-24px) scale(1); }
+}
+
 body.page-home #mode-buttons {
   position: fixed;
   bottom: calc(var(--nav-height) + 60px);
