@@ -1658,11 +1658,12 @@ body.theme-blue .auth-message {
 
 #nivel-mensagem {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 40px;
-  color: #444;
+  top: 16px;
+  left: 16px;
+  transform: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
   font-family: 'Open Sans', sans-serif;
   display: none;
 }

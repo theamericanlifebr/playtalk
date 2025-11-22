@@ -14,6 +14,8 @@ const ROUND_STATE_KEY = 'modeRoundState';
 const GENERAL_PROGRESS_KEY = 'generalProgress';
 const XP_BASE_VALUE = 15;
 const MAX_LEVEL_CAP = 1000;
+const MODE2_TIME_LIMIT_MS = 6 * 60 * 1000;
+const MODE2_ROUND_TARGET = 1000000;
 const LEVEL_SCORE_INCREMENT = 0.05;
 const MODE_SCORE_FACTORS = {
   1: 0,
@@ -628,6 +630,9 @@ let inplayActive = false;
 let pendingModeStart = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
+let mode2Timer = null;
+let mode2StartTime = 0;
+let mode2LevelHistory = [];
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
@@ -694,10 +699,53 @@ function setInplayState(active) {
     header.classList.toggle('site-header--inplay', inplayActive);
   }
   document.body.classList.toggle('inplay-active', inplayActive);
+  updateMode2LevelIndicator();
 }
 
 function ensureInplayStateFromContext() {
   setInplayState(isProgressBarVisible());
+}
+
+function isMode2() {
+  return selectedMode === 2;
+}
+
+function getMode2ElapsedMs() {
+  return mode2StartTime ? Math.max(0, Date.now() - mode2StartTime) : 0;
+}
+
+function hasMode2TimeExpired() {
+  return getMode2ElapsedMs() >= MODE2_TIME_LIMIT_MS;
+}
+
+function resetMode2Tracking() {
+  if (mode2Timer) {
+    clearInterval(mode2Timer);
+    mode2Timer = null;
+  }
+  mode2StartTime = 0;
+  mode2LevelHistory = [];
+}
+
+function startMode2Timer() {
+  resetMode2Tracking();
+  mode2StartTime = Date.now();
+  resumeMode2Timer();
+}
+
+function resumeMode2Timer() {
+  if (!mode2StartTime) {
+    return;
+  }
+  if (mode2Timer) {
+    clearInterval(mode2Timer);
+  }
+  mode2Timer = setInterval(() => {
+    atualizarBarraProgresso();
+    if (hasMode2TimeExpired()) {
+      finishMode();
+    }
+  }, 250);
 }
 
 function isInplayActive() {
@@ -1102,6 +1150,56 @@ function stepSelectedPreGameLevel(mode, delta) {
   return setSelectedPreGameLevel(mode, current + delta);
 }
 
+function pushMode2Level(level) {
+  if (!Number.isFinite(level)) {
+    return;
+  }
+  mode2LevelHistory.push(level);
+}
+
+function updateMode2LevelIndicator() {
+  const indicator = document.getElementById('nivel-mensagem');
+  if (!indicator) {
+    return;
+  }
+  if (isMode2() && inplayActive) {
+    indicator.textContent = `Pasta ${pastaAtual || getSelectedPreGameLevel(2)}`;
+    indicator.style.display = 'block';
+  } else {
+    indicator.textContent = '';
+    indicator.style.display = 'none';
+  }
+}
+
+function loadMode2NextPhrase() {
+  const library = getModeLibrary(2);
+  const pool = Array.isArray(library[pastaAtual]) ? library[pastaAtual] : [];
+  const fallbackLevels = getModeLevels(2);
+  let phrase = ['',''];
+  if (!pool.length && fallbackLevels.length) {
+    const nearestLevel = fallbackLevels.reduce((prev, curr) => {
+      if (!Number.isFinite(prev)) return curr;
+      return Math.abs(curr - (pastaAtual || curr)) < Math.abs(prev - (pastaAtual || prev)) ? curr : prev;
+    }, fallbackLevels[0]);
+    const nearestPool = Array.isArray(library[nearestLevel]) ? library[nearestLevel] : [];
+    phrase = nearestPool.length ? embaralhar([...nearestPool])[0] : phrase;
+  } else if (pool.length) {
+    phrase = embaralhar([...pool])[0];
+  }
+  frasesArr = [phrase];
+  fraseIndex = 0;
+}
+
+function adjustMode2Level(delta) {
+  const { min, max } = getAvailableLevelBounds(2);
+  const baseLevel = pastaAtual || getSelectedPreGameLevel(2) || min;
+  const updated = Math.max(min, Math.min(max, baseLevel + delta));
+  pastaAtual = updated;
+  setSelectedPreGameLevel(2, updated);
+  pushMode2Level(updated);
+  updateMode2LevelIndicator();
+}
+
 let unlockedModes = {};
 let points = 0;
 let prizeStart = 0;
@@ -1424,30 +1522,53 @@ function openPostGameScreen(summary) {
   }
   const medalEl = document.getElementById('post-game-medal');
   const statusEl = document.getElementById('post-game-level-status');
-  const correctEl = document.getElementById('post-game-correct');
-  const wrongEl = document.getElementById('post-game-wrong');
-  const accuracyEl = document.getElementById('post-game-accuracy');
-  const cpsEl = document.getElementById('post-game-cps');
-  if (medalEl) {
-    medalEl.src = summary.medal.image;
-    medalEl.alt = summary.medal.label;
+  const statsContainer = overlay.querySelector('.post-game-stats');
+
+  function renderStats(items = []) {
+    if (!statsContainer) return;
+    statsContainer.innerHTML = '';
+    items.forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'post-game-stats__item';
+      const label = document.createElement('dt');
+      label.textContent = item.label;
+      const value = document.createElement('dd');
+      value.textContent = item.value;
+      row.appendChild(label);
+      row.appendChild(value);
+      statsContainer.appendChild(row);
+    });
   }
-  if (statusEl) {
-    let levelNote = '';
-    if (Number.isFinite(summary.newLevel)) {
-      const previous = Number.isFinite(summary.previousLevel) ? summary.previousLevel : summary.newLevel;
-      if (summary.newLevel !== previous) {
-        levelNote = ` Você foi da pasta ${previous} para a pasta ${summary.newLevel}.`;
-      } else {
-        levelNote = ` Você continua na pasta ${summary.newLevel}.`;
-      }
+
+  if (summary.isMode2) {
+    if (medalEl) medalEl.style.display = 'none';
+    if (statusEl) statusEl.textContent = summary.statusText || '';
+    renderStats(summary.customStats);
+  } else {
+    if (medalEl) {
+      medalEl.style.display = 'block';
+      medalEl.src = summary.medal.image;
+      medalEl.alt = summary.medal.label;
     }
-    statusEl.textContent = `${summary.medal.status}${levelNote}`;
+    if (statusEl) {
+      let levelNote = '';
+      if (Number.isFinite(summary.newLevel)) {
+        const previous = Number.isFinite(summary.previousLevel) ? summary.previousLevel : summary.newLevel;
+        if (summary.newLevel !== previous) {
+          levelNote = ` Você foi da pasta ${previous} para a pasta ${summary.newLevel}.`;
+        } else {
+          levelNote = ` Você continua na pasta ${summary.newLevel}.`;
+        }
+      }
+      statusEl.textContent = `${summary.medal.status}${levelNote}`;
+    }
+    renderStats([
+      { label: 'Acertos', value: summary.correct },
+      { label: 'Erros', value: summary.wrong },
+      { label: 'Precisão', value: `${summary.accuracy.toFixed(1)}%` },
+      { label: 'Caracteres corretos por segundo', value: summary.cps.toFixed(2) }
+    ]);
   }
-  if (correctEl) correctEl.textContent = summary.correct;
-  if (wrongEl) wrongEl.textContent = summary.wrong;
-  if (accuracyEl) accuracyEl.textContent = `${summary.accuracy.toFixed(1)}%`;
-  if (cpsEl) cpsEl.textContent = summary.cps.toFixed(2);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
@@ -1533,6 +1654,10 @@ function stopCurrentGame() {
     clearInterval(prizeTimer);
     prizeTimer = null;
   }
+  if (mode2Timer) {
+    clearInterval(mode2Timer);
+    mode2Timer = null;
+  }
   if (reconhecimento) {
     reconhecimentoAtivo = false;
     try { reconhecimento.stop(); } catch {}
@@ -1575,7 +1700,10 @@ function resumeGame() {
     clearInterval(pauseInterval);
     pauseInterval = null;
   }
-  if (roundAttempts >= roundTarget) {
+  if (isMode2()) {
+    resumeMode2Timer();
+  }
+  if (!isMode2() && roundAttempts >= roundTarget) {
     finishMode();
     return;
   }
@@ -1978,7 +2106,7 @@ function beginGame() {
   closePreGameScreen();
   closePostGameScreen();
   resetRoundState();
-  roundTarget = getRoundSelection(selectedMode);
+  roundTarget = isMode2() ? MODE2_ROUND_TARGET : getRoundSelection(selectedMode);
   const targetLevel = getSelectedPreGameLevel(selectedMode);
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
@@ -1987,6 +2115,12 @@ function beginGame() {
   roundStartTime = Date.now();
   roundActive = true;
   pastaAtual = targetLevel;
+  if (isMode2()) {
+    startMode2Timer();
+    pushMode2Level(pastaAtual);
+  } else {
+    resetMode2Tracking();
+  }
   const start = () => {
     const visor = document.getElementById('visor');
     if (visor) visor.style.display = 'flex';
@@ -2001,6 +2135,7 @@ function beginGame() {
     updateGeneralCircles();
     const texto = document.getElementById('texto-exibicao');
     if (texto) texto.style.opacity = '1';
+    updateMode2LevelIndicator();
     updateLevelIcon({ scope: 'mode' });
     updateModeIcons();
     let recognitionLanguage = 'en-US';
@@ -2040,12 +2175,17 @@ function beginGame() {
     if (reconhecimento) {
       reconhecimento.lang = recognitionLanguage;
     }
-    const restored = restoreRoundState(getStoredRoundState(selectedMode, targetLevel), targetLevel);
+    const restored = isMode2()
+      ? false
+      : restoreRoundState(getStoredRoundState(selectedMode, targetLevel), targetLevel);
     if (reconhecimento) {
       reconhecimentoAtivo = true;
       reconhecimento.start();
     }
-    if (!restored) {
+    if (isMode2()) {
+      loadMode2NextPhrase();
+      mostrarFrase();
+    } else if (!restored) {
       carregarFrases();
     }
   };
@@ -2360,7 +2500,7 @@ function mostrarFrase() {
   refreshUserSettings();
   if (inputTimeout) clearTimeout(inputTimeout);
   if (timerInterval) clearInterval(timerInterval);
-  if (roundAttempts >= roundTarget) {
+  if (!isMode2() && roundAttempts >= roundTarget) {
     finishMode();
     return;
   }
@@ -2382,6 +2522,7 @@ function mostrarFrase() {
     const expected = esperadoLang === 'pt' ? pt : en;
     texto.dataset.expectedPhrase = expected;
   }
+  updateMode2LevelIndicator();
   animatePhraseSwap();
   document.getElementById("pt").value = '';
   document.getElementById("pt").disabled = false;
@@ -2397,9 +2538,11 @@ function mostrarFrase() {
     const secs = Math.floor(elapsed / 1000);
     timerEl.textContent = `Tempo: ${secs}s`;
   }, 200);
-  if (prizeTimer) clearInterval(prizeTimer);
-  prizeStart = Date.now();
-  prizeTimer = setInterval(atualizarBarraProgresso, 50);
+  if (!isMode2()) {
+    if (prizeTimer) clearInterval(prizeTimer);
+    prizeStart = Date.now();
+    prizeTimer = setInterval(atualizarBarraProgresso, 50);
+  }
   atualizarBarraProgresso();
   persistCurrentRoundState();
 }
@@ -2459,6 +2602,20 @@ function handleNoInput() {
   verificarResposta();
 }
 
+function proceedAfterAnswer(isCorrect, reachedRoundEnd) {
+  if (isMode2()) {
+    adjustMode2Level(isCorrect ? 3 : -2);
+    if (hasMode2TimeExpired()) {
+      finishMode();
+      return;
+    }
+  } else if (reachedRoundEnd) {
+    finishMode();
+    return;
+  }
+  continuar();
+}
+
 function verificarResposta() {
   if (bloqueado) return;
   if (!isInplayActive()) return;
@@ -2503,7 +2660,7 @@ function verificarResposta() {
     roundActive = true;
   }
   roundAttempts++;
-  const reachedRoundEnd = roundAttempts >= roundTarget;
+  const reachedRoundEnd = !isMode2() && roundAttempts >= roundTarget;
 
   if (correto) {
     stats.correct++;
@@ -2519,8 +2676,7 @@ function verificarResposta() {
     resultado.textContent = '';
     persistCurrentRoundState();
     flashSuccess(() => {
-      if (reachedRoundEnd) finishMode();
-      else continuar();
+      proceedAfterAnswer(true, reachedRoundEnd);
     });
   } else {
     stats.wrong++;
@@ -2562,14 +2718,10 @@ function verificarResposta() {
     }
     consecutiveErrors++;
     persistCurrentRoundState();
-      flashError(expectedPhrase, () => {
+    flashError(expectedPhrase, () => {
       input.disabled = false;
       bloqueado = false;
-      if (reachedRoundEnd) {
-        finishMode();
-      } else {
-        continuar();
-      }
+      proceedAfterAnswer(false, reachedRoundEnd);
     });
   }
   atualizarBarraProgresso();
@@ -2577,6 +2729,15 @@ function verificarResposta() {
 
 function continuar() {
   if (transitioning) {
+    return;
+  }
+  if (isMode2()) {
+    if (hasMode2TimeExpired()) {
+      finishMode();
+      return;
+    }
+    loadMode2NextPhrase();
+    mostrarFrase();
     return;
   }
   if (roundAttempts >= roundTarget) {
@@ -2591,6 +2752,16 @@ function atualizarBarraProgresso() {
   ensureInplayStateFromContext();
   updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
+  if (isMode2()) {
+    const elapsed = getMode2ElapsedMs();
+    const ratio = MODE2_TIME_LIMIT_MS > 0 ? Math.min(1, elapsed / MODE2_TIME_LIMIT_MS) : 0;
+    if (filled) {
+      filled.style.width = (ratio * 100) + '%';
+      filled.style.backgroundColor = colorFromPercent(ratio * 100);
+    }
+    updateMode2LevelIndicator();
+    return;
+  }
   const limite = Math.max(1, getCurrentThreshold());
   const currentPoints = Math.max(0, Math.min(points, limite));
   const accuracyRatio = currentPoints / limite;
@@ -2631,17 +2802,58 @@ function finishMode() {
     visor.style.display = 'none';
   }
   setInplayState(false);
+  updateMode2LevelIndicator();
   recordModeTime(selectedMode);
   const totalAttempts = Math.max(roundAttempts, points + roundWrongCount);
   const correct = Math.min(points, roundTarget);
   const wrong = Math.max(0, totalAttempts - correct);
   const attemptsForAccuracy = correct + wrong;
   const accuracy = attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
-  const elapsedMs = roundAdjustedTimeMs > 0
+  const elapsedMsRaw = roundAdjustedTimeMs > 0
     ? roundAdjustedTimeMs
     : (roundStartTime ? Date.now() - roundStartTime : 0);
+  const elapsedMs = isMode2()
+    ? Math.max(elapsedMsRaw, getMode2ElapsedMs())
+    : elapsedMsRaw;
   const seconds = elapsedMs > 0 ? (elapsedMs / 1000) : 0;
   const cps = seconds > 0 ? (roundCorrectChars / seconds) : 0;
+
+  if (isMode2()) {
+    const levelSum = mode2LevelHistory.reduce((sum, lvl) => sum + lvl, 0);
+    const maxLevel = mode2LevelHistory.length
+      ? Math.max(...mode2LevelHistory)
+      : (pastaAtual || getSelectedPreGameLevel(2) || 1);
+    const recentLevels = mode2LevelHistory.slice(-20);
+    const recentAverage = recentLevels.length
+      ? (recentLevels.reduce((sum, lvl) => sum + lvl, 0) / 10)
+      : 0;
+    const attemptsCount = Math.max(1, roundAttempts);
+    const totalAverage = levelSum / attemptsCount;
+    const minutes = elapsedMs > 0 ? (elapsedMs / 60000) : 0;
+    const charsPerMinute = minutes > 0 ? (roundCorrectChars / minutes) : 0;
+
+    updateMonthlyStatsProgress({
+      totalAttempts,
+      eligibleAttempts: roundAttempts,
+      correctAttempts: correct
+    });
+    if (window.playtalkAuth && typeof window.playtalkAuth.persistProgress === 'function') {
+      window.playtalkAuth.persistProgress();
+    }
+
+    openPostGameScreen({
+      isMode2: true,
+      statusText: 'Resumo do modo 2',
+      customStats: [
+        { label: 'Nível máximo', value: maxLevel.toFixed(0) },
+        { label: 'Média dos últimos 20 níveis ÷ 10', value: recentAverage.toFixed(1) },
+        { label: 'Média geral dos níveis', value: totalAverage.toFixed(2) },
+        { label: 'Caracteres por minuto', value: charsPerMinute.toFixed(2) },
+        { label: 'Precisão total', value: `${accuracy.toFixed(1)}%` }
+      ]
+    });
+    return;
+  }
 
   const medal = getMedalForAccuracy(accuracy);
   const stats = ensureModeStats(selectedMode);
