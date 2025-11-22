@@ -712,14 +712,19 @@
     const usernameInput = document.getElementById('login-flow-username');
     const passwordInput = document.getElementById('login-flow-password');
 
-    logoutButtons.forEach(button => {
-      button.addEventListener('click', (event) => {
+    if (!setupLoginFlow.logoutHandler) {
+      setupLoginFlow.logoutHandler = (event) => {
+        const button = event.target.closest('[data-role="logout"]');
+        if (!button) {
+          return;
+        }
         event.preventDefault();
         const stayOnPage = button.dataset.switchAccount === 'true';
         const redirectToLogin = button.dataset.switchAccount === 'true';
         handleLogout({ stayOnPage, redirectToLogin });
-      });
-    });
+      };
+      document.addEventListener('click', setupLoginFlow.logoutHandler);
+    }
 
     if (!flow || !form || !usernameInput || !passwordInput) {
       openLoginFlowHandler = null;
