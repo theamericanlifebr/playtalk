@@ -14,8 +14,8 @@ const ROUND_STATE_KEY = 'modeRoundState';
 const GENERAL_PROGRESS_KEY = 'generalProgress';
 const XP_BASE_VALUE = 15;
 const MAX_LEVEL_CAP = 1000;
-const MODE2_TIME_LIMIT_MS = 6 * 60 * 1000;
-const MODE2_ROUND_TARGET = 1000000;
+const LEVEL_FINDER_TIME_LIMIT_MS = 6 * 60 * 1000;
+const LEVEL_FINDER_ROUND_TARGET = 1000000;
 const LEVEL_SCORE_INCREMENT = 0.05;
 const MODE_SCORE_FACTORS = {
   1: 0,
@@ -626,13 +626,15 @@ let phraseStartTime = 0;
 let phraseSwapAudio = null;
 let roundActive = false;
 let roundAdjustedTimeMs = 0;
+let levelFinderBaseColor = '#333333';
 let inplayActive = false;
 let pendingModeStart = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
-let mode2Timer = null;
-let mode2StartTime = 0;
-let mode2LevelHistory = [];
+let levelFinderTimer = null;
+let levelFinderStartTime = 0;
+let levelFinderLevelHistory = [];
+let levelFinderActive = false;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
@@ -699,50 +701,50 @@ function setInplayState(active) {
     header.classList.toggle('site-header--inplay', inplayActive);
   }
   document.body.classList.toggle('inplay-active', inplayActive);
-  updateMode2LevelIndicator();
+  updateLevelFinderLevelIndicator();
 }
 
 function ensureInplayStateFromContext() {
   setInplayState(isProgressBarVisible());
 }
 
-function isMode2() {
-  return selectedMode === 2;
+function isLevelFinderActive() {
+  return levelFinderActive;
 }
 
-function getMode2ElapsedMs() {
-  return mode2StartTime ? Math.max(0, Date.now() - mode2StartTime) : 0;
+function getLevelFinderElapsedMs() {
+  return levelFinderStartTime ? Math.max(0, Date.now() - levelFinderStartTime) : 0;
 }
 
-function hasMode2TimeExpired() {
-  return getMode2ElapsedMs() >= MODE2_TIME_LIMIT_MS;
+function hasLevelFinderTimeExpired() {
+  return getLevelFinderElapsedMs() >= LEVEL_FINDER_TIME_LIMIT_MS;
 }
 
-function resetMode2Tracking() {
-  if (mode2Timer) {
-    clearInterval(mode2Timer);
-    mode2Timer = null;
+function resetLevelFinderTracking() {
+  if (levelFinderTimer) {
+    clearInterval(levelFinderTimer);
+    levelFinderTimer = null;
   }
-  mode2StartTime = 0;
-  mode2LevelHistory = [];
+  levelFinderStartTime = 0;
+  levelFinderLevelHistory = [];
 }
 
-function startMode2Timer() {
-  resetMode2Tracking();
-  mode2StartTime = Date.now();
-  resumeMode2Timer();
+function startLevelFinderTimer() {
+  resetLevelFinderTracking();
+  levelFinderStartTime = Date.now();
+  resumeLevelFinderTimer();
 }
 
-function resumeMode2Timer() {
-  if (!mode2StartTime) {
+function resumeLevelFinderTimer() {
+  if (!levelFinderStartTime) {
     return;
   }
-  if (mode2Timer) {
-    clearInterval(mode2Timer);
+  if (levelFinderTimer) {
+    clearInterval(levelFinderTimer);
   }
-  mode2Timer = setInterval(() => {
+  levelFinderTimer = setInterval(() => {
     atualizarBarraProgresso();
-    if (hasMode2TimeExpired()) {
+    if (hasLevelFinderTimeExpired()) {
       finishMode();
     }
   }, 250);
@@ -1150,20 +1152,20 @@ function stepSelectedPreGameLevel(mode, delta) {
   return setSelectedPreGameLevel(mode, current + delta);
 }
 
-function pushMode2Level(level) {
+function pushLevelFinderLevel(level) {
   if (!Number.isFinite(level)) {
     return;
   }
-  mode2LevelHistory.push(level);
+  levelFinderLevelHistory.push(level);
 }
 
-function updateMode2LevelIndicator() {
+function updateLevelFinderLevelIndicator() {
   const indicator = document.getElementById('nivel-mensagem');
   if (!indicator) {
     return;
   }
-  if (isMode2() && inplayActive) {
-    indicator.textContent = `Pasta ${pastaAtual || getSelectedPreGameLevel(2)}`;
+  if (isLevelFinderActive() && inplayActive) {
+    indicator.textContent = `Pasta ${pastaAtual || getSelectedPreGameLevel(selectedMode)}`;
     indicator.style.display = 'block';
   } else {
     indicator.textContent = '';
@@ -1171,10 +1173,49 @@ function updateMode2LevelIndicator() {
   }
 }
 
-function loadMode2NextPhrase() {
-  const library = getModeLibrary(2);
+function renderLevelFinderLevel(options = {}) {
+  const badge = document.getElementById('level-finder-level');
+  const icon = document.getElementById('mode-icon');
+  if (!badge) {
+    return;
+  }
+  if (!isLevelFinderActive()) {
+    badge.classList.remove('is-visible');
+    badge.style.opacity = '0';
+    badge.textContent = '';
+    badge.style.color = '';
+    if (icon) {
+      icon.style.display = 'block';
+    }
+    return;
+  }
+  const targetLevel = Number.isFinite(options.level)
+    ? options.level
+    : (pastaAtual || getSelectedPreGameLevel(selectedMode) || 1);
+  badge.textContent = targetLevel;
+  if (typeof options.baseColor === 'string' && options.baseColor.trim()) {
+    levelFinderBaseColor = options.baseColor.trim();
+  }
+  const baseColor = levelFinderBaseColor || getPhraseBaseColor(document.getElementById('texto-exibicao'));
+  const targetColor = options.color || baseColor;
+  badge.style.setProperty('--level-finder-color', baseColor);
+  badge.style.color = targetColor;
+  badge.classList.add('is-visible');
+  badge.style.opacity = '1';
+  if (options.bump) {
+    badge.classList.remove('level-finder-bump');
+    void badge.offsetWidth;
+    badge.classList.add('level-finder-bump');
+  }
+  if (icon) {
+    icon.style.display = 'none';
+  }
+}
+
+function loadLevelFinderNextPhrase() {
+  const library = getModeLibrary(selectedMode);
   const pool = Array.isArray(library[pastaAtual]) ? library[pastaAtual] : [];
-  const fallbackLevels = getModeLevels(2);
+  const fallbackLevels = getModeLevels(selectedMode);
   let phrase = ['',''];
   if (!pool.length && fallbackLevels.length) {
     const nearestLevel = fallbackLevels.reduce((prev, curr) => {
@@ -1190,14 +1231,15 @@ function loadMode2NextPhrase() {
   fraseIndex = 0;
 }
 
-function adjustMode2Level(delta) {
-  const { min, max } = getAvailableLevelBounds(2);
-  const baseLevel = pastaAtual || getSelectedPreGameLevel(2) || min;
+function adjustLevelFinderLevel(delta) {
+  const { min, max } = getAvailableLevelBounds(selectedMode);
+  const baseLevel = pastaAtual || getSelectedPreGameLevel(selectedMode) || min;
   const updated = Math.max(min, Math.min(max, baseLevel + delta));
   pastaAtual = updated;
-  setSelectedPreGameLevel(2, updated);
-  pushMode2Level(updated);
-  updateMode2LevelIndicator();
+  setSelectedPreGameLevel(selectedMode, updated);
+  pushLevelFinderLevel(updated);
+  updateLevelFinderLevelIndicator();
+  renderLevelFinderLevel({ level: updated, baseColor: levelFinderBaseColor, bump: true });
 }
 
 let unlockedModes = {};
@@ -1540,7 +1582,7 @@ function openPostGameScreen(summary) {
     });
   }
 
-  if (summary.isMode2) {
+  if (summary.isLevelFinder) {
     if (medalEl) medalEl.style.display = 'none';
     if (statusEl) statusEl.textContent = summary.statusText || '';
     renderStats(summary.customStats);
@@ -1654,9 +1696,9 @@ function stopCurrentGame() {
     clearInterval(prizeTimer);
     prizeTimer = null;
   }
-  if (mode2Timer) {
-    clearInterval(mode2Timer);
-    mode2Timer = null;
+  if (levelFinderTimer) {
+    clearInterval(levelFinderTimer);
+    levelFinderTimer = null;
   }
   if (reconhecimento) {
     reconhecimentoAtivo = false;
@@ -1700,10 +1742,10 @@ function resumeGame() {
     clearInterval(pauseInterval);
     pauseInterval = null;
   }
-  if (isMode2()) {
-    resumeMode2Timer();
+  if (isLevelFinderActive()) {
+    resumeLevelFinderTimer();
   }
-  if (!isMode2() && roundAttempts >= roundTarget) {
+  if (!isLevelFinderActive() && roundAttempts >= roundTarget) {
     finishMode();
     return;
   }
@@ -2082,6 +2124,8 @@ function startGame(modo) {
   selectedMode = modo;
   refreshUserSettings();
   resetRoundState();
+  levelFinderActive = false;
+  resetLevelFinderTracking();
   roundTarget = getRoundSelection(modo);
   saveTotals();
   atualizarBarraProgresso();
@@ -2106,7 +2150,7 @@ function beginGame() {
   closePreGameScreen();
   closePostGameScreen();
   resetRoundState();
-  roundTarget = isMode2() ? MODE2_ROUND_TARGET : getRoundSelection(selectedMode);
+  roundTarget = isLevelFinderActive() ? LEVEL_FINDER_ROUND_TARGET : getRoundSelection(selectedMode);
   const targetLevel = getSelectedPreGameLevel(selectedMode);
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
@@ -2115,11 +2159,11 @@ function beginGame() {
   roundStartTime = Date.now();
   roundActive = true;
   pastaAtual = targetLevel;
-  if (isMode2()) {
-    startMode2Timer();
-    pushMode2Level(pastaAtual);
+  if (isLevelFinderActive()) {
+    startLevelFinderTimer();
+    pushLevelFinderLevel(pastaAtual);
   } else {
-    resetMode2Tracking();
+    resetLevelFinderTracking();
   }
   const start = () => {
     const visor = document.getElementById('visor');
@@ -2135,7 +2179,7 @@ function beginGame() {
     updateGeneralCircles();
     const texto = document.getElementById('texto-exibicao');
     if (texto) texto.style.opacity = '1';
-    updateMode2LevelIndicator();
+    updateLevelFinderLevelIndicator();
     updateLevelIcon({ scope: 'mode' });
     updateModeIcons();
     let recognitionLanguage = 'en-US';
@@ -2175,15 +2219,15 @@ function beginGame() {
     if (reconhecimento) {
       reconhecimento.lang = recognitionLanguage;
     }
-    const restored = isMode2()
+    const restored = isLevelFinderActive()
       ? false
       : restoreRoundState(getStoredRoundState(selectedMode, targetLevel), targetLevel);
     if (reconhecimento) {
       reconhecimentoAtivo = true;
       reconhecimento.start();
     }
-    if (isMode2()) {
-      loadMode2NextPhrase();
+    if (isLevelFinderActive()) {
+      loadLevelFinderNextPhrase();
       mostrarFrase();
     } else if (!restored) {
       carregarFrases();
@@ -2435,10 +2479,15 @@ function carregarFrases() {
 }
 
 function updateModeMedalIcon(ratio) {
+  if (isLevelFinderActive()) {
+    renderLevelFinderLevel({ level: pastaAtual, baseColor: levelFinderBaseColor, bump: true });
+    return;
+  }
   const icon = document.getElementById('mode-icon');
   if (!icon) {
     return;
   }
+  renderLevelFinderLevel();
   const clampedRatio = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
   const perc = clampedRatio * 100;
   const medal = getMedalForAccuracy(perc);
@@ -2500,7 +2549,7 @@ function mostrarFrase() {
   refreshUserSettings();
   if (inputTimeout) clearTimeout(inputTimeout);
   if (timerInterval) clearInterval(timerInterval);
-  if (!isMode2() && roundAttempts >= roundTarget) {
+  if (!isLevelFinderActive() && roundAttempts >= roundTarget) {
     finishMode();
     return;
   }
@@ -2513,16 +2562,19 @@ function mostrarFrase() {
   const pt = getPtFromPhrase(frasesArr[fraseIndex]);
   const en = getPrimaryEnFromPhrase(frasesArr[fraseIndex]);
   const texto = document.getElementById("texto-exibicao");
+  const expected = esperadoLang === 'pt' ? pt : en;
   if (mostrarTexto === 'pt') texto.textContent = pt;
   else if (mostrarTexto === 'en') texto.textContent = en;
   else texto.textContent = '';
   if (texto) {
     texto.dataset.expectedPt = pt;
     texto.dataset.expectedEn = en;
-    const expected = esperadoLang === 'pt' ? pt : en;
     texto.dataset.expectedPhrase = expected;
+    const baseColor = getPhraseBaseColor(texto);
+    levelFinderBaseColor = baseColor;
+    renderLevelFinderLevel({ level: pastaAtual, baseColor });
   }
-  updateMode2LevelIndicator();
+  updateLevelFinderLevelIndicator();
   animatePhraseSwap();
   document.getElementById("pt").value = '';
   document.getElementById("pt").disabled = false;
@@ -2538,7 +2590,7 @@ function mostrarFrase() {
     const secs = Math.floor(elapsed / 1000);
     timerEl.textContent = `Tempo: ${secs}s`;
   }, 200);
-  if (!isMode2()) {
+  if (!isLevelFinderActive()) {
     if (prizeTimer) clearInterval(prizeTimer);
     prizeStart = Date.now();
     prizeTimer = setInterval(atualizarBarraProgresso, 50);
@@ -2553,11 +2605,19 @@ function flashSuccess(callback) {
   const perc = Math.min(100, (points / limite) * 100);
   const color = colorFromPercent(perc);
   const baseColor = getPhraseBaseColor(texto);
+  levelFinderBaseColor = baseColor;
+  const successColor = isLevelFinderActive() ? '#52c41a' : color;
   texto.style.transition = 'color 500ms linear';
-  texto.style.color = color;
+  texto.style.color = successColor;
+  if (isLevelFinderActive()) {
+    renderLevelFinderLevel({ color: successColor });
+  }
   setTimeout(() => {
     texto.style.transition = 'color 500ms linear';
     texto.style.color = baseColor;
+    if (isLevelFinderActive()) {
+      renderLevelFinderLevel({ color: baseColor });
+    }
     setTimeout(() => {
       texto.style.removeProperty('color');
       document.getElementById('resultado').textContent = '';
@@ -2603,9 +2663,9 @@ function handleNoInput() {
 }
 
 function proceedAfterAnswer(isCorrect, reachedRoundEnd) {
-  if (isMode2()) {
-    adjustMode2Level(isCorrect ? 3 : -2);
-    if (hasMode2TimeExpired()) {
+  if (isLevelFinderActive()) {
+    adjustLevelFinderLevel(isCorrect ? 3 : -2);
+    if (hasLevelFinderTimeExpired()) {
       finishMode();
       return;
     }
@@ -2660,7 +2720,7 @@ function verificarResposta() {
     roundActive = true;
   }
   roundAttempts++;
-  const reachedRoundEnd = !isMode2() && roundAttempts >= roundTarget;
+  const reachedRoundEnd = !isLevelFinderActive() && roundAttempts >= roundTarget;
 
   if (correto) {
     stats.correct++;
@@ -2731,12 +2791,12 @@ function continuar() {
   if (transitioning) {
     return;
   }
-  if (isMode2()) {
-    if (hasMode2TimeExpired()) {
+  if (isLevelFinderActive()) {
+    if (hasLevelFinderTimeExpired()) {
       finishMode();
       return;
     }
-    loadMode2NextPhrase();
+    loadLevelFinderNextPhrase();
     mostrarFrase();
     return;
   }
@@ -2752,14 +2812,15 @@ function atualizarBarraProgresso() {
   ensureInplayStateFromContext();
   updateGameBalanceDisplay();
   const filled = document.getElementById('barra-preenchida');
-  if (isMode2()) {
-    const elapsed = getMode2ElapsedMs();
-    const ratio = MODE2_TIME_LIMIT_MS > 0 ? Math.min(1, elapsed / MODE2_TIME_LIMIT_MS) : 0;
+  if (isLevelFinderActive()) {
+    const elapsed = getLevelFinderElapsedMs();
+    const ratio = LEVEL_FINDER_TIME_LIMIT_MS > 0 ? Math.min(1, elapsed / LEVEL_FINDER_TIME_LIMIT_MS) : 0;
     if (filled) {
       filled.style.width = (ratio * 100) + '%';
       filled.style.backgroundColor = colorFromPercent(ratio * 100);
     }
-    updateMode2LevelIndicator();
+    renderLevelFinderLevel({ level: pastaAtual, baseColor: levelFinderBaseColor });
+    updateLevelFinderLevelIndicator();
     return;
   }
   const limite = Math.max(1, getCurrentThreshold());
@@ -2802,7 +2863,8 @@ function finishMode() {
     visor.style.display = 'none';
   }
   setInplayState(false);
-  updateMode2LevelIndicator();
+  updateLevelFinderLevelIndicator();
+  renderLevelFinderLevel();
   recordModeTime(selectedMode);
   const totalAttempts = Math.max(roundAttempts, points + roundWrongCount);
   const correct = Math.min(points, roundTarget);
@@ -2812,18 +2874,18 @@ function finishMode() {
   const elapsedMsRaw = roundAdjustedTimeMs > 0
     ? roundAdjustedTimeMs
     : (roundStartTime ? Date.now() - roundStartTime : 0);
-  const elapsedMs = isMode2()
-    ? Math.max(elapsedMsRaw, getMode2ElapsedMs())
+  const elapsedMs = isLevelFinderActive()
+    ? Math.max(elapsedMsRaw, getLevelFinderElapsedMs())
     : elapsedMsRaw;
   const seconds = elapsedMs > 0 ? (elapsedMs / 1000) : 0;
   const cps = seconds > 0 ? (roundCorrectChars / seconds) : 0;
 
-  if (isMode2()) {
-    const levelSum = mode2LevelHistory.reduce((sum, lvl) => sum + lvl, 0);
-    const maxLevel = mode2LevelHistory.length
-      ? Math.max(...mode2LevelHistory)
-      : (pastaAtual || getSelectedPreGameLevel(2) || 1);
-    const recentLevels = mode2LevelHistory.slice(-20);
+  if (isLevelFinderActive()) {
+    const levelSum = levelFinderLevelHistory.reduce((sum, lvl) => sum + lvl, 0);
+    const maxLevel = levelFinderLevelHistory.length
+      ? Math.max(...levelFinderLevelHistory)
+      : (pastaAtual || getSelectedPreGameLevel(selectedMode) || 1);
+    const recentLevels = levelFinderLevelHistory.slice(-20);
     const recentAverage = recentLevels.length
       ? (recentLevels.reduce((sum, lvl) => sum + lvl, 0) / 10)
       : 0;
@@ -2842,8 +2904,8 @@ function finishMode() {
     }
 
     openPostGameScreen({
-      isMode2: true,
-      statusText: 'Resumo do modo 2',
+      isLevelFinder: true,
+      statusText: 'Resumo do LevelFinder',
       customStats: [
         { label: 'Nível máximo', value: maxLevel.toFixed(0) },
         { label: 'Média dos últimos 20 níveis ÷ 10', value: recentAverage.toFixed(1) },
@@ -3006,16 +3068,22 @@ async function initGame() {
   if (preGameStartBtn) {
     preGameStartBtn.addEventListener('click', () => {
       const mode = pendingModeStart ?? selectedMode;
+      levelFinderActive = false;
+      resetLevelFinderTracking();
       setRoundSelection(mode, roundTarget);
       beginGame();
     });
   }
 
-  const preGameCancelBtn = document.getElementById('pre-game-cancel');
-  if (preGameCancelBtn) {
-    preGameCancelBtn.addEventListener('click', () => {
-      closePreGameScreen();
-      goHome();
+  const preGameLevelFinderBtn = document.getElementById('pre-game-level-finder');
+  if (preGameLevelFinderBtn) {
+    preGameLevelFinderBtn.addEventListener('click', () => {
+      const mode = pendingModeStart ?? selectedMode;
+      levelFinderActive = true;
+      resetLevelFinderTracking();
+      roundTarget = LEVEL_FINDER_ROUND_TARGET;
+      setRoundSelection(mode, roundTarget);
+      beginGame();
     });
   }
 
