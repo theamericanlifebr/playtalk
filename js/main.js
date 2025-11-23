@@ -1545,6 +1545,9 @@ function openPreGameScreen(mode) {
   updatePreGameScreen(mode);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
+  if (window.playtalkLens && typeof window.playtalkLens.applyLens === 'function') {
+    window.playtalkLens.applyLens(mode);
+  }
 }
 
 function closePreGameScreen() {
@@ -1555,6 +1558,9 @@ function closePreGameScreen() {
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
   overlay.removeAttribute('data-mode');
+  if (window.playtalkLens && typeof window.playtalkLens.hideLens === 'function') {
+    window.playtalkLens.hideLens();
+  }
 }
 
 function openPostGameScreen(summary) {
@@ -1614,6 +1620,10 @@ function openPostGameScreen(summary) {
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
+  if (window.playtalkLens && typeof window.playtalkLens.applyLens === 'function') {
+    window.playtalkLens.applyLens(selectedMode);
+  }
+
   refreshPreGameResumeState(selectedMode);
 }
 
@@ -1624,6 +1634,9 @@ function closePostGameScreen() {
   }
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
+  if (window.playtalkLens && typeof window.playtalkLens.hideLens === 'function') {
+    window.playtalkLens.hideLens();
+  }
 }
 
 function refreshPreGameResumeState(mode) {
@@ -2894,6 +2907,18 @@ function finishMode() {
     const minutes = elapsedMs > 0 ? (elapsedMs / 60000) : 0;
     const charsPerMinute = minutes > 0 ? (roundCorrectChars / minutes) : 0;
 
+    const progress = getModeProgress(selectedMode);
+    const previousLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode) || 1);
+    const derivedLevel = Math.max(1, Math.min(MAX_LEVEL_CAP, Math.round(totalAverage)));
+    progress.level = derivedLevel;
+    progress.xp = 0;
+    modeProgress[String(selectedMode)] = progress;
+    saveModeProgress({ emit: true });
+    pastaAtual = setSelectedPreGameLevel(selectedMode, derivedLevel);
+    updateLevelIcon({ scope: 'mode' });
+    dispatchModeProgressUpdate(selectedMode);
+    updateModeIcons();
+
     updateMonthlyStatsProgress({
       totalAttempts,
       eligibleAttempts: roundAttempts,
@@ -2910,6 +2935,7 @@ function finishMode() {
         { label: 'Nível máximo', value: maxLevel.toFixed(0) },
         { label: 'Média dos últimos 20 níveis ÷ 10', value: recentAverage.toFixed(1) },
         { label: 'Média geral dos níveis', value: totalAverage.toFixed(2) },
+        { label: 'Nível final', value: `Pasta ${derivedLevel} (antes: ${previousLevel})` },
         { label: 'Caracteres por minuto', value: charsPerMinute.toFixed(2) },
         { label: 'Precisão total', value: `${accuracy.toFixed(1)}%` }
       ]
@@ -2925,15 +2951,13 @@ function finishMode() {
   }
   saveModeStats();
   const progress = getModeProgress(selectedMode);
-  const baseLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode));
-  const previousLevel = baseLevel;
-  let nextLevel = previousLevel + medal.levelDelta;
-  nextLevel = Math.max(1, Math.min(MAX_LEVEL_CAP, nextLevel));
-  progress.level = nextLevel;
-  progress.xp = 0;
+  const lockedLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode));
+  const previousLevel = lockedLevel;
+  const nextLevel = lockedLevel;
+  progress.level = lockedLevel;
   modeProgress[String(selectedMode)] = progress;
   saveModeProgress({ emit: true });
-  pastaAtual = setSelectedPreGameLevel(selectedMode, nextLevel);
+  pastaAtual = setSelectedPreGameLevel(selectedMode, lockedLevel);
   updateLevelIcon({ scope: 'mode' });
   dispatchModeProgressUpdate(selectedMode);
   updateModeIcons();

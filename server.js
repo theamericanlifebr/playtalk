@@ -40,7 +40,12 @@ const PROGRESS_SCHEMA = {
     type: 'json',
     default: {
       theme: 'light',
-      retryWrongPhrases: false
+      retryWrongPhrases: false,
+      headerGradientStart: '#1a66cc',
+      headerGradientEnd: '#357de0',
+      headerGradientEnabled: true,
+      phraseColor: '',
+      lensColor: ''
     }
   },
   generalProgress: { type: 'json', default: { level: 1, xp: 0 } },
@@ -402,6 +407,10 @@ function buildPlayerSnapshot(key, entry) {
     totals.correctPhrases
   );
 
+  const level = normalizePositiveInteger(
+    data.generalProgress && data.generalProgress.level
+  ) || normalizePositiveInteger(data.pastaAtual) || 1;
+
   return {
     key,
     username: normalized.username || key,
@@ -420,7 +429,8 @@ function buildPlayerSnapshot(key, entry) {
     correctChars: totals.correctChars,
     fastCps,
     recentPhraseCount,
-    recentPhraseWindow: RECENT_PHRASE_LIMIT
+    recentPhraseWindow: RECENT_PHRASE_LIMIT,
+    level
   };
 }
 
@@ -484,6 +494,18 @@ function computeRankings(users = {}) {
     { key: 'points', direction: 'desc' }
   ]));
 
+  const accuracyRanking = limitEntries(sortEntries(snapshots, [
+    { key: 'accuracy', direction: 'desc' },
+    { key: 'cps', direction: 'desc' },
+    { key: 'points', direction: 'desc' }
+  ]));
+
+  const levelRanking = limitEntries(sortEntries(snapshots, [
+    { key: 'level', direction: 'desc' },
+    { key: 'points', direction: 'desc' },
+    { key: 'accuracy', direction: 'desc' }
+  ]));
+
   const monthly = limitEntries(sortEntries(
     snapshots.filter(player => player.monthlyPoints > 0),
     [
@@ -507,7 +529,7 @@ function computeRankings(users = {}) {
     ]
   ));
 
-  return { fast, points, diamonds, streak, monthly, legends };
+  return { fast, points, diamonds, streak, monthly, legends, accuracy: accuracyRanking, level: levelRanking };
 }
 
 ensureDataDirectory();
