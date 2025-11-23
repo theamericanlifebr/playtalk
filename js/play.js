@@ -364,15 +364,13 @@
       button.setAttribute('aria-pressed', currentMode === config.id ? 'true' : 'false');
       button.setAttribute('title', config.title);
 
-      const ring = document.createElement('span');
-      ring.className = 'stats-mode-selector__ring';
       const rgb = hexToRgb(config.color || '#3fd286');
-      ring.style.setProperty('--mode-color-rgb', rgb);
+      button.style.setProperty('--mode-color-rgb', rgb);
       const image = document.createElement('img');
+      image.className = 'stats-mode-selector__icon';
       image.src = `selos%20modos%20de%20jogo/modo${config.id}.png`;
       image.alt = config.title;
-      ring.appendChild(image);
-      button.appendChild(ring);
+      button.appendChild(image);
 
       button.addEventListener('click', () => {
         const modeId = parseInt(button.dataset.mode, 10);

@@ -1,5 +1,6 @@
 (function() {
   const SETTINGS_STORAGE_KEY = 'playtalkSettings';
+  const SUPPORTED_LENS_KEYS = ['1', '2', '3', '4', '5', '6', 'home', 'game', 'menus', 'stats'];
   const DEFAULT_SETTINGS = {
     theme: 'dark',
     retryWrongPhrases: false,
@@ -18,6 +19,18 @@
     const trimmed = value.trim();
     const isValidHex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed);
     return isValidHex ? trimmed.toLowerCase() : fallback;
+  }
+
+  function toRgbString(color) {
+    const normalized = normalizeHexColor(color, '');
+    if (!normalized) {
+      return null;
+    }
+    const int = parseInt(normalized.slice(1), 16);
+    const r = (int >> 16) & 255;
+    const g = (int >> 8) & 255;
+    const b = int & 255;
+    return `${r}, ${g}, ${b}`;
   }
 
   function getDefaultPhraseColor(theme) {
@@ -58,13 +71,12 @@
     if (!raw || typeof raw !== 'object') {
       return palette;
     }
-    for (let mode = 1; mode <= 6; mode++) {
-      const key = String(mode);
+    SUPPORTED_LENS_KEYS.forEach((key) => {
       const custom = normalizeHexColor(raw[key], '');
       if (custom) {
         palette[key] = custom;
       }
-    }
+    });
     return palette;
   }
 
@@ -138,16 +150,26 @@
   function applyLensColor(color) {
     const doc = document.documentElement;
     if (!doc) return;
-    const normalized = normalizeHexColor(color, '');
-    if (normalized) {
-      const int = parseInt(normalized.slice(1), 16);
-      const r = (int >> 16) & 255;
-      const g = (int >> 8) & 255;
-      const b = int & 255;
-      doc.style.setProperty('--lens-custom-rgb', `${r}, ${g}, ${b}`);
+    const rgb = toRgbString(color);
+    if (rgb) {
+      doc.style.setProperty('--lens-custom-rgb', rgb);
     } else {
       doc.style.removeProperty('--lens-custom-rgb');
     }
+  }
+
+  function applyContextLensColors(lensColors = {}) {
+    const doc = document.documentElement;
+    if (!doc || !lensColors || typeof lensColors !== 'object') return;
+    SUPPORTED_LENS_KEYS.forEach((key) => {
+      const rgb = toRgbString(lensColors[key]);
+      const prop = `--lens-color-${key}-rgb`;
+      if (rgb) {
+        doc.style.setProperty(prop, rgb);
+      } else {
+        doc.style.removeProperty(prop);
+      }
+    });
   }
 
   function applyLensOpacity(strong, soft) {
@@ -164,6 +186,7 @@
     applyHeaderGradient(settings);
     applyPhraseColor(settings.phraseColor, settings.theme);
     applyLensColor(settings.lensColor);
+    applyContextLensColors(settings.lensColors);
     applyLensOpacity(settings.lensOpacityStrong, settings.lensOpacitySoft);
   }
 

@@ -2,7 +2,7 @@
   const API_ENDPOINT = '/api/rankings';
   const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
   const MAX_POSITION = 30;
-  const CAROUSEL_SECTIONS = ['fast', 'points', 'diamonds', 'streak', 'monthly', 'legends'];
+  const CAROUSEL_SECTIONS = ['streak', 'fast', 'accuracy', 'level'];
   let isLoading = false;
   let controller = null;
 
@@ -11,6 +11,14 @@
   const cpsFormatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
   const SECTION_CONFIG = {
+    streak: {
+      value(entry) {
+        return `${numberFormatter.format(Math.max(0, entry.bestStreak || 0))}`;
+      },
+      detail(entry) {
+        return `Sequência atual ${numberFormatter.format(Math.max(0, entry.currentStreak || 0))}`;
+      }
+    },
     fast: {
       value(entry) {
         const fastValue = entry && Number.isFinite(entry.cps)
@@ -33,45 +41,22 @@
         return `${accuracyText} • ${prefix} ${numberFormatter.format(recentCount)} ${label}`;
       }
     },
-    points: {
+    accuracy: {
       value(entry) {
-        return `${numberFormatter.format(Math.max(0, entry.points || 0))} pts`;
+        return `${percentFormatter.format(Math.max(0, Math.min(100, entry.accuracy || 0)))}%`;
+      },
+      detail(entry) {
+        const phrases = Math.max(0, entry.totalPhrases || entry.phrases || 0);
+        const label = phrases === 1 ? 'frase registrada' : 'frases registradas';
+        return `${numberFormatter.format(phrases)} ${label}`;
+      }
+    },
+    level: {
+      value(entry) {
+        return `Nível ${numberFormatter.format(Math.max(0, entry.level || 0))}`;
       },
       detail(entry) {
         return `${numberFormatter.format(Math.max(0, entry.points || 0))} pts totais`;
-      }
-    },
-    diamonds: {
-      value(entry) {
-        return `${numberFormatter.format(Math.max(0, entry.diamantes || 0))}`;
-      },
-      detail(entry) {
-        return '';
-      }
-    },
-    streak: {
-      value(entry) {
-        return `${numberFormatter.format(Math.max(0, entry.bestStreak || 0))}`;
-      },
-      detail(entry) {
-        return `Sequência atual ${numberFormatter.format(Math.max(0, entry.currentStreak || 0))}`;
-      }
-    },
-    monthly: {
-      value(entry) {
-        return `${numberFormatter.format(Math.max(0, entry.monthlyPoints || 0))} pts`;
-      },
-      detail(entry) {
-        return `${numberFormatter.format(Math.max(0, entry.points || 0))} pts totais`;
-      }
-    },
-    legends: {
-      value(entry) {
-        const value = Number.isFinite(entry.cps) ? entry.cps : (entry.cpm || 0);
-        return `${cpsFormatter.format(Math.max(0, value || 0))} cps`;
-      },
-      detail(entry) {
-        return `${percentFormatter.format(Math.max(0, Math.min(100, entry.accuracy || 0)))} • ${numberFormatter.format(Math.max(0, entry.diamantes || 0))} diamantes`;
       }
     }
   };
