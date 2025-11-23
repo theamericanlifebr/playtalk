@@ -55,6 +55,24 @@ const MEDAL_CONFIG = [
   { key: 'bronze', label: 'Bronze', icon: 'medalhas/bronze.png' }
 ];
 
+const MODE_LENS_COLORS = {
+  1: '#2bd67b',
+  2: '#f2c84b',
+  3: '#ff9a4d',
+  4: '#4aa3ff',
+  5: '#b37bff',
+  6: '#ff5f6d'
+};
+
+const MODE_BANNERS = [
+  { mode: 1, title: 'Hub geral', logline: 'Panorama da jornada completa.', color: MODE_LENS_COLORS[1], accent: 'Vocabulary' },
+  { mode: 2, title: 'Tradução direta', logline: 'Respostas certeiras em inglês.', color: MODE_LENS_COLORS[2], accent: 'Meaning' },
+  { mode: 3, title: 'Listening puro', logline: 'Reflexos afiados só com áudio.', color: MODE_LENS_COLORS[3], accent: 'Listening' },
+  { mode: 4, title: 'Reading em inglês', logline: 'Ritmo de leitura premium.', color: MODE_LENS_COLORS[4], accent: 'Reading' },
+  { mode: 5, title: 'Tradução reversa', logline: 'Compreensão e produção alinhadas.', color: MODE_LENS_COLORS[5], accent: 'Translating' },
+  { mode: 6, title: 'Desafio final', logline: 'Modo Thinking no limite.', color: MODE_LENS_COLORS[6], accent: 'Thinking' }
+];
+
 function getEmptyMedalCounts() {
   return {
     diamante: 0,
@@ -230,56 +248,78 @@ function initPlayPage(context = {}) {
   if (!modeButtonsContainer) {
     return;
   }
-  container.classList.add('stats-wrapper', 'stats-layout');
+  container.classList.add('stats-wrapper', 'stats-layout', 'stats-dashboard');
   container.style.transition = 'opacity 0.2s';
   const buttons = scope.querySelectorAll('#mode-buttons img');
   const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
   let statsData = {};
   let activeMode = 1;
+  let activeRankingKey = 'streak';
 
-  function createBlock(modifier, titleText) {
-    const block = document.createElement('div');
-    block.className = `stats-block ${modifier}`;
-    const heading = document.createElement('h2');
-    heading.className = 'stats-subtitle';
-    heading.textContent = titleText;
-    block.appendChild(heading);
-    const content = document.createElement('div');
-    content.className = 'stats-block__content';
-    block.appendChild(content);
-    return { block, content };
-  }
+  const heroSection = document.createElement('section');
+  heroSection.className = 'stats-hero ranking-banner has-lens';
+  const heroViewport = document.createElement('div');
+  heroViewport.className = 'ranking-banner__viewport';
+  const heroTrack = document.createElement('div');
+  heroTrack.className = 'ranking-banner__track stats-banner__track';
+  heroViewport.appendChild(heroTrack);
+  heroSection.appendChild(heroViewport);
 
-  const titleBlock = document.createElement('div');
-  titleBlock.className = 'stats-block stats-block--title';
-  const title = document.createElement('h1');
-  title.className = 'stats-title';
-  title.textContent = 'Estatísticas';
-  titleBlock.appendChild(title);
+  const medalsSection = document.createElement('section');
+  medalsSection.className = 'stats-card stats-card--medals has-lens';
+  const medalsTitle = document.createElement('h2');
+  medalsTitle.textContent = 'Quadro de medalhas';
+  medalsSection.appendChild(medalsTitle);
+  const medalsContent = document.createElement('div');
+  medalsContent.className = 'stats-card__body';
+  medalsSection.appendChild(medalsContent);
 
-  const performanceBlock = createBlock('stats-block--performance', 'Desempenho');
-  const medalsBlock = createBlock('stats-block--medals', 'Quadro de medalhas');
-  const modesBlock = createBlock('stats-block--modes', 'Modos de jogo');
-  const totalsBlock = createBlock('stats-block--totals', 'Totais');
+  const numbersSection = document.createElement('section');
+  numbersSection.className = 'stats-card stats-card--numbers has-lens';
+  const numbersTitle = document.createElement('h2');
+  numbersTitle.textContent = 'Números do jogador';
+  numbersSection.appendChild(numbersTitle);
+  const numbersContent = document.createElement('div');
+  numbersContent.className = 'stats-card__body stats-card__body--metrics';
+  numbersSection.appendChild(numbersContent);
 
-  const performanceContent = performanceBlock.content;
-  const medalsContent = medalsBlock.content;
-  const totalsContent = totalsBlock.content;
+  const rankingsSection = document.createElement('section');
+  rankingsSection.className = 'stats-card stats-card--ranking has-lens';
+  const rankingsTitle = document.createElement('h2');
+  rankingsTitle.textContent = 'Os 10 melhores';
+  rankingsSection.appendChild(rankingsTitle);
+  const rankingNav = document.createElement('div');
+  rankingNav.className = 'stats-ranking__nav';
+  const rankingContent = document.createElement('div');
+  rankingContent.className = 'stats-ranking__content';
+  rankingsSection.appendChild(rankingNav);
+  rankingsSection.appendChild(rankingContent);
 
-  modesBlock.content.classList.add('stats-block__content--modes');
+  const modesBlock = document.createElement('section');
+  modesBlock.className = 'stats-card stats-card--modes';
+  const modesTitle = document.createElement('h2');
+  modesTitle.textContent = 'Modos de jogo';
+  modesBlock.appendChild(modesTitle);
+  modesBlock.appendChild(modeButtonsContainer);
   modeButtonsContainer.classList.add('stats-mode-icons');
-  modesBlock.content.appendChild(modeButtonsContainer);
 
   container.innerHTML = '';
-  container.appendChild(titleBlock);
-  container.appendChild(performanceBlock.block);
-  container.appendChild(medalsBlock.block);
-  container.appendChild(modesBlock.block);
-  container.appendChild(totalsBlock.block);
+  container.appendChild(heroSection);
+  container.appendChild(medalsSection);
+  container.appendChild(numbersSection);
+  container.appendChild(rankingsSection);
+  container.appendChild(modesBlock);
+
   function refreshStatsData() {
     statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
   }
   refreshStatsData();
+
+  function getLensColor(mode) {
+    const cssColor = getComputedStyle(document.documentElement).getPropertyValue('--lens-custom-color').trim();
+    return cssColor || MODE_LENS_COLORS[mode] || MODE_LENS_COLORS[1];
+  }
+
   function calcModeStats(mode) {
     const stats = statsData[mode] || {};
     const totalPhrases = stats.totalPhrases || 0;
@@ -352,16 +392,144 @@ function initPlayPage(context = {}) {
     };
   }
 
+  function getSummaryFor(mode) {
+    return mode === 1 ? calcGeneralStats() : calcModeStats(mode);
+  }
+
+  function renderHero() {
+    heroTrack.innerHTML = '';
+    MODE_BANNERS.forEach((banner) => {
+      const stats = getSummaryFor(banner.mode);
+      const card = document.createElement('article');
+      card.className = 'ranking-banner__card stats-banner__card';
+      card.classList.toggle('is-active', banner.mode === activeMode);
+      card.dataset.mode = banner.mode;
+      card.style.setProperty('--banner-gradient', `linear-gradient(135deg, ${banner.color}80 0%, ${banner.color}cc 100%)`);
+      const content = document.createElement('div');
+      content.className = 'ranking-banner__content';
+      const eyebrow = document.createElement('p');
+      eyebrow.className = 'ranking-banner__eyebrow';
+      eyebrow.textContent = `${banner.accent} • Modo ${banner.mode}`;
+      const title = document.createElement('h2');
+      title.textContent = banner.title;
+      const logline = document.createElement('p');
+      logline.className = 'ranking-banner__logline';
+      logline.textContent = banner.logline;
+      content.append(eyebrow, title, logline);
+
+      const meta = document.createElement('div');
+      meta.className = 'stats-banner__meta';
+      meta.innerHTML = `Precisão ${formatPercent(stats.accuracyPerc)} • ${formatCps(stats.cps)} cps`;
+
+      card.append(content, meta);
+      heroTrack.appendChild(card);
+    });
+    if (window.playtalkLens) {
+      window.playtalkLens.applyLens(heroSection, { mode: activeMode, color: getLensColor(activeMode) });
+    }
+  }
+
+  function renderMedals(summary) {
+    medalsContent.innerHTML = '';
+    medalsContent.appendChild(createMedalsSection(summary.medals));
+    if (window.playtalkLens) {
+      window.playtalkLens.applyLens(medalsSection, { mode: activeMode, color: getLensColor(activeMode) });
+    }
+  }
+
+  function renderNumbers(summary) {
+    numbersContent.innerHTML = '';
+    numbersContent.appendChild(createMetricsSection(summary));
+    numbersContent.appendChild(createTotalsSection(summary));
+    if (window.playtalkLens) {
+      window.playtalkLens.applyLens(numbersSection, { mode: activeMode, color: getLensColor(activeMode) });
+    }
+  }
+
+  const rankingTabs = [
+    { key: 'streak', label: 'Melhores sequências' },
+    { key: 'cpm', label: 'Melhor CPM' },
+    { key: 'accuracy', label: 'Mais precisos' },
+    { key: 'level', label: 'Mais nível' }
+  ];
+
+  function buildSampleRanking(summary) {
+    const userName = (document.getElementById('header-username') || {}).textContent || 'Você';
+    const baseEntries = Array.from({ length: 9 }).map((_, index) => ({
+      name: `Jogador ${index + 1}`,
+      streak: Math.max(1, summary.bestStreak || 1) - index,
+      cpm: Math.max(0, Math.round(summary.cps * 60) - index * 8),
+      accuracy: Math.max(10, Math.round(summary.accuracyPerc) - index),
+      level: Math.max(1, 10 - index)
+    }));
+    baseEntries.unshift({
+      name: userName.trim() || 'Você',
+      streak: Math.max(1, summary.bestStreak || summary.currentStreak || 1),
+      cpm: Math.max(0, Math.round(summary.cps * 60)),
+      accuracy: Math.max(0, Math.round(summary.accuracyPerc)),
+      level: Math.max(1, Math.round(summary.totalPhrases / 10) || 1)
+    });
+    return baseEntries.slice(0, 10);
+  }
+
+  function renderRanking(summary) {
+    rankingNav.innerHTML = '';
+    rankingContent.innerHTML = '';
+    const entries = buildSampleRanking(summary);
+    rankingTabs.forEach((tab) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `stats-ranking__tab${tab.key === activeRankingKey ? ' is-active' : ''}`;
+      button.textContent = tab.label;
+      button.addEventListener('click', () => {
+        activeRankingKey = tab.key;
+        renderRanking(summary);
+      });
+      rankingNav.appendChild(button);
+    });
+    const list = document.createElement('ul');
+    list.className = 'stats-ranking__list';
+    const formatter = {
+      streak: (entry) => `${formatInteger(entry.streak)}x`,
+      cpm: (entry) => `${formatInteger(entry.cpm)} cpm`,
+      accuracy: (entry) => `${formatInteger(entry.accuracy)}%`,
+      level: (entry) => `Nível ${formatInteger(entry.level)}`
+    }[activeRankingKey];
+    entries.forEach((entry, index) => {
+      const row = document.createElement('li');
+      row.className = 'ranking-row stats-ranking__row';
+      const position = document.createElement('span');
+      position.className = 'ranking-row__position';
+      position.textContent = index + 1;
+      const info = document.createElement('div');
+      info.className = 'ranking-row__info';
+      const name = document.createElement('strong');
+      name.className = 'ranking-row__name';
+      name.textContent = entry.name;
+      const meta = document.createElement('span');
+      meta.className = 'ranking-row__meta';
+      meta.textContent = formatter(entry);
+      info.append(name, meta);
+      row.append(position, info);
+      list.appendChild(row);
+    });
+    rankingContent.appendChild(list);
+    if (window.playtalkLens) {
+      window.playtalkLens.applyLens(rankingsSection, { mode: activeMode, color: getLensColor(activeMode) });
+    }
+  }
+
   function render(mode) {
     container.style.opacity = 0;
     setTimeout(() => {
-      const summary = mode === 1 ? calcGeneralStats() : calcModeStats(mode);
-      performanceContent.innerHTML = '';
-      performanceContent.appendChild(createMetricsSection(summary));
-      medalsContent.innerHTML = '';
-      medalsContent.appendChild(createMedalsSection(summary.medals));
-      totalsContent.innerHTML = '';
-      totalsContent.appendChild(createTotalsSection(summary));
+      const summary = getSummaryFor(mode);
+      renderHero();
+      renderMedals(summary);
+      renderNumbers(summary);
+      renderRanking(summary);
+      if (window.playtalkLens) {
+        window.playtalkLens.applyLens(container, { mode, color: getLensColor(mode) });
+      }
       container.style.opacity = 1;
     }, 150);
   }
