@@ -782,7 +782,7 @@ function getStoredRoundState(mode, expectedLevel) {
     return null;
   }
   const storedLevel = Number.isFinite(entry.level) && entry.level > 0 ? Math.floor(entry.level) : null;
-  if (Number.isFinite(expectedLevel) && expectedLevel > 0 && storedLevel !== Math.floor(expectedLevel)) {
+  if (!entry.isLevelFinder && Number.isFinite(expectedLevel) && expectedLevel > 0 && storedLevel !== Math.floor(expectedLevel)) {
     return null;
   }
   const frases = sanitizeStoredPhrases(entry.frases);
@@ -794,6 +794,14 @@ function getStoredRoundState(mode, expectedLevel) {
   if (roundAttempts >= roundTarget) {
     return null;
   }
+  const levelFinderElapsed = Number.isFinite(entry.levelFinderElapsed)
+    ? Math.max(0, Math.floor(entry.levelFinderElapsed))
+    : 0;
+  const levelFinderHistory = Array.isArray(entry.levelFinderHistory)
+    ? entry.levelFinderHistory
+        .map(value => Math.max(1, Math.floor(Number(value) || 0)))
+        .filter(Boolean)
+    : [];
   return {
     points: Number.isFinite(entry.points) ? entry.points : 0,
     roundTarget,
@@ -805,7 +813,10 @@ function getStoredRoundState(mode, expectedLevel) {
     roundActive: Boolean(entry.roundActive),
     level: storedLevel,
     elapsedMs: Number.isFinite(entry.elapsedMs) ? entry.elapsedMs : 0,
-    adjustedMs: Number.isFinite(entry.adjustedMs) ? entry.adjustedMs : null
+    adjustedMs: Number.isFinite(entry.adjustedMs) ? entry.adjustedMs : null,
+    isLevelFinder: Boolean(entry.isLevelFinder),
+    levelFinderElapsed,
+    levelFinderHistory
   };
 }
 
@@ -856,7 +867,10 @@ function persistCurrentRoundState() {
     roundActive: Boolean(roundActive),
     level: Math.max(1, Math.floor(pastaAtual || getSelectedPreGameLevel(selectedMode) || 1)),
     elapsedMs: roundStartTime ? Math.max(0, Date.now() - roundStartTime) : 0,
-    adjustedMs: Math.max(0, Math.floor(roundAdjustedTimeMs))
+    adjustedMs: Math.max(0, Math.floor(roundAdjustedTimeMs)),
+    isLevelFinder: isLevelFinderActive(),
+    levelFinderElapsed: isLevelFinderActive() ? getLevelFinderElapsedMs() : 0,
+    levelFinderHistory: isLevelFinderActive() ? [...levelFinderLevelHistory].slice(-50) : []
   };
   saveRoundStateForMode(selectedMode, snapshot);
 }
@@ -866,7 +880,7 @@ function restoreRoundState(saved, expectedLevel) {
     return false;
   }
   const storedLevel = Number.isFinite(saved.level) && saved.level > 0 ? Math.floor(saved.level) : null;
-  if (Number.isFinite(expectedLevel) && expectedLevel > 0 && storedLevel !== Math.floor(expectedLevel)) {
+  if (!saved.isLevelFinder && Number.isFinite(expectedLevel) && expectedLevel > 0 && storedLevel !== Math.floor(expectedLevel)) {
     return false;
   }
   const sanitizedPhrases = sanitizeStoredPhrases(saved.frases);
@@ -892,6 +906,16 @@ function restoreRoundState(saved, expectedLevel) {
   }
   const savedAdjusted = Number.isFinite(saved.adjustedMs) ? Math.max(0, Math.floor(saved.adjustedMs)) : null;
   roundAdjustedTimeMs = savedAdjusted !== null ? savedAdjusted : elapsedMs;
+  levelFinderActive = Boolean(saved.isLevelFinder);
+  if (levelFinderActive) {
+    levelFinderStartTime = Date.now() - (saved.levelFinderElapsed || 0);
+    if (!Number.isFinite(levelFinderStartTime) || levelFinderStartTime <= 0) {
+      levelFinderStartTime = Date.now();
+    }
+    levelFinderLevelHistory = Array.isArray(saved.levelFinderHistory) ? [...saved.levelFinderHistory] : [];
+    roundTarget = LEVEL_FINDER_ROUND_TARGET;
+    resumeLevelFinderTimer();
+  }
   roundActive = true;
   pastaAtual = storedLevel || expectedLevel || pastaAtual;
   if (pastaAtual) {
@@ -1284,19 +1308,33 @@ function loadStreakState() {
   saveStreakState({ emitEvent: false });
 }
 
-function handleCorrectStreak() {
+function updateModeStreak(mode, isCorrect) {
+  const stats = ensureModeStats(mode);
+  if (isCorrect) {
+    stats.currentStreak = normalizePositiveInteger(stats.currentStreak) + 1;
+    stats.bestStreak = Math.max(stats.bestStreak || 0, stats.currentStreak);
+  } else {
+    stats.currentStreak = 0;
+  }
+  saveModeStats();
+}
+
+function handleCorrectStreak(mode) {
   currentStreak += 1;
   if (currentStreak > bestStreak) {
     bestStreak = currentStreak;
   }
+  updateModeStreak(mode, true);
   saveStreakState();
 }
 
-function handleWrongStreak() {
+function handleWrongStreak(mode) {
   if (currentStreak === 0) {
+    updateModeStreak(mode, false);
     return;
   }
   currentStreak = 0;
+  updateModeStreak(mode, false);
   saveStreakState();
 }
 
@@ -1525,6 +1563,7 @@ function updatePreGameScreen(mode) {
     startBtn.textContent = hasResume ? 'Continuar' : 'Jogar';
     startBtn.classList.toggle('game-overlay__primary--continue', hasResume);
     startBtn.setAttribute('data-resume', hasResume ? 'true' : 'false');
+    startBtn.setAttribute('data-resume-levelfinder', hasResume && savedRound && savedRound.isLevelFinder ? 'true' : 'false');
   }
   overlay.dataset.mode = String(mode);
 }
@@ -1564,8 +1603,10 @@ function openPostGameScreen(summary) {
     return;
   }
   const medalEl = document.getElementById('post-game-medal');
+  const medalLabelEl = document.getElementById('post-game-medal-label');
   const statusEl = document.getElementById('post-game-level-status');
   const statsContainer = overlay.querySelector('.post-game-stats');
+  const wooshAudio = document.getElementById('somWoosh');
 
   function renderStats(items = []) {
     if (!statsContainer) return;
@@ -1585,6 +1626,7 @@ function openPostGameScreen(summary) {
 
   if (summary.isLevelFinder) {
     if (medalEl) medalEl.style.display = 'none';
+    if (medalLabelEl) medalLabelEl.textContent = '';
     if (statusEl) statusEl.textContent = summary.statusText || '';
     renderStats(summary.customStats);
   } else {
@@ -1592,28 +1634,34 @@ function openPostGameScreen(summary) {
       medalEl.style.display = 'block';
       medalEl.src = summary.medal.image;
       medalEl.alt = summary.medal.label;
+      medalEl.classList.remove('is-animated');
+      void medalEl.offsetWidth;
+      medalEl.classList.add('is-animated');
+    }
+    if (medalLabelEl) {
+      const label = summary.medalKey || MEDAL_LABEL_TO_KEY[summary.medal.label] || '';
+      medalLabelEl.textContent = label ? label.toLowerCase() : '';
+      medalLabelEl.classList.remove('is-animated');
+      void medalLabelEl.offsetWidth;
+      medalLabelEl.classList.add('is-animated');
     }
     if (statusEl) {
-      let levelNote = '';
-      if (Number.isFinite(summary.newLevel)) {
-        const previous = Number.isFinite(summary.previousLevel) ? summary.previousLevel : summary.newLevel;
-        if (summary.newLevel !== previous) {
-          levelNote = ` Você foi da pasta ${previous} para a pasta ${summary.newLevel}.`;
-        } else {
-          levelNote = ` Você continua na pasta ${summary.newLevel}.`;
-        }
-      }
-      statusEl.textContent = `${summary.medal.status}${levelNote}`;
+      statusEl.textContent = '';
     }
     renderStats([
-      { label: 'Acertos', value: summary.correct },
-      { label: 'Erros', value: summary.wrong },
       { label: 'Precisão', value: `${summary.accuracy.toFixed(1)}%` },
       { label: 'Caracteres corretos por segundo', value: summary.cps.toFixed(2) }
     ]);
   }
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
+
+  if (wooshAudio) {
+    try {
+      wooshAudio.currentTime = 0;
+      wooshAudio.play().catch(() => {});
+    } catch {}
+  }
 
   if (window.playtalkLens && typeof window.playtalkLens.applyLens === 'function') {
     window.playtalkLens.applyLens(selectedMode);
@@ -1653,6 +1701,8 @@ function ensureModeStats(mode) {
       wrong: 0,
       report: 0,
       medals: createEmptyMedalCounts(),
+      currentStreak: 0,
+      bestStreak: 0,
       wrongRanking: [],
       reportRanking: []
     };
@@ -1665,6 +1715,8 @@ function ensureModeStats(mode) {
     const correctChars = Number(entry.correctChars);
     entry.correctChars = Number.isFinite(correctChars) && correctChars > 0 ? Math.floor(correctChars) : 0;
     entry.medals = normalizeMedalCounts(entry.medals);
+    entry.currentStreak = normalizePositiveInteger(entry.currentStreak);
+    entry.bestStreak = normalizePositiveInteger(entry.bestStreak);
   }
   return modeStats[mode];
 }
@@ -2227,16 +2279,19 @@ function beginGame() {
     if (reconhecimento) {
       reconhecimento.lang = recognitionLanguage;
     }
-    const restored = isLevelFinderActive()
-      ? false
-      : restoreRoundState(getStoredRoundState(selectedMode, targetLevel), targetLevel);
+    const savedState = getStoredRoundState(selectedMode, targetLevel);
+    const restored = restoreRoundState(savedState, targetLevel);
     if (reconhecimento) {
       reconhecimentoAtivo = true;
       reconhecimento.start();
     }
     if (isLevelFinderActive()) {
-      loadLevelFinderNextPhrase();
-      mostrarFrase();
+      if (!restored) {
+        loadLevelFinderNextPhrase();
+        mostrarFrase();
+      } else {
+        atualizarBarraProgresso();
+      }
     } else if (!restored) {
       carregarFrases();
     }
@@ -2733,7 +2788,7 @@ function verificarResposta() {
     acertosTotais++;
     points = Math.min(roundTarget, points + 1);
     saveTotals();
-    handleCorrectStreak();
+    handleCorrectStreak(selectedMode);
     const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
     grantExperience(reward, selectedMode);
     consecutiveErrors = 0;
@@ -2744,7 +2799,7 @@ function verificarResposta() {
     });
   } else {
     stats.wrong++;
-    handleWrongStreak();
+    handleWrongStreak(selectedMode);
     const wr = stats.wrongRanking;
     const existing = wr.find(e => e.expected === expectedPhrase && e.input === resposta && e.folder === pastaAtual);
     if (existing) {
@@ -2939,12 +2994,14 @@ function finishMode() {
   saveModeStats();
   const progress = getModeProgress(selectedMode);
   const lockedLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode));
+  const { max: maxLevel } = getAvailableLevelBounds(selectedMode);
   const previousLevel = lockedLevel;
-  const nextLevel = lockedLevel;
-  progress.level = lockedLevel;
+  const shouldLevelUp = medalKey === 'ouro' || medalKey === 'diamante';
+  const nextLevel = shouldLevelUp ? Math.min(maxLevel, lockedLevel + 1) : lockedLevel;
+  progress.level = nextLevel;
   modeProgress[String(selectedMode)] = progress;
   saveModeProgress({ emit: true });
-  pastaAtual = setSelectedPreGameLevel(selectedMode, lockedLevel);
+  pastaAtual = setSelectedPreGameLevel(selectedMode, nextLevel);
   updateLevelIcon({ scope: 'mode' });
   dispatchModeProgressUpdate(selectedMode);
   updateModeIcons();
@@ -2958,11 +3015,10 @@ function finishMode() {
   }
 
   openPostGameScreen({
-    correct,
-    wrong,
     accuracy,
     cps,
     medal,
+    medalKey,
     previousLevel,
     newLevel: nextLevel
   });
@@ -3079,8 +3135,14 @@ async function initGame() {
   if (preGameStartBtn) {
     preGameStartBtn.addEventListener('click', () => {
       const mode = pendingModeStart ?? selectedMode;
-      levelFinderActive = false;
-      resetLevelFinderTracking();
+      const resumeLevelFinder = preGameStartBtn.dataset.resumeLevelfinder === 'true';
+      if (resumeLevelFinder) {
+        levelFinderActive = true;
+        resumeLevelFinderTimer();
+      } else {
+        levelFinderActive = false;
+        resetLevelFinderTracking();
+      }
       setRoundSelection(mode, roundTarget);
       beginGame();
     });
@@ -3162,6 +3224,16 @@ async function bootstrapHomePage() {
     });
   }
   await initGame();
+  const handleBackgroundPersist = () => {
+    persistCurrentRoundState();
+    saveModeStats();
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      handleBackgroundPersist();
+    }
+  });
+  window.addEventListener('pagehide', handleBackgroundPersist);
   window.addEventListener('beforeunload', () => {
     recordModeTime(selectedMode);
     saveModeStats();

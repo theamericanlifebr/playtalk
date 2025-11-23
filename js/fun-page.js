@@ -11,7 +11,9 @@
     const headerEndInput = scope.querySelector('#headerColorEnd');
     const headerGradientToggle = scope.querySelector('#headerGradientEnabled');
     const phraseColorInput = scope.querySelector('#phraseColor');
-    const lensColorInput = scope.querySelector('#lensColor');
+    const lensColorInputs = Array.from(scope.querySelectorAll('.lens-mode-input[data-lens-mode]'));
+    const lensOpacityStrongInput = scope.querySelector('#lensOpacityStrong');
+    const lensOpacitySoftInput = scope.querySelector('#lensOpacitySoft');
     const feedback = scope.querySelector('#fun-feedback');
     const backgroundInput = scope.querySelector('#fun-background-upload');
     const backgroundClearButton = scope.querySelector('#fun-background-clear');
@@ -58,6 +60,12 @@
     }
 
     function getFormSettings() {
+      const lensColors = {};
+      lensColorInputs.forEach(input => {
+        const mode = input.dataset.lensMode;
+        if (!mode) return;
+        lensColors[mode] = input.value;
+      });
       return {
         theme: 'dark',
         retryWrongPhrases: retryWrongCheckbox ? retryWrongCheckbox.checked : false,
@@ -65,7 +73,10 @@
         headerGradientEnd: headerEndInput ? headerEndInput.value : undefined,
         headerGradientEnabled: headerGradientToggle ? headerGradientToggle.checked : true,
         phraseColor: phraseColorInput ? phraseColorInput.value : '',
-        lensColor: lensColorInput ? lensColorInput.value : ''
+        lensColor: lensColors['1'] || '',
+        lensColors,
+        lensOpacityStrong: lensOpacityStrongInput ? lensOpacityStrongInput.value : undefined,
+        lensOpacitySoft: lensOpacitySoftInput ? lensOpacitySoftInput.value : undefined
       };
     }
 
@@ -86,8 +97,19 @@
       if (phraseColorInput && typeof settings.phraseColor === 'string' && settings.phraseColor.trim()) {
         phraseColorInput.value = settings.phraseColor;
       }
-      if (lensColorInput && typeof settings.lensColor === 'string' && settings.lensColor.trim()) {
-        lensColorInput.value = settings.lensColor;
+      lensColorInputs.forEach(input => {
+        const mode = input.dataset.lensMode;
+        if (!mode) return;
+        const saved = settings.lensColors && settings.lensColors[mode];
+        if (typeof saved === 'string' && saved.trim()) {
+          input.value = saved;
+        }
+      });
+      if (lensOpacityStrongInput && Number.isFinite(Number(settings.lensOpacityStrong))) {
+        lensOpacityStrongInput.value = settings.lensOpacityStrong;
+      }
+      if (lensOpacitySoftInput && Number.isFinite(Number(settings.lensOpacitySoft))) {
+        lensOpacitySoftInput.value = settings.lensOpacitySoft;
       }
     }
 
@@ -107,7 +129,7 @@
     load();
     form.addEventListener('submit', save);
 
-    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, lensColorInput].forEach(input => {
+    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, lensOpacityStrongInput, lensOpacitySoftInput, ...lensColorInputs].forEach(input => {
       if (!input) return;
       input.addEventListener('input', () => {
         if (!api) return;

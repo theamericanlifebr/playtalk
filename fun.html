@@ -73,10 +73,41 @@
       <section class="fun-section">
         <h2>Lente</h2>
         <p class="fun-note">Escolha a cor base da lente degradê que aparece nas telas de pré e pós-jogo.</p>
-        <div class="fun-color-options">
-          <label for="lensColor">
-            Cor da lente
-            <input type="color" id="lensColor" class="fun-color-input" value="#3fd286">
+        <div class="fun-color-options fun-color-options--grid">
+          <label>
+            Vocabulary
+            <input type="color" data-lens-mode="1" class="fun-color-input lens-mode-input" value="#3fd286">
+          </label>
+          <label>
+            Meaning
+            <input type="color" data-lens-mode="2" class="fun-color-input lens-mode-input" value="#f2c11f">
+          </label>
+          <label>
+            Listening
+            <input type="color" data-lens-mode="3" class="fun-color-input lens-mode-input" value="#ff8b3d">
+          </label>
+          <label>
+            Reading
+            <input type="color" data-lens-mode="4" class="fun-color-input lens-mode-input" value="#4a9cff">
+          </label>
+          <label>
+            Translating
+            <input type="color" data-lens-mode="5" class="fun-color-input lens-mode-input" value="#9a6dff">
+          </label>
+          <label>
+            Thinking
+            <input type="color" data-lens-mode="6" class="fun-color-input lens-mode-input" value="#ff4f6d">
+          </label>
+        </div>
+        <p class="fun-note">Defina a opacidade da lente aplicada em qualquer modo.</p>
+        <div class="fun-opacity">
+          <label for="lensOpacityStrong">
+            Camada forte
+            <input type="range" id="lensOpacityStrong" min="0" max="1" step="0.05" value="0.65">
+          </label>
+          <label for="lensOpacitySoft">
+            Camada suave
+            <input type="range" id="lensOpacitySoft" min="0" max="1" step="0.05" value="0.25">
           </label>
         </div>
       </section>
