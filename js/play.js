@@ -8,6 +8,8 @@
     { id: 6, title: 'Thinking', logline: 'Raciocínio afiado em vermelho vivo.', color: '#ff4f6d' }
   ];
 
+  const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
+
   const GENERAL_META = {
     id: null,
     title: 'Painel geral',
@@ -289,22 +291,25 @@
   function createHero(summary, modeMeta) {
     const wrapper = document.createElement('section');
     wrapper.className = 'stats-hero';
-    const titleWrap = document.createElement('div');
-    titleWrap.className = 'stats-hero__copy';
-
-    const eyebrow = document.createElement('p');
-    eyebrow.className = 'stats-hero__eyebrow';
-    eyebrow.textContent = 'Lente de resultados';
+    const visual = document.createElement('div');
+    visual.className = 'stats-hero__visual';
+    const badge = document.createElement('div');
+    badge.className = 'stats-hero__badge';
+    const heroImg = document.createElement('img');
+    heroImg.src = modeMeta.id ? `selos%20modos%20de%20jogo/modo${modeMeta.id}.png` : 'selos%20modos%20de%20jogo/logoitalk2.png';
+    heroImg.alt = modeMeta.title || 'Modo de jogo';
+    badge.appendChild(heroImg);
     const title = document.createElement('h1');
     title.className = 'stats-title';
     title.textContent = modeMeta.title;
+    visual.appendChild(badge);
+    visual.appendChild(title);
+
+    const titleWrap = document.createElement('div');
+    titleWrap.className = 'stats-hero__copy';
     const logline = document.createElement('p');
     logline.className = 'stats-hero__lead';
     logline.textContent = modeMeta.logline;
-    titleWrap.appendChild(eyebrow);
-    titleWrap.appendChild(title);
-    titleWrap.appendChild(logline);
-
     const chips = document.createElement('div');
     chips.className = 'stats-hero__chips';
     const chipData = [
@@ -324,8 +329,11 @@
       chips.appendChild(chip);
     });
 
+    titleWrap.appendChild(logline);
+    titleWrap.appendChild(chips);
+
+    wrapper.appendChild(visual);
     wrapper.appendChild(titleWrap);
-    wrapper.appendChild(chips);
     return wrapper;
   }
 
@@ -400,11 +408,7 @@
       const iconWrapper = document.createElement('span');
       iconWrapper.className = 'ranking-carousel__nav-icon';
       iconWrapper.innerHTML = entry.icon;
-      const label = document.createElement('span');
-      label.className = 'ranking-carousel__nav-label';
-      label.textContent = entry.title;
       button.appendChild(iconWrapper);
-      button.appendChild(label);
 
       if (index === 0) {
         button.classList.add('is-active');
@@ -436,6 +440,13 @@
       const position = document.createElement('span');
       position.className = 'ranking-row__position';
       position.textContent = index + 1;
+      const avatarWrapper = document.createElement('div');
+      avatarWrapper.className = 'ranking-row__avatar';
+      const avatar = document.createElement('img');
+      avatar.src = entry.avatar || DEFAULT_AVATAR_URL;
+      avatar.alt = `Foto de ${entry.displayName || entry.username || 'Jogador'}`;
+      avatar.loading = 'lazy';
+      avatarWrapper.appendChild(avatar);
       const info = document.createElement('div');
       info.className = 'ranking-row__info';
       const name = document.createElement('strong');
@@ -450,6 +461,7 @@
       value.className = 'ranking-row__value';
       value.textContent = typeof config.value === 'function' ? config.value(entry) : '';
       row.appendChild(position);
+      row.appendChild(avatarWrapper);
       row.appendChild(info);
       row.appendChild(value);
       listEl.appendChild(row);
@@ -462,16 +474,26 @@
     const header = document.createElement('div');
     header.className = 'stats-section__header';
     const headerCopy = document.createElement('div');
-    const eyebrow = document.createElement('p');
-    eyebrow.className = 'stats-hero__eyebrow';
-    eyebrow.textContent = 'Os 10 melhores';
     const title = document.createElement('h2');
-    title.textContent = 'Carrossel de rankings';
-    headerCopy.appendChild(eyebrow);
+    title.textContent = 'Os 10 melhores';
     headerCopy.appendChild(title);
 
     const list = createTopList();
     let currentKey = Object.values(TOP_CONFIG)[0].key;
+    let cachedData = {};
+    let currentModeFilter = null;
+
+    function scopeEntriesForMode(entries, mode) {
+      if (!mode) return entries || [];
+      const modeKey = String(mode);
+      return (entries || [])
+        .map(entry => {
+          const modeData = entry && entry.modes && entry.modes[modeKey];
+          if (!modeData) return null;
+          return { ...entry, ...modeData };
+        })
+        .filter(item => item && (item.totalPhrases || item.correctPhrases || item.correctChars || item.points || item.bestStreak));
+    }
 
     const nav = buildTopNav(TOP_CONFIG, (key, button) => {
       currentKey = key;
@@ -480,7 +502,10 @@
         btn.classList.toggle('is-active', isActive);
         btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
-      renderTopEntries(list, rankings[currentKey] || [], Object.values(TOP_CONFIG).find(entry => entry.key === key));
+      const config = Object.values(TOP_CONFIG).find(entry => entry.key === key);
+      const scoped = scopeEntriesForMode(cachedData[currentKey] || [], currentModeFilter);
+      title.textContent = config ? config.title : 'Ranking';
+      renderTopEntries(list, scoped, config || {});
     });
 
     header.appendChild(headerCopy);
@@ -488,8 +513,13 @@
     section.appendChild(header);
     section.appendChild(list);
 
-    return { section, update: (data) => {
-      renderTopEntries(list, data[currentKey] || [], Object.values(TOP_CONFIG).find(entry => entry.key === currentKey));
+    return { section, update: (data, mode) => {
+      cachedData = data || {};
+      currentModeFilter = mode || null;
+      const config = Object.values(TOP_CONFIG).find(entry => entry.key === currentKey);
+      const scoped = scopeEntriesForMode(cachedData[currentKey] || [], currentModeFilter);
+      title.textContent = config ? config.title : 'Ranking';
+      renderTopEntries(list, scoped, config || {});
     } };
   }
 
@@ -552,6 +582,7 @@
       medalsSection = swapSection(container, medalsSection, newMedals);
       const newNumbers = createNumbersSection(newSummary);
       numbersSection = swapSection(container, numbersSection, newNumbers);
+      updateTop(rankings, mode);
       if (mode) {
         applyLens(mode);
       } else {
@@ -579,7 +610,7 @@
       .then(res => res.json())
       .then(payload => {
         rankings = payload && payload.rankings ? payload.rankings : {};
-        updateTop(rankings);
+        updateTop(rankings, activeMode);
       })
       .catch(error => {
         console.warn('Não foi possível carregar os rankings', error);
@@ -595,6 +626,7 @@
       medalsSection = swapSection(container, medalsSection, refreshedMedals);
       const refreshedNumbers = createNumbersSection(updated);
       numbersSection = swapSection(container, numbersSection, refreshedNumbers);
+      updateTop(rankings, activeMode);
     });
   }
 

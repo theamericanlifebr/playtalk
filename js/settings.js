@@ -1,7 +1,7 @@
 (function() {
   const SETTINGS_STORAGE_KEY = 'playtalkSettings';
   const DEFAULT_SETTINGS = {
-    theme: 'light',
+    theme: 'dark',
     retryWrongPhrases: false,
     headerGradientStart: '#1a66cc',
     headerGradientEnd: '#357de0',
@@ -18,8 +18,7 @@
   }
 
   function getDefaultPhraseColor(theme) {
-    if (theme === 'dark' || theme === 'blue') return '#ffffff';
-    return '#333333';
+    return '#ffffff';
   }
 
   function normalizeSettings(value) {
@@ -28,9 +27,7 @@
       return base;
     }
     const normalized = { ...base };
-    if (typeof value.theme === 'string') {
-      normalized.theme = value.theme;
-    }
+    normalized.theme = 'dark';
     if (typeof value.retryWrongPhrases === 'boolean') {
       normalized.retryWrongPhrases = value.retryWrongPhrases;
     }
@@ -84,17 +81,8 @@
   function applyTheme(theme) {
     const body = document.body;
     if (!body) return;
-    body.classList.remove('dark-mode', 'theme-blue');
-    switch (theme) {
-      case 'dark':
-        body.classList.add('dark-mode');
-        break;
-      case 'blue':
-        body.classList.add('theme-blue');
-        break;
-      default:
-        break;
-    }
+    body.classList.add('dark-mode');
+    body.classList.remove('theme-blue');
   }
 
   function applyHeaderGradient({ headerGradientStart, headerGradientEnd, headerGradientEnabled } = {}) {
@@ -181,6 +169,21 @@
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.mp4'];
 
+  function getBackgroundStorageKey() {
+    try {
+      const auth = window.playtalkAuth;
+      const currentUser = auth && typeof auth.getCurrentUser === 'function' ? auth.getCurrentUser() : null;
+      const identifier = currentUser
+        && (currentUser.uid || currentUser.id || currentUser.username || currentUser.email || currentUser.name);
+      if (identifier) {
+        return `${BACKGROUND_STORAGE_KEY}:${identifier}`;
+      }
+    } catch (error) {
+      console.warn('Não foi possível ler o usuário para salvar o background.', error);
+    }
+    return BACKGROUND_STORAGE_KEY;
+  }
+
   function safeParse(value, fallback = null) {
     if (!value) {
       return fallback;
@@ -211,22 +214,22 @@
   }
 
   function readStoredBackground() {
-    const stored = safeParse(localStorage.getItem(BACKGROUND_STORAGE_KEY), null);
+    const stored = safeParse(localStorage.getItem(getBackgroundStorageKey()), null);
     return normalizeConfig(stored);
   }
 
   function persistBackground(config) {
     if (!config) {
-      localStorage.removeItem(BACKGROUND_STORAGE_KEY);
+      localStorage.removeItem(getBackgroundStorageKey());
       return null;
     }
     const normalized = normalizeConfig(config);
     if (!normalized) {
-      localStorage.removeItem(BACKGROUND_STORAGE_KEY);
+      localStorage.removeItem(getBackgroundStorageKey());
       return null;
     }
     try {
-      localStorage.setItem(BACKGROUND_STORAGE_KEY, JSON.stringify(normalized));
+      localStorage.setItem(getBackgroundStorageKey(), JSON.stringify(normalized));
     } catch (error) {
       console.warn('Não foi possível salvar o plano de fundo localmente.', error);
     }
@@ -362,9 +365,13 @@
 
   document.addEventListener('DOMContentLoaded', applyStoredBackground, { once: true });
   window.addEventListener('storage', (event) => {
-    if (event.key === BACKGROUND_STORAGE_KEY) {
+    if (event.key && event.key.startsWith(BACKGROUND_STORAGE_KEY)) {
       applyBackground(normalizeConfig(safeParse(event.newValue, null)));
     }
+  });
+
+  document.addEventListener('playtalk:user-change', () => {
+    applyStoredBackground();
   });
 })();
 

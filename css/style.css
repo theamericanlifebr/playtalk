@@ -6,7 +6,7 @@
   --header-gradient-start: #1a66cc;
   --header-gradient-end: #357de0;
   --header-gradient: linear-gradient(135deg, var(--header-gradient-start) 0%, var(--header-gradient-end) 100%);
-  --phrase-color: #333333;
+  --phrase-color: #ffffff;
 }
 
 html,
@@ -18,11 +18,11 @@ body {
 }
 
 body {
-  padding-top: var(--header-height);
+  padding-top: 0;
   padding-bottom: var(--nav-height);
-  background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+  background: linear-gradient(180deg, #0d4ab2 0%, #0c6bb8 40%, #033567 85%, #021735 100%);
   font-family: 'Open Sans', sans-serif;
-  color: #0b3d91;
+  color: #ffffff;
   position: relative;
 }
 
@@ -49,15 +49,11 @@ body > *:not(.lens-overlay) {
   z-index: 1;
 }
 
-body.dark-mode {
-  background: #000;
-  color: #fff;
-}
-
 .container-screen {
   width: min(100%, var(--container-max-width));
   min-height: calc(100vh - var(--header-height) - var(--nav-height));
   margin: 0 auto;
+  margin-top: var(--header-height);
   padding: clamp(16px, 4vw, 48px);
   box-sizing: border-box;
   display: flex;
@@ -108,6 +104,7 @@ body.dark-mode {
   justify-content: center;
   align-items: center;
   z-index: 1100;
+  margin-top: 0;
 }
 
 body.theme-blue {
@@ -963,7 +960,7 @@ body.dark-mode #texto-exibicao {
   align-items: center;
   justify-content: space-evenly;
   padding: 0 28px;
-  background: linear-gradient(135deg, #1a66cc 0%, #2f7ae0 100%);
+  background: var(--header-gradient, linear-gradient(135deg, #1a66cc 0%, #2f7ae0 100%));
   box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
   z-index: 1200;
   box-sizing: border-box;
@@ -1935,6 +1932,21 @@ body.page-play #play-content.stats-wrapper {
   display: block;
 }
 
+@media (max-width: 640px) {
+  .stats-mode-selector__track {
+    gap: 6px;
+  }
+
+  .stats-mode-selector__button {
+    padding: 4px;
+  }
+
+  .stats-mode-selector__ring {
+    width: 40px;
+    height: 40px;
+  }
+}
+
 .stats-slide {
   position: relative;
   transition: transform 0.22s ease, opacity 0.22s ease;
@@ -1967,28 +1979,44 @@ body.page-play #play-content.stats-wrapper {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: clamp(16px, 4vw, 26px);
-  box-shadow: 0 18px 45px rgba(12, 61, 94, 0.12);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+  opacity: 1;
+}
+
+.stats-hero__visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 180px;
+}
+
+.stats-hero__badge {
+  width: 160px;
+  height: 160px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.stats-hero__badge img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
 }
 
 .stats-hero__copy {
   flex: 1 1 280px;
 }
 
-.stats-hero__eyebrow {
-  margin: 0 0 6px;
-  font-weight: 700;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #0c3d5e;
-}
-
 .stats-hero__lead {
   margin: 8px 0 0;
-  color: #234e70;
+  color: #e5ecff;
 }
 
 .stats-hero__chips {
@@ -2000,8 +2028,8 @@ body.page-play #play-content.stats-wrapper {
 }
 
 .stats-chip {
-  background: linear-gradient(135deg, rgba(12, 61, 94, 0.08), rgba(12, 61, 94, 0.02));
-  border: 1px solid rgba(12, 61, 94, 0.06);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
   padding: 10px 12px;
   display: flex;
@@ -2010,7 +2038,7 @@ body.page-play #play-content.stats-wrapper {
 }
 
 .stats-chip span {
-  color: #4e6a87;
+  color: #e5ecff;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2018,7 +2046,7 @@ body.page-play #play-content.stats-wrapper {
 
 .stats-chip strong {
   font-size: 18px;
-  color: #0c3d5e;
+  color: #ffffff;
 }
 
 .stats-banner {
@@ -2043,6 +2071,7 @@ body.page-play #play-content.stats-wrapper {
   border-radius: 16px;
   padding: clamp(14px, 3vw, 22px);
   box-shadow: 0 16px 40px rgba(12, 61, 94, 0.08);
+  opacity: 1;
 }
 
 .stats-section__header {
@@ -2132,7 +2161,7 @@ body.page-play #play-content.stats-wrapper {
 .stats-title {
   font-size: clamp(24px, 6vw, 32px);
   font-weight: 700;
-  color: #0c3d5e;
+  color: #ffffff;
   margin: 0;
   text-align: center;
 }
@@ -2142,7 +2171,7 @@ body.page-play #play-content.stats-wrapper {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #0c3d5e;
+  color: #ffffff;
   margin: 0;
   text-align: center;
 }

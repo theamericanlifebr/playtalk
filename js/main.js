@@ -1,6 +1,6 @@
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
-  theme: 'light',
+  theme: 'dark',
   retryWrongPhrases: false,
   headerGradientStart: '#1a66cc',
   headerGradientEnd: '#357de0',
@@ -2289,10 +2289,6 @@ function toggleEn() {
   mostrarFrase();
 }
 
-function toggleDarkMode() {
-  document.body.classList.toggle('dark-mode');
-}
-
 function falarFrase() {
   if (selectedMode === 1) {
     return;
@@ -3136,7 +3132,6 @@ async function initGame() {
 
   document.addEventListener('keydown', e => {
     if (e.key === 'r') falarFrase();
-    if (e.key.toLowerCase() === 'h') toggleDarkMode();
     if (e.key.toLowerCase() === 'i') {
       const currentEntry = frasesArr[fraseIndex] || ['', []];
       const esperado = esperadoLang === 'pt'
