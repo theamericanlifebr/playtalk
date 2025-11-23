@@ -914,7 +914,8 @@
       'fun.html': { hash: '#fun', scripts: ['js/fun-page.js'], classes: ['page-fun'] },
       'play.html': { hash: '#play', scripts: ['js/play.js'], classes: ['page-play'] },
       'ranking.html': { hash: '#ranking', scripts: ['js/ranking.js'], classes: ['page-ranking'] },
-      'custom.html': { hash: '#custom', scripts: ['js/custom-page.js'], classes: ['page-custom'] },
+      'store.html': { hash: '#store', scripts: ['js/store.js'], classes: ['page-store'] },
+      'custom.html': { hash: '#store', scripts: ['js/store.js'], classes: ['page-store'] },
       'perfil.html': { hash: '#perfil', scripts: ['js/profile.js'], classes: ['page-profile'] }
     };
 

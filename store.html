@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-  <title>PlayTalk | Perfil</title>
+  <title>PlayTalk | Store</title>
   <meta
     name="description"
     content="PlayTalk, o app da fluência, transforma desafios de vocabulário, listening e speaking em uma jornada gamificada para dominar o inglês."
@@ -15,7 +15,7 @@
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body class="page-profile" data-lens-context="menus">
+<body class="page-store" data-lens-context="menus">
   <header class="site-header" id="global-header">
     <div class="site-header__profile">
       <div class="site-header__avatar-container" id="header-avatar-container">
@@ -37,70 +37,56 @@
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
-  <main id="profile-container" class="container-screen container-screen--profile" data-page-transition>
-    <h1>Usuário</h1>
-    <form class="profile-form" autocomplete="on">
-      <div class="profile-field">
-        <label for="profile-name">Nome</label>
-        <input type="text" id="profile-name" name="profile-name" placeholder="Digite seu nome">
+
+  <main id="store-container" class="container-screen container-screen--store" data-page-transition>
+    <div class="store-hero">
+      <div class="store-hero__text">
+        <p class="store-hero__eyebrow">Loja interna</p>
+        <h1>Store</h1>
+        <p class="store-hero__subtitle">Compre itens digitais com as moedas que você conquistou jogando.</p>
       </div>
-      <div class="profile-photo">
-        <div
-          id="profile-photo-preview"
-          class="profile-photo-preview"
-          role="img"
-          aria-live="polite"
-        >
-          <div class="profile-photo-preview__content">
-            <img
-              id="profile-photo-image"
-              class="profile-photo-preview__image"
-              alt="Foto do usuário"
-              hidden
-            >
-            <span id="profile-photo-placeholder" class="profile-photo-preview__placeholder">
-              Adicione uma foto
-            </span>
-            <span id="profile-photo-status" class="profile-photo-preview__status" aria-live="polite"></span>
-          </div>
+      <div class="balance-card store-balance-card">
+        <span class="balance-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false">
+            <path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v1.18A3 3 0 0 1 22 11v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3H3a1 1 0 0 1 0-2h1v-2H3a1 1 0 0 1 0-2h1Zm2 0v1h12V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm0 6v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm6 3a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z"/>
+          </svg>
+        </span>
+        <div class="balance-card__text">
+          <span class="balance-card__label">Saldo disponível</span>
+          <span class="balance-card__value" data-balance-value>0</span>
         </div>
-        <label for="profile-photo" class="profile-upload-label">
-          <span aria-hidden="true">📷</span>
-          <span>Carregar foto</span>
-          <input type="file" id="profile-photo" name="profile-photo" accept=".jpg,.jpeg,.png,.gif,.webp">
-        </label>
-        <button type="button" id="profile-photo-publish" class="profile-publish-button" disabled>
-          Publicar foto
-        </button>
       </div>
-      <div class="profile-field">
-        <label for="profile-username">Nome de usuário</label>
-        <input type="text" id="profile-username" name="profile-username" readonly>
-      </div>
-      <div class="profile-share">
-        <label class="profile-share-toggle" for="profile-share-results">
-          <input type="checkbox" id="profile-share-results" name="profile-share-results">
-          Compartilhar resultados
-        </label>
-        <p class="profile-share-description">Ao compartilhar, seu nível e desempenho poderão aparecer nos rankings públicos e no seu perfil.</p>
-      </div>
-    </form>
-    <div class="profile-actions">
-      <button
-        type="button"
-        id="profile-logout-btn"
-        class="logout-button logout-button--primary"
-        data-role="logout"
-      >Encerrar sessão</button>
-      <button
-        type="button"
-        id="profile-switch-account-btn"
-        class="logout-button"
-        data-role="logout"
-        data-switch-account="true"
-      >Trocar de conta</button>
     </div>
+
+    <div class="store-tabs" role="tablist" aria-label="Conteúdo da loja">
+      <button class="store-tab is-active" role="tab" aria-selected="true" data-tab="shop">Loja</button>
+      <button class="store-tab" role="tab" aria-selected="false" data-tab="owned">Meus produtos</button>
+    </div>
+
+    <section class="store-grid" data-store-grid="shop" aria-label="Produtos disponíveis"></section>
+    <p class="store-empty" data-store-empty="shop" hidden>A loja está carregando itens digitais.</p>
+
+    <section class="store-grid" data-store-grid="owned" aria-label="Produtos adquiridos" hidden></section>
+    <p class="store-empty" data-store-empty="owned" hidden>Você ainda não tem compras. Pegue algo na loja!</p>
   </main>
+
+  <div class="store-modal" data-store-modal hidden aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="store-modal__backdrop" data-store-backdrop></div>
+    <div class="store-modal__panel" tabindex="-1">
+      <button type="button" class="store-modal__close" data-store-close aria-label="Fechar detalhes">×</button>
+      <div class="store-modal__image" data-store-modal-image></div>
+      <div class="store-modal__body">
+        <p class="store-modal__eyebrow">Produto digital</p>
+        <h2 class="store-modal__title" data-store-modal-title></h2>
+        <p class="store-modal__description" data-store-modal-description></p>
+        <div class="store-modal__actions">
+          <span class="store-modal__price" data-store-modal-price></span>
+          <button type="button" class="store-button store-button--buy" data-store-modal-action>Comprar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="page-footer">
     <nav id="main-nav">
       <a href="inplay.html" class="nav-item" aria-label="Inplay" data-nav-index="0">
@@ -127,13 +113,13 @@
         </span>
         <span class="sr-only">Ranking</span>
       </a>
-      <a href="store.html" class="nav-item" aria-label="Store" data-nav-index="4">
+      <a href="store.html" class="nav-item active" aria-label="Store" data-nav-index="4">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M6 7h12l-1 12H7Zm0-3h12v2H6Z"/><path d="M9 11h2v4H9Zm4 0h2v4h-2Z"/></svg>
         </span>
         <span class="sr-only">Store</span>
       </a>
-      <a href="perfil.html" class="nav-item active" aria-label="Perfil" aria-current="page" data-nav-index="5">
+      <a href="perfil.html" class="nav-item" aria-label="Perfil" data-nav-index="5">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
         </span>
@@ -141,6 +127,6 @@
       </a>
     </nav>
   </footer>
-  <script src="js/profile.js"></script>
+  <script src="js/store.js" defer></script>
 </body>
 </html>
