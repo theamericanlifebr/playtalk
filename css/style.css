@@ -2071,7 +2071,7 @@ body.page-play #play-content.stats-wrapper {
   border-radius: 16px;
   padding: clamp(14px, 3vw, 22px);
   box-shadow: 0 16px 40px rgba(12, 61, 94, 0.08);
-  opacity: 0;
+  opacity: 1;
 }
 
 .stats-section__header {

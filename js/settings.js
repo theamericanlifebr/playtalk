@@ -1,7 +1,7 @@
 (function() {
   const SETTINGS_STORAGE_KEY = 'playtalkSettings';
   const DEFAULT_SETTINGS = {
-    theme: 'light',
+    theme: 'dark',
     retryWrongPhrases: false,
     headerGradientStart: '#1a66cc',
     headerGradientEnd: '#357de0',
@@ -27,7 +27,7 @@
       return base;
     }
     const normalized = { ...base };
-    normalized.theme = 'light';
+    normalized.theme = 'dark';
     if (typeof value.retryWrongPhrases === 'boolean') {
       normalized.retryWrongPhrases = value.retryWrongPhrases;
     }
@@ -82,6 +82,9 @@
     const body = document.body;
     if (!body) return;
     body.classList.remove('dark-mode', 'theme-blue');
+    if (theme === 'dark') {
+      body.classList.add('dark-mode');
+    }
   }
 
   function applyHeaderGradient({ headerGradientStart, headerGradientEnd, headerGradientEnabled } = {}) {

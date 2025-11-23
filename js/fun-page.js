@@ -59,7 +59,7 @@
 
     function getFormSettings() {
       return {
-        theme: 'light',
+        theme: 'dark',
         retryWrongPhrases: retryWrongCheckbox ? retryWrongCheckbox.checked : false,
         headerGradientStart: headerStartInput ? headerStartInput.value : undefined,
         headerGradientEnd: headerEndInput ? headerEndInput.value : undefined,
