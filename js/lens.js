@@ -19,13 +19,18 @@
     return `${r}, ${g}, ${b}`;
   }
 
-  function readCustomLensRgb() {
+  function readCustomLensRgb(mode) {
     try {
       const settings = window.playtalkSettings && window.playtalkSettings.loadSettings
         ? window.playtalkSettings.loadSettings()
         : null;
-      if (settings && settings.lensColor) {
-        return hexToRgb(settings.lensColor);
+      if (settings) {
+        if (settings.lensColors && mode && settings.lensColors[String(mode)]) {
+          return hexToRgb(settings.lensColors[String(mode)]);
+        }
+        if (settings.lensColor) {
+          return hexToRgb(settings.lensColor);
+        }
       }
     } catch (error) {
       console.warn('Não foi possível aplicar a cor da lente salva.', error);
@@ -38,7 +43,7 @@
   }
 
   function getColorForMode(mode) {
-    const custom = readCustomLensRgb();
+    const custom = readCustomLensRgb(mode);
     if (custom) {
       return custom;
     }

@@ -7,7 +7,10 @@
     headerGradientEnd: '#357de0',
     headerGradientEnabled: true,
     phraseColor: '',
-    lensColor: ''
+    lensColor: '',
+    lensColors: {},
+    lensOpacityStrong: 0.65,
+    lensOpacitySoft: 0.25
   };
 
   function normalizeHexColor(value, fallback = '') {
@@ -37,8 +40,32 @@
       normalized.headerGradientEnabled = Boolean(value.headerGradientEnabled);
       normalized.phraseColor = normalizeHexColor(value.phraseColor, '');
       normalized.lensColor = normalizeHexColor(value.lensColor, '');
+      normalized.lensColors = normalizeLensPalette(value.lensColors);
+      normalized.lensOpacityStrong = normalizeOpacity(value.lensOpacityStrong, DEFAULT_SETTINGS.lensOpacityStrong);
+      normalized.lensOpacitySoft = normalizeOpacity(value.lensOpacitySoft, DEFAULT_SETTINGS.lensOpacitySoft);
     }
     return normalized;
+  }
+
+  function normalizeOpacity(value, fallback = 0.5) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return Math.max(0, Math.min(1, fallback));
+    return Math.max(0, Math.min(1, num));
+  }
+
+  function normalizeLensPalette(raw) {
+    const palette = {};
+    if (!raw || typeof raw !== 'object') {
+      return palette;
+    }
+    for (let mode = 1; mode <= 6; mode++) {
+      const key = String(mode);
+      const custom = normalizeHexColor(raw[key], '');
+      if (custom) {
+        palette[key] = custom;
+      }
+    }
+    return palette;
   }
 
   function loadSettings() {
@@ -123,11 +150,21 @@
     }
   }
 
+  function applyLensOpacity(strong, soft) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const strongValue = normalizeOpacity(strong, DEFAULT_SETTINGS.lensOpacityStrong);
+    const softValue = normalizeOpacity(soft, DEFAULT_SETTINGS.lensOpacitySoft);
+    doc.style.setProperty('--lens-opacity-strong', String(strongValue));
+    doc.style.setProperty('--lens-opacity-soft', String(softValue));
+  }
+
   function applyVisualPreferences(settings = {}) {
     applyTheme(settings.theme);
     applyHeaderGradient(settings);
     applyPhraseColor(settings.phraseColor, settings.theme);
     applyLensColor(settings.lensColor);
+    applyLensOpacity(settings.lensOpacityStrong, settings.lensOpacitySoft);
   }
 
   function applyStoredTheme() {
@@ -149,6 +186,7 @@
     applyHeaderGradient,
     applyPhraseColor,
     applyLensColor,
+    applyLensOpacity,
     applyVisualPreferences,
     applyTheme,
     applyStoredTheme

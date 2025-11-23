@@ -112,18 +112,11 @@
 
     <section id="post-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
-        <h2 id="post-game-title" class="game-overlay__title">Fim de jogo</h2>
+        <h2 id="post-game-title" class="game-overlay__title game-overlay__title--hidden">Resumo da rodada</h2>
         <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
+        <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label"></p>
         <p id="post-game-level-status" class="game-overlay__subtitle"></p>
         <dl class="post-game-stats">
-          <div class="post-game-stats__item">
-            <dt>Acertos</dt>
-            <dd id="post-game-correct">0</dd>
-          </div>
-          <div class="post-game-stats__item">
-            <dt>Erros</dt>
-            <dd id="post-game-wrong">0</dd>
-          </div>
           <div class="post-game-stats__item">
             <dt>Precisão</dt>
             <dd id="post-game-accuracy">0%</dd>
@@ -190,6 +183,7 @@
   <audio id="somAcerto" src="gamesounds/success.mp3"></audio>
   <audio id="somErro" src="gamesounds/error.mp3"></audio>
   <audio id="somLock" src="gamesounds/lock.wav"></audio>
+  <audio id="somWoosh" src="gamesounds/woosh.mp3"></audio>
 
   <script src="js/kit-speech.js" defer></script>
   <script src="js/main.js" defer></script>
