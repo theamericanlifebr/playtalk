@@ -63,7 +63,15 @@
       <button class="store-tab" role="tab" aria-selected="false" data-tab="owned">Meus produtos</button>
     </div>
 
-    <section class="store-grid" data-store-grid="shop" aria-label="Produtos disponíveis"></section>
+    <div class="store-slider" data-slider="shop">
+      <button class="store-slider__control store-slider__control--prev" data-slider-prev="shop" aria-label="Produtos anteriores">‹</button>
+      <section
+        class="store-grid store-grid--slider"
+        data-store-grid="shop"
+        aria-label="Produtos disponíveis"
+      ></section>
+      <button class="store-slider__control store-slider__control--next" data-slider-next="shop" aria-label="Próximos produtos">›</button>
+    </div>
     <p class="store-empty" data-store-empty="shop" hidden>A loja está carregando itens digitais.</p>
 
     <section class="store-grid" data-store-grid="owned" aria-label="Produtos adquiridos" hidden></section>

@@ -108,6 +108,8 @@
   ];
 
   const PURCHASES_KEY = 'playtalkStorePurchases';
+  const BALANCE_KEY = 'playtalkStoreBalance';
+  const DEFAULT_BALANCE = 4500;
 
   function formatPrice(value) {
     return `${value.toLocaleString('pt-BR')} moedas`;
@@ -127,6 +129,27 @@
     localStorage.setItem(PURCHASES_KEY, JSON.stringify(list));
   }
 
+  function getBalance() {
+    const balanceAPI = window.playtalkBalance;
+    if (balanceAPI && typeof balanceAPI.getBalance === 'function') {
+      const value = Number(balanceAPI.getBalance());
+      return Number.isFinite(value) ? value : 0;
+    }
+    const stored = Number(localStorage.getItem(BALANCE_KEY));
+    return Number.isFinite(stored) ? stored : DEFAULT_BALANCE;
+  }
+
+  function setBalance(value) {
+    const safeValue = Math.max(0, Number(value) || 0);
+    const balanceAPI = window.playtalkBalance;
+    if (balanceAPI && typeof balanceAPI.set === 'function') {
+      balanceAPI.set(safeValue);
+    } else {
+      localStorage.setItem(BALANCE_KEY, String(safeValue));
+    }
+    return safeValue;
+  }
+
   function initStorePage(context = {}) {
     const scope = context && context.container ? context.container : document;
     const storeContainer = scope.querySelector('#store-container');
@@ -137,10 +160,27 @@
       shop: scope.querySelector('[data-store-grid="shop"]'),
       owned: scope.querySelector('[data-store-grid="owned"]'),
     };
+    const sliderControls = {
+      shop: {
+        wrapper: scope.querySelector('[data-slider="shop"]'),
+        prev: scope.querySelector('[data-slider-prev="shop"]'),
+        next: scope.querySelector('[data-slider-next="shop"]'),
+      },
+      owned: {
+        wrapper: scope.querySelector('[data-slider="owned"]'),
+        prev: scope.querySelector('[data-slider-prev="owned"]'),
+        next: scope.querySelector('[data-slider-next="owned"]'),
+      },
+    };
+    const wrappers = {
+      shop: sliderControls.shop.wrapper || grids.shop,
+      owned: sliderControls.owned.wrapper || grids.owned,
+    };
     const emptyStates = {
       shop: scope.querySelector('[data-store-empty="shop"]'),
       owned: scope.querySelector('[data-store-empty="owned"]'),
     };
+    const balanceDisplay = scope.querySelector('[data-balance-value]');
 
     const modal = scope.querySelector('[data-store-modal]');
     const modalPanel = modal ? modal.querySelector('.store-modal__panel') : null;
@@ -154,6 +194,8 @@
     let purchases = readPurchases();
     let currentProduct = null;
 
+    updateBalanceDisplay(getBalance());
+
     function isOwned(productId) {
       return purchases.includes(productId);
     }
@@ -164,16 +206,22 @@
         tab.classList.toggle('is-active', isTarget);
         tab.setAttribute('aria-selected', String(isTarget));
       });
-      Object.entries(grids).forEach(([key, grid]) => {
-        if (!grid) return;
+      Object.entries(wrappers).forEach(([key, wrapper]) => {
+        if (!wrapper) return;
         const isVisible = key === target;
-        grid.hidden = !isVisible;
+        wrapper.hidden = !isVisible;
       });
       Object.entries(emptyStates).forEach(([key, element]) => {
         if (!element) return;
         const isVisible = key === target;
         element.hidden = !isVisible || element.dataset.state !== 'visible';
       });
+    }
+
+    function updateBalanceDisplay(value) {
+      if (!balanceDisplay) return;
+      const balance = Number(value);
+      balanceDisplay.textContent = balance.toLocaleString('pt-BR');
     }
 
     function updateEmptyStates() {
@@ -187,6 +235,25 @@
         emptyStates.owned.dataset.state = ownedEmpty ? 'visible' : 'hidden';
         emptyStates.owned.hidden = !ownedEmpty;
       }
+    }
+
+    function refreshSliderState(target) {
+      const grid = grids[target];
+      const controls = sliderControls[target];
+      if (!grid || !controls || !controls.prev || !controls.next) return;
+      const maxScroll = grid.scrollWidth - grid.clientWidth;
+      const atStart = grid.scrollLeft <= 4;
+      const atEnd = grid.scrollLeft >= maxScroll - 4;
+      controls.prev.disabled = atStart;
+      controls.next.disabled = atEnd || maxScroll <= 0;
+    }
+
+    function slide(target, direction) {
+      const grid = grids[target];
+      if (!grid) return;
+      const offset = grid.clientWidth * 0.9 * direction;
+      grid.scrollBy({ left: offset, behavior: 'smooth' });
+      setTimeout(() => refreshSliderState(target), 220);
     }
 
     function createButton(product, owned) {
@@ -234,6 +301,9 @@
       const grid = grids[target];
       if (!grid) return;
       grid.innerHTML = '';
+      if (grid.classList.contains('store-grid--slider')) {
+        grid.scrollLeft = 0;
+      }
       const items = target === 'owned'
         ? PRODUCTS.filter((product) => purchases.includes(product.id))
         : PRODUCTS;
@@ -241,6 +311,7 @@
         const owned = isOwned(product.id);
         grid.appendChild(createCard(product, owned));
       });
+      refreshSliderState(target);
     }
 
     function closeModal() {
@@ -272,18 +343,13 @@
         refreshedButton.textContent = 'Comprar';
         modalPrice.textContent = formatPrice(product.price);
         refreshedButton.addEventListener('click', () => {
-          const balanceAPI = window.playtalkBalance;
-          const currentBalance = balanceAPI && typeof balanceAPI.getBalance === 'function'
-            ? balanceAPI.getBalance()
-            : 0;
+          const currentBalance = getBalance();
           if (currentBalance < product.price) {
             modalPrice.textContent = 'Saldo insuficiente';
             return;
           }
-          const newBalance = Math.max(0, currentBalance - product.price);
-          if (balanceAPI && typeof balanceAPI.set === 'function') {
-            balanceAPI.set(newBalance);
-          }
+          const newBalance = setBalance(currentBalance - product.price);
+          updateBalanceDisplay(newBalance);
           purchases = [...new Set([...purchases, product.id])];
           savePurchases(purchases);
           renderGrid('shop');
@@ -327,6 +393,18 @@
         const target = tab.dataset.tab;
         setTab(target);
       });
+    });
+
+    Object.entries(sliderControls).forEach(([key, controls]) => {
+      const grid = grids[key];
+      if (!controls || !grid) return;
+      if (controls.prev) {
+        controls.prev.addEventListener('click', () => slide(key, -1));
+      }
+      if (controls.next) {
+        controls.next.addEventListener('click', () => slide(key, 1));
+      }
+      grid.addEventListener('scroll', () => refreshSliderState(key));
     });
 
     [modalClose, modalBackdrop].forEach((el) => {

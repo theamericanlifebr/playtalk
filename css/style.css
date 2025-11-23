@@ -3803,6 +3803,53 @@ body.dark-mode .post-game-stats__item {
   width: 100%;
 }
 
+.store-grid--slider {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  overflow: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+}
+
+.store-grid--slider > * {
+  scroll-snap-align: center;
+}
+
+.store-slider {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.store-slider__control {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f6fbff;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.store-slider__control:hover,
+.store-slider__control:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.store-slider__control[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .store-card {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 18px;
