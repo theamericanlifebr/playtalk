@@ -6,7 +6,8 @@
     headerGradientStart: '#1a66cc',
     headerGradientEnd: '#357de0',
     headerGradientEnabled: true,
-    phraseColor: ''
+    phraseColor: '',
+    lensColor: ''
   };
 
   function normalizeHexColor(value, fallback = '') {
@@ -38,6 +39,7 @@
       normalized.headerGradientEnd = normalizeHexColor(value.headerGradientEnd, DEFAULT_SETTINGS.headerGradientEnd);
       normalized.headerGradientEnabled = Boolean(value.headerGradientEnabled);
       normalized.phraseColor = normalizeHexColor(value.phraseColor, '');
+      normalized.lensColor = normalizeHexColor(value.lensColor, '');
     }
     return normalized;
   }
@@ -116,10 +118,26 @@
     doc.style.setProperty('--phrase-color', finalColor);
   }
 
+  function applyLensColor(color) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const normalized = normalizeHexColor(color, '');
+    if (normalized) {
+      const int = parseInt(normalized.slice(1), 16);
+      const r = (int >> 16) & 255;
+      const g = (int >> 8) & 255;
+      const b = int & 255;
+      doc.style.setProperty('--lens-custom-rgb', `${r}, ${g}, ${b}`);
+    } else {
+      doc.style.removeProperty('--lens-custom-rgb');
+    }
+  }
+
   function applyVisualPreferences(settings = {}) {
     applyTheme(settings.theme);
     applyHeaderGradient(settings);
     applyPhraseColor(settings.phraseColor, settings.theme);
+    applyLensColor(settings.lensColor);
   }
 
   function applyStoredTheme() {
@@ -140,6 +158,7 @@
     saveSettings,
     applyHeaderGradient,
     applyPhraseColor,
+    applyLensColor,
     applyVisualPreferences,
     applyTheme,
     applyStoredTheme

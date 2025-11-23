@@ -12,6 +12,7 @@
     const headerEndInput = scope.querySelector('#headerColorEnd');
     const headerGradientToggle = scope.querySelector('#headerGradientEnabled');
     const phraseColorInput = scope.querySelector('#phraseColor');
+    const lensColorInput = scope.querySelector('#lensColor');
     const feedback = scope.querySelector('#fun-feedback');
 
     function getFormSettings() {
@@ -22,7 +23,8 @@
         headerGradientStart: headerStartInput ? headerStartInput.value : undefined,
         headerGradientEnd: headerEndInput ? headerEndInput.value : undefined,
         headerGradientEnabled: headerGradientToggle ? headerGradientToggle.checked : true,
-        phraseColor: phraseColorInput ? phraseColorInput.value : ''
+        phraseColor: phraseColorInput ? phraseColorInput.value : '',
+        lensColor: lensColorInput ? lensColorInput.value : ''
       };
     }
 
@@ -46,6 +48,9 @@
       }
       if (phraseColorInput && typeof settings.phraseColor === 'string' && settings.phraseColor.trim()) {
         phraseColorInput.value = settings.phraseColor;
+      }
+      if (lensColorInput && typeof settings.lensColor === 'string' && settings.lensColor.trim()) {
+        lensColorInput.value = settings.lensColor;
       }
     }
 
@@ -74,7 +79,7 @@
       });
     });
 
-    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput].forEach(input => {
+    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, lensColorInput].forEach(input => {
       if (!input) return;
       input.addEventListener('input', () => {
         if (!api) return;

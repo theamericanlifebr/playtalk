@@ -1,285 +1,121 @@
-const colorStops = [
-  [0, '#ff0000'],
-  [2000, '#ff3b00'],
-  [4000, '#ff7f00'],
-  [6000, '#ffb300'],
-  [8000, '#ffe000'],
-  [10000, '#ffff66'],
-  [12000, '#ccff66'],
-  [14000, '#99ff99'],
-  [16000, '#00cc66'],
-  [18000, '#00994d'],
-  [20000, '#00ffff'],
-  [22000, '#66ccff'],
-  [24000, '#0099ff'],
-  [25000, '#0099ff']
-];
+(function() {
+  const MODE_CONFIG = [
+    { id: 1, title: 'Vocabulary', logline: 'Panorama geral com seu melhor ritmo.', color: '#3fd286' },
+    { id: 2, title: 'Meaning', logline: 'Interpretações certeiras, no tom dourado.', color: '#f2c11f' },
+    { id: 3, title: 'Listening', logline: 'Audição afiada e respostas rápidas.', color: '#ff8b3d' },
+    { id: 4, title: 'Reading', logline: 'Leitura premium e foco total.', color: '#4a9cff' },
+    { id: 5, title: 'Translating', logline: 'Traduções quentes com clareza.', color: '#9a6dff' },
+    { id: 6, title: 'Thinking', logline: 'Raciocínio afiado em vermelho vivo.', color: '#ff4f6d' }
+  ];
 
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [int >> 16 & 255, int >> 8 & 255, int & 255];
-}
-
-function rgbToHex(r, g, b) {
-  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
-function calcularCor(pontos) {
-  const max = colorStops[colorStops.length - 1][0];
-  const p = Math.max(0, Math.min(pontos, max));
-  for (let i = 0; i < colorStops.length - 1; i++) {
-    const [p1, c1] = colorStops[i];
-    const [p2, c2] = colorStops[i + 1];
-    if (p >= p1 && p <= p2) {
-      const ratio = (p - p1) / (p2 - p1);
-      const [r1, g1, b1] = hexToRgb(c1);
-      const [r2, g2, b2] = hexToRgb(c2);
-      const r = Math.round(r1 + ratio * (r2 - r1));
-      const g = Math.round(g1 + ratio * (g2 - g1));
-      const b = Math.round(b1 + ratio * (b2 - b1));
-      return rgbToHex(r, g, b);
+  const TOP_CONFIG = {
+    streak: {
+      key: 'streak',
+      title: 'Melhores sequências',
+      logline: 'Quem mantém a chama acesa por mais tempo.',
+      value(entry) {
+        return formatInteger(entry.bestStreak || entry.currentStreak || 0);
+      },
+      detail(entry) {
+        return `Atual: ${formatInteger(entry.currentStreak || 0)} • ${formatInteger(entry.points || 0)} pts`;
+      }
+    },
+    cpm: {
+      key: 'fast',
+      title: 'Melhor CPM',
+      logline: 'Ritmo premium em cada frase.',
+      value(entry) {
+        const cps = Number.isFinite(entry.cps) ? entry.cps : (entry.fastCps || 0);
+        return `${formatInteger(Math.max(0, Math.round(cps * 60)))} cpm`;
+      },
+      detail(entry) {
+        return `${formatPercent(entry.accuracy || 0)} de precisão`;
+      }
+    },
+    accuracy: {
+      key: 'accuracy',
+      title: 'Mais precisos',
+      logline: 'Quem erra menos e decide mais.',
+      value(entry) {
+        return formatPercent(entry.accuracy || 0);
+      },
+      detail(entry) {
+        return `${formatInteger(entry.totalPhrases || 0)} frases registradas`;
+      }
+    },
+    level: {
+      key: 'level',
+      title: 'Quem tem mais nível',
+      logline: 'A escalada mais quente do app.',
+      value(entry) {
+        return `Nível ${formatInteger(entry.level || 1)}`;
+      },
+      detail(entry) {
+        return `${formatInteger(entry.points || 0)} pts totais`;
+      }
     }
-  }
-  return colorStops[colorStops.length - 1][1];
-}
-
-function colorFromPercent(perc) {
-  const max = colorStops[colorStops.length - 1][0];
-  return calcularCor((perc / 100) * max);
-}
-
-const MEDAL_CONFIG = [
-  { key: 'diamante', label: 'Diamante', icon: 'medalhas/diamante.png' },
-  { key: 'ouro', label: 'Ouro', icon: 'medalhas/ouro.png' },
-  { key: 'prata', label: 'Prata', icon: 'medalhas/prata.png' },
-  { key: 'bronze', label: 'Bronze', icon: 'medalhas/bronze.png' }
-];
-
-function getEmptyMedalCounts() {
-  return {
-    diamante: 0,
-    ouro: 0,
-    prata: 0,
-    bronze: 0
   };
-}
 
-function normalizeMedals(medals) {
-  const base = getEmptyMedalCounts();
-  if (!medals || typeof medals !== 'object') {
-    return base;
-  }
-  MEDAL_CONFIG.forEach(({ key }) => {
-    const value = Number(medals[key]);
-    base[key] = Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
-  });
-  return base;
-}
+  const MEDAL_CONFIG = [
+    { key: 'diamante', label: 'Diamante', icon: 'medalhas/diamante.png' },
+    { key: 'ouro', label: 'Ouro', icon: 'medalhas/ouro.png' },
+    { key: 'prata', label: 'Prata', icon: 'medalhas/prata.png' },
+    { key: 'bronze', label: 'Bronze', icon: 'medalhas/bronze.png' }
+  ];
 
-function hasMedals(medals) {
-  return MEDAL_CONFIG.some(({ key }) => (medals[key] || 0) > 0);
-}
-
-function formatInteger(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) {
-    return '0';
-  }
-  return Math.max(0, Math.floor(number)).toLocaleString('pt-BR');
-}
-
-function formatPercent(value) {
-  const number = Number(value);
-  const safe = Number.isFinite(number) ? Math.max(0, Math.min(number, 100)) : 0;
-  return safe.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
-}
-
-function formatCps(value) {
-  const number = Number(value);
-  const safe = Number.isFinite(number)
-    ? Math.max(0, Math.round(number * 100) / 100)
-    : 0;
-  return safe.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function createMetricCard(label, value, accentPercent, options = {}) {
-  const card = document.createElement('div');
-  card.className = 'stat-metric';
-  if (options.modifier) {
-    card.classList.add(options.modifier);
-  }
-  const labelEl = document.createElement('span');
-  labelEl.className = 'stat-metric__label';
-  labelEl.textContent = label;
-  const valueEl = document.createElement('span');
-  valueEl.className = 'stat-metric__value';
-  valueEl.textContent = value;
-  if (Number.isFinite(accentPercent)) {
-    const clamped = Math.max(0, Math.min(accentPercent, 100));
-    valueEl.style.color = colorFromPercent(clamped);
-  }
-  card.appendChild(labelEl);
-  card.appendChild(valueEl);
-  if (options.detail) {
-    const detailEl = document.createElement('span');
-    detailEl.className = 'stat-metric__detail';
-    detailEl.textContent = options.detail;
-    card.appendChild(detailEl);
-  }
-  return card;
-}
-
-function createMetricsSection(summary = {}) {
-  const section = document.createElement('div');
-  section.className = 'stats-metrics';
-  section.appendChild(createMetricCard('Velocidade', `${formatCps(summary.cps)} cps`));
-  section.appendChild(createMetricCard('Precisão', formatPercent(summary.accuracyPerc), summary.accuracyPerc));
-  if (Number.isFinite(summary.bestStreak) || Number.isFinite(summary.currentStreak)) {
-    const best = Math.max(0, Math.floor(Number.isFinite(summary.bestStreak) ? summary.bestStreak : 0));
-    const current = Math.max(0, Math.floor(Number.isFinite(summary.currentStreak) ? summary.currentStreak : 0));
-    const detail = `Atual: ${formatInteger(current)}`;
-    section.appendChild(createMetricCard('Melhor sequência', formatInteger(best), undefined, {
-      modifier: 'stat-metric--streak',
-      detail
-    }));
-  }
-  return section;
-}
-
-function createStatsSection(title, items) {
-  const section = document.createElement('div');
-  section.className = 'stats-section';
-  if (title) {
-    const titleEl = document.createElement('h3');
-    titleEl.className = 'stats-section__title';
-    titleEl.textContent = title;
-    section.appendChild(titleEl);
-  }
-  const list = document.createElement('div');
-  list.className = 'stats-list';
-  items.forEach((item) => {
-    const row = document.createElement('div');
-    row.className = 'stats-list__item';
-    const labelEl = document.createElement('span');
-    labelEl.className = 'stats-list__label';
-    labelEl.textContent = item.label;
-    const valueEl = document.createElement('span');
-    valueEl.className = 'stats-list__value';
-    valueEl.textContent = item.value;
-    row.appendChild(labelEl);
-    row.appendChild(valueEl);
-    list.appendChild(row);
-  });
-  section.appendChild(list);
-  return section;
-}
-
-function createMedalsSection(medals) {
-  const counts = normalizeMedals(medals);
-  const section = document.createElement('div');
-  section.className = 'stats-medal-board';
-  if (!hasMedals(counts)) {
-    const empty = document.createElement('p');
-    empty.className = 'stats-medal-board__empty';
-    empty.textContent = 'Sem medalhas conquistadas';
-    section.appendChild(empty);
-    return section;
-  }
-  const list = document.createElement('ul');
-  list.className = 'stats-medal-board__grid';
-  MEDAL_CONFIG.forEach(({ key, label, icon }) => {
-    const count = counts[key];
-    if (!count) {
-      return;
-    }
-    const item = document.createElement('li');
-    item.className = 'stats-medal-board__item';
-    const image = document.createElement('img');
-    image.className = 'stats-medal-board__icon';
-    image.src = icon;
-    image.alt = label;
-    const value = document.createElement('span');
-    value.className = 'stats-medal-board__value';
-    value.textContent = formatInteger(count);
-    item.appendChild(image);
-    item.appendChild(value);
-    list.appendChild(item);
-  });
-  section.appendChild(list);
-  return section;
-}
-
-function createTotalsSection(summary = {}) {
-  const section = createStatsSection(null, [
-    { label: 'Frases totais', value: formatInteger(summary.totalPhrases) },
-    { label: 'Frases certas', value: formatInteger(summary.correctPhrases) },
-    { label: 'Caracteres totais', value: formatInteger(summary.totalChars) },
-    { label: 'Caracteres certos', value: formatInteger(summary.correctChars) }
-  ]);
-  section.classList.add('stats-section--totals');
-  return section;
-}
-
-function initPlayPage(context = {}) {
-  const scope = context && context.container ? context.container : document;
-  const container = scope.querySelector('#play-content');
-  if (!container) {
-    return;
-  }
-  const modeButtonsContainer = scope.querySelector('#mode-buttons');
-  if (!modeButtonsContainer) {
-    return;
-  }
-  container.classList.add('stats-wrapper', 'stats-layout');
-  container.style.transition = 'opacity 0.2s';
-  const buttons = scope.querySelectorAll('#mode-buttons img');
-  const clickSound = new Audio('gamesounds/mododesbloqueado.mp3');
   let statsData = {};
   let activeMode = 1;
+  let rankings = {};
 
-  function createBlock(modifier, titleText) {
-    const block = document.createElement('div');
-    block.className = `stats-block ${modifier}`;
-    const heading = document.createElement('h2');
-    heading.className = 'stats-subtitle';
-    heading.textContent = titleText;
-    block.appendChild(heading);
-    const content = document.createElement('div');
-    content.className = 'stats-block__content';
-    block.appendChild(content);
-    return { block, content };
+  function formatInteger(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return '0';
+    return Math.max(0, Math.floor(number)).toLocaleString('pt-BR');
   }
 
-  const titleBlock = document.createElement('div');
-  titleBlock.className = 'stats-block stats-block--title';
-  const title = document.createElement('h1');
-  title.className = 'stats-title';
-  title.textContent = 'Estatísticas';
-  titleBlock.appendChild(title);
+  function formatPercent(value) {
+    const number = Number(value);
+    const safe = Number.isFinite(number) ? Math.max(0, Math.min(number, 100)) : 0;
+    return safe.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+  }
 
-  const performanceBlock = createBlock('stats-block--performance', 'Desempenho');
-  const medalsBlock = createBlock('stats-block--medals', 'Quadro de medalhas');
-  const modesBlock = createBlock('stats-block--modes', 'Modos de jogo');
-  const totalsBlock = createBlock('stats-block--totals', 'Totais');
+  function formatCps(value) {
+    const number = Number(value);
+    const safe = Number.isFinite(number)
+      ? Math.max(0, Math.round(number * 100) / 100)
+      : 0;
+    return safe.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
 
-  const performanceContent = performanceBlock.content;
-  const medalsContent = medalsBlock.content;
-  const totalsContent = totalsBlock.content;
+  function getEmptyMedalCounts() {
+    return {
+      diamante: 0,
+      ouro: 0,
+      prata: 0,
+      bronze: 0
+    };
+  }
 
-  modesBlock.content.classList.add('stats-block__content--modes');
-  modeButtonsContainer.classList.add('stats-mode-icons');
-  modesBlock.content.appendChild(modeButtonsContainer);
+  function normalizeMedals(medals) {
+    const base = getEmptyMedalCounts();
+    if (!medals || typeof medals !== 'object') {
+      return base;
+    }
+    MEDAL_CONFIG.forEach(({ key }) => {
+      const value = Number(medals[key]);
+      base[key] = Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+    });
+    return base;
+  }
 
-  container.innerHTML = '';
-  container.appendChild(titleBlock);
-  container.appendChild(performanceBlock.block);
-  container.appendChild(medalsBlock.block);
-  container.appendChild(modesBlock.block);
-  container.appendChild(totalsBlock.block);
+  function hasMedals(medals) {
+    return MEDAL_CONFIG.some(({ key }) => (medals[key] || 0) > 0);
+  }
+
   function refreshStatsData() {
     statsData = JSON.parse(localStorage.getItem('modeStats') || '{}');
   }
-  refreshStatsData();
+
   function calcModeStats(mode) {
     const stats = statsData[mode] || {};
     const totalPhrases = stats.totalPhrases || 0;
@@ -300,7 +136,9 @@ function initPlayPage(context = {}) {
       accuracyPerc,
       cps,
       noReportPerc,
-      medals: normalizeMedals(stats.medals)
+      medals: normalizeMedals(stats.medals),
+      bestStreak: Math.max(0, Math.floor(stats.bestStreak || 0)),
+      currentStreak: Math.max(0, Math.floor(stats.currentStreak || 0))
     };
   }
 
@@ -352,58 +190,388 @@ function initPlayPage(context = {}) {
     };
   }
 
-  function render(mode) {
-    container.style.opacity = 0;
-    setTimeout(() => {
-      const summary = mode === 1 ? calcGeneralStats() : calcModeStats(mode);
-      performanceContent.innerHTML = '';
-      performanceContent.appendChild(createMetricsSection(summary));
-      medalsContent.innerHTML = '';
-      medalsContent.appendChild(createMedalsSection(summary.medals));
-      totalsContent.innerHTML = '';
-      totalsContent.appendChild(createTotalsSection(summary));
-      container.style.opacity = 1;
-    }, 150);
+  function getSummary(mode) {
+    if (mode === 1) return calcGeneralStats();
+    return calcModeStats(mode);
   }
 
-  function selectMode(mode) {
-    buttons.forEach(img => {
-      img.style.opacity = img.dataset.mode == mode ? '1' : '0.3';
+  function createMedalsSection(summary) {
+    const section = document.createElement('section');
+    section.className = 'stats-section stats-section--medals';
+    const header = document.createElement('div');
+    header.className = 'stats-section__header';
+    const title = document.createElement('h2');
+    title.textContent = 'Quadro de medalhas';
+    header.appendChild(title);
+    section.appendChild(header);
+
+    const counts = normalizeMedals(summary.medals);
+    if (!hasMedals(counts)) {
+      const empty = document.createElement('p');
+      empty.className = 'stats-medal-board__empty';
+      empty.textContent = 'Sem medalhas conquistadas';
+      section.appendChild(empty);
+      return section;
+    }
+
+    const list = document.createElement('ul');
+    list.className = 'stats-medal-board__grid';
+    MEDAL_CONFIG.forEach(({ key, label, icon }) => {
+      const count = counts[key];
+      if (!count) return;
+      const item = document.createElement('li');
+      item.className = 'stats-medal-board__item';
+      const image = document.createElement('img');
+      image.className = 'stats-medal-board__icon';
+      image.src = icon;
+      image.alt = label;
+      const value = document.createElement('span');
+      value.className = 'stats-medal-board__value';
+      value.textContent = formatInteger(count);
+      item.appendChild(image);
+      item.appendChild(value);
+      list.appendChild(item);
     });
-    activeMode = mode;
-    render(mode);
+    section.appendChild(list);
+    return section;
   }
 
-  buttons.forEach(img => {
-    img.addEventListener('click', () => {
-      clickSound.currentTime = 0;
-      clickSound.play();
-      selectMode(parseInt(img.dataset.mode, 10));
+  function createNumberCard(label, value, detail) {
+    const card = document.createElement('div');
+    card.className = 'stat-metric stat-metric--panel';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'stat-metric__label';
+    labelEl.textContent = label;
+    const valueEl = document.createElement('span');
+    valueEl.className = 'stat-metric__value';
+    valueEl.textContent = value;
+    card.appendChild(labelEl);
+    card.appendChild(valueEl);
+    if (detail) {
+      const detailEl = document.createElement('span');
+      detailEl.className = 'stat-metric__detail';
+      detailEl.textContent = detail;
+      card.appendChild(detailEl);
+    }
+    return card;
+  }
+
+  function createNumbersSection(summary) {
+    const section = document.createElement('section');
+    section.className = 'stats-section stats-section--numbers';
+    const header = document.createElement('div');
+    header.className = 'stats-section__header';
+    const title = document.createElement('h2');
+    title.textContent = 'Números do jogador';
+    header.appendChild(title);
+    section.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'stats-metrics stats-metrics--panel';
+    grid.appendChild(createNumberCard('Velocidade', `${formatCps(summary.cps)} cps`, `${formatInteger(Math.round(summary.cps * 60))} cpm`));
+    grid.appendChild(createNumberCard('Precisão', formatPercent(summary.accuracyPerc)));
+    grid.appendChild(createNumberCard('Melhor sequência', formatInteger(summary.bestStreak || 0), `Atual: ${formatInteger(summary.currentStreak || 0)}`));
+    grid.appendChild(createNumberCard('Frases certas', formatInteger(summary.correctPhrases || 0), `${formatInteger(summary.totalPhrases || 0)} jogadas`));
+    section.appendChild(grid);
+    return section;
+  }
+
+  function createHero(summary, modeMeta) {
+    const wrapper = document.createElement('section');
+    wrapper.className = 'stats-hero';
+    const titleWrap = document.createElement('div');
+    titleWrap.className = 'stats-hero__copy';
+
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'stats-hero__eyebrow';
+    eyebrow.textContent = 'Lente de resultados';
+    const title = document.createElement('h1');
+    title.className = 'stats-title';
+    title.textContent = modeMeta.title;
+    const logline = document.createElement('p');
+    logline.className = 'stats-hero__lead';
+    logline.textContent = modeMeta.logline;
+    titleWrap.appendChild(eyebrow);
+    titleWrap.appendChild(title);
+    titleWrap.appendChild(logline);
+
+    const chips = document.createElement('div');
+    chips.className = 'stats-hero__chips';
+    const chipData = [
+      { label: 'Precisão', value: formatPercent(summary.accuracyPerc) },
+      { label: 'CPM', value: `${formatInteger(Math.round(summary.cps * 60))}` },
+      { label: 'Sequência', value: formatInteger(summary.bestStreak || summary.currentStreak || 0) }
+    ];
+    chipData.forEach(entry => {
+      const chip = document.createElement('div');
+      chip.className = 'stats-chip';
+      const chipLabel = document.createElement('span');
+      chipLabel.textContent = entry.label;
+      const chipValue = document.createElement('strong');
+      chipValue.textContent = entry.value;
+      chip.appendChild(chipLabel);
+      chip.appendChild(chipValue);
+      chips.appendChild(chip);
     });
-  });
 
-  selectMode(1);
+    wrapper.appendChild(titleWrap);
+    wrapper.appendChild(chips);
+    return wrapper;
+  }
 
-  const seq = localStorage.getItem('statsSequence');
-  if (seq === 'true') {
-    localStorage.removeItem('statsSequence');
-    let delay = 3000;
-    [2, 3, 4, 5, 6].forEach(mode => {
-      setTimeout(() => selectMode(mode), delay);
-      delay += 1500;
+  function buildBannerCard(config) {
+    const card = document.createElement('article');
+    card.className = 'ranking-banner__card stats-banner__card';
+    card.dataset.mode = String(config.id);
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    const rgb = hexToRgb(config.color || '#3fd286');
+    card.style.setProperty('--banner-strong', `rgba(${rgb}, 0.65)`);
+    card.style.setProperty('--banner-soft', `rgba(${rgb}, 0.5)`);
+    card.style.setProperty('--banner-color', `rgba(${rgb}, 0.5)`);
+
+    const content = document.createElement('div');
+    content.className = 'ranking-banner__content';
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'ranking-banner__eyebrow';
+    eyebrow.textContent = 'Modo de jogo';
+    const title = document.createElement('h2');
+    title.textContent = config.title;
+    const logline = document.createElement('p');
+    logline.className = 'ranking-banner__logline';
+    logline.textContent = config.logline;
+    content.appendChild(eyebrow);
+    content.appendChild(title);
+    content.appendChild(logline);
+
+    card.appendChild(content);
+    return card;
+  }
+
+  function createModeCarousel(onSelect, currentMode = 1) {
+    const section = document.createElement('section');
+    section.className = 'ranking-banner stats-banner';
+    section.setAttribute('aria-label', 'Banners dos modos de jogo');
+
+    const viewport = document.createElement('div');
+    viewport.className = 'ranking-banner__viewport';
+    const track = document.createElement('div');
+    track.className = 'ranking-banner__track';
+    const cards = [];
+
+    function setActive(modeId) {
+      cards.forEach(card => {
+        card.classList.toggle('is-active', card.dataset.mode === String(modeId));
+      });
+    }
+
+    MODE_CONFIG.forEach((config, index) => {
+      const card = buildBannerCard(config);
+      if (index === 0) {
+        card.classList.add('is-active');
+      }
+      cards.push(card);
+      card.addEventListener('click', () => {
+        setActive(config.id);
+        onSelect(config.id);
+      });
+      card.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setActive(config.id);
+          onSelect(config.id);
+        }
+      });
+      track.appendChild(card);
+    });
+
+    setActive(currentMode);
+
+    viewport.appendChild(track);
+    section.appendChild(viewport);
+    return section;
+  }
+
+  function buildTopNav(config, onChange) {
+    const nav = document.createElement('nav');
+    nav.className = 'ranking-carousel__nav stats-top__nav';
+    Object.values(config).forEach((entry, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ranking-carousel__nav-button';
+      if (index === 0) {
+        button.classList.add('is-active');
+      }
+      button.dataset.topKey = entry.key;
+      button.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
+      button.textContent = entry.title;
+      button.addEventListener('click', () => onChange(entry.key, button));
+      nav.appendChild(button);
+    });
+    return nav;
+  }
+
+  function createTopList() {
+    const ul = document.createElement('ul');
+    ul.className = 'stats-top__list';
+    return ul;
+  }
+
+  function renderTopEntries(listEl, entries, config) {
+    listEl.innerHTML = '';
+    if (!entries || !entries.length) {
+      const empty = document.createElement('li');
+      empty.className = 'stats-top__empty';
+      empty.textContent = 'Sem jogadores neste ranking ainda.';
+      listEl.appendChild(empty);
+      return;
+    }
+    entries.slice(0, 10).forEach((entry, index) => {
+      const row = document.createElement('li');
+      row.className = 'ranking-row ranking-row--compact';
+      const position = document.createElement('span');
+      position.className = 'ranking-row__position';
+      position.textContent = index + 1;
+      const info = document.createElement('div');
+      info.className = 'ranking-row__info';
+      const name = document.createElement('strong');
+      name.className = 'ranking-row__name';
+      name.textContent = entry.displayName || entry.username || 'Jogador';
+      info.appendChild(name);
+      const meta = document.createElement('span');
+      meta.className = 'ranking-row__meta';
+      meta.textContent = typeof config.detail === 'function' ? config.detail(entry) : '';
+      info.appendChild(meta);
+      const value = document.createElement('div');
+      value.className = 'ranking-row__value';
+      value.textContent = typeof config.value === 'function' ? config.value(entry) : '';
+      row.appendChild(position);
+      row.appendChild(info);
+      row.appendChild(value);
+      listEl.appendChild(row);
     });
   }
 
-  document.addEventListener('playtalk:user-change', () => {
+  function createTopSection() {
+    const section = document.createElement('section');
+    section.className = 'stats-section stats-section--top';
+    const header = document.createElement('div');
+    header.className = 'stats-section__header';
+    const headerCopy = document.createElement('div');
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'stats-hero__eyebrow';
+    eyebrow.textContent = 'Os 10 melhores';
+    const title = document.createElement('h2');
+    title.textContent = 'Carrossel de rankings';
+    headerCopy.appendChild(eyebrow);
+    headerCopy.appendChild(title);
+
+    const list = createTopList();
+    let currentKey = Object.values(TOP_CONFIG)[0].key;
+
+    const nav = buildTopNav(TOP_CONFIG, (key, button) => {
+      currentKey = key;
+      nav.querySelectorAll('button').forEach(btn => {
+        const isActive = btn === button;
+        btn.classList.toggle('is-active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      renderTopEntries(list, rankings[currentKey] || [], Object.values(TOP_CONFIG).find(entry => entry.key === key));
+    });
+
+    header.appendChild(headerCopy);
+    header.appendChild(nav);
+    section.appendChild(header);
+    section.appendChild(list);
+
+    return { section, update: (data) => {
+      renderTopEntries(list, data[currentKey] || [], Object.values(TOP_CONFIG).find(entry => entry.key === currentKey));
+    } };
+  }
+
+  function hexToRgb(hex) {
+    const int = parseInt(hex.slice(1), 16);
+    return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+  }
+
+  function applyLens(mode) {
+    if (window.playtalkLens && typeof window.playtalkLens.applyLens === 'function') {
+      window.playtalkLens.applyLens(mode);
+    }
+  }
+
+  function initPlayPage(context = {}) {
+    const scope = context && context.container ? context.container : document;
+    const container = scope.querySelector('#play-content');
+    if (!container) return;
+
     refreshStatsData();
-    selectMode(activeMode);
-  });
-}
+    activeMode = 1;
 
-if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
-  window.registerPlaytalkPage('page-play', initPlayPage);
-} else if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => initPlayPage(), { once: true });
-} else {
-  initPlayPage();
-}
+    const summary = getSummary(activeMode);
+    const modeMeta = MODE_CONFIG.find(item => item.id === activeMode) || MODE_CONFIG[0];
+
+    container.innerHTML = '';
+    let heroSection = createHero(summary, modeMeta);
+    container.appendChild(heroSection);
+    let medalsSection = createMedalsSection(summary);
+    let numbersSection = createNumbersSection(summary);
+    const carousel = createModeCarousel((mode) => {
+      activeMode = mode;
+      const newSummary = getSummary(mode);
+      const meta = MODE_CONFIG.find(item => item.id === mode) || modeMeta;
+      const updatedHero = createHero(newSummary, meta);
+      container.replaceChild(updatedHero, heroSection);
+      heroSection = updatedHero;
+      const newMedals = createMedalsSection(newSummary);
+      container.replaceChild(newMedals, medalsSection);
+      medalsSection = newMedals;
+      const newNumbers = createNumbersSection(newSummary);
+      container.replaceChild(newNumbers, numbersSection);
+      numbersSection = newNumbers;
+      applyLens(mode);
+    }, activeMode);
+
+    container.appendChild(carousel);
+    container.appendChild(medalsSection);
+    container.appendChild(numbersSection);
+
+    const { section: topSection, update: updateTop } = createTopSection();
+    container.appendChild(topSection);
+
+    applyLens(activeMode);
+
+    fetch('/api/rankings', { method: 'GET', cache: 'no-store' })
+      .then(res => res.json())
+      .then(payload => {
+        rankings = payload && payload.rankings ? payload.rankings : {};
+        updateTop(rankings);
+      })
+      .catch(error => {
+        console.warn('Não foi possível carregar os rankings', error);
+      });
+
+    document.addEventListener('playtalk:user-change', () => {
+      refreshStatsData();
+      const updated = getSummary(activeMode);
+      const meta = MODE_CONFIG.find(item => item.id === activeMode) || modeMeta;
+      const refreshedHero = createHero(updated, meta);
+      container.replaceChild(refreshedHero, heroSection);
+      heroSection = refreshedHero;
+      const refreshedMedals = createMedalsSection(updated);
+      container.replaceChild(refreshedMedals, medalsSection);
+      medalsSection = refreshedMedals;
+      const refreshedNumbers = createNumbersSection(updated);
+      container.replaceChild(refreshedNumbers, numbersSection);
+      numbersSection = refreshedNumbers;
+    });
+  }
+
+  if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {
+    window.registerPlaytalkPage('page-play', initPlayPage);
+  } else if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initPlayPage(), { once: true });
+  } else {
+    initPlayPage();
+  }
+})();
