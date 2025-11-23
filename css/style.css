@@ -81,6 +81,7 @@ body > *:not(.lens-overlay) {
 }
 
 body.page-play #play-container {
+  --content-offset: 0px;
   padding-top: 0;
 }
 
@@ -588,6 +589,11 @@ body.theme-blue .ranking-tag {
     grid-template-areas:
       'pos avatar value'
       'pos info info';
+  }
+
+  .stats-top__list .ranking-row {
+    width: 330px;
+    max-width: 100%;
   }
 
   .ranking-row__position {
@@ -1877,13 +1883,13 @@ body.page-play #play-content {
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  padding: 30px 20px 10px;
+  padding: 0 16px 16px;
   text-align: center;
 }
 
 @media (max-width: 640px) {
   body.page-play #play-content {
-    padding-top: 230px;
+    padding-top: 0;
   }
 }
 
@@ -1900,7 +1906,7 @@ body.page-play #play-content.stats-wrapper {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: clamp(12px, 4vw, 28px);
+  padding: 0 12px 20px;
   box-sizing: border-box;
 }
 
@@ -2081,18 +2087,21 @@ body.page-play #play-content.stats-wrapper {
 }
 
 .stats-metrics--panel {
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  justify-items: center;
 }
 
 .stats-top__nav {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  flex-wrap: nowrap;
+  justify-content: center;
+  width: min(380px, 100%);
+  margin: 0 auto;
 }
 
 .stats-top__nav .ranking-carousel__nav-button {
-  min-width: 120px;
+  min-width: 0;
 }
 
 .stats-top__list {
@@ -2102,6 +2111,7 @@ body.page-play #play-content.stats-wrapper {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  align-items: center;
 }
 
 .stats-top__empty {
@@ -2250,10 +2260,10 @@ body.theme-blue .stat-bar-track {
 
 .stat-metric {
   background: transparent;
-  padding: 18px 22px;
+  padding: 0;
   border-radius: 20px;
   text-align: center;
-  min-width: 160px;
+  min-width: 120px;
   box-shadow: none;
   display: flex;
   flex-direction: column;
@@ -2434,7 +2444,7 @@ body.theme-blue .stats-medal-board__empty {
 @media (max-width: 640px) {
   #play-container {
     gap: 18px;
-    padding: 20px 12px 24px;
+    padding: 0 0 12px;
   }
 
   body.page-play #play-content.stats-wrapper {
@@ -2461,7 +2471,7 @@ body.theme-blue .stats-medal-board__empty {
   }
 
   .stat-metric {
-    padding: 16px 18px;
+    padding: 0;
   }
 
   .stat-metric__value {
@@ -3437,7 +3447,7 @@ body.theme-blue .fun-actions button {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 30px 0 0;
+  padding: 0;
   background: transparent;
   backdrop-filter: none;
   z-index: 1100;
@@ -3445,11 +3455,11 @@ body.theme-blue .fun-actions button {
 }
 
 .game-overlay__panel {
-  width: 100%;
+  width: min(960px, 100%);
   max-width: 100%;
   height: 100%;
   border-radius: 0;
-  padding: clamp(24px, 4vw, 48px);
+  padding: 0;
   background: transparent;
   box-shadow: none;
   text-align: center;
