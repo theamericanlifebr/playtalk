@@ -4,7 +4,7 @@ const path = require('path');
 const rootDir = __dirname;
 const outputDir = path.join(rootDir, 'public');
 
-const filesToCopy = ['index.html', 'play.html', 'custom.html'];
+const filesToCopy = ['index.html', 'play.html', 'store.html'];
 const directoriesToCopy = [
   'css',
   'js',
