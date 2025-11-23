@@ -1520,13 +1520,6 @@ function updatePreGameScreen(mode) {
     savedRound.roundAttempts < savedRound.roundTarget &&
     (!Number.isFinite(targetLevel) || savedRound.level === targetLevel)
   );
-  const bounds = getAvailableLevelBounds(mode);
-  overlay.querySelectorAll('.pre-game-level__control').forEach(control => {
-    const dir = control.dataset.direction === 'up' ? 1 : -1;
-    const target = getSelectedPreGameLevel(mode) + dir;
-    const clamped = Math.max(bounds.min, Math.min(bounds.max, target));
-    control.disabled = hasResume || clamped === getSelectedPreGameLevel(mode);
-  });
   const startBtn = document.getElementById('pre-game-start');
   if (startBtn) {
     startBtn.textContent = hasResume ? 'Continuar' : 'Jogar';
@@ -2287,10 +2280,6 @@ function togglePt() {
 function toggleEn() {
   voz = voz ? null : 'en';
   mostrarFrase();
-}
-
-function toggleDarkMode() {
-  document.body.classList.toggle('dark-mode');
 }
 
 function falarFrase() {
@@ -3109,15 +3098,6 @@ async function initGame() {
     });
   }
 
-  document.querySelectorAll('#pre-game-screen .pre-game-level__control').forEach(button => {
-    button.addEventListener('click', () => {
-      const mode = pendingModeStart ?? selectedMode;
-      const delta = button.dataset.direction === 'up' ? 1 : -1;
-      stepSelectedPreGameLevel(mode, delta);
-      updatePreGameScreen(mode);
-    });
-  });
-
   const postReplayBtn = document.getElementById('post-game-replay');
   if (postReplayBtn) {
     postReplayBtn.addEventListener('click', () => {
@@ -3136,7 +3116,6 @@ async function initGame() {
 
   document.addEventListener('keydown', e => {
     if (e.key === 'r') falarFrase();
-    if (e.key.toLowerCase() === 'h') toggleDarkMode();
     if (e.key.toLowerCase() === 'i') {
       const currentEntry = frasesArr[fraseIndex] || ['', []];
       const esperado = esperadoLang === 'pt'
