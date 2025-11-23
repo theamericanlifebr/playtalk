@@ -536,6 +536,8 @@ let reconhecimentoRodando = false;
 let listeningForCommand = false;
 let microphonePaused = false;
 let speechPauseToken = 0;
+const IS_MOBILE = /Mobi|Android/i.test(navigator.userAgent);
+let lastMicrophoneActivity = Date.now();
 
 const SpeechRecognizerClass = window.KitSpeechRecognizer || window.OpenAISpeechRecognizer;
 if (SpeechRecognizerClass) {
@@ -543,18 +545,20 @@ if (SpeechRecognizerClass) {
     segmentMs: 2400,
     minBytes: 2048,
     volumeThresholdDb: 46,
-    silenceCutoffMs: 800
+    silenceCutoffMs: IS_MOBILE ? 6000 : 800
   });
   reconhecimento.lang = 'en-US';
 
   reconhecimento.onstart = () => {
     reconhecimentoRodando = true;
+    lastMicrophoneActivity = Date.now();
   };
 
   reconhecimento.onresult = (event) => {
     if (microphonePaused) {
       return;
     }
+    lastMicrophoneActivity = Date.now();
     const transcript = event.results[event.results.length - 1][0].transcript.trim();
     const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (awaitingRetry && (normCmd.includes('try again') || normCmd.includes('tentar de novo'))) {
@@ -591,7 +595,12 @@ if (SpeechRecognizerClass) {
   };
 
   reconhecimento.onend = () => {
+    const silenceDuration = Date.now() - lastMicrophoneActivity;
     reconhecimentoRodando = false;
+    if (IS_MOBILE && reconhecimentoAtivo && !microphonePaused && silenceDuration < 6000) {
+      try { reconhecimento.start(); } catch (error) {}
+      return;
+    }
   };
 } else {
   alert('Reconhecimento de voz não é suportado neste navegador. Use o Chrome.');
@@ -635,6 +644,8 @@ let levelFinderTimer = null;
 let levelFinderStartTime = 0;
 let levelFinderLevelHistory = [];
 let levelFinderActive = false;
+let zoomLockInitialized = false;
+let homeScrollLocked = false;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
@@ -3046,19 +3057,25 @@ function nextMode() {
 }
 
 
-function goHome() {
+function goHome(options = {}) {
+  const { preserveRoundState = false } = options;
   pauseGame(true);
-  paused = false;
-  consecutiveErrors = 0;
-  bloqueado = false;
-  if (sessionStart) {
-    const total = parseInt(localStorage.getItem('totalTime') || '0', 10);
-    localStorage.setItem('totalTime', total + (Date.now() - sessionStart));
-    sessionStart = null;
+  if (preserveRoundState) {
+    paused = true;
+    persistCurrentRoundState();
+  } else {
+    paused = false;
+    consecutiveErrors = 0;
+    bloqueado = false;
+    if (sessionStart) {
+      const total = parseInt(localStorage.getItem('totalTime') || '0', 10);
+      localStorage.setItem('totalTime', total + (Date.now() - sessionStart));
+      sessionStart = null;
+    }
+    recordModeTime(selectedMode);
+    resetRoundState();
+    saveTotals();
   }
-  recordModeTime(selectedMode);
-  resetRoundState();
-  saveTotals();
   atualizarBarraProgresso();
   const visor = document.getElementById('visor');
   if (visor) visor.style.display = 'none';
@@ -3088,6 +3105,52 @@ function updateClock() {
   if (!el) return;
   const now = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false });
   el.textContent = now;
+}
+
+function freezeActiveGameSession() {
+  persistCurrentRoundState();
+  pauseGame(true);
+  setInplayState(false);
+}
+
+function setupDesktopZoomLock() {
+  if (IS_MOBILE || zoomLockInitialized) {
+    return;
+  }
+  const preventZoom = (event) => {
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+    }
+  };
+  window.addEventListener('wheel', (event) => {
+    if (event.ctrlKey) {
+      event.preventDefault();
+    }
+  }, { passive: false });
+  window.addEventListener('keydown', (event) => {
+    const zoomKeys = ['+', '-', '=', '_'];
+    if ((event.ctrlKey || event.metaKey) && zoomKeys.includes(event.key)) {
+      event.preventDefault();
+    }
+  });
+  window.addEventListener('gesturestart', preventZoom);
+  window.addEventListener('gesturechange', preventZoom);
+  window.addEventListener('gestureend', preventZoom);
+  zoomLockInitialized = true;
+}
+
+function lockHomeScroll() {
+  if (homeScrollLocked || !document.body.classList.contains('page-home')) {
+    return;
+  }
+  const preventScroll = (event) => {
+    event.preventDefault();
+    window.scrollTo(0, 0);
+  };
+  window.addEventListener('wheel', preventScroll, { passive: false });
+  window.addEventListener('touchmove', preventScroll, { passive: false });
+  window.addEventListener('scroll', () => window.scrollTo(0, 0), { passive: false });
+  homeScrollLocked = true;
 }
 
 async function initGame() {
@@ -3207,24 +3270,30 @@ async function bootstrapHomePage() {
     return;
   }
   homePageInitialized = true;
+  setupDesktopZoomLock();
+  lockHomeScroll();
   updateGameBalanceDisplay();
+  document.addEventListener('click', (event) => {
+    if (!isInplayActive()) {
+      return;
+    }
+    if (event.target.closest('#visor')) {
+      return;
+    }
+    freezeActiveGameSession();
+  });
   document.querySelectorAll('#top-nav a').forEach(a => {
-    a.addEventListener('click', stopCurrentGame);
+    a.addEventListener('click', freezeActiveGameSession);
   });
   document.querySelectorAll('#main-nav a.nav-item').forEach(link => {
-    link.addEventListener('click', () => {
-      persistCurrentRoundState();
-      stopCurrentGame();
-      setInplayState(false);
-    });
+    link.addEventListener('click', freezeActiveGameSession);
   });
   const homeLink = document.getElementById('home-link');
   if (homeLink && homeLink.dataset.external !== 'true') {
     homeLink.addEventListener('click', (e) => {
       e.preventDefault();
-      persistCurrentRoundState();
-      stopCurrentGame();
-      goHome();
+      freezeActiveGameSession();
+      goHome({ preserveRoundState: true });
     });
   }
   await initGame();
