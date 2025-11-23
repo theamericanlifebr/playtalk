@@ -1,58 +1,67 @@
 (function () {
+  function createSvgImage(title, colors) {
+    const gradientStops = colors
+      .map((color, index) => `<stop offset="${(index / (colors.length - 1)) * 100}%" stop-color="${color}" />`)
+      .join('');
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            ${gradientStops}
+          </linearGradient>
+        </defs>
+        <rect width="320" height="320" rx="32" fill="url(#g)" />
+        <circle cx="160" cy="116" r="48" fill="rgba(255,255,255,0.92)" />
+        <text x="50%" y="215" text-anchor="middle" font-family="'Open Sans', Arial" font-size="28" fill="#0f172a" font-weight="700">
+          ${title}
+        </text>
+      </svg>
+    `;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
+
   const PRODUCTS = [
     {
-      id: 'neon-wallpapers',
-      name: 'Pacote Neon',
-      price: 1200,
-      image:
-        'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80',
-      description:
-        'Coleção de fundos neon animados para personalizar seus placares e deixar cada vitória com cara futurista, com cores pulsantes e brilho suave em 4K.',
+      id: 'pulse-avatar',
+      name: 'Avatar Pulse',
+      price: 400,
+      image: createSvgImage('Avatar', ['#a78bfa', '#6366f1']),
+      description: 'Avatar básico com moldura pulsante para destacar seu perfil nas telas do app.',
     },
     {
-      id: 'focus-kit',
-      name: 'Kit Concentração',
-      price: 950,
-      image:
-        'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80',
-      description:
-        'Pacote de trilhas sonoras relaxantes e loops suaves para estudar dentro do app, criado para manter o foco sem distrair durante as rodadas.',
+      id: 'calm-pack',
+      name: 'Kit Calm',
+      price: 650,
+      image: createSvgImage('Focus', ['#22d3ee', '#0ea5e9']),
+      description: 'Mini pacote com sons ambientes em loop para sessões de estudo mais tranquilas.',
     },
     {
-      id: 'emoji-pack',
-      name: 'Pacote de Reações',
-      price: 500,
-      image:
-        'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=900&q=80',
-      description:
-        'Reações animadas exclusivas para celebrar vitórias, compartilhar streaks e apoiar amigos com figurinhas que brilham em mensagens rápidas.',
+      id: 'emoji-mini',
+      name: 'Reações Mini',
+      price: 520,
+      image: createSvgImage('Emoji', ['#facc15', '#f97316']),
+      description: 'Conjunto de cinco reações quadradas para comemorar vitórias rápidas.',
     },
     {
-      id: 'badge-pack',
-      name: 'Coleção de Badges',
-      price: 2400,
-      image:
-        'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=900&q=80',
-      description:
-        'Seis emblemas raros inspirados em missões especiais, perfeitos para exibir na sua jornada e mostrar conquistas lendárias dentro do jogo.',
+      id: 'badge-starters',
+      name: 'Badges Start',
+      price: 900,
+      image: createSvgImage('Badge', ['#fda4af', '#fb7185']),
+      description: 'Coleção inicial de emblemas 1x1 para equipar placares e mostrar progressos.',
     },
     {
-      id: 'voice-pack',
-      name: 'Voz Futurista',
-      price: 3200,
-      image:
-        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=80',
-      description:
-        'Filtro de voz digital para desafios de listening e speaking, com timbres metálicos e eco espacial para deixar cada tentativa ainda mais épica.',
+      id: 'voice-lite',
+      name: 'Voz Lite',
+      price: 750,
+      image: createSvgImage('Voz', ['#67e8f9', '#a5f3fc']),
+      description: 'Filtro simples que clareia sua voz nos desafios de speaking dentro do jogo.',
     },
     {
-      id: 'booster-pack',
-      name: 'Impulso XP',
-      price: 5000,
-      image:
-        'https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=900&q=80',
-      description:
-        'Pacote digital que ativa faíscas de experiência extra em séries perfeitas. Ideal para acelerar níveis e desbloquear recompensas temáticas.',
+      id: 'xp-spark',
+      name: 'Faísca XP',
+      price: 1100,
+      image: createSvgImage('XP', ['#34d399', '#10b981']),
+      description: 'Impulso digital que libera pequenas faíscas de experiência extra em sequências.',
     },
   ];
 
