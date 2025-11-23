@@ -91,15 +91,6 @@ const MEDAL_RULES = [
   { min: 90, max: 100, image: 'medalhas/diamante.png', label: 'Medalha de Diamante', levelDelta: 1, status: 'Você subiu de nível!' }
 ];
 
-const MODE_LENS_COLORS = {
-  1: '#2bd67b',
-  2: '#f2c84b',
-  3: '#ff9a4d',
-  4: '#4aa3ff',
-  5: '#b37bff',
-  6: '#ff5f6d'
-};
-
 const MEDAL_LABEL_TO_KEY = {
   'Medalha de Diamante': 'diamante',
   'Medalha de Ouro': 'ouro',
@@ -273,7 +264,6 @@ function getPrimaryEnFromPhrase(entry) {
 
 let generalProgress = { level: 1, xp: 0 };
 let modeProgress = {};
-let lensPreference = '';
 
 function refreshUserSettings() {
   if (typeof settingsAPI.loadSettings === 'function') {
@@ -284,13 +274,6 @@ function refreshUserSettings() {
 }
 
 refreshUserSettings();
-syncLensPreference();
-
-function syncLensPreference() {
-  if (userSettings && typeof userSettings.lensColor === 'string') {
-    lensPreference = userSettings.lensColor.trim();
-  }
-}
 
 function getNormalizedLevelValue(level) {
   if (!Number.isFinite(level)) {
@@ -1500,22 +1483,6 @@ function getModeDetail(mode) {
   };
 }
 
-function getLensColorForMode(mode) {
-  const color = lensPreference || (userSettings && userSettings.lensColor) || '';
-  if (color && typeof color === 'string' && color.trim()) {
-    return color.trim();
-  }
-  return MODE_LENS_COLORS[mode] || MODE_LENS_COLORS[1];
-}
-
-function applyLensToOverlay(target, mode) {
-  if (!target || typeof window === 'undefined' || !window.playtalkLens) {
-    return;
-  }
-  const panel = target.querySelector('.game-overlay__panel') || target;
-  window.playtalkLens.applyLens(panel, { mode, color: getLensColorForMode(mode) });
-}
-
 function updatePreGameScreen(mode) {
   const overlay = document.getElementById('pre-game-screen');
   if (!overlay) {
@@ -1576,7 +1543,6 @@ function openPreGameScreen(mode) {
   pendingModeStart = mode;
   roundTarget = getRoundSelection(mode);
   updatePreGameScreen(mode);
-  applyLensToOverlay(overlay, mode);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 }
@@ -1645,7 +1611,6 @@ function openPostGameScreen(summary) {
       { label: 'Caracteres corretos por segundo', value: summary.cps.toFixed(2) }
     ]);
   }
-  applyLensToOverlay(overlay, selectedMode);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
@@ -2934,27 +2899,13 @@ function finishMode() {
       eligibleAttempts: roundAttempts,
       correctAttempts: correct
     });
-    const progress = getModeProgress(selectedMode);
-    const previousLevel = progress.level || getSelectedPreGameLevel(selectedMode) || 1;
-    const averagedLevel = Math.max(1, Math.min(MAX_LEVEL_CAP, Math.round(totalAverage)));
-    progress.level = averagedLevel;
-    progress.xp = 0;
-    modeProgress[String(selectedMode)] = progress;
-    saveModeProgress({ emit: true });
-    pastaAtual = setSelectedPreGameLevel(selectedMode, averagedLevel);
-    updateLevelIcon({ scope: 'mode' });
-    dispatchModeProgressUpdate(selectedMode);
-
-    const levelMessage = averagedLevel !== previousLevel
-      ? `Seu nível foi ajustado para ${averagedLevel} pela média geral dos níveis.`
-      : `Seu nível permanece em ${averagedLevel} após o LevelFinder.`;
     if (window.playtalkAuth && typeof window.playtalkAuth.persistProgress === 'function') {
       window.playtalkAuth.persistProgress();
     }
 
     openPostGameScreen({
       isLevelFinder: true,
-      statusText: levelMessage,
+      statusText: 'Resumo do LevelFinder',
       customStats: [
         { label: 'Nível máximo', value: maxLevel.toFixed(0) },
         { label: 'Média dos últimos 20 níveis ÷ 10', value: recentAverage.toFixed(1) },
@@ -2974,9 +2925,12 @@ function finishMode() {
   }
   saveModeStats();
   const progress = getModeProgress(selectedMode);
-  const previousLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode) || 1);
-  const nextLevel = previousLevel;
-  progress.level = previousLevel;
+  const baseLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode));
+  const previousLevel = baseLevel;
+  let nextLevel = previousLevel + medal.levelDelta;
+  nextLevel = Math.max(1, Math.min(MAX_LEVEL_CAP, nextLevel));
+  progress.level = nextLevel;
+  progress.xp = 0;
   modeProgress[String(selectedMode)] = progress;
   saveModeProgress({ emit: true });
   pastaAtual = setSelectedPreGameLevel(selectedMode, nextLevel);
@@ -3177,15 +3131,6 @@ document.addEventListener('playtalk:user-change', () => {
   reloadPersistentProgress();
   selectedMode = 1;
   goHome();
-});
-
-document.addEventListener('playtalk:settings-change', (event) => {
-  if (event && event.detail && event.detail.settings) {
-    const { lensColor } = event.detail.settings;
-    if (typeof lensColor === 'string') {
-      lensPreference = lensColor.trim();
-    }
-  }
 });
 
 let homePageInitialized = false;
