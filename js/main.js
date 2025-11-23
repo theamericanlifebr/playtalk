@@ -537,13 +537,16 @@ let listeningForCommand = false;
 let microphonePaused = false;
 let speechPauseToken = 0;
 
+const isMobileViewport = typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches;
+const recognitionSilenceMs = isMobileViewport ? 6000 : 800;
+
 const SpeechRecognizerClass = window.KitSpeechRecognizer || window.OpenAISpeechRecognizer;
 if (SpeechRecognizerClass) {
   reconhecimento = new SpeechRecognizerClass({
     segmentMs: 2400,
     minBytes: 2048,
     volumeThresholdDb: 46,
-    silenceCutoffMs: 800
+    silenceCutoffMs: recognitionSilenceMs
   });
   reconhecimento.lang = 'en-US';
 
@@ -1762,6 +1765,11 @@ function stopCurrentGame() {
     reconhecimentoAtivo = false;
     try { reconhecimento.stop(); } catch {}
   }
+}
+
+function freezeGameForNavigation() {
+  pauseGame(true);
+  setInplayState(false);
 }
 
 function pauseGame(noPenalty = false) {
@@ -3046,7 +3054,8 @@ function nextMode() {
 }
 
 
-function goHome() {
+function goHome(options = {}) {
+  const { preserveRoundState = false } = options;
   pauseGame(true);
   paused = false;
   consecutiveErrors = 0;
@@ -3057,7 +3066,11 @@ function goHome() {
     sessionStart = null;
   }
   recordModeTime(selectedMode);
-  resetRoundState();
+  if (preserveRoundState) {
+    persistCurrentRoundState();
+  } else {
+    resetRoundState();
+  }
   saveTotals();
   atualizarBarraProgresso();
   const visor = document.getElementById('visor');
@@ -3209,22 +3222,16 @@ async function bootstrapHomePage() {
   homePageInitialized = true;
   updateGameBalanceDisplay();
   document.querySelectorAll('#top-nav a').forEach(a => {
-    a.addEventListener('click', stopCurrentGame);
+    a.addEventListener('click', freezeGameForNavigation);
   });
   document.querySelectorAll('#main-nav a.nav-item').forEach(link => {
-    link.addEventListener('click', () => {
-      persistCurrentRoundState();
-      stopCurrentGame();
-      setInplayState(false);
-    });
+    link.addEventListener('click', freezeGameForNavigation);
   });
   const homeLink = document.getElementById('home-link');
   if (homeLink && homeLink.dataset.external !== 'true') {
     homeLink.addEventListener('click', (e) => {
       e.preventDefault();
-      persistCurrentRoundState();
-      stopCurrentGame();
-      goHome();
+      goHome({ preserveRoundState: true });
     });
   }
   await initGame();

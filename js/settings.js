@@ -13,6 +13,7 @@
     lensOpacityStrong: 0.65,
     lensOpacitySoft: 0.25
   };
+  let zoomLockInstalled = false;
 
   function normalizeHexColor(value, fallback = '') {
     if (typeof value !== 'string') return fallback;
@@ -117,6 +118,29 @@
     return normalized;
   }
 
+  function lockDesktopZoom() {
+    if (zoomLockInstalled) {
+      return;
+    }
+    const isDesktop = window.matchMedia('(pointer: fine)').matches && !/Mobi/i.test(navigator.userAgent || '');
+    if (!isDesktop) {
+      return;
+    }
+    const preventZoomEvent = (event) => {
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('wheel', preventZoomEvent, { passive: false });
+    window.addEventListener('keydown', (event) => {
+      const zoomKeys = ['+', '-', '=', '_'];
+      if ((event.ctrlKey || event.metaKey) && zoomKeys.includes(event.key)) {
+        event.preventDefault();
+      }
+    });
+    zoomLockInstalled = true;
+  }
+
   function applyTheme(theme) {
     const body = document.body;
     if (!body) return;
@@ -193,6 +217,7 @@
   function applyStoredTheme() {
     const settings = loadSettings();
     applyVisualPreferences(settings);
+    lockDesktopZoom();
   }
 
   function handleThemeSync(event) {
