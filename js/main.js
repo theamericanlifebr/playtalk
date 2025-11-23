@@ -671,22 +671,7 @@ function setRoundSelection(mode, size) {
 }
 
 function getComprehensionDelayMs(mode, chars) {
-  const length = Math.max(0, Math.floor(Number(chars) || 0));
-  switch (mode) {
-    case 1:
-      return Math.max(0, Math.round((0.5 + Math.max(0, length - 3) * (1.5 / 37)) * 1000));
-    case 2:
-    case 3:
-      return Math.max(0, 500 + length * 30);
-    case 4:
-      return 500;
-    case 5:
-      return Math.max(0, length * 50);
-    case 6:
-      return Math.max(0, length * 40);
-    default:
-      return 500;
-  }
+  return 1000;
 }
 
 function isProgressBarVisible() {
@@ -758,8 +743,7 @@ function calculatePhraseDurationMs(startTimestamp) {
   if (!startTimestamp) {
     return 0;
   }
-  const raw = Date.now() - startTimestamp;
-  return Math.max(0, raw - 700);
+  return Math.max(0, Date.now() - startTimestamp);
 }
 
 function persistRoundStateCache() {
