@@ -239,6 +239,31 @@ function aggregateModeStats(modeStats = {}) {
   return totals;
 }
 
+function buildModeSnapshot(modeKey, stats = {}) {
+  const totalPhrases = normalizePositiveInteger(stats.totalPhrases);
+  const correctPhrases = normalizePositiveInteger(stats.correct);
+  const totalChars = normalizePositiveInteger(stats.totalChars);
+  const correctChars = normalizePositiveInteger(stats.correctChars);
+  const totalTime = normalizePositiveInteger(stats.totalTime);
+  const seconds = totalTime > 0 ? totalTime / 1000 : 0;
+  const cps = seconds > 0 ? correctChars / seconds : 0;
+  const accuracy = totalPhrases > 0 ? (correctPhrases / totalPhrases) * 100 : 0;
+
+  return {
+    mode: modeKey,
+    totalPhrases,
+    correctPhrases,
+    totalChars,
+    correctChars,
+    totalTime,
+    cps,
+    accuracy,
+    bestStreak: normalizePositiveInteger(stats.bestStreak),
+    currentStreak: normalizePositiveInteger(stats.currentStreak),
+    points: Math.max(correctPhrases, normalizePositiveInteger(stats.points))
+  };
+}
+
 function createVerificationCode(length = DEFAULT_VERIFICATION_CODE_LENGTH) {
   const digits = '0123456789';
   let result = '';
@@ -411,6 +436,11 @@ function buildPlayerSnapshot(key, entry) {
     data.generalProgress && data.generalProgress.level
   ) || normalizePositiveInteger(data.pastaAtual) || 1;
 
+  const modeBreakdown = {};
+  Object.entries(data.modeStats || {}).forEach(([modeKey, stats]) => {
+    modeBreakdown[modeKey] = buildModeSnapshot(modeKey, stats || {});
+  });
+
   return {
     key,
     username: normalized.username || key,
@@ -430,7 +460,8 @@ function buildPlayerSnapshot(key, entry) {
     fastCps,
     recentPhraseCount,
     recentPhraseWindow: RECENT_PHRASE_LIMIT,
-    level
+    level,
+    modes: modeBreakdown
   };
 }
 

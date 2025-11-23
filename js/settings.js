@@ -18,8 +18,7 @@
   }
 
   function getDefaultPhraseColor(theme) {
-    if (theme === 'dark' || theme === 'blue') return '#ffffff';
-    return '#333333';
+    return '#ffffff';
   }
 
   function normalizeSettings(value) {
@@ -28,9 +27,7 @@
       return base;
     }
     const normalized = { ...base };
-    if (typeof value.theme === 'string') {
-      normalized.theme = value.theme;
-    }
+    normalized.theme = 'light';
     if (typeof value.retryWrongPhrases === 'boolean') {
       normalized.retryWrongPhrases = value.retryWrongPhrases;
     }
@@ -85,16 +82,6 @@
     const body = document.body;
     if (!body) return;
     body.classList.remove('dark-mode', 'theme-blue');
-    switch (theme) {
-      case 'dark':
-        body.classList.add('dark-mode');
-        break;
-      case 'blue':
-        body.classList.add('theme-blue');
-        break;
-      default:
-        break;
-    }
   }
 
   function applyHeaderGradient({ headerGradientStart, headerGradientEnd, headerGradientEnabled } = {}) {
