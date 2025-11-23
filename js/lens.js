@@ -8,6 +8,13 @@
     6: '#ff4f6d'  // vermelho
   };
 
+  const CONTEXT_COLORS = {
+    home: '#3fd286',
+    game: '#4a9cff',
+    menus: '#9a6dff',
+    stats: '#f2c11f'
+  };
+
   let overlay = null;
   let activeMode = null;
 
@@ -42,7 +49,24 @@
     return null;
   }
 
+  function readContextLensRgb(mode) {
+    const doc = document.documentElement;
+    if (!mode || !doc) return null;
+    const cssValue = getComputedStyle(doc).getPropertyValue(`--lens-color-${mode}-rgb`);
+    if (cssValue && cssValue.trim()) {
+      return cssValue.trim();
+    }
+    const fallback = CONTEXT_COLORS[mode];
+    return fallback ? hexToRgb(fallback) : null;
+  }
+
   function getColorForMode(mode) {
+    if (mode && !MODE_COLORS[mode]) {
+      const contextual = readContextLensRgb(String(mode));
+      if (contextual) {
+        return contextual;
+      }
+    }
     const custom = readCustomLensRgb(mode);
     if (custom) {
       return custom;
@@ -83,6 +107,13 @@
     }
   }
 
+  function applyBodyContextLens() {
+    const context = document.body && document.body.dataset && document.body.dataset.lensContext;
+    if (context) {
+      applyLens(context);
+    }
+  }
+
   window.playtalkLens = {
     applyLens,
     hideLens,
@@ -92,4 +123,9 @@
   };
 
   document.addEventListener('playtalk:settings-change', refreshLens);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyBodyContextLens, { once: true });
+  } else {
+    applyBodyContextLens();
+  }
 })();

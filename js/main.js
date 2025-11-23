@@ -1530,11 +1530,9 @@ function updatePreGameScreen(mode) {
   }
   const detail = getModeDetail(mode);
   const titleEl = document.getElementById('pre-game-title');
-  const descEl = document.getElementById('pre-game-description');
   const logoEl = document.getElementById('pre-game-logo');
   const levelEl = document.getElementById('pre-game-level');
   if (titleEl) titleEl.textContent = detail.title;
-  if (descEl) descEl.textContent = detail.description;
   if (logoEl) {
     logoEl.src = detail.logo;
     logoEl.alt = `Logo do ${detail.title}`;
@@ -1548,7 +1546,7 @@ function updatePreGameScreen(mode) {
   }
   if (levelEl) {
     const level = setSelectedPreGameLevel(mode, getSelectedPreGameLevel(mode));
-    levelEl.textContent = `Pasta ${level}`;
+    levelEl.textContent = `Nível ${level}`;
   }
   const targetLevel = getSelectedPreGameLevel(mode);
   const hasResume = Boolean(
@@ -2219,6 +2217,9 @@ function beginGame() {
   roundStartTime = Date.now();
   roundActive = true;
   pastaAtual = targetLevel;
+  if (window.playtalkLens && typeof window.playtalkLens.applyLens === 'function') {
+    window.playtalkLens.applyLens('game');
+  }
   if (isLevelFinderActive()) {
     startLevelFinderTimer();
     pushLevelFinderLevel(pastaAtual);
@@ -3077,6 +3078,9 @@ function goHome() {
   pendingModeStart = null;
   updateModeIcons();
   updateLevelIcon({ scope: 'general' });
+  if (window.playtalkLens && typeof window.playtalkLens.applyLens === 'function') {
+    window.playtalkLens.applyLens('home');
+  }
 }
 
 function updateClock() {

@@ -15,7 +15,7 @@
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
 </head>
-  <body class="page-home">
+  <body class="page-home" data-lens-context="home">
     <header class="site-header" id="global-header">
     <div class="site-header__profile">
       <div class="site-header__avatar-container" id="header-avatar-container">
@@ -97,11 +97,9 @@
       <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
         <img id="pre-game-logo" class="game-overlay__logo" alt="Logo do modo selecionado">
         <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
-        <p id="pre-game-description" class="game-overlay__description"></p>
         <div class="pre-game-level">
-          <span class="pre-game-level__label">Escolha a pasta:</span>
           <div class="pre-game-level__selector">
-            <strong id="pre-game-level" class="pre-game-level__value">Pasta 1</strong>
+            <strong id="pre-game-level" class="pre-game-level__value">Nível 1</strong>
           </div>
         </div>
         <div class="game-overlay__actions">
@@ -113,8 +111,9 @@
 
     <section id="post-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
-        <h2 id="post-game-title" class="game-overlay__title">Fim de jogo</h2>
+        <h2 id="post-game-title" class="game-overlay__title game-overlay__title--hidden">Fim de jogo</h2>
         <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
+        <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label"></p>
         <p id="post-game-level-status" class="game-overlay__subtitle"></p>
         <dl class="post-game-stats">
           <div class="post-game-stats__item">

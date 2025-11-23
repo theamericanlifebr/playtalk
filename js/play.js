@@ -79,6 +79,43 @@
   let activeMode = null;
   let rankings = {};
 
+  function formatDuration(milliseconds) {
+    const totalSeconds = Math.max(0, Math.floor((Number(milliseconds) || 0) / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+    }
+    return `${seconds}s`;
+  }
+
+  function formatWords(totalChars) {
+    const words = Math.max(0, Math.floor((Number(totalChars) || 0) / 5));
+    return formatInteger(words);
+  }
+
+  function getJoinDateInfo() {
+    const user = window.playtalkAuth && typeof window.playtalkAuth.getCurrentUser === 'function'
+      ? window.playtalkAuth.getCurrentUser()
+      : null;
+    const candidates = [
+      localStorage.getItem('firstLoginAt'),
+      user && (user.createdAt || user.created_at),
+      user && user.data && (user.data.createdAt || user.data.created_at)
+    ].filter(Boolean);
+    let rawDate = candidates.find(Boolean) || null;
+    if (!rawDate) {
+      rawDate = new Date().toISOString();
+      localStorage.setItem('firstLoginAt', rawDate);
+    }
+    const parsed = rawDate ? new Date(rawDate) : null;
+    return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+  }
+
   function formatInteger(value) {
     const number = Number(value);
     if (!Number.isFinite(number)) return '0';
@@ -136,6 +173,7 @@
     const report = stats.report || 0;
     const totalChars = stats.totalChars || 0;
     const correctChars = stats.correctChars || 0;
+    const wrong = stats.wrong || Math.max(0, totalPhrases - correctPhrases);
     const accuracyPerc = totalPhrases ? (correctPhrases / totalPhrases * 100) : 0;
     const seconds = totalTime > 0 ? (totalTime / 1000) : 0;
     const cps = seconds > 0 ? (correctChars / seconds) : 0;
@@ -145,9 +183,12 @@
       correctPhrases,
       totalChars,
       correctChars,
+      wrongPhrases: wrong,
       accuracyPerc,
       cps,
       noReportPerc,
+      totalTime,
+      reportCount: report,
       medals: normalizeMedals(stats.medals),
       bestStreak: Math.max(0, Math.floor(stats.bestStreak || 0)),
       currentStreak: Math.max(0, Math.floor(stats.currentStreak || 0))
@@ -161,6 +202,7 @@
       correctPhrases: 0,
       totalChars: 0,
       correctChars: 0,
+      wrongPhrases: 0,
       totalTime: 0,
       report: 0,
       medals: getEmptyMedalCounts()
@@ -171,6 +213,7 @@
       totals.correctPhrases += stats.correct || 0;
       totals.totalChars += stats.totalChars || 0;
       totals.correctChars += stats.correctChars || 0;
+      totals.wrongPhrases += (stats.wrong || Math.max(0, (stats.totalPhrases || 0) - (stats.correct || 0)));
       totals.totalTime += stats.totalTime || 0;
       totals.report += stats.report || 0;
       const medals = normalizeMedals(stats.medals);
@@ -193,9 +236,12 @@
       correctPhrases: totals.correctPhrases,
       totalChars: totals.totalChars,
       correctChars: totals.correctChars,
+      wrongPhrases: totals.wrongPhrases,
       accuracyPerc,
       cps,
       noReportPerc,
+      totalTime: totals.totalTime,
+      reportCount: totals.report,
       medals: totals.medals,
       bestStreak,
       currentStreak
@@ -283,7 +329,6 @@
     grid.appendChild(createNumberCard('Velocidade', `${formatCps(summary.cps)} cps`, `${formatInteger(Math.round(summary.cps * 60))} cpm`));
     grid.appendChild(createNumberCard('Precisão', formatPercent(summary.accuracyPerc)));
     grid.appendChild(createNumberCard('Melhor sequência', formatInteger(summary.bestStreak || 0), `Atual: ${formatInteger(summary.currentStreak || 0)}`));
-    grid.appendChild(createNumberCard('Frases certas', formatInteger(summary.correctPhrases || 0), `${formatInteger(summary.totalPhrases || 0)} jogadas`));
     section.appendChild(grid);
     return section;
   }
@@ -304,37 +349,55 @@
     title.textContent = modeMeta.title;
     visual.appendChild(badge);
     visual.appendChild(title);
+    wrapper.appendChild(visual);
+    return wrapper;
+  }
 
-    const titleWrap = document.createElement('div');
-    titleWrap.className = 'stats-hero__copy';
-    const logline = document.createElement('p');
-    logline.className = 'stats-hero__lead';
-    logline.textContent = modeMeta.logline;
-    const chips = document.createElement('div');
-    chips.className = 'stats-hero__chips';
-    const chipData = [
-      { label: 'Precisão', value: formatPercent(summary.accuracyPerc) },
-      { label: 'CPM', value: `${formatInteger(Math.round(summary.cps * 60))}` },
-      { label: 'Sequência', value: formatInteger(summary.bestStreak || summary.currentStreak || 0) }
+  function createPlayerStatsSection(summary) {
+    const section = document.createElement('section');
+    section.className = 'stats-section stats-section--totals';
+    const header = document.createElement('div');
+    header.className = 'stats-section__header';
+    const title = document.createElement('h2');
+    title.textContent = 'Estatísticas';
+    header.appendChild(title);
+    section.appendChild(header);
+
+    const list = document.createElement('div');
+    list.className = 'stats-list';
+
+    const wrong = Math.max(0, summary.wrongPhrases || (summary.totalPhrases - summary.correctPhrases));
+    const reportRate = wrong > 0 ? (summary.reportCount || 0) / wrong * 100 : 0;
+    const joinDate = getJoinDateInfo();
+
+    const entries = [
+      { label: 'Frases totais', value: formatInteger(summary.totalPhrases || 0) },
+      { label: 'Frases certas', value: formatInteger(summary.correctPhrases || 0) },
+      { label: 'Frases erradas', value: formatInteger(wrong) },
+      { label: 'Palavras faladas', value: formatWords(summary.totalChars) },
+      { label: 'Tempo de jogo', value: formatDuration(summary.totalTime) },
+      { label: 'Reports', value: formatPercent(reportRate) },
+      { label: 'No PlayTalk desde', value: joinDate
+        ? joinDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+        : '—' }
     ];
-    chipData.forEach(entry => {
-      const chip = document.createElement('div');
-      chip.className = 'stats-chip';
-      const chipLabel = document.createElement('span');
-      chipLabel.textContent = entry.label;
-      const chipValue = document.createElement('strong');
-      chipValue.textContent = entry.value;
-      chip.appendChild(chipLabel);
-      chip.appendChild(chipValue);
-      chips.appendChild(chip);
+
+    entries.forEach(({ label, value }) => {
+      const row = document.createElement('div');
+      row.className = 'stats-list__item';
+      const rowLabel = document.createElement('span');
+      rowLabel.className = 'stats-list__label';
+      rowLabel.textContent = label;
+      const rowValue = document.createElement('span');
+      rowValue.className = 'stats-list__value';
+      rowValue.textContent = value;
+      row.appendChild(rowLabel);
+      row.appendChild(rowValue);
+      list.appendChild(row);
     });
 
-    titleWrap.appendChild(logline);
-    titleWrap.appendChild(chips);
-
-    wrapper.appendChild(visual);
-    wrapper.appendChild(titleWrap);
-    return wrapper;
+    section.appendChild(list);
+    return section;
   }
 
   function createModeSelector(onSelect, currentMode = null) {
@@ -571,6 +634,8 @@
     const modeMeta = GENERAL_META;
 
     container.innerHTML = '';
+    let heroSection = createHero(summary, modeMeta);
+    container.appendChild(heroSection);
     const selector = createModeSelector((mode) => {
       const newSummary = getSummary(mode);
       const meta = mode ? (MODE_CONFIG.find(item => item.id === mode) || GENERAL_META) : GENERAL_META;
@@ -580,16 +645,16 @@
       medalsSection = swapSection(container, medalsSection, newMedals);
       const newNumbers = createNumbersSection(newSummary);
       numbersSection = swapSection(container, numbersSection, newNumbers);
+      const newPlayerStats = createPlayerStatsSection(newSummary);
+      playerStatsSection = swapSection(container, playerStatsSection, newPlayerStats);
       updateTop(rankings, mode);
       if (mode) {
         applyLens(mode);
       } else {
-        hideLens();
+        applyLens('stats');
       }
     }, activeMode);
     container.appendChild(selector);
-    let heroSection = createHero(summary, modeMeta);
-    container.appendChild(heroSection);
     let medalsSection = createMedalsSection(summary);
     container.appendChild(medalsSection);
     let numbersSection = createNumbersSection(summary);
@@ -598,10 +663,13 @@
     const { section: topSection, update: updateTop } = createTopSection();
     container.appendChild(topSection);
 
+    let playerStatsSection = createPlayerStatsSection(summary);
+    container.appendChild(playerStatsSection);
+
     if (activeMode) {
       applyLens(activeMode);
     } else {
-      hideLens();
+      applyLens('stats');
     }
 
     fetch('/api/rankings', { method: 'GET', cache: 'no-store' })
@@ -624,6 +692,8 @@
       medalsSection = swapSection(container, medalsSection, refreshedMedals);
       const refreshedNumbers = createNumbersSection(updated);
       numbersSection = swapSection(container, numbersSection, refreshedNumbers);
+      const refreshedPlayerStats = createPlayerStatsSection(updated);
+      playerStatsSection = swapSection(container, playerStatsSection, refreshedPlayerStats);
       updateTop(rankings, activeMode);
     });
   }

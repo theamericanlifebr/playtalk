@@ -12,9 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/settings.js"></script>
+  <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
 </head>
-  <body class="page-inplay">
+<body class="page-inplay" data-lens-context="home">
     <header class="site-header" id="global-header">
     <div class="site-header__profile">
       <div class="site-header__avatar-container" id="header-avatar-container">
@@ -96,11 +97,9 @@
       <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
         <img id="pre-game-logo" class="game-overlay__logo" alt="Logo do modo selecionado">
         <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
-        <p id="pre-game-description" class="game-overlay__description"></p>
         <div class="pre-game-level">
-          <span class="pre-game-level__label">Escolha a pasta:</span>
           <div class="pre-game-level__selector">
-            <strong id="pre-game-level" class="pre-game-level__value">Pasta 1</strong>
+            <strong id="pre-game-level" class="pre-game-level__value">Nível 1</strong>
           </div>
         </div>
         <div class="game-overlay__actions">
