@@ -8,11 +8,18 @@
     { id: 6, title: 'Thinking', logline: 'Raciocínio afiado em vermelho vivo.', color: '#ff4f6d' }
   ];
 
+  const GENERAL_META = {
+    id: null,
+    title: 'Painel geral',
+    logline: 'Visão macro com o desempenho combinado dos modos.'
+  };
+
   const TOP_CONFIG = {
     streak: {
       key: 'streak',
       title: 'Melhores sequências',
       logline: 'Quem mantém a chama acesa por mais tempo.',
+      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2 4 14h5v8l7-12h-5z"/></svg>',
       value(entry) {
         return formatInteger(entry.bestStreak || entry.currentStreak || 0);
       },
@@ -24,6 +31,7 @@
       key: 'fast',
       title: 'Melhor CPM',
       logline: 'Ritmo premium em cada frase.',
+      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5h-2v5.41l3.29 3.3 1.42-1.42L13 11.59Z"/></svg>',
       value(entry) {
         const cps = Number.isFinite(entry.cps) ? entry.cps : (entry.fastCps || 0);
         return `${formatInteger(Math.max(0, Math.round(cps * 60)))} cpm`;
@@ -36,6 +44,7 @@
       key: 'accuracy',
       title: 'Mais precisos',
       logline: 'Quem erra menos e decide mais.',
+      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 3 5v6c0 5 3.84 9.74 9 11 5.16-1.26 9-6 9-11V5Zm0 13a4 4 0 1 1 4-4 4 4 0 0 1-4 4Zm0-6a2 2 0 1 0 2 2 2 2 0 0 0-2-2Z"/></svg>',
       value(entry) {
         return formatPercent(entry.accuracy || 0);
       },
@@ -47,6 +56,7 @@
       key: 'level',
       title: 'Quem tem mais nível',
       logline: 'A escalada mais quente do app.',
+      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16v2H4Zm12-9h4l-6-9-6 9h4v6h4Z"/></svg>',
       value(entry) {
         return `Nível ${formatInteger(entry.level || 1)}`;
       },
@@ -64,7 +74,7 @@
   ];
 
   let statsData = {};
-  let activeMode = 1;
+  let activeMode = null;
   let rankings = {};
 
   function formatInteger(value) {
@@ -191,7 +201,7 @@
   }
 
   function getSummary(mode) {
-    if (mode === 1) return calcGeneralStats();
+    if (!mode) return calcGeneralStats();
     return calcModeStats(mode);
   }
 
@@ -319,76 +329,61 @@
     return wrapper;
   }
 
-  function buildBannerCard(config) {
-    const card = document.createElement('article');
-    card.className = 'ranking-banner__card stats-banner__card';
-    card.dataset.mode = String(config.id);
-    card.setAttribute('role', 'button');
-    card.setAttribute('tabindex', '0');
-    const rgb = hexToRgb(config.color || '#3fd286');
-    card.style.setProperty('--banner-strong', `rgba(${rgb}, 0.65)`);
-    card.style.setProperty('--banner-soft', `rgba(${rgb}, 0.5)`);
-    card.style.setProperty('--banner-color', `rgba(${rgb}, 0.5)`);
-
-    const content = document.createElement('div');
-    content.className = 'ranking-banner__content';
-    const eyebrow = document.createElement('p');
-    eyebrow.className = 'ranking-banner__eyebrow';
-    eyebrow.textContent = 'Modo de jogo';
-    const title = document.createElement('h2');
-    title.textContent = config.title;
-    const logline = document.createElement('p');
-    logline.className = 'ranking-banner__logline';
-    logline.textContent = config.logline;
-    content.appendChild(eyebrow);
-    content.appendChild(title);
-    content.appendChild(logline);
-
-    card.appendChild(content);
-    return card;
-  }
-
-  function createModeCarousel(onSelect, currentMode = 1) {
+  function createModeSelector(onSelect, currentMode = null) {
     const section = document.createElement('section');
-    section.className = 'ranking-banner stats-banner';
-    section.setAttribute('aria-label', 'Banners dos modos de jogo');
+    section.className = 'stats-mode-selector';
+    section.setAttribute('aria-label', 'Selecionar modo de jogo para a lente');
 
-    const viewport = document.createElement('div');
-    viewport.className = 'ranking-banner__viewport';
     const track = document.createElement('div');
-    track.className = 'ranking-banner__track';
-    const cards = [];
+    track.className = 'stats-mode-selector__track';
+    section.appendChild(track);
 
-    function setActive(modeId) {
-      cards.forEach(card => {
-        card.classList.toggle('is-active', card.dataset.mode === String(modeId));
+    const buttons = [];
+
+    function updateStates(active) {
+      section.classList.toggle('has-selection', Boolean(active));
+      buttons.forEach(btn => {
+        const isActive = btn.dataset.mode === String(active);
+        btn.classList.toggle('is-active', isActive);
       });
     }
 
-    MODE_CONFIG.forEach((config, index) => {
-      const card = buildBannerCard(config);
-      if (index === 0) {
-        card.classList.add('is-active');
-      }
-      cards.push(card);
-      card.addEventListener('click', () => {
-        setActive(config.id);
-        onSelect(config.id);
+    MODE_CONFIG.forEach(config => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'stats-mode-selector__button';
+      button.dataset.mode = config.id;
+      button.setAttribute('aria-pressed', currentMode === config.id ? 'true' : 'false');
+      button.setAttribute('title', config.title);
+
+      const ring = document.createElement('span');
+      ring.className = 'stats-mode-selector__ring';
+      const rgb = hexToRgb(config.color || '#3fd286');
+      ring.style.setProperty('--mode-color-rgb', rgb);
+      const image = document.createElement('img');
+      image.src = `selos%20modos%20de%20jogo/modo${config.id}.png`;
+      image.alt = config.title;
+      ring.appendChild(image);
+      button.appendChild(ring);
+
+      button.addEventListener('click', () => {
+        const modeId = parseInt(button.dataset.mode, 10);
+        const nextMode = activeMode === modeId ? null : modeId;
+        activeMode = nextMode;
+        buttons.forEach(btn => {
+          const isActive = btn === button && nextMode;
+          btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+        updateStates(nextMode);
+        onSelect(nextMode);
       });
-      card.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          setActive(config.id);
-          onSelect(config.id);
-        }
-      });
-      track.appendChild(card);
+
+      buttons.push(button);
+      track.appendChild(button);
     });
 
-    setActive(currentMode);
+    updateStates(currentMode);
 
-    viewport.appendChild(track);
-    section.appendChild(viewport);
     return section;
   }
 
@@ -398,13 +393,22 @@
     Object.values(config).forEach((entry, index) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'ranking-carousel__nav-button';
+      button.className = 'ranking-carousel__nav-button ranking-carousel__nav-button--icon';
+      button.dataset.topKey = entry.key;
+      button.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
+
+      const iconWrapper = document.createElement('span');
+      iconWrapper.className = 'ranking-carousel__nav-icon';
+      iconWrapper.innerHTML = entry.icon;
+      const label = document.createElement('span');
+      label.className = 'ranking-carousel__nav-label';
+      label.textContent = entry.title;
+      button.appendChild(iconWrapper);
+      button.appendChild(label);
+
       if (index === 0) {
         button.classList.add('is-active');
       }
-      button.dataset.topKey = entry.key;
-      button.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
-      button.textContent = entry.title;
       button.addEventListener('click', () => onChange(entry.key, button));
       nav.appendChild(button);
     });
@@ -500,46 +504,76 @@
     }
   }
 
+  function hideLens() {
+    if (window.playtalkLens && typeof window.playtalkLens.hideLens === 'function') {
+      window.playtalkLens.hideLens();
+    }
+  }
+
+  function swapSection(container, oldSection, newSection) {
+    if (!oldSection || !oldSection.parentNode) {
+      container.insertBefore(newSection, container.firstChild);
+      return newSection;
+    }
+    newSection.classList.add('stats-slide', 'is-entering');
+    oldSection.classList.add('stats-slide', 'is-leaving');
+    oldSection.after(newSection);
+    requestAnimationFrame(() => {
+      newSection.classList.add('is-active');
+      oldSection.classList.add('is-off');
+    });
+    setTimeout(() => {
+      if (oldSection.parentNode) {
+        oldSection.parentNode.removeChild(oldSection);
+      }
+      newSection.classList.remove('stats-slide', 'is-entering', 'is-active');
+    }, 240);
+    return newSection;
+  }
+
   function initPlayPage(context = {}) {
     const scope = context && context.container ? context.container : document;
     const container = scope.querySelector('#play-content');
     if (!container) return;
 
     refreshStatsData();
-    activeMode = 1;
+    activeMode = null;
 
     const summary = getSummary(activeMode);
-    const modeMeta = MODE_CONFIG.find(item => item.id === activeMode) || MODE_CONFIG[0];
+    const modeMeta = GENERAL_META;
 
     container.innerHTML = '';
+    const selector = createModeSelector((mode) => {
+      const newSummary = getSummary(mode);
+      const meta = mode ? (MODE_CONFIG.find(item => item.id === mode) || GENERAL_META) : GENERAL_META;
+      const updatedHero = createHero(newSummary, meta);
+      heroSection = swapSection(container, heroSection, updatedHero);
+      const newMedals = createMedalsSection(newSummary);
+      medalsSection = swapSection(container, medalsSection, newMedals);
+      const newNumbers = createNumbersSection(newSummary);
+      numbersSection = swapSection(container, numbersSection, newNumbers);
+      if (mode) {
+        applyLens(mode);
+      } else {
+        hideLens();
+      }
+    }, activeMode);
+    container.appendChild(selector);
     let heroSection = createHero(summary, modeMeta);
     container.appendChild(heroSection);
     let medalsSection = createMedalsSection(summary);
-    let numbersSection = createNumbersSection(summary);
-    const carousel = createModeCarousel((mode) => {
-      activeMode = mode;
-      const newSummary = getSummary(mode);
-      const meta = MODE_CONFIG.find(item => item.id === mode) || modeMeta;
-      const updatedHero = createHero(newSummary, meta);
-      container.replaceChild(updatedHero, heroSection);
-      heroSection = updatedHero;
-      const newMedals = createMedalsSection(newSummary);
-      container.replaceChild(newMedals, medalsSection);
-      medalsSection = newMedals;
-      const newNumbers = createNumbersSection(newSummary);
-      container.replaceChild(newNumbers, numbersSection);
-      numbersSection = newNumbers;
-      applyLens(mode);
-    }, activeMode);
-
-    container.appendChild(carousel);
     container.appendChild(medalsSection);
+    let numbersSection = createNumbersSection(summary);
     container.appendChild(numbersSection);
 
     const { section: topSection, update: updateTop } = createTopSection();
     container.appendChild(topSection);
 
-    applyLens(activeMode);
+    if (activeMode) {
+      applyLens(activeMode);
+    } else {
+      hideLens();
+    }
 
     fetch('/api/rankings', { method: 'GET', cache: 'no-store' })
       .then(res => res.json())
@@ -554,16 +588,13 @@
     document.addEventListener('playtalk:user-change', () => {
       refreshStatsData();
       const updated = getSummary(activeMode);
-      const meta = MODE_CONFIG.find(item => item.id === activeMode) || modeMeta;
+      const meta = activeMode ? (MODE_CONFIG.find(item => item.id === activeMode) || GENERAL_META) : GENERAL_META;
       const refreshedHero = createHero(updated, meta);
-      container.replaceChild(refreshedHero, heroSection);
-      heroSection = refreshedHero;
+      heroSection = swapSection(container, heroSection, refreshedHero);
       const refreshedMedals = createMedalsSection(updated);
-      container.replaceChild(refreshedMedals, medalsSection);
-      medalsSection = refreshedMedals;
+      medalsSection = swapSection(container, medalsSection, refreshedMedals);
       const refreshedNumbers = createNumbersSection(updated);
-      container.replaceChild(refreshedNumbers, numbersSection);
-      numbersSection = refreshedNumbers;
+      numbersSection = swapSection(container, numbersSection, refreshedNumbers);
     });
   }
 

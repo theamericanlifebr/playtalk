@@ -1,6 +1,6 @@
 :root {
   --nav-height: 72px;
-  --header-height: 56px;
+  --header-height: 62px;
   --container-max-width: 1180px;
   --ranking-carousel-max-width: 960px;
   --header-gradient-start: #1a66cc;
@@ -297,12 +297,12 @@ body.page-ranking {
 
 .ranking-carousel__nav-button {
   border: none;
-  border-radius: 50%;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0;
+  font-size: 14px;
   color: #0f52ba;
   background: transparent;
   cursor: pointer;
@@ -316,14 +316,14 @@ body.theme-blue .ranking-carousel__nav-button {
 }
 
 .ranking-carousel__nav-button svg {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
   fill: currentColor;
 }
 
 .ranking-carousel__nav-button.is-active {
   opacity: 1;
-  transform: translateY(-4px);
+  transform: translateY(-2px);
 }
 
 .ranking-carousel__nav-button:focus-visible {
@@ -333,6 +333,26 @@ body.theme-blue .ranking-carousel__nav-button {
 
 .ranking-carousel__nav-button:active {
   transform: scale(0.96);
+}
+
+.ranking-carousel__nav-button--icon {
+  gap: 8px;
+  border: 1px solid rgba(12, 61, 94, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(12, 61, 94, 0.08);
+  padding-inline: 14px;
+}
+
+.ranking-carousel__nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ranking-carousel__nav-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0c3d5e;
 }
 
 .ranking-carousel__viewport {
@@ -569,6 +589,8 @@ body.theme-blue .ranking-tag {
   justify-content: space-between;
   gap: 16px;
   padding: 6px 18px;
+  min-height: 62px;
+  height: 62px;
   background: var(--header-gradient, linear-gradient(135deg, #1a66cc 0%, #357de0 100%));
   color: #ffffff;
   position: fixed;
@@ -610,6 +632,7 @@ body.theme-blue .ranking-tag {
   gap: 16px;
   min-width: 0;
   flex: 1 1 auto;
+  max-width: 400px;
 }
 
 .site-header__avatar-container {
@@ -758,6 +781,7 @@ body.theme-blue .site-header__button--logout {
     justify-content: flex-start;
     gap: 10px;
     padding: 4px 12px;
+    height: auto;
   }
 
   .site-header__avatar-container {
@@ -776,7 +800,7 @@ body.theme-blue .site-header__button--logout {
 
 @media (max-width: 720px) {
   :root {
-    --header-height: 56px;
+    --header-height: 62px;
   }
 }
 
@@ -1851,6 +1875,93 @@ body.page-play #play-content.stats-wrapper {
   box-sizing: border-box;
 }
 
+.stats-mode-selector {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(12, 61, 94, 0.08);
+  position: sticky;
+  top: calc(var(--header-height, 62px) + 8px);
+  z-index: 4;
+  backdrop-filter: blur(6px);
+}
+
+.stats-mode-selector__track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.stats-mode-selector__button {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  opacity: 1;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stats-mode-selector.has-selection .stats-mode-selector__button {
+  opacity: 0.5;
+}
+
+.stats-mode-selector__button.is-active {
+  opacity: 0.99;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(12, 61, 94, 0.15);
+}
+
+.stats-mode-selector__ring {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(var(--mode-color-rgb, 63, 210, 134), 0.35), rgba(255, 255, 255, 0.9));
+  border: 2px solid rgba(var(--mode-color-rgb, 63, 210, 134), 0.55);
+  overflow: hidden;
+}
+
+.stats-mode-selector__ring img {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+.stats-slide {
+  position: relative;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.stats-slide.is-entering {
+  transform: translateX(8px);
+  opacity: 0;
+}
+
+.stats-slide.is-entering.is-active {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.stats-slide.is-leaving {
+  position: absolute;
+  width: 100%;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.stats-slide.is-leaving.is-off {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
 .stats-hero {
   display: flex;
   flex-wrap: wrap;
@@ -1961,6 +2072,7 @@ body.page-play #play-content.stats-wrapper {
 }
 
 .stats-top__nav {
+  display: flex;
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
