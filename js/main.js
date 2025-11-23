@@ -1236,7 +1236,9 @@ function adjustLevelFinderLevel(delta) {
   const baseLevel = pastaAtual || getSelectedPreGameLevel(selectedMode) || min;
   const updated = Math.max(min, Math.min(max, baseLevel + delta));
   pastaAtual = updated;
-  setSelectedPreGameLevel(selectedMode, updated);
+  if (!isLevelFinderActive()) {
+    setSelectedPreGameLevel(selectedMode, updated);
+  }
   pushLevelFinderLevel(updated);
   updateLevelFinderLevelIndicator();
   renderLevelFinderLevel({ level: updated, baseColor: levelFinderBaseColor, bump: true });
@@ -2908,13 +2910,9 @@ function finishMode() {
     const charsPerMinute = minutes > 0 ? (roundCorrectChars / minutes) : 0;
 
     const progress = getModeProgress(selectedMode);
-    const previousLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode) || 1);
+    const preservedLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode) || 1);
     const derivedLevel = Math.max(1, Math.min(MAX_LEVEL_CAP, Math.round(totalAverage)));
-    progress.level = derivedLevel;
-    progress.xp = 0;
-    modeProgress[String(selectedMode)] = progress;
-    saveModeProgress({ emit: true });
-    pastaAtual = setSelectedPreGameLevel(selectedMode, derivedLevel);
+    pastaAtual = preservedLevel;
     updateLevelIcon({ scope: 'mode' });
     dispatchModeProgressUpdate(selectedMode);
     updateModeIcons();
@@ -2935,7 +2933,7 @@ function finishMode() {
         { label: 'Nível máximo', value: maxLevel.toFixed(0) },
         { label: 'Média dos últimos 20 níveis ÷ 10', value: recentAverage.toFixed(1) },
         { label: 'Média geral dos níveis', value: totalAverage.toFixed(2) },
-        { label: 'Nível final', value: `Pasta ${derivedLevel} (antes: ${previousLevel})` },
+        { label: 'Nível recomendado', value: `Pasta ${derivedLevel} (nível atual: ${preservedLevel})` },
         { label: 'Caracteres por minuto', value: charsPerMinute.toFixed(2) },
         { label: 'Precisão total', value: `${accuracy.toFixed(1)}%` }
       ]
