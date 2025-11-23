@@ -79,6 +79,10 @@ body > *:not(.lens-overlay) {
   border: none;
 }
 
+body.page-play #play-container {
+  padding-top: 30px;
+}
+
 .container-screen,
 .balance-card,
 .profile-report,
@@ -1907,14 +1911,14 @@ body.page-play #play-content.stats-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 4px 6px;
+  padding: 0;
   background: transparent;
-  border-radius: 14px;
+  border-radius: 0;
   box-shadow: none;
-  position: sticky;
-  top: calc(var(--header-height, 62px) + 8px);
-  z-index: 4;
-  backdrop-filter: blur(6px);
+  position: static;
+  top: auto;
+  z-index: 1;
+  backdrop-filter: none;
 }
 
 .stats-mode-selector__track {
@@ -1935,7 +1939,7 @@ body.page-play #play-content.stats-wrapper {
 }
 
 .stats-mode-selector.has-selection .stats-mode-selector__button {
-  opacity: 0.5;
+  opacity: 1;
 }
 
 .stats-mode-selector__button.is-active {
@@ -1995,12 +1999,12 @@ body.page-play #play-content.stats-wrapper {
 
 .stats-hero {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   background: transparent;
   border-radius: 18px;
-  padding: clamp(16px, 4vw, 26px);
+  padding: clamp(10px, 2vw, 20px);
   box-shadow: none;
   opacity: 1;
 }
@@ -2010,12 +2014,12 @@ body.page-play #play-content.stats-wrapper {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  flex: 0 0 180px;
+  flex: 0 0 auto;
 }
 
 .stats-hero__badge {
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 200px;
   border-radius: 28px;
   background: transparent;
   display: grid;
@@ -2024,48 +2028,9 @@ body.page-play #play-content.stats-wrapper {
 }
 
 .stats-hero__badge img {
-  width: 120px;
-  height: 120px;
+  width: 200px;
+  height: 200px;
   object-fit: contain;
-}
-
-.stats-hero__copy {
-  flex: 1 1 280px;
-}
-
-.stats-hero__lead {
-  margin: 8px 0 0;
-  color: #e5ecff;
-}
-
-.stats-hero__chips {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-  align-items: stretch;
-  flex: 1 1 260px;
-}
-
-.stats-chip {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stats-chip span {
-  color: #e5ecff;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.stats-chip strong {
-  font-size: 18px;
-  color: #ffffff;
 }
 
 .stats-banner {
@@ -2095,15 +2060,17 @@ body.page-play #play-content.stats-wrapper {
 
 .stats-section__header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-direction: column;
   margin-bottom: 12px;
 }
 
 .stats-section__header h2 {
   margin: 0;
   color: currentColor;
+  text-align: center;
 }
 
 .stat-metric--panel {
@@ -2417,8 +2384,8 @@ body.theme-blue .stats-list__value {
   padding: 0;
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 20px;
   justify-items: center;
 }
 
@@ -2434,8 +2401,8 @@ body.theme-blue .stats-list__value {
 }
 
 .stats-medal-board__icon {
-  width: 56px;
-  height: 56px;
+  width: 84px;
+  height: 84px;
   object-fit: contain;
 }
 
@@ -3470,9 +3437,9 @@ body.theme-blue .fun-actions button {
   right: 0;
   bottom: var(--nav-height);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 0;
+  padding: 30px 0 0;
   background: transparent;
   backdrop-filter: none;
   z-index: 1100;
@@ -3490,7 +3457,7 @@ body.theme-blue .fun-actions button {
   text-align: center;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: clamp(16px, 3vw, 32px);
 }
@@ -3533,9 +3500,7 @@ body.dark-mode .game-overlay__title {
 }
 
 .game-overlay__description {
-  font-size: clamp(16px, 2.2vw, 18px);
-  line-height: 1.6;
-  margin: 0;
+  display: none;
 }
 
 .pre-game-level {
