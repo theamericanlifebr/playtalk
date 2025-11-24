@@ -1,55 +1,59 @@
 (function initStorePage() {
   const PURCHASE_STORAGE_KEY = 'playtalk.store.purchases';
-  const PRODUCT_PRICE = 1000;
-
   const PRODUCTS = [
     {
-      id: 'speed-challenge',
-      title: 'Speed Challenge',
+      id: 'starter-pack',
+      title: 'Starter Pack',
+      price: 750,
       image: 'produtos/01.webp',
-      eyebrow: 'Modo de jogo',
+      eyebrow: 'Pacote virtual',
       description:
-        'Mergulhe no modo Speed Challenge para treinar reflexos em inglês com rodadas rápidas, metas claras e feedback imediato. Ideal para dominar vocabulário e manter ritmo intenso em poucos minutos diários.',
+        'Um combo básico de boosts visuais para quem está começando. Itens puramente cosméticos, perfeitos para personalizar seu perfil.',
     },
     {
-      id: 'listening-lab',
-      title: 'Listening Lab',
+      id: 'focus-kit',
+      title: 'Focus Kit',
+      price: 1200,
       image: 'produtos/02.webp',
-      eyebrow: 'Modo de jogo',
+      eyebrow: 'Pacote virtual',
       description:
-        'Experimente o Listening Lab com áudios e perguntas contextuais. Adapte a dificuldade, acompanhe transcrições e ganhe confiança para entender conversas em situações sociais, com calma e clareza sempre.',
+        'Coleção de fundos e ícones para deixar os treinos com a sua cara. Compra com moedas internas e sem impacto na progressão.',
     },
     {
-      id: 'story-mode',
-      title: 'Story Mode',
+      id: 'sound-bundle',
+      title: 'Sound Bundle',
+      price: 950,
       image: 'produtos/03.webp',
-      eyebrow: 'Modo de jogo',
+      eyebrow: 'Coleção de áudio',
       description:
-        'Desbloqueie o Story Mode e avance em capítulos interativos. Decisões pedem frases em inglês, ampliam repertório e entregam recompensas por coerência criatividade e escolhas gramaticais na trama sempre',
+        'Pacote de toques e efeitos temáticos. É só equipar e aproveitar — nada muda na jogabilidade, só no estilo.',
     },
     {
-      id: 'quiz-relampago',
-      title: 'Quiz Relâmpago',
+      id: 'retro-pack',
+      title: 'Retro Pack',
+      price: 1800,
       image: 'produtos/04.webp',
-      eyebrow: 'Modo de jogo',
+      eyebrow: 'Visual clássico',
       description:
-        'Entre no Quiz Relâmpago e encare sequências de perguntas temáticas. Cronômetro, multiplicadores e combos mantêm adrenalina total ajudando a fixar expressões úteis enquanto disputa o placar com amigos.',
+        'Skins inspiradas nos fliperamas, para quem gosta de nostalgia. Conteúdo cosmético comprado com moedas virtuais.',
     },
     {
-      id: 'pronunciation-pro',
-      title: 'Pronunciation Pro',
+      id: 'neon-set',
+      title: 'Neon Set',
+      price: 2100,
       image: 'produtos/05.webp',
-      eyebrow: 'Modo de jogo',
+      eyebrow: 'Tema vibrante',
       description:
-        'No Pronunciation Pro você grava frases, recebe notas e dicas fonéticas para acertar ritmo e entonação. A prática é leve, gamificada e perfeita para treinar pronúncia sem pressão direto no seu fone já.',
+        'Tema neon com avatares e bordas brilhantes. As compras não interferem nas partidas — servem apenas para personalização.',
     },
     {
-      id: 'duelo-multiplayer',
-      title: 'Duelo Multiplayer',
+      id: 'galaxy-collection',
+      title: 'Galaxy Collection',
+      price: 2500,
       image: 'produtos/06.webp',
-      eyebrow: 'Modo de jogo',
+      eyebrow: 'Coleção especial',
       description:
-        'No Duelo Multiplayer você desafia amigos em rodadas simultâneas, aposta pontos e sobe no ranking em tempo real. Partidas, salas privadas e feed-back instantâneo deixam cada disputa justa e motivadora!',
+        'Conjunto inspirado no espaço com wallpapers e badges exclusivos. Tudo é cosmético e adquirido com a moeda interna do app.',
     },
   ];
 
@@ -149,7 +153,7 @@
 
     const price = document.createElement('p');
     price.className = 'store-card__price';
-    price.textContent = formatPrice(PRODUCT_PRICE);
+    price.textContent = formatPrice(product.price);
 
     content.append(eyebrow, title, price);
 
@@ -184,7 +188,7 @@
     modalEyebrow.textContent = product.eyebrow;
     modalTitle.textContent = product.title;
     modalDescription.textContent = product.description;
-    modalPrice.textContent = formatPrice(PRODUCT_PRICE);
+    modalPrice.textContent = formatPrice(product.price);
     modalMessage.textContent = '';
 
     const owned = purchasedProducts.has(product.id);
@@ -195,13 +199,13 @@
       modalConfirm.classList.remove('store-button--buy');
       modalConfirm.classList.add('store-button--owned');
       modalConfirm.disabled = true;
-      modalMessage.textContent = 'Você já liberou este modo.';
-    } else if (balance < PRODUCT_PRICE) {
+      modalMessage.textContent = 'Você já resgatou este item. Ele é cosmético e não altera o jogo.';
+    } else if (balance < product.price) {
       modalConfirm.textContent = 'Saldo insuficiente';
       modalConfirm.classList.add('store-button--buy');
       modalConfirm.classList.remove('store-button--owned');
       modalConfirm.disabled = true;
-      modalMessage.textContent = 'Jogue mais rodadas para acumular pontos e concluir a compra deste modo.';
+      modalMessage.textContent = 'Jogue mais rodadas para acumular moedas virtuais e concluir a compra deste item.';
     } else {
       modalConfirm.textContent = 'Confirmar compra';
       modalConfirm.classList.add('store-button--buy');
@@ -216,12 +220,12 @@
     if (!selectedProduct) return;
 
     const balance = getBalance();
-    if (balance < PRODUCT_PRICE) {
-      modalMessage.textContent = 'Saldo insuficiente para comprar este modo.';
+    if (balance < selectedProduct.price) {
+      modalMessage.textContent = 'Saldo insuficiente para comprar este item.';
       return;
     }
 
-    const updatedBalance = Math.max(0, balance - PRODUCT_PRICE);
+    const updatedBalance = Math.max(0, balance - selectedProduct.price);
     setBalance(updatedBalance);
 
     purchasedProducts.add(selectedProduct.id);
