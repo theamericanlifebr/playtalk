@@ -4049,7 +4049,7 @@ body.dark-mode .post-game-stats__item {
 .store-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 12, 34, 0.65);
+  background: rgba(0, 12, 34, 0.8);
 }
 
 .store-modal__panel {
