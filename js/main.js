@@ -2251,6 +2251,8 @@ function beginGame() {
     const icon = document.getElementById('mode-icon');
     if (icon) {
       icon.dataset.medalSrc = '';
+      icon.dataset.medalRotation = '0';
+      icon.style.transform = 'rotate(0deg)';
       icon.style.display = 'block';
     }
     setupModeIconInteractions();
@@ -2561,9 +2563,11 @@ function triggerMedalResponseSpin() {
   if (!icon) {
     return;
   }
-  icon.classList.remove('medal-spin');
-  void icon.offsetWidth;
-  icon.classList.add('medal-spin');
+  const currentRotation = Number.parseFloat(icon.dataset.medalRotation || '0');
+  const safeRotation = Number.isFinite(currentRotation) ? currentRotation : 0;
+  const nextRotation = (safeRotation + 90) % 360;
+  icon.dataset.medalRotation = String(nextRotation);
+  icon.style.transform = `rotate(${nextRotation}deg)`;
 }
 
 function updateModeMedalIcon(ratio) {
