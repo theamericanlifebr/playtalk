@@ -38,62 +38,7 @@
     </div>
   </header>
 
-  <main id="store-container" class="container-screen container-screen--store" data-page-transition>
-    <div class="store-hero">
-      <div class="store-hero__text">
-        <p class="store-hero__eyebrow">Loja interna</p>
-        <h1>Store</h1>
-        <p class="store-hero__subtitle">Compre itens digitais com as moedas que você conquistou jogando.</p>
-      </div>
-      <div class="balance-card store-balance-card">
-        <span class="balance-card__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" role="img" focusable="false">
-            <path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v1.18A3 3 0 0 1 22 11v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3H3a1 1 0 0 1 0-2h1v-2H3a1 1 0 0 1 0-2h1Zm2 0v1h12V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm0 6v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1Zm6 3a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z"/>
-          </svg>
-        </span>
-        <div class="balance-card__text">
-          <span class="balance-card__label">Saldo disponível</span>
-          <span class="balance-card__value" data-balance-value>0</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="store-tabs" role="tablist" aria-label="Conteúdo da loja">
-      <button class="store-tab is-active" role="tab" aria-selected="true" data-tab="shop">Loja</button>
-      <button class="store-tab" role="tab" aria-selected="false" data-tab="owned">Meus produtos</button>
-    </div>
-
-    <div class="store-slider" data-slider="shop">
-      <button class="store-slider__control store-slider__control--prev" data-slider-prev="shop" aria-label="Produtos anteriores">‹</button>
-      <section
-        class="store-grid store-grid--slider"
-        data-store-grid="shop"
-        aria-label="Produtos disponíveis"
-      ></section>
-      <button class="store-slider__control store-slider__control--next" data-slider-next="shop" aria-label="Próximos produtos">›</button>
-    </div>
-    <p class="store-empty" data-store-empty="shop" hidden>A loja está carregando itens digitais.</p>
-
-    <section class="store-grid" data-store-grid="owned" aria-label="Produtos adquiridos" hidden></section>
-    <p class="store-empty" data-store-empty="owned" hidden>Você ainda não tem compras. Pegue algo na loja!</p>
-  </main>
-
-  <div class="store-modal" data-store-modal hidden aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="store-modal__backdrop" data-store-backdrop></div>
-    <div class="store-modal__panel" tabindex="-1">
-      <button type="button" class="store-modal__close" data-store-close aria-label="Fechar detalhes">×</button>
-      <div class="store-modal__image" data-store-modal-image></div>
-      <div class="store-modal__body">
-        <p class="store-modal__eyebrow">Produto digital</p>
-        <h2 class="store-modal__title" data-store-modal-title></h2>
-        <p class="store-modal__description" data-store-modal-description></p>
-        <div class="store-modal__actions">
-          <span class="store-modal__price" data-store-modal-price></span>
-          <button type="button" class="store-button store-button--buy" data-store-modal-action>Comprar</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <main id="store-container" class="container-screen container-screen--store" data-page-transition></main>
 
   <footer class="page-footer">
     <nav id="main-nav">
@@ -135,6 +80,5 @@
       </a>
     </nav>
   </footer>
-  <script src="js/store.js" defer></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 (function() {
   const SETTINGS_STORAGE_KEY = 'playtalkSettings';
-  const SUPPORTED_LENS_KEYS = ['1', '2', '3', '4', '5', '6', 'home', 'game', 'menus', 'stats'];
+  const SUPPORTED_LENS_KEYS = ['1', '2', '3', '4', '5', '6', 'home', 'game', 'menus', 'profile', 'stats'];
   const DEFAULT_SETTINGS = {
     theme: 'dark',
     retryWrongPhrases: false,
@@ -10,8 +10,8 @@
     phraseColor: '',
     lensColor: '',
     lensColors: {},
-    lensOpacityStrong: 0.65,
-    lensOpacitySoft: 0.25
+    lensOpacityStrong: 0,
+    lensOpacitySoft: 0.5
   };
   let zoomLockInstalled = false;
 
