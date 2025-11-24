@@ -38,7 +38,46 @@
     </div>
   </header>
 
-  <main id="store-container" class="container-screen container-screen--store" data-page-transition></main>
+  <main id="store-container" class="container-screen container-screen--store" data-page-transition>
+    <section class="store-hero">
+      <div class="store-hero__text">
+        <p class="store-hero__eyebrow">PlayTalk Store</p>
+        <h1>Desbloqueie os modos de jogo</h1>
+        <p class="store-hero__subtitle">
+          Use seus pontos para comprar novos desafios e personalizar seu treino com os modos que você mais curte.
+        </p>
+      </div>
+      <div class="balance-card store-balance-card">
+        <div class="balance-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Zm0 8H4V9h16Z"/><path d="M9 10h6v4H9z"/></svg>
+        </div>
+        <div class="balance-card__text">
+          <span class="balance-card__label">Saldo disponível</span>
+          <span class="balance-card__value" data-balance-value>0</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="store-grid" id="store-grid" aria-label="Produtos disponíveis"></section>
+  </main>
+
+  <section class="store-modal" id="store-modal" hidden aria-modal="true" role="dialog">
+    <div class="store-modal__backdrop" data-modal-dismiss></div>
+    <div class="store-modal__panel">
+      <button class="store-modal__close" type="button" aria-label="Fechar" data-modal-dismiss>&times;</button>
+      <div class="store-modal__image" id="modal-image" role="presentation"></div>
+      <div class="store-modal__body">
+        <p class="store-modal__eyebrow" id="modal-eyebrow">Modo de jogo</p>
+        <h2 class="store-modal__title" id="modal-title"></h2>
+        <p class="store-modal__description" id="modal-description"></p>
+        <div class="store-modal__actions">
+          <div class="store-modal__price" id="modal-price"></div>
+          <button class="store-button store-button--buy" type="button" id="modal-confirm">Confirmar compra</button>
+        </div>
+        <p class="store-modal__description" id="modal-message"></p>
+      </div>
+    </div>
+  </section>
 
   <footer class="page-footer">
     <nav id="main-nav">
@@ -80,5 +119,6 @@
       </a>
     </nav>
   </footer>
+  <script src="js/store.js"></script>
 </body>
 </html>
