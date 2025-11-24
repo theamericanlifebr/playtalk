@@ -1418,7 +1418,7 @@ body.game-active #visor {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  transform: translateY(-150px);
+  transform: translateY(-80px);
 }
 
 #menu > * {
@@ -1834,17 +1834,8 @@ body.theme-blue .auth-message {
   max-width: 100%;
   opacity: 1;
   pointer-events: auto;
-  --mode-icon-shift: translateX(-24px);
-  transform: var(--mode-icon-shift);
-  transition: transform 300ms ease, opacity 300ms ease;
-}
-
-#mode-icon.medal-slide-active {
-  --mode-icon-shift: translateX(0);
-}
-
-#mode-icon.medal-rotate {
-  transform: var(--mode-icon-shift) rotate(90deg);
+  transform: none;
+  transition: opacity 300ms ease;
 }
 
 #mode-icon.medal-fade-out {
@@ -1853,6 +1844,19 @@ body.theme-blue .auth-message {
 
 #mode-icon.medal-fade-in {
   opacity: 1;
+}
+
+#mode-icon.medal-spin {
+  animation: medalQuarterSpin 300ms ease;
+}
+
+@keyframes medalQuarterSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
 }
 
 .level-finder-level {
@@ -3307,17 +3311,21 @@ body.theme-blue .fun-actions button {
   }
 
   #menu {
-    padding: 24px 16px 128px;
-    gap: 22px;
+    padding: 12px 16px 116px;
+    gap: 14px;
   }
 
   #menu-modes {
     grid-template-columns: repeat(2, minmax(128px, 1fr));
-    gap: 16px;
+    gap: 10px;
   }
 
   #menu-modes img {
     width: min(52vw, 162px);
+  }
+
+  .menu-mode {
+    gap: 6px;
   }
 
   body.page-home #mode-buttons {
@@ -3532,6 +3540,12 @@ body.theme-blue .fun-actions button {
   transform: translateY(-200px);
 }
 
+#post-game-screen .game-overlay__panel {
+  align-items: center;
+  transform: translateY(-150px);
+  gap: clamp(20px, 4vw, 42px);
+}
+
 .game-overlay__panel > * {
   max-width: min(720px, 100%);
 }
@@ -3542,7 +3556,7 @@ body.dark-mode .game-overlay__panel {
 }
 
 .game-overlay__logo {
-  width: clamp(160px, 40vw, 240px);
+  width: clamp(200px, 50vw, 300px);
   margin: 0 auto;
   display: block;
 }
@@ -3551,6 +3565,10 @@ body.dark-mode .game-overlay__panel {
   font-size: clamp(26px, 4vw, 36px);
   margin: 0;
   color: #0d1c3b;
+}
+
+#post-game-screen .game-overlay__title {
+  font-size: clamp(39px, 6vw, 54px);
 }
 
 .game-overlay__title--hidden {
@@ -3633,6 +3651,10 @@ body.dark-mode .pre-game-round__option {
   gap: 16px;
 }
 
+#post-game-screen .game-overlay__actions {
+  gap: 20px;
+}
+
 .game-overlay__primary,
 .game-overlay__secondary {
   min-width: 160px;
@@ -3643,6 +3665,12 @@ body.dark-mode .pre-game-round__option {
   font-size: 16px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#post-game-screen .game-overlay__primary,
+#post-game-screen .game-overlay__secondary {
+  padding: 20px 28px;
+  font-size: 20px;
 }
 
 .game-overlay__primary {
@@ -3681,6 +3709,10 @@ body.dark-mode .game-overlay__secondary {
   margin: 0 auto;
 }
 
+#post-game-screen .game-overlay__medal {
+  width: clamp(270px, 55vw, 330px);
+}
+
 .game-overlay__medal.is-animated {
   animation: medalPop 0.5s ease;
 }
@@ -3690,6 +3722,10 @@ body.dark-mode .game-overlay__secondary {
   font-weight: 700;
   margin: 0;
   text-transform: capitalize;
+}
+
+#post-game-screen .game-overlay__medal-label {
+  font-size: clamp(27px, 4vw, 30px);
 }
 
 .game-overlay__medal-label.is-animated {
@@ -3702,11 +3738,21 @@ body.dark-mode .game-overlay__secondary {
   font-weight: 600;
 }
 
+#post-game-screen .game-overlay__subtitle {
+  font-size: clamp(25px, 4vw, 28px);
+}
+
 .post-game-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   margin: 0;
+}
+
+#post-game-screen .post-game-stats {
+  width: min(720px, 100%);
+  justify-items: center;
+  gap: 20px;
 }
 
 .post-game-stats__item {
@@ -3719,11 +3765,21 @@ body.dark-mode .game-overlay__secondary {
   box-shadow: inset 0 0 0 1px rgba(9, 40, 97, 0.08);
 }
 
+#post-game-screen .post-game-stats__item {
+  padding: 24px 18px;
+  text-align: center;
+  align-items: center;
+}
+
 .post-game-stats__item dt {
   font-size: 14px;
   font-weight: 600;
   opacity: 0.75;
   margin: 0;
+}
+
+#post-game-screen .post-game-stats__item dt {
+  font-size: 21px;
 }
 
 @keyframes medalPop {
@@ -3745,6 +3801,10 @@ body.dark-mode .game-overlay__secondary {
   margin: 0;
   font-size: clamp(18px, 2.6vw, 22px);
   font-weight: 700;
+}
+
+#post-game-screen .post-game-stats__item dd {
+  font-size: clamp(27px, 4vw, 33px);
 }
 
 body.dark-mode .post-game-stats__item {

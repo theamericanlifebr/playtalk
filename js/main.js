@@ -54,31 +54,37 @@ const COLOR_STOPS = COLOR_STOP_RATIOS.map(([ratio, color]) => [
 const MODE_DETAILS = {
   1: {
     title: 'Modo 1 — Aquecimento bilingue',
+    shortTitle: 'Aquecimento',
     description: 'Escute em inglês, visualize em português e aqueça sua mente traduzindo rapidamente antes de responder.',
     logo: 'selos%20modos%20de%20jogo/modo1.png'
   },
   2: {
     title: 'Modo 2 — Tradução direta',
+    shortTitle: 'Tradução',
     description: 'Veja a frase em português e responda em inglês sem hesitar para consolidar vocabulário ativo.',
     logo: 'selos%20modos%20de%20jogo/modo2.png'
   },
   3: {
     title: 'Modo 3 — Listening puro',
+    shortTitle: 'Listening',
     description: 'Apenas o áudio em inglês e sua resposta. Foque na compreensão auditiva para dominar a estrutura das frases.',
     logo: 'selos%20modos%20de%20jogo/modo3.png'
   },
   4: {
     title: 'Modo 4 — Reading em inglês',
+    shortTitle: 'Reading',
     description: 'Leia em inglês, pense em inglês. Esse modo solidifica leitura e pronúncia mental em ritmo acelerado.',
     logo: 'selos%20modos%20de%20jogo/modo4.png'
   },
   5: {
     title: 'Modo 5 — Tradução reversa',
+    shortTitle: 'Reversa',
     description: 'Escute em inglês e responda em português com precisão. Ideal para treinar compreensão e produção simultânea.',
     logo: 'selos%20modos%20de%20jogo/modo5.png'
   },
   6: {
     title: 'Modo 6 — Desafio final',
+    shortTitle: 'Desafio',
     description: 'Combine leitura, escuta e resposta em inglês em ritmo máximo para provar que você domina o idioma.',
     logo: 'selos%20modos%20de%20jogo/modo6.png'
   }
@@ -1538,10 +1544,11 @@ function updatePreGameScreen(mode) {
   const titleEl = document.getElementById('pre-game-title');
   const logoEl = document.getElementById('pre-game-logo');
   const levelEl = document.getElementById('pre-game-level');
-  if (titleEl) titleEl.textContent = detail.title;
+  const simpleTitle = detail.shortTitle || detail.title;
+  if (titleEl) titleEl.textContent = simpleTitle;
   if (logoEl) {
     logoEl.src = detail.logo;
-    logoEl.alt = `Logo do ${detail.title}`;
+    logoEl.alt = `Logo do ${simpleTitle}`;
   }
   const savedRound = getStoredRoundState(mode, getSelectedPreGameLevel(mode)) || getStoredRoundState(mode);
   if (savedRound && Number.isFinite(savedRound.level)) {
@@ -2549,6 +2556,16 @@ function carregarFrases() {
   persistCurrentRoundState();
 }
 
+function triggerMedalResponseSpin() {
+  const icon = document.getElementById('mode-icon');
+  if (!icon) {
+    return;
+  }
+  icon.classList.remove('medal-spin');
+  void icon.offsetWidth;
+  icon.classList.add('medal-spin');
+}
+
 function updateModeMedalIcon(ratio) {
   if (isLevelFinderActive()) {
     renderLevelFinderLevel({ level: pastaAtual, baseColor: levelFinderBaseColor, bump: true });
@@ -2572,9 +2589,6 @@ function updateModeMedalIcon(ratio) {
     icon.dataset.pendingMedalSrc = src;
     runPendingMedalSwap(false);
   }
-  icon.classList.remove('medal-slide-active');
-  void icon.offsetWidth;
-  icon.classList.add('medal-slide-active');
   icon.style.display = 'block';
   icon.style.opacity = 1;
 }
@@ -2600,16 +2614,16 @@ function runPendingMedalSwap(force = false) {
   icon.dataset.pendingMedalSrc = '';
   clearTimeout(medalSwapTimeout);
   medalSwapTimeout = null;
-  icon.classList.remove('medal-fade-in', 'medal-fade-out', 'medal-rotate');
+  triggerMedalResponseSpin();
+  icon.classList.remove('medal-fade-in', 'medal-fade-out');
   void icon.offsetWidth;
-  icon.classList.add('medal-rotate', 'medal-fade-out');
+  icon.classList.add('medal-fade-out');
 
   setTimeout(() => {
     icon.dataset.medalSrc = nextSrc;
     icon.src = nextSrc;
     icon.classList.remove('medal-fade-out');
     icon.classList.add('medal-fade-in');
-    icon.classList.remove('medal-rotate');
     setTimeout(() => {
       icon.classList.remove('medal-fade-in');
     }, 300);
@@ -2835,6 +2849,7 @@ function verificarResposta() {
     roundActive = true;
   }
   roundAttempts++;
+  triggerMedalResponseSpin();
   const reachedRoundEnd = !isLevelFinderActive() && roundAttempts >= roundTarget;
 
   if (correto) {
