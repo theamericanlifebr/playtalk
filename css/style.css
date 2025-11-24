@@ -8,8 +8,13 @@
   --header-gradient-end: #357de0;
   --header-gradient: linear-gradient(135deg, var(--header-gradient-start) 0%, var(--header-gradient-end) 100%);
   --phrase-color: #ffffff;
-  --lens-opacity-strong: 0.65;
-  --lens-opacity-soft: 0.25;
+  --lens-opacity-strong: 0;
+  --lens-opacity-soft: 0.5;
+  --lens-color-home-rgb: 13, 141, 157;
+  --lens-color-game-rgb: 13, 141, 157;
+  --lens-color-menus-rgb: 10, 31, 68;
+  --lens-color-profile-rgb: 11, 47, 91;
+  --lens-color-stats-rgb: 0, 0, 0;
 }
 
 html,
@@ -34,8 +39,8 @@ body {
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(var(--lens-color-rgb, var(--lens-custom-rgb, 63, 210, 134)), var(--lens-opacity-strong, 0.65)) 0%,
-    rgba(var(--lens-color-rgb, var(--lens-custom-rgb, 63, 210, 134)), var(--lens-opacity-soft, 0.25)) 100%
+    rgba(var(--lens-color-rgb, var(--lens-custom-rgb, 178, 42, 28)), var(--lens-opacity-strong, 0)) 0%,
+    rgba(var(--lens-color-rgb, var(--lens-custom-rgb, 178, 42, 28)), var(--lens-opacity-soft, 0.5)) 100%
   );
   pointer-events: none;
   opacity: 0;
@@ -133,7 +138,8 @@ body.theme-blue {
 }
 
 body.has-custom-background {
-  background: transparent;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 #playtalk-background-layer {
@@ -1392,6 +1398,16 @@ body.theme-blue .login-flow__status {
   box-sizing: border-box;
 }
 
+body.game-active #visor {
+  transform: translateY(-220px);
+}
+
+@media (max-width: 768px) {
+  body.game-active #visor {
+    transform: translateY(-180px);
+  }
+}
+
 #menu {
   display: flex;
   flex-direction: column;
@@ -1402,6 +1418,7 @@ body.theme-blue .login-flow__status {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  transform: translateY(-150px);
 }
 
 #menu > * {
@@ -1812,17 +1829,30 @@ body.theme-blue .auth-message {
 }
 
 #mode-icon {
-  width: clamp(180px, 45vw, 260px);
+  width: clamp(225px, 45vw, 325px);
   height: auto;
   max-width: 100%;
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(-24px);
-  transition: transform 500ms ease;
+  --mode-icon-shift: translateX(-24px);
+  transform: var(--mode-icon-shift);
+  transition: transform 300ms ease, opacity 300ms ease;
 }
 
 #mode-icon.medal-slide-active {
-  transform: translateX(0);
+  --mode-icon-shift: translateX(0);
+}
+
+#mode-icon.medal-rotate {
+  transform: var(--mode-icon-shift) rotate(90deg);
+}
+
+#mode-icon.medal-fade-out {
+  opacity: 0;
+}
+
+#mode-icon.medal-fade-in {
+  opacity: 1;
 }
 
 .level-finder-level {
@@ -1856,7 +1886,7 @@ body.theme-blue .auth-message {
 
 body.page-home #mode-buttons {
   position: fixed;
-  bottom: calc(var(--nav-height) + 60px);
+  bottom: calc(var(--nav-height) + 210px);
   left: 50%;
   transform: translateX(-50%);
   width: min(90vw, calc(6 * 117px + 5 * 20px));
@@ -3070,7 +3100,7 @@ body.page-transition-leave [data-page-transition] {
   }
 
   body.page-home #mode-buttons {
-    bottom: calc(var(--nav-height) + 40px);
+    bottom: calc(var(--nav-height) + 190px);
   }
 
   body.page-play .stats-block--modes #mode-buttons img {
@@ -3242,16 +3272,14 @@ body.theme-blue .fun-actions button {
 
 @media (max-width: 600px) {
   #mode-icon {
-    width: 150px;
-    height: 150px;
-    position: relative;
-    top: -100px;
+    width: min(90vw, 375px);
+    height: auto;
+    position: static;
   }
 
   #texto-exibicao,
   #barra-progresso {
-    position: relative;
-    top: -100px;
+    position: static;
   }
 
   #clock {
@@ -3293,7 +3321,7 @@ body.theme-blue .fun-actions button {
   }
 
   body.page-home #mode-buttons {
-    bottom: calc(var(--nav-height) + 24px);
+    bottom: calc(var(--nav-height) + 174px);
     padding: 0 20px;
     width: min(92vw, 340px);
     gap: 16px;
@@ -3479,6 +3507,10 @@ body.theme-blue .fun-actions button {
   box-sizing: border-box;
 }
 
+#pre-game-screen {
+  align-items: center;
+}
+
 .game-overlay__panel {
   width: min(960px, 100%);
   max-width: 100%;
@@ -3493,6 +3525,11 @@ body.theme-blue .fun-actions button {
   justify-content: flex-start;
   align-items: center;
   gap: clamp(16px, 3vw, 32px);
+}
+
+#pre-game-screen .game-overlay__panel {
+  justify-content: center;
+  transform: translateY(-200px);
 }
 
 .game-overlay__panel > * {

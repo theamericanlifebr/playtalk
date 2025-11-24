@@ -627,6 +627,9 @@ let roundCorrectChars = 0;
 let roundStartTime = 0;
 let phraseStartTime = 0;
 let phraseSwapAudio = null;
+let pendingMedalSrc = null;
+let medalSwapTimeout = null;
+let lastPhraseSwapAt = 0;
 let roundActive = false;
 let roundAdjustedTimeMs = 0;
 let levelFinderBaseColor = '#333333';
@@ -2560,15 +2563,57 @@ function updateModeMedalIcon(ratio) {
   const perc = clampedRatio * 100;
   const medal = getMedalForAccuracy(perc);
   const src = medal && medal.image ? medal.image : 'medalhas/gesso.png';
-  if (icon.dataset.medalSrc !== src) {
+  const currentSrc = icon.dataset.medalSrc || '';
+  if (!currentSrc) {
     icon.dataset.medalSrc = src;
     icon.src = src;
-    icon.classList.remove('medal-slide-active');
-    void icon.offsetWidth;
-    icon.classList.add('medal-slide-active');
+  } else if (currentSrc !== src) {
+    pendingMedalSrc = src;
+    icon.dataset.pendingMedalSrc = src;
+    runPendingMedalSwap(false);
   }
+  icon.classList.remove('medal-slide-active');
+  void icon.offsetWidth;
+  icon.classList.add('medal-slide-active');
   icon.style.display = 'block';
   icon.style.opacity = 1;
+}
+
+function runPendingMedalSwap(force = false) {
+  const icon = document.getElementById('mode-icon');
+  if (!icon || !pendingMedalSrc) {
+    clearTimeout(medalSwapTimeout);
+    medalSwapTimeout = null;
+    return;
+  }
+
+  const now = Date.now();
+  if (!force && now - lastPhraseSwapAt > 400) {
+    if (!medalSwapTimeout) {
+      medalSwapTimeout = setTimeout(() => runPendingMedalSwap(true), 600);
+    }
+    return;
+  }
+
+  const nextSrc = pendingMedalSrc;
+  pendingMedalSrc = null;
+  icon.dataset.pendingMedalSrc = '';
+  clearTimeout(medalSwapTimeout);
+  medalSwapTimeout = null;
+  icon.classList.remove('medal-fade-in', 'medal-fade-out', 'medal-rotate');
+  void icon.offsetWidth;
+  icon.classList.add('medal-rotate', 'medal-fade-out');
+
+  setTimeout(() => {
+    icon.dataset.medalSrc = nextSrc;
+    icon.src = nextSrc;
+    icon.classList.remove('medal-fade-out');
+    icon.classList.add('medal-fade-in');
+    icon.classList.remove('medal-rotate');
+    setTimeout(() => {
+      icon.classList.remove('medal-fade-in');
+    }, 300);
+  }, 300);
 }
 
 function playPhraseSwapSound() {
@@ -2593,6 +2638,8 @@ function playPhraseSwapSound() {
 function animatePhraseSwap() {
   const texto = document.getElementById('texto-exibicao');
   if (!texto) return;
+  lastPhraseSwapAt = Date.now();
+  runPendingMedalSwap(true);
   texto.classList.remove('phrase-slide');
   void texto.offsetWidth;
   texto.classList.add('phrase-slide');

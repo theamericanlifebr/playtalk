@@ -1,18 +1,19 @@
 (function() {
   const MODE_COLORS = {
-    1: '#3fd286', // verde
-    2: '#f2c11f', // amarelo quente
-    3: '#ff8b3d', // laranja
-    4: '#4a9cff', // azul
-    5: '#9a6dff', // roxo
-    6: '#ff4f6d'  // vermelho
+    1: '#b22a1c', // vermelho queimado
+    2: '#c4451c', // laranja escuro
+    3: '#d06b1f', // âmbar profundo
+    4: '#a23c28', // terracota
+    5: '#8c2f3a', // vinho quente
+    6: '#7a1f2b'  // rubi fechado
   };
 
   const CONTEXT_COLORS = {
-    home: '#3fd286',
-    game: '#4a9cff',
-    menus: '#9a6dff',
-    stats: '#f2c11f'
+    home: '#0d8d9d',
+    game: '#0d8d9d',
+    menus: '#0a1f44',
+    profile: '#0b2f5b',
+    stats: '#000000'
   };
 
   let overlay = null;
