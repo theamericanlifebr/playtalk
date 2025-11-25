@@ -115,21 +115,20 @@
 
     <section id="post-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
+        <h2 id="post-game-title" class="game-overlay__title game-overlay__title--hidden">Resumo da rodada</h2>
         <div class="post-game-medal-wrapper">
           <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
           <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label sr-only"></p>
         </div>
-        <h2 id="post-game-title" class="game-overlay__title game-overlay__title--hidden">Resumo da rodada</h2>
+        <p id="post-game-level-status" class="game-overlay__subtitle"></p>
         <div id="post-game-cpm" class="post-game-metric" aria-live="polite">
           <div class="post-game-metric__values">
-            <span class="post-game-metric__icon" aria-hidden="true"></span>
-            <div class="post-game-metric__stack">
-              <span id="post-game-metric-label" class="post-game-metric__label">CPM</span>
-              <span id="post-game-cpm-value" class="post-game-metric__value">0</span>
-            </div>
+            <span class="post-game-metric__logo" aria-hidden="true">
+              <img id="post-game-mode-logo" src="" alt="Logo do modo atual" />
+            </span>
+            <span id="post-game-cpm-value" class="post-game-metric__value">0</span>
           </div>
         </div>
-        <p id="post-game-level-status" class="game-overlay__subtitle"></p>
         <dl class="post-game-stats" aria-live="polite"></dl>
         <div class="game-overlay__actions">
           <button id="post-game-replay" class="game-overlay__primary" type="button">Jogar novamente</button>
