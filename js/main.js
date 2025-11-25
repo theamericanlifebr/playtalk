@@ -636,7 +636,7 @@ let esperadoLang = 'pt';
 let timerInterval = null;
 let inputTimeout = null;
 let lastExpected = '', lastInput = '', lastFolder = 1;
-let selectedMode = 1;
+let selectedMode = 5;
 let roundTarget = DEFAULT_ROUND_SIZE;
 let roundAttempts = 0;
 let roundWrongCount = 0;
@@ -652,6 +652,7 @@ let roundAdjustedTimeMs = 0;
 let levelFinderBaseColor = '#333333';
 let inplayActive = false;
 let pendingModeStart = null;
+let preRoundGeneralCpm = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
 let levelFinderTimer = null;
@@ -1644,6 +1645,32 @@ function closePreGameScreen() {
   }
 }
 
+function animateNumberChange(el, fromValue, toValue, duration = 1000) {
+  if (!el) return;
+  const start = Math.round(Number.isFinite(fromValue) ? fromValue : 0);
+  const end = Math.round(Number.isFinite(toValue) ? toValue : start);
+  el.textContent = start.toLocaleString('pt-BR');
+  if (start === end) return;
+  const totalSteps = Math.max(1, Math.abs(end - start));
+  const stepDuration = duration / totalSteps;
+  const direction = end > start ? 1 : -1;
+  let lastUpdate = performance.now();
+  let current = start;
+
+  function step(now) {
+    if (now - lastUpdate >= stepDuration) {
+      current += direction;
+      lastUpdate = now;
+      el.textContent = current.toLocaleString('pt-BR');
+    }
+    if (current !== end) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
 function openPostGameScreen(summary) {
   const overlay = document.getElementById('post-game-screen');
   if (!overlay) {
@@ -1653,11 +1680,17 @@ function openPostGameScreen(summary) {
   const medalLabelEl = document.getElementById('post-game-medal-label');
   const statusEl = document.getElementById('post-game-level-status');
   const statsContainer = overlay.querySelector('.post-game-stats');
+  const cpmCard = document.getElementById('post-game-cpm');
+  const cpmBeforeEl = document.getElementById('post-game-cpm-before');
+  const cpmAfterEl = document.getElementById('post-game-cpm-after');
   const wooshAudio = document.getElementById('somWoosh');
 
   function renderStats(items = []) {
     if (!statsContainer) return;
     statsContainer.innerHTML = '';
+    const hasItems = Array.isArray(items) && items.length > 0;
+    statsContainer.classList.toggle('is-visible', hasItems);
+    if (!hasItems) return;
     items.forEach((item) => {
       const row = document.createElement('div');
       row.className = 'post-game-stats__item';
@@ -1669,6 +1702,16 @@ function openPostGameScreen(summary) {
       row.appendChild(value);
       statsContainer.appendChild(row);
     });
+  }
+
+  function renderCpm(beforeValue, afterValue) {
+    if (!cpmCard) return;
+    const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
+    const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
+    if (cpmBeforeEl) {
+      cpmBeforeEl.textContent = before.toLocaleString('pt-BR');
+    }
+    animateNumberChange(cpmAfterEl, before, after, 1000);
   }
 
   if (summary.isLevelFinder) {
@@ -1686,20 +1729,15 @@ function openPostGameScreen(summary) {
       medalEl.classList.add('is-animated');
     }
     if (medalLabelEl) {
-      const label = summary.medalKey || MEDAL_LABEL_TO_KEY[summary.medal.label] || '';
-      medalLabelEl.textContent = label ? label.toLowerCase() : '';
-      medalLabelEl.classList.remove('is-animated');
-      void medalLabelEl.offsetWidth;
-      medalLabelEl.classList.add('is-animated');
+      const label = summary.medal?.label || summary.medalKey || MEDAL_LABEL_TO_KEY[summary.medal?.label] || '';
+      medalLabelEl.textContent = label ? String(label).toLowerCase() : '';
     }
     if (statusEl) {
       statusEl.textContent = '';
     }
-    renderStats([
-      { label: 'Precisão', value: `${summary.accuracy.toFixed(1)}%` },
-      { label: 'Caracteres corretos por segundo', value: summary.cps.toFixed(2) }
-    ]);
+    renderStats([]);
   }
+  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
@@ -2264,6 +2302,8 @@ function beginGame() {
   resetRoundState();
   roundTarget = isLevelFinderActive() ? LEVEL_FINDER_ROUND_TARGET : getRoundSelection(selectedMode);
   const targetLevel = getSelectedPreGameLevel(selectedMode);
+  const generalStatsBefore = calcGeneralStats();
+  preRoundGeneralCpm = Math.round((generalStatsBefore.cps || 0) * 60);
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
   consecutiveErrors = 0;
@@ -3057,9 +3097,14 @@ function finishMode() {
       window.playtalkAuth.persistProgress();
     }
 
+    const postGeneralCpm = Math.round(calcGeneralStats().cps * 60);
+    const cpmBefore = Number.isFinite(preRoundGeneralCpm) ? preRoundGeneralCpm : postGeneralCpm;
+
     openPostGameScreen({
       isLevelFinder: true,
       statusText: 'Resumo do LevelFinder',
+      preGeneralCpm: cpmBefore,
+      postGeneralCpm,
       customStats: [
         { label: 'Nível máximo', value: maxLevel.toFixed(0) },
         { label: 'Média dos últimos 20 níveis ÷ 10', value: recentAverage.toFixed(1) },
@@ -3069,6 +3114,7 @@ function finishMode() {
         { label: 'Precisão total', value: `${accuracy.toFixed(1)}%` }
       ]
     });
+    preRoundGeneralCpm = null;
     return;
   }
 
@@ -3101,14 +3147,20 @@ function finishMode() {
     window.playtalkAuth.persistProgress();
   }
 
+  const postGeneralCpm = Math.round(calcGeneralStats().cps * 60);
+  const cpmBefore = Number.isFinite(preRoundGeneralCpm) ? preRoundGeneralCpm : postGeneralCpm;
+
   openPostGameScreen({
     accuracy,
     cps,
     medal,
     medalKey,
     previousLevel,
-    newLevel: nextLevel
+    newLevel: nextLevel,
+    preGeneralCpm: cpmBefore,
+    postGeneralCpm
   });
+  preRoundGeneralCpm = null;
 }
 
 function nextMode() {
@@ -3287,7 +3339,7 @@ async function initGame() {
 
 document.addEventListener('playtalk:user-change', () => {
   reloadPersistentProgress();
-  selectedMode = 1;
+  selectedMode = 5;
   goHome();
 });
 

@@ -70,26 +70,32 @@
       <div id="visor" class="container-screen container-screen--visor">
         <!-- conteúdo visual aqui -->
         <div id="score"></div>
-        <img id="mode-icon" alt="Mode Icon" style="display:none" />
-        <div id="level-finder-level" class="level-finder-level"></div>
-        <div id="texto-exibicao"></div>
-      <div id="pt-container">
-        <textarea id="pt" rows="1" readonly></textarea>
+        <div class="visor-stack">
+          <div id="level-instruction" class="level-instruction" role="status" aria-live="polite"></div>
+          <div class="mode-emblem">
+            <img id="mode-icon" alt="Mode Icon" style="display:none" />
+            <div id="level-finder-level" class="level-finder-level"></div>
+          </div>
+          <div class="phrase-stack">
+            <div id="texto-exibicao"></div>
+            <div id="pt-container">
+              <textarea id="pt" rows="1" readonly></textarea>
+            </div>
+          </div>
+        </div>
+        <div id="nivel-mensagem"></div>
+        <div id="timer"></div>
+        <div id="resultado"></div>
+        <div id="acertos"></div>
+        <div id="mode-buttons">
+          <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
+          <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
+          <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
+          <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
+          <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
+          <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
+        </div>
       </div>
-      <div id="level-instruction" class="level-instruction" role="status" aria-live="polite"></div>
-      <div id="nivel-mensagem"></div>
-      <div id="timer"></div>
-      <div id="resultado"></div>
-      <div id="acertos"></div>
-      <div id="mode-buttons">
-        <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
-        <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
-        <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
-        <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
-        <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
-        <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
-      </div>
-    </div>
 
     <section id="pre-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
@@ -110,19 +116,31 @@
     <section id="post-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
         <h2 id="post-game-title" class="game-overlay__title game-overlay__title--hidden">Resumo da rodada</h2>
-        <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
-        <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label"></p>
+        <div class="post-game-medal-wrapper">
+          <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
+          <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label sr-only"></p>
+        </div>
         <p id="post-game-level-status" class="game-overlay__subtitle"></p>
-        <dl class="post-game-stats">
-          <div class="post-game-stats__item">
-            <dt>Precisão</dt>
-            <dd id="post-game-accuracy">0%</dd>
+        <div id="post-game-cpm" class="post-game-metric" aria-live="polite">
+          <div class="post-game-metric__label">CPM geral</div>
+          <div class="post-game-metric__values">
+            <span class="post-game-metric__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M13 2 3 14h7v8l10-12h-7z"/></svg>
+            </span>
+            <div class="post-game-metric__numbers">
+              <div class="post-game-metric__group">
+                <span class="post-game-metric__hint">Antes</span>
+                <span id="post-game-cpm-before" class="post-game-metric__value">0</span>
+              </div>
+              <span class="post-game-metric__arrow" aria-hidden="true">→</span>
+              <div class="post-game-metric__group">
+                <span class="post-game-metric__hint">Depois</span>
+                <span id="post-game-cpm-after" class="post-game-metric__value">0</span>
+              </div>
+            </div>
           </div>
-          <div class="post-game-stats__item">
-            <dt>Caracteres corretos por segundo</dt>
-            <dd id="post-game-cps">0</dd>
-          </div>
-        </dl>
+        </div>
+        <dl class="post-game-stats" aria-live="polite"></dl>
         <div class="game-overlay__actions">
           <button id="post-game-replay" class="game-overlay__primary" type="button">Jogar novamente</button>
           <button id="post-game-menu" class="game-overlay__secondary" type="button">Voltar ao menu</button>
