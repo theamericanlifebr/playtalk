@@ -1,7 +1,68 @@
 {
   "levels": {
     "1": {
-      "instruction": "Mude a frase para o negativo",
+      "instruction": "Mude para o plural",
+      "entries": [
+        "Um gato#Cats",
+        "Um cão#Dogs",
+        "Uma cama#Beds",
+        "Uma casa#Houses",
+        "Uma porta#Doors"
+      ]
+    },
+    "2": {
+      "instruction": "Troque o artigo para 'a' ou 'an'",
+      "entries": [
+        "Um carro#A car",
+        "Um elefante#An elephant",
+        "Uma maçã#An apple",
+        "Uma árvore#A tree",
+        "Um urso#A bear"
+      ]
+    },
+    "3": {
+      "instruction": "Use 'there is' ou 'there are'",
+      "entries": [
+        "Um gato#There is a cat",
+        "Dois cães#There are two dogs",
+        "Uma cama#There is a bed",
+        "Três portas#There are three doors",
+        "Uma janela#There is a window"
+      ]
+    },
+    "4": {
+      "instruction": "Adicione 'very' para intensificar",
+      "entries": [
+        "Grande#Very big",
+        "Pequeno#Very small",
+        "Rápido#Very fast",
+        "Lento#Very slow",
+        "Feliz#Very happy"
+      ]
+    },
+    "5": {
+      "instruction": "Transforme em presente simples afirmativo",
+      "entries": [
+        "Eu corro#I run",
+        "Eu penso#I think",
+        "Eu vejo#I see",
+        "Eu gosto#I like",
+        "Eu sinto#I feel"
+      ]
+    },
+    "6": {
+      "instruction": "Troque o verbo para a forma -ing (gerúndio)",
+      "entries": [
+        "Correr#Running",
+        "Andar#Walking",
+        "Dormir#Sleeping",
+        "Comer#Eating",
+        "Beber#Drinking"
+      ]
+    },
+
+    "7": {
+      "instruction": "Negativo curto (am not / are not / is not)",
       "entries": [
         "Eu sou#I am not",
         "Você é#You are not",
@@ -15,8 +76,9 @@
         "Uma cama#Not a bed"
       ]
     },
-    "2": {
-      "instruction": "Transforme a frase em pergunta",
+
+    "8": {
+      "instruction": "Pergunta simples (Do / Does?)",
       "entries": [
         "Eu penso#Do I think?",
         "Eu sinto#Do I feel?",
@@ -29,8 +91,9 @@
         "Eu rio#Do I laugh?"
       ]
     },
-    "3": {
-      "instruction": "Coloque a frase no passado simples",
+
+    "9": {
+      "instruction": "Passado simples curto",
       "entries": [
         "Você pensa#You thought",
         "Você sente#You felt",
@@ -43,8 +106,9 @@
         "Você dança#You danced"
       ]
     },
-    "4": {
-      "instruction": "Adicione 'now' ao final da frase",
+
+    "10": {
+      "instruction": "Adicione 'now'",
       "entries": [
         "Você pensa#You think now",
         "Você sente#You feel now",
@@ -57,8 +121,9 @@
         "Você dança#You dance now"
       ]
     },
-    "5": {
-      "instruction": "Adicione o artigo definido 'the' antes dos substantivos",
+
+    "11": {
+      "instruction": "Use 'the'",
       "entries": [
         "Um gato#The cat",
         "Um cão#The dog",
@@ -71,8 +136,9 @@
         "Uma janela#The window"
       ]
     },
-    "6": {
-      "instruction": "Mude a frase para o futuro com 'will'",
+
+    "12": {
+      "instruction": "Futuro com will",
       "entries": [
         "Eu penso#I will think",
         "Eu sinto#I will feel",
@@ -83,62 +149,6 @@
         "Eu ando#I will walk",
         "Eu durmo#I will sleep",
         "Eu rio#I will laugh"
-      ]
-    },
-    "7": {
-      "instruction": "Transforme a frase afirmativa em negativa com 'don't' ou 'doesn't'",
-      "entries": [
-        "Você pensa#You don't think",
-        "Você sente#You don't feel",
-        "Você sabe#You don't know",
-        "Você vê#You don't see",
-        "Você gosta#You don't like",
-        "Ela corre#She doesn't run",
-        "Ele anda#He doesn't walk",
-        "Ela dorme#She doesn't sleep",
-        "Ele dança#He doesn't dance"
-      ]
-    },
-    "8": {
-      "instruction": "Transforme a frase em pergunta com 'Does' ou 'Do'",
-      "entries": [
-        "Ele corre#Does he run?",
-        "Ela anda#Does she walk?",
-        "Ele dorme#Does he sleep?",
-        "Ela dança#Does she dance?",
-        "Você pensa#Do you think?",
-        "Você sente#Do you feel?",
-        "Você sabe#Do you know?",
-        "Você vê#Do you see?",
-        "Você gosta#Do you like?"
-      ]
-    },
-    "9": {
-      "instruction": "Transforme os verbos para a forma -ing",
-      "entries": [
-        "Correr#Running",
-        "Andar#Walking",
-        "Dormir#Sleeping",
-        "Dançar#Dancing",
-        "Pensar#Thinking",
-        "Sentir#Feeling",
-        "Saber#Knowing",
-        "Ver#Seeing",
-        "Gostar#Liking"
-      ]
-    },
-    "10": {
-      "instruction": "Use 'can' para expressar habilidade",
-      "entries": [
-        "Eu corro#I can run",
-        "Você anda#You can walk",
-        "Ele dorme#He can sleep",
-        "Ela dança#She can dance",
-        "Nós pensamos#We can think",
-        "Eles sentem#They can feel",
-        "Ele vê#He can see",
-        "Ela gosta#She can like",
-        "Eu sei#I can know"
       ]
     }
   }
