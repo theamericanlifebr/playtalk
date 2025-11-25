@@ -1,6 +1,7 @@
 :root {
   --nav-height: 72px;
   --header-height: 82px;
+  --header-safe-height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   --content-offset: 30px;
   --container-max-width: 1180px;
   --ranking-carousel-max-width: 960px;
@@ -26,7 +27,7 @@ body {
 }
 
 body {
-  padding-top: var(--header-height);
+  padding-top: var(--header-safe-height);
   padding-bottom: var(--nav-height);
   background: linear-gradient(180deg, #0d4ab2 0%, #0c6bb8 40%, #033567 85%, #021735 100%);
   font-family: 'Open Sans', sans-serif;
@@ -71,7 +72,7 @@ body > *:not(.lens-overlay) {
 
 .container-screen {
   width: 100%;
-  min-height: calc(100vh - var(--header-height) - var(--nav-height));
+  min-height: calc(100vh - var(--header-safe-height) - var(--nav-height));
   margin: 0;
   padding: clamp(16px, 3vw, 32px);
   box-sizing: border-box;
@@ -114,7 +115,7 @@ body.page-play #play-container {
 
 .container-screen--overlay {
   position: fixed;
-  top: var(--header-height);
+  top: var(--header-safe-height);
   bottom: var(--nav-height);
   left: 0;
   right: 0;
@@ -646,9 +647,9 @@ body.theme-blue .ranking-tag {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 18px;
-  min-height: 82px;
-  height: 82px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 12px;
+  min-height: var(--header-safe-height);
+  height: var(--header-safe-height);
   background: var(--header-gradient, linear-gradient(135deg, #1a66cc 0%, #357de0 100%));
   color: #ffffff;
   position: fixed;
@@ -864,6 +865,7 @@ body.theme-blue .site-header__button--logout {
 @media (max-width: 720px) {
   :root {
     --header-height: 82px;
+    --header-safe-height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
     --content-offset: 50px;
   }
 }
@@ -3533,7 +3535,7 @@ body.theme-blue .fun-actions button {
 
 .game-overlay {
   position: fixed;
-  top: var(--header-height);
+  top: var(--header-safe-height);
   left: 0;
   right: 0;
   bottom: var(--nav-height);
@@ -3932,10 +3934,10 @@ body.dark-mode .post-game-metric__logo {
   }
 
   .page-ranking .container-screen--ranking {
-    margin-top: calc(var(--header-height) + var(--content-offset) - 100px);
+    margin-top: calc(var(--header-safe-height) + var(--content-offset) - 100px);
   }
 
   .page-play #play-container {
-    margin-top: calc(var(--header-height) + var(--content-offset) - 100px);
+    margin-top: calc(var(--header-safe-height) + var(--content-offset) - 100px);
   }
 }
