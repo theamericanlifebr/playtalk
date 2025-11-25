@@ -50,5 +50,6 @@
       "pt": "eles arrumam a mesa",
       "en": "They set the table"
     }
-  ]
+  ],
+  "instruction": "Traduza as frases do nível 2 para o inglês."
 }
