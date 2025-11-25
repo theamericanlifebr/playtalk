@@ -63,7 +63,7 @@ body > *:not(.lens-overlay) {
 #nivel-mensagem,
 #resultado,
 #level-finder-level,
-#barra-progresso,
+#level-instruction,
 #pt-container label,
 #pt-container textarea {
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
@@ -1749,22 +1749,22 @@ body.theme-blue .auth-message {
   display: none;
 }
 
-#barra-progresso {
+.level-instruction {
   width: 100%;
   max-width: min(90vw, 960px);
-  height: 20px;
-  background: #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
+  margin: 8px auto 0;
+  padding: 12px 14px;
+  background: #f5f7ff;
+  border-radius: 12px;
+  color: #1f2a44;
+  text-align: center;
+  font-weight: 600;
+  display: none;
+  box-shadow: 0 8px 30px rgba(17, 24, 39, 0.08);
 }
 
-#barra-preenchida {
-  height: 100%;
-  width: 0%;
-  background-color: #ff0000;
-  border-radius: 10px;
-  transition: width 1.5s linear, background-color 1.5s linear;
+.level-instruction.is-visible {
+  display: block;
 }
 
 #resultado, #acertos {
@@ -3269,7 +3269,7 @@ body.theme-blue .fun-actions button {
   }
 
   #texto-exibicao,
-  #barra-progresso {
+  #level-instruction {
     position: static;
   }
 

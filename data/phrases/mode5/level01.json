@@ -50,5 +50,6 @@
       "pt": "eles limpam o quarto",
       "en": "They clean the room"
     }
-  ]
+  ],
+  "instruction": "Traduza as frases do nível 1 para o inglês."
 }

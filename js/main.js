@@ -77,9 +77,9 @@ const MODE_DETAILS = {
     logo: 'selos%20modos%20de%20jogo/modo4.png'
   },
   5: {
-    title: 'Modo 5 — Tradução reversa',
-    shortTitle: 'Reversa',
-    description: 'Escute em inglês e responda em português com precisão. Ideal para treinar compreensão e produção simultânea.',
+    title: 'Modo 5 — Translating',
+    shortTitle: 'Translating',
+    description: 'Leia em português e responda em inglês, sem narração, focando em traduções diretas e claras.',
     logo: 'selos%20modos%20de%20jogo/modo5.png'
   },
   6: {
@@ -223,6 +223,7 @@ const phraseLibrary = {
   config: {},
   modes: {},
   maxLevels: {},
+  instructions: {},
   loaded: false
 };
 
@@ -440,12 +441,14 @@ async function carregarPastas() {
     phraseLibrary.config = modesConfig;
     phraseLibrary.modes = {};
     phraseLibrary.maxLevels = {};
+    phraseLibrary.instructions = {};
 
     const fetches = [];
     modeEntries.forEach(([modeKey, modeConfig]) => {
       const filePath = modeConfig && typeof modeConfig.file === 'string' ? modeConfig.file : '';
       phraseLibrary.modes[modeKey] = {};
       phraseLibrary.maxLevels[modeKey] = 0;
+      phraseLibrary.instructions[modeKey] = {};
 
       if (!filePath) {
         return;
@@ -467,14 +470,21 @@ async function carregarPastas() {
               const levelNumber = Number.isFinite(parsedLevel)
                 ? Math.max(1, Math.floor(parsedLevel))
                 : normalizedLevels.length + 1;
-              const normalizedEntries = Array.isArray(entries)
-                ? entries.map(normalizePhraseLine)
+              const levelConfig = Array.isArray(entries)
+                ? { entries }
+                : (entries && typeof entries === 'object' ? entries : { entries: [] });
+              const normalizedEntries = Array.isArray(levelConfig.entries)
+                ? levelConfig.entries.map(normalizePhraseLine)
                 : [];
-              normalizedLevels.push([levelNumber, normalizedEntries]);
+              const instruction = typeof levelConfig.instruction === 'string'
+                ? levelConfig.instruction.trim()
+                : '';
+              normalizedLevels.push([levelNumber, normalizedEntries, instruction]);
             });
             normalizedLevels.sort((a, b) => a[0] - b[0]);
-            normalizedLevels.forEach(([levelNumber, entries]) => {
+            normalizedLevels.forEach(([levelNumber, entries, instruction]) => {
               phraseLibrary.modes[modeKey][levelNumber] = entries.map(ensurePhraseTuple);
+              phraseLibrary.instructions[modeKey][levelNumber] = instruction;
             });
             const levelNumbers = normalizedLevels.map(([levelNumber]) => levelNumber);
             const maxLevel = levelNumbers.length ? Math.max(...levelNumbers) : normalizedLevels.length;
@@ -493,6 +503,7 @@ async function carregarPastas() {
     phraseLibrary.loaded = false;
     phraseLibrary.modes = {};
     phraseLibrary.maxLevels = {};
+    phraseLibrary.instructions = {};
     throw error;
   }
 
@@ -702,8 +713,8 @@ function getComprehensionDelayMs(mode, chars) {
 }
 
 function isProgressBarVisible() {
-  const bar = document.getElementById('barra-progresso');
-  return Boolean(bar && bar.offsetParent !== null);
+  const container = document.getElementById('visor');
+  return Boolean(container && container.offsetParent !== null);
 }
 
 function setInplayState(active) {
@@ -714,6 +725,9 @@ function setInplayState(active) {
   }
   document.body.classList.toggle('inplay-active', inplayActive);
   updateLevelFinderLevelIndicator();
+  if (!inplayActive) {
+    renderLevelInstruction({ mode: null, level: null });
+  }
 }
 
 function ensureInplayStateFromContext() {
@@ -933,6 +947,7 @@ function restoreRoundState(saved, expectedLevel) {
   if (pastaAtual) {
     setSelectedPreGameLevel(selectedMode, pastaAtual);
   }
+  renderLevelInstruction({ level: pastaAtual });
   if (roundAttempts >= roundTarget) {
     clearRoundState(selectedMode);
     return false;
@@ -1129,6 +1144,11 @@ function getModeLibrary(mode) {
   return phraseLibrary.modes[key] || {};
 }
 
+function getLevelInstruction(mode, level) {
+  const instructions = phraseLibrary.instructions[String(mode)] || {};
+  return instructions[level] || '';
+}
+
 function getModeLevels(mode) {
   return Object.keys(getModeLibrary(mode))
     .map(Number)
@@ -1209,6 +1229,21 @@ function updateLevelFinderLevelIndicator() {
   }
 }
 
+function renderLevelInstruction({ mode = selectedMode, level = pastaAtual || getSelectedPreGameLevel(selectedMode) } = {}) {
+  const instructionEl = document.getElementById('level-instruction');
+  if (!instructionEl) {
+    return;
+  }
+  const instruction = mode === 5 ? getLevelInstruction(mode, level) : '';
+  if (instruction) {
+    instructionEl.textContent = instruction;
+    instructionEl.classList.add('is-visible');
+  } else {
+    instructionEl.textContent = '';
+    instructionEl.classList.remove('is-visible');
+  }
+}
+
 function renderLevelFinderLevel(options = {}) {
   const badge = document.getElementById('level-finder-level');
   const icon = document.getElementById('mode-icon');
@@ -1277,6 +1312,7 @@ function adjustLevelFinderLevel(delta) {
   }
   pushLevelFinderLevel(updated);
   updateLevelFinderLevelIndicator();
+  renderLevelInstruction({ level: updated });
   renderLevelFinderLevel({ level: updated, baseColor: levelFinderBaseColor, bump: true });
 }
 
@@ -1544,7 +1580,7 @@ function updatePreGameScreen(mode) {
   const titleEl = document.getElementById('pre-game-title');
   const logoEl = document.getElementById('pre-game-logo');
   const levelEl = document.getElementById('pre-game-level');
-  const simpleTitle = detail.shortTitle || detail.title;
+  const simpleTitle = detail.title;
   if (titleEl) titleEl.textContent = simpleTitle;
   if (logoEl) {
     logoEl.src = detail.logo;
@@ -2261,6 +2297,7 @@ function beginGame() {
     const texto = document.getElementById('texto-exibicao');
     if (texto) texto.style.opacity = '1';
     updateLevelFinderLevelIndicator();
+    renderLevelInstruction();
     updateLevelIcon({ scope: 'mode' });
     updateModeIcons();
     let recognitionLanguage = 'en-US';
@@ -2286,10 +2323,10 @@ function beginGame() {
         esperadoLang = 'en';
         break;
       case 5:
-        mostrarTexto = 'none';
-        voz = 'en';
-        esperadoLang = 'pt';
-        recognitionLanguage = 'pt-BR';
+        mostrarTexto = 'pt';
+        voz = null;
+        esperadoLang = 'en';
+        recognitionLanguage = 'en-US';
         break;
       case 6:
         mostrarTexto = 'pt';
@@ -2478,6 +2515,7 @@ function carregarFrases() {
   const library = getModeLibrary(selectedMode);
   const levelToUse = getSelectedPreGameLevel(selectedMode);
   pastaAtual = levelToUse;
+  renderLevelInstruction({ level: levelToUse });
   const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
   const anteriores = [];
 
@@ -2945,14 +2983,9 @@ function continuar() {
 function atualizarBarraProgresso() {
   ensureInplayStateFromContext();
   updateGameBalanceDisplay();
-  const filled = document.getElementById('barra-preenchida');
+  renderLevelInstruction();
   if (isLevelFinderActive()) {
     const elapsed = getLevelFinderElapsedMs();
-    const ratio = LEVEL_FINDER_TIME_LIMIT_MS > 0 ? Math.min(1, elapsed / LEVEL_FINDER_TIME_LIMIT_MS) : 0;
-    if (filled) {
-      filled.style.width = (ratio * 100) + '%';
-      filled.style.backgroundColor = colorFromPercent(ratio * 100);
-    }
     renderLevelFinderLevel({ level: pastaAtual, baseColor: levelFinderBaseColor });
     updateLevelFinderLevelIndicator();
     return;
@@ -2960,27 +2993,6 @@ function atualizarBarraProgresso() {
   const limite = Math.max(1, getCurrentThreshold());
   const currentPoints = Math.max(0, Math.min(points, limite));
   const accuracyRatio = currentPoints / limite;
-  const perc = accuracyRatio * 100;
-  let segmentRatio = accuracyRatio;
-  const medal = getMedalForAccuracy(perc);
-  if (medal) {
-    const currentIndex = MEDAL_RULES.indexOf(medal);
-    if (currentIndex >= 0) {
-      const start = Number.isFinite(medal.min) ? medal.min : 0;
-      const nextMedal = MEDAL_RULES[currentIndex + 1];
-      if (nextMedal) {
-        const end = nextMedal.min;
-        const span = Math.max(1, end - start);
-        segmentRatio = Math.max(0, Math.min(1, (perc - start) / span));
-      } else {
-        segmentRatio = 1;
-      }
-    }
-  }
-  if (filled) {
-    filled.style.width = (segmentRatio * 100) + '%';
-    filled.style.backgroundColor = colorFromPercent(perc);
-  }
   updateModeMedalIcon(accuracyRatio);
 }
 
