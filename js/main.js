@@ -53,38 +53,38 @@ const COLOR_STOPS = COLOR_STOP_RATIOS.map(([ratio, color]) => [
 
 const MODE_DETAILS = {
   1: {
-    title: 'Modo 1 — Aquecimento bilingue',
-    shortTitle: 'Aquecimento',
+    title: 'Vocabulary',
+    shortTitle: 'Vocabulary',
     description: 'Escute em inglês, visualize em português e aqueça sua mente traduzindo rapidamente antes de responder.',
     logo: 'selos%20modos%20de%20jogo/modo1.png'
   },
   2: {
-    title: 'Modo 2 — Tradução direta',
-    shortTitle: 'Tradução',
+    title: 'Creative',
+    shortTitle: 'Creative',
     description: 'Veja a frase em português e responda em inglês sem hesitar para consolidar vocabulário ativo.',
     logo: 'selos%20modos%20de%20jogo/modo2.png'
   },
   3: {
-    title: 'Modo 3 — Listening puro',
+    title: 'Listening',
     shortTitle: 'Listening',
     description: 'Apenas o áudio em inglês e sua resposta. Foque na compreensão auditiva para dominar a estrutura das frases.',
     logo: 'selos%20modos%20de%20jogo/modo3.png'
   },
   4: {
-    title: 'Modo 4 — Reading em inglês',
+    title: 'Reading',
     shortTitle: 'Reading',
     description: 'Leia em inglês, pense em inglês. Esse modo solidifica leitura e pronúncia mental em ritmo acelerado.',
     logo: 'selos%20modos%20de%20jogo/modo4.png'
   },
   5: {
-    title: 'Modo 5 — Translating',
-    shortTitle: 'Translating',
+    title: 'Building',
+    shortTitle: 'Building',
     description: 'Leia em português e responda em inglês, sem narração, focando em traduções diretas e claras.',
     logo: 'selos%20modos%20de%20jogo/modo5.png'
   },
   6: {
-    title: 'Modo 6 — Desafio final',
-    shortTitle: 'Desafio',
+    title: 'Fluency',
+    shortTitle: 'Fluency',
     description: 'Combine leitura, escuta e resposta em inglês em ritmo máximo para provar que você domina o idioma.',
     logo: 'selos%20modos%20de%20jogo/modo6.png'
   }
