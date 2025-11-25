@@ -356,6 +356,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startProgress() {
     const filled = document.getElementById('barra-preenchida');
+    if (!filled) {
+      return;
+    }
     const start = Date.now();
     progressTimer = setInterval(() => {
       const ratio = Math.min((Date.now() - start) / 120000, 1);
