@@ -361,34 +361,6 @@ function calculateBalanceReward(text) {
   return cleaned.length > 0 ? cleaned.length : 0;
 }
 
-function getFluencyModeBonus(mode) {
-  switch (mode) {
-    case 3:
-    case 6:
-      return 1.1;
-    case 5:
-      return 1.2;
-    default:
-      return 0;
-  }
-}
-
-function getLevelMultiplier(level) {
-  const clamped = Math.max(1, Math.min(240, Number(level) || 1));
-  const slope = (4 - 1) / (240 - 1);
-  return 1 + (clamped - 1) * slope;
-}
-
-function computeFluentScore(baseCpm, mode, level) {
-  const numericCpm = Math.max(0, Number(baseCpm) || 0);
-  const product = getLevelMultiplier(level) + getFluencyModeBonus(mode);
-  return Math.round(numericCpm * product);
-}
-
-function isFluencyMode(mode) {
-  return mode === 3 || mode === 5 || mode === 6;
-}
-
 function normalizeForCharTiming(text) {
   if (typeof text !== 'string') {
     return '';
@@ -681,7 +653,6 @@ let levelFinderBaseColor = '#333333';
 let inplayActive = false;
 let pendingModeStart = null;
 let preRoundGeneralCpm = null;
-let preRoundBalance = null;
 let postGameCpmTimer = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
@@ -1657,10 +1628,6 @@ function openPreGameScreen(mode) {
   updatePreGameScreen(mode);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
-  overlay.classList.remove('is-leaving');
-  requestAnimationFrame(() => overlay.classList.add('is-active'));
-  overlay.classList.remove('is-leaving');
-  requestAnimationFrame(() => overlay.classList.add('is-active'));
   if (window.playtalkLens && typeof window.playtalkLens.applyLens === 'function') {
     window.playtalkLens.applyLens(mode);
   }
@@ -1671,15 +1638,9 @@ function closePreGameScreen() {
   if (!overlay) {
     return;
   }
-  if (overlay.classList.contains('hidden')) return;
-  overlay.classList.add('is-leaving');
-  overlay.classList.remove('is-active');
-  setTimeout(() => {
-    overlay.classList.add('hidden');
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.removeAttribute('data-mode');
-    overlay.classList.remove('is-leaving');
-  }, 320);
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.removeAttribute('data-mode');
   if (window.playtalkLens && typeof window.playtalkLens.hideLens === 'function') {
     window.playtalkLens.hideLens();
   }
@@ -1722,21 +1683,13 @@ function openPostGameScreen(summary) {
   const statsContainer = overlay.querySelector('.post-game-stats');
   const cpmCard = document.getElementById('post-game-cpm');
   const cpmValueEl = document.getElementById('post-game-cpm-value');
-  const metricLabelEl = document.getElementById('post-game-metric-label');
-  const iconWrapper = overlay.querySelector('.post-game-metric__icon');
+  const cpmLogoEl = document.getElementById('post-game-mode-logo');
   const wooshAudio = document.getElementById('somWoosh');
 
-  const icons = {
-    speed: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.43 2.05a1 1 0 0 0-1.64.83L11.8 11H7a1 1 0 0 0-.79 1.62l8 10a1 1 0 0 0 1.79-.62l.01-8.72H19a1 1 0 0 0 .86-1.5Z"/></svg>',
-    coins: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C7.03 2 3 3.79 3 6v12c0 2.21 4.03 4 9 4s9-1.79 9-4V6c0-2.21-4.03-4-9-4Zm7 14c0 .86-2.61 2-7 2s-7-1.14-7-2v-1.27C6.95 15.55 9.38 16 12 16s5.05-.45 7-1.27Zm0-4c0 .86-2.61 2-7 2s-7-1.14-7-2V9.73C6.95 10.55 9.38 11 12 11s5.05-.45 7-1.27Zm-7-1.73c-4.39 0-7-1.14-7-2s2.61-2 7-2 7 1.14 7 2-2.61 2-7 2Z"/></svg>'
-  };
-
-  function setMetricIcon(type = 'speed') {
-    if (!iconWrapper) return;
-    iconWrapper.innerHTML = icons[type] || icons.speed;
-    if (cpmCard) {
-      cpmCard.classList.toggle('post-game-metric--coins', type === 'coins');
-    }
+  if (cpmLogoEl) {
+    const detail = getModeDetail(selectedMode);
+    cpmLogoEl.src = detail.logo;
+    cpmLogoEl.alt = `Logo do ${detail.title}`;
   }
 
   function renderStats(items = []) {
@@ -1758,7 +1711,7 @@ function openPostGameScreen(summary) {
     });
   }
 
-  function renderMetric({ beforeValue, afterValue, label, icon = 'speed', onComplete } = {}) {
+  function renderCpm(beforeValue, afterValue) {
     if (!cpmCard || !cpmValueEl) return;
     if (postGameCpmTimer) {
       clearTimeout(postGameCpmTimer);
@@ -1766,29 +1719,10 @@ function openPostGameScreen(summary) {
     }
     const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
     const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
-    if (metricLabelEl) {
-      metricLabelEl.textContent = label || '';
-    }
-    setMetricIcon(icon);
-    cpmCard.classList.toggle('post-game-metric--coins', icon === 'coins');
     cpmValueEl.textContent = before.toLocaleString('pt-BR');
     postGameCpmTimer = setTimeout(() => {
       animateNumberChange(cpmValueEl, before, after, 1000);
-      if (typeof onComplete === 'function') {
-        setTimeout(() => onComplete(after), 1100);
-      }
     }, 1000);
-  }
-
-  function renderCoins(startValue, endValue) {
-    const start = Number.isFinite(startValue) ? Math.max(0, Math.floor(startValue)) : 0;
-    const end = Number.isFinite(endValue) ? Math.max(0, Math.floor(endValue)) : start;
-    if (metricLabelEl) {
-      metricLabelEl.textContent = 'Moedas';
-    }
-    setMetricIcon('coins');
-    cpmValueEl.textContent = start.toLocaleString('pt-BR');
-    animateNumberChange(cpmValueEl, start, end, 1000);
   }
 
   if (summary.isLevelFinder) {
@@ -1817,33 +1751,7 @@ function openPostGameScreen(summary) {
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
-  const metricKind = summary.metricKind || (isFluencyMode(selectedMode) ? 'fluency' : 'speed');
-  const metricBefore = Number.isFinite(summary.metricBefore)
-    ? summary.metricBefore
-    : summary.preGeneralCpm;
-  const metricAfter = Number.isFinite(summary.metricAfter)
-    ? summary.metricAfter
-    : summary.postGeneralCpm;
-  const metricLabel = metricKind === 'fluency' ? 'Fluentscore' : 'CPM';
-  const shouldShowCoins = metricKind === 'fluency' && Number.isFinite(summary.coinGain) && summary.coinGain > 0;
-  const coinStart = Number.isFinite(summary.coinStart)
-    ? summary.coinStart
-    : (Number.isFinite(summary.coinGain) ? (Number.isFinite(summary.coinEnd) ? summary.coinEnd - summary.coinGain : null) : null);
-  const coinEnd = Number.isFinite(summary.coinEnd)
-    ? summary.coinEnd
-    : (Number.isFinite(coinStart) && Number.isFinite(summary.coinGain) ? coinStart + summary.coinGain : null);
-
-  renderMetric({
-    beforeValue: metricBefore,
-    afterValue: metricAfter,
-    label: metricLabel,
-    icon: 'speed',
-    onComplete: () => {
-      if (shouldShowCoins) {
-        setTimeout(() => renderCoins(coinStart, coinEnd), 200);
-      }
-    }
-  });
+  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm);
 
   if (wooshAudio) {
     try {
@@ -1868,13 +1776,8 @@ function closePostGameScreen() {
     clearTimeout(postGameCpmTimer);
     postGameCpmTimer = null;
   }
-  overlay.classList.add('is-leaving');
-  overlay.classList.remove('is-active');
-  setTimeout(() => {
-    overlay.classList.add('hidden');
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.classList.remove('is-leaving');
-  }, 300);
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
   if (window.playtalkLens && typeof window.playtalkLens.hideLens === 'function') {
     window.playtalkLens.hideLens();
   }
@@ -2417,9 +2320,6 @@ function beginGame() {
   const targetLevel = getSelectedPreGameLevel(selectedMode);
   const generalStatsBefore = calcGeneralStats();
   preRoundGeneralCpm = Math.round((generalStatsBefore.cps || 0) * 60);
-  preRoundBalance = window.playtalkBalance && typeof window.playtalkBalance.getBalance === 'function'
-    ? window.playtalkBalance.getBalance()
-    : null;
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
   consecutiveErrors = 0;
@@ -3231,7 +3131,6 @@ function finishMode() {
       ]
     });
     preRoundGeneralCpm = null;
-    preRoundBalance = null;
     return;
   }
 
@@ -3266,18 +3165,6 @@ function finishMode() {
 
   const postGeneralCpm = Math.round(calcGeneralStats().cps * 60);
   const cpmBefore = Number.isFinite(preRoundGeneralCpm) ? preRoundGeneralCpm : postGeneralCpm;
-  const metricBefore = isFluencyMode(selectedMode)
-    ? computeFluentScore(cpmBefore, selectedMode, lockedLevel)
-    : cpmBefore;
-  const metricAfter = isFluencyMode(selectedMode)
-    ? computeFluentScore(postGeneralCpm, selectedMode, lockedLevel)
-    : postGeneralCpm;
-  const currentBalance = window.playtalkBalance && typeof window.playtalkBalance.getBalance === 'function'
-    ? window.playtalkBalance.getBalance()
-    : null;
-  const coinGain = Number.isFinite(preRoundBalance) && Number.isFinite(currentBalance)
-    ? Math.max(0, Math.floor(currentBalance - preRoundBalance))
-    : null;
 
   openPostGameScreen({
     accuracy,
@@ -3287,18 +3174,9 @@ function finishMode() {
     previousLevel,
     newLevel: nextLevel,
     preGeneralCpm: cpmBefore,
-    postGeneralCpm,
-    metricBefore,
-    metricAfter,
-    metricKind: isFluencyMode(selectedMode) ? 'fluency' : 'speed',
-    levelPlayed: lockedLevel,
-    coinGain,
-    coinStart: preRoundBalance,
-    coinEnd: currentBalance,
-    levelPlayed: lockedLevel
+    postGeneralCpm
   });
   preRoundGeneralCpm = null;
-  preRoundBalance = null;
 }
 
 function nextMode() {
