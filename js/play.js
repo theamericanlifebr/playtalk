@@ -107,6 +107,41 @@
     return normalized.toLocaleString('pt-BR');
   }
 
+  function getFluencyModeBonus(mode) {
+    switch (mode) {
+      case 3:
+      case 6:
+        return 1.1;
+      case 5:
+        return 1.2;
+      default:
+        return 0;
+    }
+  }
+
+  function getLevelMultiplier(level) {
+    const clamped = Math.max(1, Math.min(240, Number(level) || 1));
+    const slope = (4 - 1) / (240 - 1);
+    return 1 + (clamped - 1) * slope;
+  }
+
+  function computeFluentScore(baseCpm, mode, level) {
+    const numericCpm = Math.max(0, Number(baseCpm) || 0);
+    const product = getLevelMultiplier(level) + getFluencyModeBonus(mode);
+    return Math.round(numericCpm * product);
+  }
+
+  function isFluencyMode(mode) {
+    return mode === 3 || mode === 5 || mode === 6;
+  }
+
+  function getModeLevel(mode) {
+    const stored = JSON.parse(localStorage.getItem('modeProgress') || '{}');
+    const entry = stored && stored[String(mode)];
+    const level = entry && entry.level;
+    return Number.isFinite(level) ? level : 1;
+  }
+
   function getJoinDateInfo() {
     const user = window.playtalkAuth && typeof window.playtalkAuth.getCurrentUser === 'function'
       ? window.playtalkAuth.getCurrentUser()
@@ -303,26 +338,6 @@
     return section;
   }
 
-  function createNumberCard(label, value, detail) {
-    const card = document.createElement('div');
-    card.className = 'stat-metric stat-metric--panel';
-    const labelEl = document.createElement('span');
-    labelEl.className = 'stat-metric__label';
-    labelEl.textContent = label;
-    const valueEl = document.createElement('span');
-    valueEl.className = 'stat-metric__value';
-    valueEl.textContent = value;
-    card.appendChild(labelEl);
-    card.appendChild(valueEl);
-    if (detail) {
-      const detailEl = document.createElement('span');
-      detailEl.className = 'stat-metric__detail';
-      detailEl.textContent = detail;
-      card.appendChild(detailEl);
-    }
-    return card;
-  }
-
   function createNumbersSection(summary) {
     const section = document.createElement('section');
     section.className = 'stats-section stats-section--numbers';
@@ -334,10 +349,56 @@
     section.appendChild(header);
 
     const grid = document.createElement('div');
-    grid.className = 'stats-metrics stats-metrics--panel';
-    grid.appendChild(createNumberCard('Velocidade', `${formatCps(summary.cps)} cps`, `${formatInteger(Math.round(summary.cps * 60))} cpm`));
-    grid.appendChild(createNumberCard('Precisão', formatPercent(summary.accuracyPerc)));
-    grid.appendChild(createNumberCard('Melhor sequência', formatInteger(summary.bestStreak || 0), `Atual: ${formatInteger(summary.currentStreak || 0)}`));
+    grid.className = 'player-micro-metrics';
+
+    const cpm = Math.max(0, Math.round((summary.cps || 0) * 60));
+    const accuracy = Math.max(0, Math.round(summary.accuracyPerc || 0));
+    const modeForScore = activeMode || 1;
+    const levelForScore = getModeLevel(modeForScore);
+    const fluentscore = isFluencyMode(modeForScore)
+      ? computeFluentScore(cpm, modeForScore, levelForScore)
+      : computeFluentScore(cpm, 1, 1);
+
+    const cards = [
+      {
+        label: 'Velocidade',
+        value: cpm.toLocaleString('pt-BR'),
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.43 2.05a1 1 0 0 0-1.64.83L11.8 11H7a1 1 0 0 0-.79 1.62l8 10a1 1 0 0 0 1.79-.62l.01-8.72H19a1 1 0 0 0 .86-1.5Z"/></svg>'
+      },
+      {
+        label: 'Precisão',
+        value: `${accuracy}%`,
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 3a7 7 0 0 1 6.93 6H16a4 4 0 0 0-4-4Z"/><path d="M11 11h2v8h-2z"/></svg>'
+      },
+      {
+        label: 'Fluentscore',
+        value: fluentscore.toLocaleString('pt-BR'),
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H5.17L4 17.17Zm0 14h5v2H4Z"/></svg>'
+      }
+    ];
+
+    cards.forEach((entry) => {
+      const item = document.createElement('div');
+      item.className = 'player-micro-metrics__item';
+
+      const icon = document.createElement('span');
+      icon.className = 'player-micro-metrics__icon';
+      icon.innerHTML = entry.icon;
+
+      const value = document.createElement('div');
+      value.className = 'player-micro-metrics__value';
+      value.textContent = entry.value;
+
+      const label = document.createElement('span');
+      label.className = 'player-micro-metrics__label';
+      label.textContent = entry.label;
+
+      item.appendChild(icon);
+      item.appendChild(value);
+      item.appendChild(label);
+      grid.appendChild(item);
+    });
+
     section.appendChild(grid);
     return section;
   }
@@ -383,6 +444,10 @@
       { label: 'Frases totais', value: formatInteger(summary.totalPhrases || 0) },
       { label: 'Frases certas', value: formatInteger(summary.correctPhrases || 0) },
       { label: 'Frases erradas', value: formatInteger(wrong) },
+      {
+        label: 'Melhor sequência',
+        value: `${formatInteger(summary.bestStreak || 0)} (atual: ${formatInteger(summary.currentStreak || 0)})`
+      },
       { label: 'Palavras faladas', value: formatWords(summary.totalChars) },
       { label: 'Tempo de jogo', value: formatDuration(summary.totalTime) },
       { label: 'Reports', value: formatPercent(reportRate) },
