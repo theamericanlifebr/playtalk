@@ -122,22 +122,11 @@
         </div>
         <p id="post-game-level-status" class="game-overlay__subtitle"></p>
         <div id="post-game-cpm" class="post-game-metric" aria-live="polite">
-          <div class="post-game-metric__label">CPM geral</div>
           <div class="post-game-metric__values">
-            <span class="post-game-metric__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M13 2 3 14h7v8l10-12h-7z"/></svg>
+            <span class="post-game-metric__logo" aria-hidden="true">
+              <img id="post-game-mode-logo" src="" alt="Logo do modo atual" />
             </span>
-            <div class="post-game-metric__numbers">
-              <div class="post-game-metric__group">
-                <span class="post-game-metric__hint">Antes</span>
-                <span id="post-game-cpm-before" class="post-game-metric__value">0</span>
-              </div>
-              <span class="post-game-metric__arrow" aria-hidden="true">→</span>
-              <div class="post-game-metric__group">
-                <span class="post-game-metric__hint">Depois</span>
-                <span id="post-game-cpm-after" class="post-game-metric__value">0</span>
-              </div>
-            </div>
+            <span id="post-game-cpm-value" class="post-game-metric__value">0</span>
           </div>
         </div>
         <dl class="post-game-stats" aria-live="polite"></dl>

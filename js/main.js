@@ -653,6 +653,7 @@ let levelFinderBaseColor = '#333333';
 let inplayActive = false;
 let pendingModeStart = null;
 let preRoundGeneralCpm = null;
+let postGameCpmTimer = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
 let levelFinderTimer = null;
@@ -1681,9 +1682,15 @@ function openPostGameScreen(summary) {
   const statusEl = document.getElementById('post-game-level-status');
   const statsContainer = overlay.querySelector('.post-game-stats');
   const cpmCard = document.getElementById('post-game-cpm');
-  const cpmBeforeEl = document.getElementById('post-game-cpm-before');
-  const cpmAfterEl = document.getElementById('post-game-cpm-after');
+  const cpmValueEl = document.getElementById('post-game-cpm-value');
+  const cpmLogoEl = document.getElementById('post-game-mode-logo');
   const wooshAudio = document.getElementById('somWoosh');
+
+  if (cpmLogoEl) {
+    const detail = getModeDetail(selectedMode);
+    cpmLogoEl.src = detail.logo;
+    cpmLogoEl.alt = `Logo do ${detail.title}`;
+  }
 
   function renderStats(items = []) {
     if (!statsContainer) return;
@@ -1705,13 +1712,17 @@ function openPostGameScreen(summary) {
   }
 
   function renderCpm(beforeValue, afterValue) {
-    if (!cpmCard) return;
+    if (!cpmCard || !cpmValueEl) return;
+    if (postGameCpmTimer) {
+      clearTimeout(postGameCpmTimer);
+      postGameCpmTimer = null;
+    }
     const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
     const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
-    if (cpmBeforeEl) {
-      cpmBeforeEl.textContent = before.toLocaleString('pt-BR');
-    }
-    animateNumberChange(cpmAfterEl, before, after, 1000);
+    cpmValueEl.textContent = before.toLocaleString('pt-BR');
+    postGameCpmTimer = setTimeout(() => {
+      animateNumberChange(cpmValueEl, before, after, 1000);
+    }, 1000);
   }
 
   if (summary.isLevelFinder) {
@@ -1737,9 +1748,10 @@ function openPostGameScreen(summary) {
     }
     renderStats([]);
   }
-  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
+
+  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm);
 
   if (wooshAudio) {
     try {
@@ -1759,6 +1771,10 @@ function closePostGameScreen() {
   const overlay = document.getElementById('post-game-screen');
   if (!overlay) {
     return;
+  }
+  if (postGameCpmTimer) {
+    clearTimeout(postGameCpmTimer);
+    postGameCpmTimer = null;
   }
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
