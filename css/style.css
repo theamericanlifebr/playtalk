@@ -1,7 +1,7 @@
 :root {
   --nav-height: 72px;
   --header-height: 82px;
-  --header-safe-height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  --header-safe-height: var(--header-height);
   --content-offset: 30px;
   --container-max-width: 1180px;
   --ranking-carousel-max-width: 960px;
@@ -865,7 +865,7 @@ body.theme-blue .site-header__button--logout {
 @media (max-width: 720px) {
   :root {
     --header-height: 82px;
-    --header-safe-height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+    --header-safe-height: var(--header-height);
     --content-offset: 50px;
   }
 }
@@ -1444,7 +1444,7 @@ body.game-active #visor {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  transform: translateY(-80px);
+  transform: translateY(160px);
 }
 
 #menu > * {
@@ -3347,6 +3347,7 @@ body.theme-blue .fun-actions button {
   #menu {
     padding: 12px 16px 116px;
     gap: 14px;
+    transform: translateY(120px);
   }
 
   #menu-modes {
@@ -3571,7 +3572,13 @@ body.theme-blue .fun-actions button {
 
 #pre-game-screen .game-overlay__panel {
   justify-content: center;
-  transform: translateY(-200px);
+  transform: translateY(160px);
+}
+
+@media (max-width: 768px) {
+  #pre-game-screen .game-overlay__panel {
+    transform: translateY(120px);
+  }
 }
 
 #post-game-screen .game-overlay__panel {
@@ -3777,23 +3784,20 @@ body.dark-mode .game-overlay__secondary {
 .post-game-medal-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
-  min-height: 42vh;
-  position: relative;
+  gap: 18px;
   width: 100%;
+  text-align: center;
 }
 
 #post-game-medal {
-  position: relative;
-  left: 900px;
+  position: static;
 }
 
 #post-game-level-status {
-  margin-top: 50px;
-  position: relative;
-  left: 900px;
+  margin-top: 8px;
+  position: static;
 }
 
 .post-game-metric {
@@ -3813,8 +3817,7 @@ body.dark-mode .game-overlay__secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(6px, 1.6vw, 10px);
-  flex-direction: column-reverse;
+  gap: clamp(10px, 2vw, 14px);
 }
 
 .post-game-metric__value {
@@ -3830,6 +3833,24 @@ body.dark-mode .game-overlay__secondary {
   font-weight: 800;
   color: #ffffff;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.post-game-metric__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 8vw, 52px);
+  height: clamp(40px, 8vw, 52px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+.post-game-metric__icon svg {
+  width: 62%;
+  height: 62%;
+  fill: #ffd84d;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
 }
 
 .post-game-stats {
@@ -3930,7 +3951,7 @@ body.dark-mode .post-game-metric__logo {
 
 @media (max-width: 768px) {
   .page-home .container-screen--home {
-    transform: translateY(-150px);
+    transform: translateY(120px);
   }
 
   .page-ranking .container-screen--ranking {
