@@ -72,10 +72,14 @@
         <div id="score"></div>
         <div class="visor-stack">
           <div id="level-instruction" class="level-instruction" role="status" aria-live="polite"></div>
-          <div id="mode-five-intro" class="mode-five-intro" aria-live="polite">
+          <div id="mode-five-intro" class="mode-five-intro" aria-live="polite" tabindex="0">
             <p class="mode-five-intro__instruction"></p>
-            <p class="mode-five-intro__example mode-five-intro__example--pt"></p>
-            <p class="mode-five-intro__example mode-five-intro__example--en"></p>
+            <p class="mode-five-intro__hero"></p>
+            <div class="mode-five-intro__examples">
+              <p class="mode-five-intro__example mode-five-intro__example--pt"></p>
+              <p class="mode-five-intro__example mode-five-intro__example--en"></p>
+            </div>
+            <p class="mode-five-intro__cta">Toque para começar</p>
           </div>
           <div class="mode-emblem">
             <img id="mode-icon" alt="Mode Icon" style="display:none" />
@@ -137,7 +141,6 @@
         <dl class="post-game-stats" aria-live="polite"></dl>
         <div class="game-overlay__actions">
           <button id="post-game-replay" class="game-overlay__primary" type="button">Jogar novamente</button>
-          <button id="post-game-menu" class="game-overlay__secondary" type="button">Voltar ao menu</button>
         </div>
       </div>
     </section>
