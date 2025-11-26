@@ -1,13 +1,9 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ---------------------------------------------------------------------------
-// Configuração e constantes
-// ---------------------------------------------------------------------------
 const DEFAULT_DATA_DIR = path.join(__dirname, 'data');
 const DATA_ROOT = process.env.PLAYTALK_DATA_DIR
   ? path.resolve(process.env.PLAYTALK_DATA_DIR)
@@ -71,7 +67,7 @@ const PROGRESS_SCHEMA = {
   }
 };
 
-const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%222%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
+const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
 const DEFAULT_VERIFICATION_EXPIRATION_MINUTES = 10;
 const DEFAULT_VERIFICATION_CODE_LENGTH = 6;
 const DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS = 60;
@@ -83,7 +79,6 @@ const GENERAL_MODE_KEYS = ['2', '3', '4', '5', '6'];
 const MAX_RANKING_ENTRIES = 30;
 const LEGEND_REQUIREMENTS = { cps: 3.5, accuracy: 80, diamonds: 10 };
 const RECENT_PHRASE_LIMIT = 500;
-
 const BOT_PROFILES = [
   { key: 'maya', name: 'Maya', avatar: 'users/maya.png' },
   { key: 'jimmy', name: 'Jimmy', avatar: 'users/jimmy.png' },
@@ -116,36 +111,6 @@ const staticDir = (() => {
   return __dirname;
 })();
 
-// ---------------------------------------------------------------------------
-// Utilitários de normalização
-// ---------------------------------------------------------------------------
-function normalizeKey(username = '') {
-  return username.trim().toLowerCase();
-}
-
-function normalizeNumber(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
-}
-
-function normalizePositiveInteger(value) {
-  return Math.max(0, Math.floor(normalizeNumber(value)));
-}
-
-function parseDate(dateString) {
-  const timestamp = Date.parse(dateString);
-  return Number.isNaN(timestamp) ? null : new Date(timestamp);
-}
-
-function getCurrentMonthKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}`;
-}
-
-// ---------------------------------------------------------------------------
-// Persistência de dados
-// ---------------------------------------------------------------------------
 function ensureDataDirectory() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -157,6 +122,28 @@ function ensureDataDirectory() {
     };
     fs.writeFileSync(USERS_DB_PATH, JSON.stringify(initialData, null, 2));
   }
+}
+
+function normalizeKey(username = '') {
+  return username.trim().toLowerCase();
+}
+
+function getDefaultValue(schema) {
+  if (!('default' in schema)) {
+    return undefined;
+  }
+  if (schema.type === 'json') {
+    return JSON.parse(JSON.stringify(schema.default));
+  }
+  return schema.default;
+}
+
+function createDefaultData() {
+  const data = {};
+  for (const [key, schema] of Object.entries(PROGRESS_SCHEMA)) {
+    data[key] = getDefaultValue(schema);
+  }
+  return data;
 }
 
 async function readDatabase() {
@@ -184,72 +171,64 @@ async function writeDatabase(data) {
   return payload;
 }
 
-// ---------------------------------------------------------------------------
-// Estruturas de progresso e normalização de usuário
-// ---------------------------------------------------------------------------
-function getDefaultValue(schema) {
-  if (!('default' in schema)) {
-    return undefined;
-  }
-  if (schema.type === 'json') {
-    return JSON.parse(JSON.stringify(schema.default));
-  }
-  return schema.default;
-}
-
-function createDefaultData() {
-  return Object.entries(PROGRESS_SCHEMA).reduce((data, [key, schema]) => {
-    data[key] = getDefaultValue(schema);
-    return data;
-  }, {});
-}
-
 function ensureUserDefaults(user) {
   if (!('email' in user)) {
     user.email = '';
   } else if (typeof user.email === 'string') {
     user.email = user.email.trim();
   }
-
   if (typeof user.emailVerified !== 'boolean') {
     user.emailVerified = Boolean(user.emailVerified);
   }
-  user.emailVerifiedAt = user.emailVerified ? user.emailVerifiedAt || new Date().toISOString() : null;
+  if (user.emailVerified) {
+    user.emailVerifiedAt = user.emailVerifiedAt || new Date().toISOString();
+  } else {
+    user.emailVerifiedAt = null;
+  }
 
-  user.emailVerificationCode = user.emailVerificationCode ?? null;
-  user.emailVerificationExpiresAt = user.emailVerificationExpiresAt ?? null;
-  user.emailVerificationAttempts = normalizePositiveInteger(user.emailVerificationAttempts ?? 0);
-  user.emailVerificationLastSentAt = user.emailVerificationLastSentAt ?? null;
+  if (!('emailVerificationCode' in user)) {
+    user.emailVerificationCode = null;
+  }
+  if (!('emailVerificationExpiresAt' in user)) {
+    user.emailVerificationExpiresAt = null;
+  }
+  if (!('emailVerificationAttempts' in user)) {
+    user.emailVerificationAttempts = 0;
+  } else {
+    user.emailVerificationAttempts = normalizePositiveInteger(user.emailVerificationAttempts);
+  }
+  if (!('emailVerificationLastSentAt' in user)) {
+    user.emailVerificationLastSentAt = null;
+  }
 
   if (!user.data || typeof user.data !== 'object') {
     user.data = createDefaultData();
     return user;
   }
 
-  Object.entries(PROGRESS_SCHEMA).forEach(([key, schema]) => {
+  for (const [key, schema] of Object.entries(PROGRESS_SCHEMA)) {
     if (user.data[key] === undefined) {
       user.data[key] = getDefaultValue(schema);
     }
-  });
-
+  }
   return user;
 }
 
-function buildUserPayload(key, entry) {
-  return {
-    key,
-    username: entry.username,
-    password: entry.password,
-    email: entry.email || '',
-    emailVerified: Boolean(entry.emailVerified),
-    emailVerifiedAt: entry.emailVerifiedAt || null,
-    data: entry.data
-  };
+function normalizeNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
 }
 
-// ---------------------------------------------------------------------------
-// Estatísticas e rankings
-// ---------------------------------------------------------------------------
+function normalizePositiveInteger(value) {
+  return Math.max(0, Math.floor(normalizeNumber(value)));
+}
+
+function getCurrentMonthKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
 function aggregateModeStats(modeStats = {}) {
   const totals = {
     totalPhrases: 0,
@@ -260,7 +239,6 @@ function aggregateModeStats(modeStats = {}) {
     report: 0,
     diamantes: 0
   };
-
   GENERAL_MODE_KEYS.forEach((modeKey) => {
     const stats = modeStats[String(modeKey)] || {};
     totals.totalPhrases += normalizePositiveInteger(stats.totalPhrases);
@@ -272,7 +250,6 @@ function aggregateModeStats(modeStats = {}) {
     const medals = stats.medals || {};
     totals.diamantes += normalizePositiveInteger(medals.diamante);
   });
-
   return totals;
 }
 
@@ -301,6 +278,67 @@ function buildModeSnapshot(modeKey, stats = {}) {
   };
 }
 
+function createVerificationCode(length = DEFAULT_VERIFICATION_CODE_LENGTH) {
+  const digits = '0123456789';
+  let result = '';
+  for (let i = 0; i < length; i += 1) {
+    const randomIndex = Math.floor(Math.random() * digits.length);
+    result += digits[randomIndex];
+  }
+  return result;
+}
+
+function computeVerificationExpiry(minutes = DEFAULT_VERIFICATION_EXPIRATION_MINUTES) {
+  const expiresAt = new Date();
+  expiresAt.setMinutes(expiresAt.getMinutes() + minutes);
+  return expiresAt.toISOString();
+}
+
+function parseDate(dateString) {
+  const timestamp = Date.parse(dateString);
+  return Number.isNaN(timestamp) ? null : new Date(timestamp);
+}
+
+function canSendNewVerification(user) {
+  if (!user.emailVerificationLastSentAt) {
+    return true;
+  }
+
+  const lastSent = parseDate(user.emailVerificationLastSentAt);
+  if (!lastSent) {
+    return true;
+  }
+
+  const now = Date.now();
+  const elapsedSeconds = Math.floor((now - lastSent.getTime()) / 1000);
+  return elapsedSeconds >= DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS;
+}
+
+async function sendVerificationEmail(to, code) {
+  if (!RESEND_API_KEY) {
+    throw new Error('PLAYTALK_RESEND_API_KEY não configurada.');
+  }
+
+  const response = await fetch(RESEND_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${RESEND_API_KEY}`
+    },
+    body: JSON.stringify({
+      from: RESEND_EMAIL_FROM,
+      to: [to],
+      subject: 'Código de verificação PlayTalk',
+      html: `<p>Seu código de verificação é <strong>${code}</strong>.</p><p>Ele expira em ${DEFAULT_VERIFICATION_EXPIRATION_MINUTES} minutos.</p>`
+    })
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Falha ao enviar e-mail: ${response.status} - ${text}`);
+  }
+}
+
 function createEmptyRecentPhraseStats() {
   return { entries: [], totalChars: 0, totalTime: 0 };
 }
@@ -310,48 +348,40 @@ function normalizeRecentPhraseStatsValue(value) {
   if (!value || typeof value !== 'object') {
     return base;
   }
-
   const sourceEntries = Array.isArray(value.entries)
     ? value.entries
     : Array.isArray(value)
       ? value
       : [];
-
   sourceEntries.some((entry) => {
     if (base.entries.length >= RECENT_PHRASE_LIMIT) {
       return true;
     }
-
     let chars = 0;
     let duration = 0;
-
     if (Array.isArray(entry)) {
-      [chars, duration] = entry;
+      chars = entry[0];
+      duration = entry[1];
     } else if (entry && typeof entry === 'object') {
       chars = entry.chars ?? entry.c ?? 0;
       duration = entry.time ?? entry.t ?? 0;
     }
-
     const normalizedChars = Number.isFinite(chars) && chars > 0 ? Math.floor(chars) : 0;
     const normalizedDuration = Number.isFinite(duration) && duration > 0 ? Math.floor(duration) : 0;
-
     if (!normalizedChars && !normalizedDuration) {
       return false;
     }
-
     base.entries.push([normalizedChars, normalizedDuration]);
     base.totalChars += normalizedChars;
     base.totalTime += normalizedDuration;
     return false;
   });
-
   if (!base.totalChars && Number.isFinite(value.totalChars)) {
     base.totalChars = Math.max(0, Math.floor(value.totalChars));
   }
   if (!base.totalTime && Number.isFinite(value.totalTime)) {
     base.totalTime = Math.max(0, Math.floor(value.totalTime));
   }
-
   return base;
 }
 
@@ -361,6 +391,66 @@ function computeRecentCps(stats) {
   }
   const seconds = stats.totalTime / 1000;
   return seconds > 0 ? stats.totalChars / seconds : 0;
+}
+
+function seedFromString(value) {
+  return Array.from(String(value)).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+}
+
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function randomInRange(seed, min, max) {
+  const safeMin = Math.ceil(min);
+  const safeMax = Math.floor(max);
+  return Math.floor(seededRandom(seed) * (safeMax - safeMin + 1)) + safeMin;
+}
+
+function createBotSnapshot(profile, index = 0) {
+  if (!profile || !profile.name) {
+    return null;
+  }
+  const baseSeed = seedFromString(profile.key || profile.name) + index;
+  const totalPhrases = randomInRange(baseSeed, 200, 500);
+  const accuracy = randomInRange(baseSeed + 1, 65, 98);
+  const correctPhrases = Math.min(totalPhrases, Math.max(1, Math.round(totalPhrases * (accuracy / 100))));
+  const avgChars = randomInRange(baseSeed + 2, 14, 26);
+  const correctChars = correctPhrases * avgChars;
+  const secondsPerPhrase = randomInRange(baseSeed + 3, 3, 6);
+  const totalTime = Math.max(1, totalPhrases * secondsPerPhrase * 1000);
+  const cps = correctChars / (totalTime / 1000);
+  const fastCps = cps * 1.05;
+  const diamantes = randomInRange(baseSeed + 4, 5, 40);
+  const points = correctPhrases * randomInRange(baseSeed + 5, 2, 6);
+  const bestStreak = randomInRange(baseSeed + 6, 8, 32);
+  const currentStreak = Math.min(bestStreak, randomInRange(baseSeed + 7, 3, bestStreak));
+  const monthlyPoints = Math.round(points * 0.4);
+  const level = randomInRange(baseSeed + 8, 3, 22);
+  const recentPhraseCount = randomInRange(baseSeed + 9, 12, 48);
+
+  return {
+    key: `bot-${profile.key || profile.name}`,
+    username: profile.name,
+    displayName: profile.name,
+    avatar: profile.avatar || DEFAULT_AVATAR_URL,
+    cps,
+    accuracy,
+    points,
+    diamantes,
+    bestStreak,
+    currentStreak,
+    monthlyPoints,
+    totalPhrases,
+    correctPhrases,
+    totalTime,
+    correctChars,
+    fastCps,
+    recentPhraseCount,
+    level,
+    modes: {}
+  };
 }
 
 function parseAvatar(value) {
@@ -396,14 +486,15 @@ function buildPlayerSnapshot(key, entry) {
   if (data.shareResults === false) {
     return null;
   }
-
   const totals = aggregateModeStats(data.modeStats || {});
   const seconds = totals.totalTime > 0 ? totals.totalTime / 1000 : 0;
   const cps = seconds > 0 ? totals.correctChars / seconds : 0;
   const recentStats = normalizeRecentPhraseStatsValue(data.recentPhraseStats || {});
   const recentCps = computeRecentCps(recentStats);
   const recentPhraseCount = Array.isArray(recentStats.entries) ? recentStats.entries.length : 0;
-  const accuracy = totals.totalPhrases > 0 ? (totals.correctPhrases / totals.totalPhrases) * 100 : 0;
+  const accuracy = totals.totalPhrases > 0
+    ? (totals.correctPhrases / totals.totalPhrases) * 100
+    : 0;
   const bestStreak = Math.max(
     normalizePositiveInteger(data.bestStreak),
     normalizePositiveInteger(data.currentStreak)
@@ -415,9 +506,9 @@ function buildPlayerSnapshot(key, entry) {
     totals.correctPhrases
   );
 
-  const level = normalizePositiveInteger(data.generalProgress && data.generalProgress.level)
-    || normalizePositiveInteger(data.pastaAtual)
-    || 1;
+  const level = normalizePositiveInteger(
+    data.generalProgress && data.generalProgress.level
+  ) || normalizePositiveInteger(data.pastaAtual) || 1;
 
   const modeBreakdown = {};
   Object.entries(data.modeStats || {}).forEach(([modeKey, stats]) => {
@@ -454,17 +545,16 @@ function sortEntries(entries, fields) {
       const direction = field.direction === 'asc' ? 1 : -1;
       const aValue = normalizeNumber(a[field.key]);
       const bValue = normalizeNumber(b[field.key]);
-      if (aValue !== bValue) {
-        return aValue > bValue ? direction : -direction;
+      if (aValue === bValue) {
+        continue;
       }
+      return aValue > bValue ? direction : -direction;
     }
-
     const nameCompare = String(a.displayName || a.username || '')
       .localeCompare(String(b.displayName || b.username || ''), 'pt-BR', { sensitivity: 'base' });
     if (nameCompare !== 0) {
       return nameCompare;
     }
-
     return String(a.key || '').localeCompare(String(b.key || ''));
   });
 }
@@ -475,7 +565,6 @@ function limitEntries(entries) {
 
 function computeRankings(users = {}) {
   const snapshots = [];
-
   Object.entries(users).forEach(([key, entry]) => {
     const snapshot = buildPlayerSnapshot(key, entry);
     if (snapshot) {
@@ -530,7 +619,7 @@ function computeRankings(users = {}) {
   ]));
 
   const monthly = limitEntries(sortEntries(
-    snapshots.filter((player) => player.monthlyPoints > 0),
+    snapshots.filter(player => player.monthlyPoints > 0),
     [
       { key: 'monthlyPoints', direction: 'desc' },
       { key: 'points', direction: 'desc' },
@@ -539,10 +628,10 @@ function computeRankings(users = {}) {
   ));
 
   const legends = limitEntries(sortEntries(
-    snapshots.filter((player) => (
-      player.cps >= LEGEND_REQUIREMENTS.cps
-        && player.accuracy >= LEGEND_REQUIREMENTS.accuracy
-        && player.diamantes >= LEGEND_REQUIREMENTS.diamonds
+    snapshots.filter(player => (
+      player.cps >= LEGEND_REQUIREMENTS.cps &&
+      player.accuracy >= LEGEND_REQUIREMENTS.accuracy &&
+      player.diamantes >= LEGEND_REQUIREMENTS.diamonds
     )),
     [
       { key: 'cps', direction: 'desc' },
@@ -552,144 +641,9 @@ function computeRankings(users = {}) {
     ]
   ));
 
-  return {
-    fast,
-    points,
-    diamonds,
-    streak,
-    monthly,
-    legends,
-    accuracy: accuracyRanking,
-    level: levelRanking
-  };
+  return { fast, points, diamonds, streak, monthly, legends, accuracy: accuracyRanking, level: levelRanking };
 }
 
-// ---------------------------------------------------------------------------
-// Bots e geração determinística
-// ---------------------------------------------------------------------------
-function seedFromString(value) {
-  return Array.from(String(value)).reduce((acc, char) => acc + char.charCodeAt(0), 0);
-}
-
-function seededRandom(seed) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
-function randomInRange(seed, min, max) {
-  const safeMin = Math.ceil(min);
-  const safeMax = Math.floor(max);
-  return Math.floor(seededRandom(seed) * (safeMax - safeMin + 1)) + safeMin;
-}
-
-function createBotSnapshot(profile, index = 0) {
-  if (!profile || !profile.name) {
-    return null;
-  }
-
-  const baseSeed = seedFromString(profile.key || profile.name) + index;
-  const totalPhrases = randomInRange(baseSeed, 200, 500);
-  const accuracy = randomInRange(baseSeed + 1, 65, 98);
-  const correctPhrases = Math.min(totalPhrases, Math.max(1, Math.round(totalPhrases * (accuracy / 100))));
-  const avgChars = randomInRange(baseSeed + 2, 14, 26);
-  const correctChars = correctPhrases * avgChars;
-  const secondsPerPhrase = randomInRange(baseSeed + 3, 3, 6);
-  const totalTime = Math.max(1, totalPhrases * secondsPerPhrase * 1000);
-  const cps = correctChars / (totalTime / 1000);
-  const fastCps = cps * 1.05;
-  const diamantes = randomInRange(baseSeed + 4, 5, 40);
-  const points = correctPhrases * randomInRange(baseSeed + 5, 2, 6);
-  const bestStreak = randomInRange(baseSeed + 6, 8, 32);
-  const currentStreak = Math.min(bestStreak, randomInRange(baseSeed + 7, 3, bestStreak));
-  const monthlyPoints = Math.round(points * 0.4);
-  const level = randomInRange(baseSeed + 8, 3, 22);
-  const recentPhraseCount = randomInRange(baseSeed + 9, 12, 48);
-
-  return {
-    key: `bot-${profile.key || profile.name}`,
-    username: profile.name,
-    displayName: profile.name,
-    avatar: profile.avatar || DEFAULT_AVATAR_URL,
-    cps,
-    accuracy,
-    points,
-    diamantes,
-    bestStreak,
-    currentStreak,
-    monthlyPoints,
-    totalPhrases,
-    correctPhrases,
-    totalTime,
-    correctChars,
-    fastCps,
-    recentPhraseCount,
-    level,
-    modes: {}
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Verificação de e-mail
-// ---------------------------------------------------------------------------
-function canSendNewVerification(user) {
-  if (!user.emailVerificationLastSentAt) {
-    return true;
-  }
-
-  const lastSent = parseDate(user.emailVerificationLastSentAt);
-  if (!lastSent) {
-    return true;
-  }
-
-  const now = Date.now();
-  const elapsedSeconds = Math.floor((now - lastSent.getTime()) / 1000);
-  return elapsedSeconds >= DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS;
-}
-
-function createVerificationCode(length = DEFAULT_VERIFICATION_CODE_LENGTH) {
-  const digits = '0123456789';
-  let result = '';
-  for (let i = 0; i < length; i += 1) {
-    const randomIndex = Math.floor(Math.random() * digits.length);
-    result += digits[randomIndex];
-  }
-  return result;
-}
-
-function computeVerificationExpiry(minutes = DEFAULT_VERIFICATION_EXPIRATION_MINUTES) {
-  const expiresAt = new Date();
-  expiresAt.setMinutes(expiresAt.getMinutes() + minutes);
-  return expiresAt.toISOString();
-}
-
-async function sendVerificationEmail(to, code) {
-  if (!RESEND_API_KEY) {
-    throw new Error('PLAYTALK_RESEND_API_KEY não configurada.');
-  }
-
-  const response = await fetch(RESEND_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${RESEND_API_KEY}`
-    },
-    body: JSON.stringify({
-      from: RESEND_EMAIL_FROM,
-      to: [to],
-      subject: 'Código de verificação PlayTalk',
-      html: `<p>Seu código de verificação é <strong>${code}</strong>.</p><p>Ele expira em ${DEFAULT_VERIFICATION_EXPIRATION_MINUTES} minutos.</p>`
-    })
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Falha ao enviar e-mail: ${response.status} - ${text}`);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Inicialização
-// ---------------------------------------------------------------------------
 ensureDataDirectory();
 
 async function ensureDefaultUser() {
@@ -698,14 +652,14 @@ async function ensureDefaultUser() {
     const defaultUserKey = normalizeKey(DEFAULT_USER.username);
 
     if (!database.users[defaultUserKey]) {
-      const user = ensureUserDefaults({
-        username: DEFAULT_USER.username,
-        password: DEFAULT_USER.password,
-        email: DEFAULT_USER.email,
-        emailVerified: DEFAULT_USER.emailVerified,
-        emailVerifiedAt: DEFAULT_USER.emailVerifiedAt,
-        data: createDefaultData()
-      });
+    const user = ensureUserDefaults({
+      username: DEFAULT_USER.username,
+      password: DEFAULT_USER.password,
+      email: DEFAULT_USER.email,
+      emailVerified: DEFAULT_USER.emailVerified,
+      emailVerifiedAt: DEFAULT_USER.emailVerifiedAt,
+      data: createDefaultData()
+    });
 
       database.users[defaultUserKey] = user;
       await writeDatabase(database);
@@ -717,9 +671,6 @@ async function ensureDefaultUser() {
 
 ensureDefaultUser();
 
-// ---------------------------------------------------------------------------
-// Middleware
-// ---------------------------------------------------------------------------
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(staticDir));
 
@@ -731,25 +682,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ---------------------------------------------------------------------------
-// Handlers auxiliares
-// ---------------------------------------------------------------------------
-async function loadUser(database, key) {
-  const entry = database.users[key];
-  if (!entry) {
-    return null;
-  }
-  ensureUserDefaults(entry);
-  return entry;
-}
-
-function validateEmail(email) {
-  return typeof email === 'string' && email.includes('@');
-}
-
-// ---------------------------------------------------------------------------
-// Rotas
-// ---------------------------------------------------------------------------
 app.get('/api/users', async (req, res) => {
   try {
     const database = await readDatabase();
@@ -787,7 +719,7 @@ app.post('/api/email/verification-code', async (req, res) => {
     return;
   }
 
-  if (!validateEmail(email)) {
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
     res.status(400).json({ success: false, message: 'Informe um e-mail válido.', field: 'email' });
     return;
   }
@@ -796,12 +728,14 @@ app.post('/api/email/verification-code', async (req, res) => {
 
   try {
     const database = await readDatabase();
-    const entry = await loadUser(database, key);
+    const entry = database.users[key];
 
     if (!entry) {
       res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
       return;
     }
+
+    ensureUserDefaults(entry);
 
     if (!canSendNewVerification(entry)) {
       res.status(429).json({
@@ -842,12 +776,14 @@ app.post('/api/email/verify', async (req, res) => {
 
   try {
     const database = await readDatabase();
-    const entry = await loadUser(database, key);
+    const entry = database.users[key];
 
     if (!entry) {
       res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
       return;
     }
+
+    ensureUserDefaults(entry);
 
     if (!entry.emailVerificationCode || !entry.emailVerificationExpiresAt) {
       res.status(400).json({ success: false, message: 'Nenhum código ativo. Solicite um novo envio.' });
@@ -932,7 +868,10 @@ app.post('/api/users/register', async (req, res) => {
     database.users[key] = user;
     await writeDatabase(database);
 
-    res.status(201).json({ success: true, user: buildUserPayload(key, user) });
+    res.status(201).json({
+      success: true,
+      user: { key, ...user }
+    });
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro ao registrar usuário.' });
@@ -951,14 +890,27 @@ app.post('/api/users/login', async (req, res) => {
 
   try {
     const database = await readDatabase();
-    const entry = await loadUser(database, key);
+    const entry = database.users[key];
 
     if (!entry || entry.password !== password) {
       res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
       return;
     }
 
-    res.json({ success: true, user: buildUserPayload(key, entry) });
+    ensureUserDefaults(entry);
+
+    res.json({
+      success: true,
+      user: {
+        key,
+        username: entry.username || username.trim(),
+        password: entry.password,
+        email: entry.email || '',
+        emailVerified: Boolean(entry.emailVerified),
+        emailVerifiedAt: entry.emailVerifiedAt || null,
+        data: entry.data
+      }
+    });
   } catch (error) {
     console.error('Erro ao autenticar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro ao autenticar usuário.' });
@@ -975,7 +927,7 @@ app.post('/api/users/update', async (req, res) => {
 
   try {
     const database = await readDatabase();
-    const entry = await loadUser(database, key);
+    const entry = database.users[key];
 
     if (!entry) {
       res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
@@ -1002,16 +954,24 @@ app.post('/api/users/update', async (req, res) => {
     ensureUserDefaults(entry);
     await writeDatabase(database);
 
-    res.json({ success: true, user: buildUserPayload(key, entry) });
+    res.json({
+      success: true,
+      user: {
+        key,
+        username: entry.username,
+        password: entry.password,
+        email: entry.email || '',
+        emailVerified: Boolean(entry.emailVerified),
+        emailVerifiedAt: entry.emailVerifiedAt || null,
+        data: entry.data
+      }
+    });
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro ao atualizar usuário.' });
   }
 });
 
-// ---------------------------------------------------------------------------
-// Inicialização do servidor
-// ---------------------------------------------------------------------------
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Serving static content from ${staticDir}`);

@@ -45,8 +45,8 @@
           <span class="menu-mode__label">Vocabulary</span>
         </button>
         <button type="button" class="menu-mode" data-mode="2">
-          <img src="selos%20modos%20de%20jogo/modo2.png" alt="Modo Creative" />
-          <span class="menu-mode__label">Creative</span>
+          <img src="selos%20modos%20de%20jogo/modo2.png" alt="Modo Meaning" />
+          <span class="menu-mode__label">Meaning</span>
         </button>
         <button type="button" class="menu-mode" data-mode="3">
           <img src="selos%20modos%20de%20jogo/modo3.png" alt="Modo Listening" />
@@ -57,12 +57,12 @@
           <span class="menu-mode__label">Reading</span>
         </button>
         <button type="button" class="menu-mode" data-mode="5">
-          <img src="selos%20modos%20de%20jogo/modo5.png" alt="Modo Building" />
-          <span class="menu-mode__label">Building</span>
+          <img src="selos%20modos%20de%20jogo/modo5.png" alt="Modo Translating" />
+          <span class="menu-mode__label">Translating</span>
         </button>
         <button type="button" class="menu-mode" data-mode="6">
-          <img src="selos%20modos%20de%20jogo/modo6.png" alt="Modo Fluency" />
-          <span class="menu-mode__label">Fluency</span>
+          <img src="selos%20modos%20de%20jogo/modo6.png" alt="Modo Thinking" />
+          <span class="menu-mode__label">Thinking</span>
         </button>
       </div>
     </div>
@@ -82,12 +82,12 @@
       <div id="resultado"></div>
       <div id="acertos"></div>
       <div id="mode-buttons">
-        <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo Vocabulary" />
-        <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo Creative" />
-        <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo Listening" />
-        <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo Reading" />
-        <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo Building" />
-        <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo Fluency" />
+        <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
+        <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
+        <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
+        <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
+        <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
+        <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
       </div>
     </div>
 
@@ -117,17 +117,16 @@
         <p id="post-game-level-status" class="game-overlay__subtitle"></p>
         <div id="post-game-cpm" class="post-game-metric" aria-live="polite">
           <div class="post-game-metric__values">
-            <span id="post-game-cpm-value" class="post-game-metric__value">0</span>
-            <span class="post-game-metric__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" role="img" focusable="false">
-                <path d="M13 2 4 14h6v8l10-12h-6z" />
-              </svg>
+            <span class="post-game-metric__logo" aria-hidden="true">
+              <img id="post-game-mode-logo" src="" alt="Logo do modo atual" />
             </span>
+            <span id="post-game-cpm-value" class="post-game-metric__value">0</span>
           </div>
         </div>
         <dl class="post-game-stats" aria-live="polite"></dl>
         <div class="game-overlay__actions">
           <button id="post-game-replay" class="game-overlay__primary" type="button">Jogar novamente</button>
+          <button id="post-game-menu" class="game-overlay__secondary" type="button">Voltar ao menu</button>
         </div>
       </div>
     </section>
