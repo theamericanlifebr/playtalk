@@ -646,6 +646,7 @@ let phraseStartTime = 0;
 let phraseSwapAudio = null;
 let pendingMedalSrc = null;
 let medalSwapTimeout = null;
+let modeFiveIntroTimeout = null;
 let lastPhraseSwapAt = 0;
 let roundActive = false;
 let roundAdjustedTimeMs = 0;
@@ -1236,7 +1237,7 @@ function renderLevelInstruction({ mode = selectedMode, level = pastaAtual || get
   if (!instructionEl) {
     return;
   }
-  const instruction = mode === 5 ? getLevelInstruction(mode, level) : '';
+  const instruction = mode === 5 ? '' : getLevelInstruction(mode, level);
   if (instruction) {
     instructionEl.textContent = instruction;
     instructionEl.classList.add('is-visible');
@@ -1244,6 +1245,73 @@ function renderLevelInstruction({ mode = selectedMode, level = pastaAtual || get
     instructionEl.textContent = '';
     instructionEl.classList.remove('is-visible');
   }
+}
+
+function hideModeFiveIntro() {
+  const intro = document.getElementById('mode-five-intro');
+  if (modeFiveIntroTimeout) {
+    clearTimeout(modeFiveIntroTimeout);
+    modeFiveIntroTimeout = null;
+  }
+  const texto = document.getElementById('texto-exibicao');
+  if (texto) {
+    texto.style.opacity = '1';
+  }
+  if (!intro) {
+    return;
+  }
+  intro.classList.remove('is-visible');
+  intro.querySelectorAll('p').forEach(p => {
+    p.textContent = '';
+  });
+}
+
+function showModeFiveIntro({ level, library }) {
+  if (selectedMode !== 5) {
+    hideModeFiveIntro();
+    return Promise.resolve();
+  }
+
+  const intro = document.getElementById('mode-five-intro');
+  const texto = document.getElementById('texto-exibicao');
+  if (texto) {
+    texto.textContent = '';
+    texto.style.opacity = '0';
+  }
+  if (!intro) {
+    return Promise.resolve();
+  }
+
+  const instruction = getLevelInstruction(selectedMode, level) || '';
+  const levelPhrases = library && Array.isArray(library[level]) ? library[level] : [];
+  const firstEntry = ensurePhraseTuple(levelPhrases[0] || ['', '']);
+  const examplePt = getPtFromPhrase(firstEntry) || '';
+  const exampleEn = getPrimaryEnFromPhrase(firstEntry) || '';
+
+  if (!instruction && !examplePt && !exampleEn) {
+    hideModeFiveIntro();
+    return Promise.resolve();
+  }
+
+  const instructionEl = intro.querySelector('.mode-five-intro__instruction');
+  const examplePtEl = intro.querySelector('.mode-five-intro__example--pt');
+  const exampleEnEl = intro.querySelector('.mode-five-intro__example--en');
+
+  if (instructionEl) instructionEl.textContent = instruction;
+  if (examplePtEl) examplePtEl.textContent = examplePt;
+  if (exampleEnEl) exampleEnEl.textContent = exampleEn;
+
+  intro.classList.add('is-visible');
+
+  return new Promise(resolve => {
+    if (modeFiveIntroTimeout) {
+      clearTimeout(modeFiveIntroTimeout);
+    }
+    modeFiveIntroTimeout = setTimeout(() => {
+      hideModeFiveIntro();
+      resolve();
+    }, 5000);
+  });
 }
 
 function renderLevelFinderLevel(options = {}) {
@@ -1865,6 +1933,7 @@ function stopCurrentGame() {
     reconhecimentoAtivo = false;
     try { reconhecimento.stop(); } catch {}
   }
+  hideModeFiveIntro();
 }
 
 function freezeGameForNavigation() {
@@ -2401,8 +2470,12 @@ function beginGame() {
     }
     if (isLevelFinderActive()) {
       if (!restored) {
-        loadLevelFinderNextPhrase();
-        mostrarFrase();
+        const startLevelFinderRound = () => {
+          loadLevelFinderNextPhrase();
+          mostrarFrase();
+        };
+        showModeFiveIntro({ level: pastaAtual, library: getModeLibrary(selectedMode) })
+          .then(startLevelFinderRound);
       } else {
         atualizarBarraProgresso();
       }
@@ -2571,85 +2644,89 @@ function carregarFrases() {
   const library = getModeLibrary(selectedMode);
   const levelToUse = getSelectedPreGameLevel(selectedMode);
   pastaAtual = levelToUse;
-  renderLevelInstruction({ level: levelToUse });
-  const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
-  const anteriores = [];
+  const iniciarRodada = () => {
+    renderLevelInstruction({ level: levelToUse });
+    const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
+    const anteriores = [];
 
-  const totalNecessario = Math.max(1, roundTarget);
-  const erradas = userSettings.retryWrongPhrases
-    ? getWrongPhrasePool(selectedMode, levelToUse)
-    : [];
+    const totalNecessario = Math.max(1, roundTarget);
+    const erradas = userSettings.retryWrongPhrases
+      ? getWrongPhrasePool(selectedMode, levelToUse)
+      : [];
 
-  const allocationPlan = userSettings.retryWrongPhrases
-    ? [
-        { key: 'principais', ratio: 0.85 },
-        { key: 'erradas', ratio: 0.15 }
-      ]
-    : [
-        { key: 'principais', ratio: 1 }
-      ];
+    const allocationPlan = userSettings.retryWrongPhrases
+      ? [
+          { key: 'principais', ratio: 0.85 },
+          { key: 'erradas', ratio: 0.15 }
+        ]
+      : [
+          { key: 'principais', ratio: 1 }
+        ];
 
-  const desiredCounts = allocatePhraseCounts(totalNecessario, allocationPlan);
-  const pools = {
-    principais: embaralhar([...principais]),
-    anteriores: embaralhar([...anteriores]),
-    erradas: embaralhar([...erradas])
-  };
-  const originalPools = {
-    principais: [...principais],
-    anteriores: [...anteriores],
-    erradas: [...erradas]
-  };
+    const desiredCounts = allocatePhraseCounts(totalNecessario, allocationPlan);
+    const pools = {
+      principais: embaralhar([...principais]),
+      anteriores: embaralhar([...anteriores]),
+      erradas: embaralhar([...erradas])
+    };
+    const originalPools = {
+      principais: [...principais],
+      anteriores: [...anteriores],
+      erradas: [...erradas]
+    };
 
-  const selecionadas = [];
+    const selecionadas = [];
 
-  function consumeFromPool(key, amount, { allowReuse = false } = {}) {
-    if (amount <= 0) return 0;
-    const pool = pools[key];
-    let remaining = amount;
-    if (Array.isArray(pool) && pool.length) {
-      const take = pool.splice(0, Math.min(remaining, pool.length));
-      selecionadas.push(...take);
-      remaining -= take.length;
-    }
-    if (allowReuse && remaining > 0) {
-      const source = originalPools[key];
-      if (Array.isArray(source) && source.length) {
-        const refill = embaralhar([...source]).slice(0, Math.min(remaining, source.length));
-        selecionadas.push(...refill);
-        remaining -= refill.length;
+    function consumeFromPool(key, amount, { allowReuse = false } = {}) {
+      if (amount <= 0) return 0;
+      const pool = pools[key];
+      let remaining = amount;
+      if (Array.isArray(pool) && pool.length) {
+        const take = pool.splice(0, Math.min(remaining, pool.length));
+        selecionadas.push(...take);
+        remaining -= take.length;
       }
+      if (allowReuse && remaining > 0) {
+        const source = originalPools[key];
+        if (Array.isArray(source) && source.length) {
+          const refill = embaralhar([...source]).slice(0, Math.min(remaining, source.length));
+          selecionadas.push(...refill);
+          remaining -= refill.length;
+        }
+      }
+      return remaining;
     }
-    return remaining;
-  }
 
-  let leftover = 0;
-  Object.entries(desiredCounts).forEach(([key, amount]) => {
-    leftover += consumeFromPool(key, amount);
-  });
+    let leftover = 0;
+    Object.entries(desiredCounts).forEach(([key, amount]) => {
+      leftover += consumeFromPool(key, amount);
+    });
 
-  const fallbackOrder = ['principais', 'erradas', 'anteriores'];
-  fallbackOrder.forEach(key => {
-    if (leftover > 0) {
-      leftover = consumeFromPool(key, leftover, { allowReuse: true });
+    const fallbackOrder = ['principais', 'erradas', 'anteriores'];
+    fallbackOrder.forEach(key => {
+      if (leftover > 0) {
+        leftover = consumeFromPool(key, leftover, { allowReuse: true });
+      }
+    });
+
+    if (!selecionadas.length && principais.length) {
+      selecionadas.push(...embaralhar([...principais]).slice(0, totalNecessario));
     }
-  });
 
-  if (!selecionadas.length && principais.length) {
-    selecionadas.push(...embaralhar([...principais]).slice(0, totalNecessario));
-  }
+    if (!selecionadas.length) {
+      selecionadas.push(['', '']);
+    }
 
-  if (!selecionadas.length) {
-    selecionadas.push(['', '']);
-  }
+    frasesArr = embaralhar(selecionadas).slice(0, totalNecessario);
+    fraseIndex = 0;
+    points = 0;
+    setTimeout(() => mostrarFrase(), 300);
+    atualizarBarraProgresso();
+    dispatchModeProgressUpdate(selectedMode);
+    persistCurrentRoundState();
+  };
 
-  frasesArr = embaralhar(selecionadas).slice(0, totalNecessario);
-  fraseIndex = 0;
-  points = 0;
-  setTimeout(() => mostrarFrase(), 300);
-  atualizarBarraProgresso();
-  dispatchModeProgressUpdate(selectedMode);
-  persistCurrentRoundState();
+  showModeFiveIntro({ level: levelToUse, library }).then(iniciarRodada);
 }
 
 function triggerMedalResponseSpin() {
