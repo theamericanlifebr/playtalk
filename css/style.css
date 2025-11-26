@@ -3941,7 +3941,7 @@ body.dark-mode .game-overlay__secondary {
 .post-game-metric {
   width: min(520px, 92vw);
   margin: 0 auto;
-  padding: clamp(16px, 4vw, 22px);
+  padding: 0;
   border-radius: 20px;
   background: rgba(240, 246, 255, 0.22);
   backdrop-filter: blur(14px);
@@ -4104,11 +4104,11 @@ body.dark-mode .game-overlay__secondary {
   }
 
   #post-game-screen #post-game-cpm {
-    transform: translate(100px, -170px);
+    transform: translateY(-200px);
   }
 
   #post-game-screen #post-game-balance {
-    transform: translate(100px, -110px);
+    transform: translateY(-200px);
   }
 
   #post-game-screen .game-overlay__actions {
@@ -4123,12 +4123,10 @@ body.dark-mode .game-overlay__secondary {
 
   #post-game-screen #post-game-cpm {
     transform: translateY(-200px);
-    margin-top: 50px;
   }
 
   #post-game-screen #post-game-balance {
-    transform: translateY(-140px);
-    margin-top: 70px;
+    transform: translateY(-200px);
   }
 
   #post-game-screen .game-overlay__actions {
