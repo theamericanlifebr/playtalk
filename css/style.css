@@ -64,6 +64,8 @@ body > *:not(.lens-overlay) {
 #resultado,
 #level-finder-level,
 #level-instruction,
+#mode-five-intro,
+#mode-five-intro p,
 #pt-container label,
 #pt-container textarea {
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
@@ -88,6 +90,7 @@ body > *:not(.lens-overlay) {
 body.page-play #play-container {
   --content-offset: 0px;
   padding-top: 0;
+  margin-top: calc(var(--header-height) + var(--content-offset) + 125px);
 }
 
 .container-screen,
@@ -662,12 +665,17 @@ body.theme-blue .ranking-tag {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1250;
+  z-index: 1400;
   box-shadow: 0 6px 18px rgba(11, 61, 145, 0.28);
   backdrop-filter: blur(8px);
   flex-wrap: wrap;
   box-sizing: border-box;
   transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+body:not(.page-play) .site-header {
+  position: sticky;
+  top: 0;
 }
 
 body.page-play .site-header {
@@ -1796,6 +1804,58 @@ body.theme-blue .auth-message {
 
 .level-instruction.is-visible {
   display: block;
+}
+
+.mode-five-intro {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: min(90vw, 960px);
+  margin: 0 auto;
+  text-align: center;
+  color: #ffffff;
+}
+
+.mode-five-intro.is-visible {
+  display: flex;
+  animation: modeFiveIntroFade 5s ease forwards;
+}
+
+.mode-five-intro__instruction {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.2;
+  color: #ffeaa0;
+  font-weight: 700;
+}
+
+.mode-five-intro__example {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.35;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+@keyframes modeFiveIntroFade {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  82% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 }
 
 #resultado, #acertos {
@@ -3787,6 +3847,12 @@ body.dark-mode .game-overlay__secondary {
   min-height: 42vh;
 }
 
+#post-game-screen .post-game-medal-wrapper,
+#post-game-screen #post-game-cpm,
+#post-game-screen .game-overlay__actions {
+  position: relative;
+}
+
 .post-game-metric {
   width: min(420px, 90vw);
   margin: 0 auto;
@@ -3895,6 +3961,36 @@ body.dark-mode .game-overlay__secondary {
   }
 }
 
+@media (min-width: 769px) {
+  #post-game-screen .post-game-medal-wrapper {
+    transform: translate(100px, -100px);
+  }
+
+  #post-game-screen #post-game-cpm {
+    transform: translate(100px, -170px);
+  }
+
+  #post-game-screen .game-overlay__actions {
+    transform: translateY(-180px);
+  }
+}
+
+@media (max-width: 768px) {
+  #post-game-screen .post-game-medal-wrapper {
+    transform: translateY(-250px);
+  }
+
+  #post-game-screen #post-game-cpm {
+    transform: translateY(-200px);
+    margin-top: 50px;
+  }
+
+  #post-game-screen .game-overlay__actions {
+    transform: translateY(-150px);
+    margin-top: 50px;
+  }
+}
+
 .post-game-stats__item dd {
   margin: 0;
   font-size: clamp(18px, 2.6vw, 22px);
@@ -3945,6 +4041,6 @@ body.dark-mode .post-game-metric__logo {
   }
 
   .page-play #play-container {
-    margin-top: calc(var(--header-height) + var(--content-offset) - 100px);
+    margin-top: calc(var(--header-height) + var(--content-offset) + 25px);
   }
 }

@@ -70,13 +70,24 @@
       <div id="visor" class="container-screen container-screen--visor">
         <!-- conteúdo visual aqui -->
         <div id="score"></div>
-        <img id="mode-icon" alt="Mode Icon" style="display:none" />
-        <div id="level-finder-level" class="level-finder-level"></div>
-        <div id="texto-exibicao"></div>
-      <div id="pt-container">
-        <textarea id="pt" rows="1" readonly></textarea>
-      </div>
-      <div id="level-instruction" class="level-instruction" role="status" aria-live="polite"></div>
+        <div class="visor-stack">
+          <div id="level-instruction" class="level-instruction" role="status" aria-live="polite"></div>
+          <div id="mode-five-intro" class="mode-five-intro" aria-live="polite">
+            <p class="mode-five-intro__instruction"></p>
+            <p class="mode-five-intro__example mode-five-intro__example--pt"></p>
+            <p class="mode-five-intro__example mode-five-intro__example--en"></p>
+          </div>
+          <div class="mode-emblem">
+            <img id="mode-icon" alt="Mode Icon" style="display:none" />
+            <div id="level-finder-level" class="level-finder-level"></div>
+          </div>
+          <div class="phrase-stack">
+            <div id="texto-exibicao"></div>
+            <div id="pt-container">
+              <textarea id="pt" rows="1" readonly></textarea>
+            </div>
+          </div>
+        </div>
       <div id="nivel-mensagem"></div>
       <div id="timer"></div>
       <div id="resultado"></div>
