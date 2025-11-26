@@ -292,6 +292,7 @@
   }
 
   function persistBackground(config) {
+    const previous = readStoredBackground();
     if (!config) {
       localStorage.removeItem(BACKGROUND_STORAGE_KEY);
       return null;
@@ -301,10 +302,17 @@
       localStorage.removeItem(BACKGROUND_STORAGE_KEY);
       return null;
     }
+    localStorage.removeItem(BACKGROUND_STORAGE_KEY);
     try {
       localStorage.setItem(BACKGROUND_STORAGE_KEY, JSON.stringify(normalized));
     } catch (error) {
       console.warn('Não foi possível salvar o plano de fundo localmente.', error);
+      if (previous) {
+        try {
+          localStorage.setItem(BACKGROUND_STORAGE_KEY, JSON.stringify(previous));
+        } catch {}
+      }
+      return null;
     }
     return normalized;
   }
@@ -407,12 +415,19 @@
     const type = (file.type && file.type.startsWith('video')) || getExtension(file.name) === '.mp4'
       ? 'video'
       : 'image';
+    const previousConfig = readStoredBackground();
     const config = {
       src: dataUrl,
       name: file.name || '',
       type
     };
     const stored = persistBackground(config);
+    if (!stored) {
+      if (previousConfig) {
+        applyBackground(previousConfig);
+      }
+      throw new Error('Não foi possível salvar o novo plano de fundo. Mantivemos o último fundo ativo.');
+    }
     applyBackground(stored);
     return stored;
   }
@@ -437,6 +452,12 @@
   };
 
   document.addEventListener('DOMContentLoaded', applyStoredBackground, { once: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      applyStoredBackground();
+    }
+  });
+  window.addEventListener('pageshow', applyStoredBackground);
   window.addEventListener('storage', (event) => {
     if (event.key === BACKGROUND_STORAGE_KEY) {
       applyBackground(normalizeConfig(safeParse(event.newValue, null)));
