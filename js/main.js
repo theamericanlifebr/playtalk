@@ -654,7 +654,6 @@ let levelFinderBaseColor = '#333333';
 let inplayActive = false;
 let pendingModeStart = null;
 let preRoundGeneralCpm = null;
-let postGameBalanceTimer = null;
 let preRoundBalance = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
@@ -871,8 +870,13 @@ function clearRoundState(mode) {
 }
 
 function persistCurrentRoundState() {
+  if (!roundActive) {
+    return;
+  }
   if (!Array.isArray(frasesArr) || !frasesArr.length) {
-    clearRoundState(selectedMode);
+    return;
+  }
+  if (!Number.isFinite(roundTarget) || roundTarget <= 0) {
     return;
   }
   if (roundAttempts >= roundTarget) {
@@ -1759,7 +1763,7 @@ function closePreGameScreen() {
   }
 }
 
-function animateNumberChange(el, fromValue, toValue, duration = 500) {
+function animateNumberChange(el, fromValue, toValue, duration = 1000) {
   if (!el) return Promise.resolve();
   return new Promise((resolve) => {
     const start = Math.round(Number.isFinite(fromValue) ? fromValue : 0);
@@ -1807,27 +1811,41 @@ function openPostGameScreen(summary) {
   const balanceValueEl = document.getElementById('post-game-balance-value');
   const wooshAudio = document.getElementById('somWoosh');
 
-  if (postGameBalanceTimer) {
-    clearTimeout(postGameBalanceTimer);
-    postGameBalanceTimer = null;
-  }
-
   [cpmCard, balanceCard].forEach((card) => {
     if (card) {
-      card.classList.remove('is-visible', 'is-sliding');
+      card.classList.remove('is-visible', 'is-sliding', 'is-hiding');
       card.style.display = 'none';
     }
   });
 
   function revealMetric(card, { sliding = false } = {}) {
     if (!card) return;
-    card.classList.remove('is-visible', 'is-sliding');
+    card.classList.remove('is-visible', 'is-sliding', 'is-hiding');
     card.style.display = 'flex';
     requestAnimationFrame(() => {
       if (sliding) {
         card.classList.add('is-sliding');
       }
       card.classList.add('is-visible');
+    });
+  }
+
+  function hideMetric(card) {
+    if (!card || card.style.display === 'none') return Promise.resolve();
+    return new Promise((resolve) => {
+      card.classList.remove('is-sliding');
+      card.classList.add('is-hiding');
+      const handleEnd = () => {
+        card.removeEventListener('transitionend', handleEnd);
+        card.classList.remove('is-visible', 'is-hiding');
+        card.style.display = 'none';
+        resolve();
+      };
+      card.addEventListener('transitionend', handleEnd);
+      requestAnimationFrame(() => {
+        card.classList.remove('is-visible');
+      });
+      setTimeout(handleEnd, 420);
     });
   }
 
@@ -1855,8 +1873,8 @@ function openPostGameScreen(summary) {
     const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
     const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
     cpmValueEl.textContent = before.toLocaleString('pt-BR');
-    revealMetric(cpmCard);
-    return animateNumberChange(cpmValueEl, before, after, 500);
+    revealMetric(cpmCard, { sliding: true });
+    return animateNumberChange(cpmValueEl, before, after, 1000).then(() => hideMetric(cpmCard));
   }
 
   function renderBalance(beforeValue, afterValue) {
@@ -1865,7 +1883,7 @@ function openPostGameScreen(summary) {
     const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
     balanceValueEl.textContent = before.toLocaleString('pt-BR');
     revealMetric(balanceCard, { sliding: true });
-    return animateNumberChange(balanceValueEl, before, after, 500);
+    return animateNumberChange(balanceValueEl, before, after, 1000);
   }
 
   if (summary.isLevelFinder) {
@@ -1894,12 +1912,10 @@ function openPostGameScreen(summary) {
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
-  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm).then(() => {
-    postGameBalanceTimer = setTimeout(() => {
-      renderBalance(summary.balanceBefore, summary.balanceAfter);
-      postGameBalanceTimer = null;
-    }, 1000);
-  });
+  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm).then(() => renderBalance(
+    summary.balanceBefore,
+    summary.balanceAfter
+  ));
 
   if (wooshAudio) {
     try {
@@ -1920,15 +1936,11 @@ function closePostGameScreen() {
   if (!overlay) {
     return;
   }
-  if (postGameBalanceTimer) {
-    clearTimeout(postGameBalanceTimer);
-    postGameBalanceTimer = null;
-  }
   const cpmCard = document.getElementById('post-game-cpm');
   const balanceCard = document.getElementById('post-game-balance');
   [cpmCard, balanceCard].forEach((card) => {
     if (card) {
-      card.classList.remove('is-visible', 'is-sliding');
+      card.classList.remove('is-visible', 'is-sliding', 'is-hiding');
       card.style.display = 'none';
     }
   });

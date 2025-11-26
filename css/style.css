@@ -3963,6 +3963,11 @@ body.dark-mode .game-overlay__secondary {
   pointer-events: auto;
 }
 
+.post-game-metric.is-hiding {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+
 .post-game-metric.is-sliding {
   animation: postGameSlideIn 420ms ease forwards;
 }
