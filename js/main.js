@@ -646,7 +646,7 @@ let phraseStartTime = 0;
 let phraseSwapAudio = null;
 let pendingMedalSrc = null;
 let medalSwapTimeout = null;
-let modeFiveIntroTimeout = null;
+let modeFiveIntroCleanup = null;
 let lastPhraseSwapAt = 0;
 let roundActive = false;
 let roundAdjustedTimeMs = 0;
@@ -1249,18 +1249,21 @@ function renderLevelInstruction({ mode = selectedMode, level = pastaAtual || get
 
 function hideModeFiveIntro() {
   const intro = document.getElementById('mode-five-intro');
-  if (modeFiveIntroTimeout) {
-    clearTimeout(modeFiveIntroTimeout);
-    modeFiveIntroTimeout = null;
+  if (typeof modeFiveIntroCleanup === 'function') {
+    modeFiveIntroCleanup();
+    modeFiveIntroCleanup = null;
   }
   const texto = document.getElementById('texto-exibicao');
   if (texto) {
     texto.style.opacity = '1';
   }
+  document.body.classList.remove('mode-five-intro-active');
   if (!intro) {
     return;
   }
-  intro.classList.remove('is-visible');
+  intro.classList.remove('is-visible', 'is-leaving');
+  intro.style.display = 'none';
+  intro.dataset.awaitingTap = 'false';
   intro.querySelectorAll('p').forEach(p => {
     p.textContent = '';
   });
@@ -1296,21 +1299,52 @@ function showModeFiveIntro({ level, library }) {
   const instructionEl = intro.querySelector('.mode-five-intro__instruction');
   const examplePtEl = intro.querySelector('.mode-five-intro__example--pt');
   const exampleEnEl = intro.querySelector('.mode-five-intro__example--en');
+  const heroEl = intro.querySelector('.mode-five-intro__hero');
+  const ctaEl = intro.querySelector('.mode-five-intro__cta');
 
   if (instructionEl) instructionEl.textContent = instruction;
   if (examplePtEl) examplePtEl.textContent = examplePt;
   if (exampleEnEl) exampleEnEl.textContent = exampleEn;
+  if (heroEl) heroEl.textContent = exampleEn || examplePt || instruction;
+  if (ctaEl) ctaEl.textContent = 'Toque para começar';
 
-  intro.classList.add('is-visible');
+  intro.style.display = 'flex';
+  intro.classList.remove('is-leaving');
+  requestAnimationFrame(() => {
+    intro.classList.add('is-visible');
+    intro.dataset.awaitingTap = 'true';
+    document.body.classList.add('mode-five-intro-active');
+  });
 
   return new Promise(resolve => {
-    if (modeFiveIntroTimeout) {
-      clearTimeout(modeFiveIntroTimeout);
-    }
-    modeFiveIntroTimeout = setTimeout(() => {
-      hideModeFiveIntro();
-      resolve();
-    }, 5000);
+    const finishIntro = () => {
+      intro.dataset.awaitingTap = 'false';
+      intro.classList.add('is-leaving');
+      document.body.classList.remove('mode-five-intro-active');
+      setTimeout(() => {
+        hideModeFiveIntro();
+        resolve();
+      }, 260);
+    };
+
+    const handleKeyDown = (event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && intro.dataset.awaitingTap === 'true') {
+        event.preventDefault();
+        finishIntro();
+      }
+    };
+
+    intro.addEventListener('click', finishIntro, { once: true });
+    intro.addEventListener('keydown', handleKeyDown);
+    modeFiveIntroCleanup = () => {
+      intro.removeEventListener('keydown', handleKeyDown);
+    };
+
+    setTimeout(() => {
+      if (intro.dataset.awaitingTap === 'true') {
+        intro.focus({ preventScroll: true });
+      }
+    }, 50);
   });
 }
 
@@ -3405,14 +3439,6 @@ async function initGame() {
     postReplayBtn.addEventListener('click', () => {
       closePostGameScreen();
       startGame(selectedMode);
-    });
-  }
-
-  const postMenuBtn = document.getElementById('post-game-menu');
-  if (postMenuBtn) {
-    postMenuBtn.addEventListener('click', () => {
-      closePostGameScreen();
-      goHome();
     });
   }
 
