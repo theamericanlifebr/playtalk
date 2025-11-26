@@ -53,7 +53,7 @@ body {
   opacity: 1;
 }
 
-body > *:not(.lens-overlay) {
+body > *:not(.lens-overlay):not(.site-header) {
   position: relative;
   z-index: 1;
 }
