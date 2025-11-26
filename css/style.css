@@ -3932,10 +3932,17 @@ body.dark-mode .game-overlay__secondary {
 }
 
 #post-game-screen .post-game-medal-wrapper,
-#post-game-screen #post-game-cpm,
-#post-game-screen #post-game-balance,
-#post-game-screen .game-overlay__actions {
+#post-game-screen #post-game-balance {
   position: relative;
+}
+
+.post-game-summary {
+  width: min(640px, 92vw);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(20px, 4vw, 32px);
 }
 
 .post-game-metric {
@@ -4099,39 +4106,16 @@ body.dark-mode .game-overlay__secondary {
 }
 
 @media (min-width: 769px) {
-  #post-game-screen .post-game-medal-wrapper {
-    transform: translate(100px, -100px);
-  }
-
-  #post-game-screen #post-game-cpm {
-    transform: translateY(-200px);
-  }
-
+  #post-game-screen .post-game-medal-wrapper,
   #post-game-screen #post-game-balance {
-    transform: translateY(-200px);
-  }
-
-  #post-game-screen .game-overlay__actions {
-    transform: translateY(-180px);
+    transform: none;
   }
 }
 
 @media (max-width: 768px) {
-  #post-game-screen .post-game-medal-wrapper {
-    transform: translateY(-250px);
-  }
-
-  #post-game-screen #post-game-cpm {
-    transform: translateY(-200px);
-  }
-
+  #post-game-screen .post-game-medal-wrapper,
   #post-game-screen #post-game-balance {
-    transform: translateY(-200px);
-  }
-
-  #post-game-screen .game-overlay__actions {
-    transform: translateY(-150px);
-    margin-top: 50px;
+    transform: none;
   }
 }
 

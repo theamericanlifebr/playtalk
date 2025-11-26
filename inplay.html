@@ -122,35 +122,23 @@
       </div>
     </section>
 
-    <section id="post-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
+    <section id="post-game-screen" class="game-overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
         <h2 id="post-game-title" class="game-overlay__title game-overlay__title--hidden">Resumo da rodada</h2>
-        <div class="post-game-medal-wrapper">
-          <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
-          <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label sr-only"></p>
-        </div>
-        <p id="post-game-level-status" class="game-overlay__subtitle"></p>
-        <div id="post-game-cpm" class="post-game-metric" aria-live="polite">
-          <div class="post-game-metric__values">
-            <span class="post-game-metric__icon post-game-metric__icon--lightning" aria-hidden="true">
-              <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M13 2 3 14h7v8l11-14h-7z"/></svg>
-            </span>
-            <span id="post-game-cpm-value" class="post-game-metric__value">0</span>
+        <div class="post-game-summary">
+          <div class="post-game-medal-wrapper">
+            <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
+            <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label sr-only"></p>
           </div>
-          <p class="post-game-metric__caption">Resultado da rodada</p>
-        </div>
-        <div id="post-game-balance" class="post-game-metric" aria-live="polite">
-          <div class="post-game-metric__values">
-            <span class="post-game-metric__icon post-game-metric__icon--coin" aria-hidden="true">
-              <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3C7.029 3 3 5.239 3 8.5v7C3 18.761 7.029 21 12 21s9-2.239 9-5.5v-7C21 5.239 16.971 3 12 3Zm0 2c3.86 0 7 1.57 7 3.5S15.86 12 12 12s-7-1.57-7-3.5S8.14 5 12 5Zm7 6.09V15.5c0 1.93-3.14 3.5-7 3.5s-7-1.57-7-3.5v-4.41C6.5 12.3 9.12 13 12 13s5.5-.7 7-1.91ZM11 7v2H9v2h2v2h2v-2h2V9h-2V7Z"/></svg>
-            </span>
-            <span id="post-game-balance-value" class="post-game-metric__value">0</span>
+          <div id="post-game-balance" class="post-game-metric" aria-live="polite">
+            <div class="post-game-metric__values">
+              <span class="post-game-metric__icon post-game-metric__icon--coin" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3C7.029 3 3 5.239 3 8.5v7C3 18.761 7.029 21 12 21s9-2.239 9-5.5v-7C21 5.239 16.971 3 12 3Zm0 2c3.86 0 7 1.57 7 3.5S15.86 12 12 12s-7-1.57-7-3.5S8.14 5 12 5Zm7 6.09V15.5c0 1.93-3.14 3.5-7 3.5s-7-1.57-7-3.5v-4.41C6.5 12.3 9.12 13 12 13s5.5-.7 7-1.91ZM11 7v2H9v2h2v2h2v-2h2V9h-2V7Z"/></svg>
+              </span>
+              <span id="post-game-balance-value" class="post-game-metric__value">0</span>
+            </div>
+            <p class="post-game-metric__caption">Saldo em pontos</p>
           </div>
-          <p class="post-game-metric__caption">Saldo em pontos</p>
-        </div>
-        <dl class="post-game-stats" aria-live="polite"></dl>
-        <div class="game-overlay__actions">
-          <button id="post-game-replay" class="game-overlay__primary" type="button">Jogar novamente</button>
         </div>
       </div>
     </section>

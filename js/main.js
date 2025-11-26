@@ -1803,78 +1803,13 @@ function openPostGameScreen(summary) {
   }
   const medalEl = document.getElementById('post-game-medal');
   const medalLabelEl = document.getElementById('post-game-medal-label');
-  const statusEl = document.getElementById('post-game-level-status');
-  const statsContainer = overlay.querySelector('.post-game-stats');
-  const cpmCard = document.getElementById('post-game-cpm');
-  const cpmValueEl = document.getElementById('post-game-cpm-value');
   const balanceCard = document.getElementById('post-game-balance');
   const balanceValueEl = document.getElementById('post-game-balance-value');
   const wooshAudio = document.getElementById('somWoosh');
 
-  [cpmCard, balanceCard].forEach((card) => {
-    if (card) {
-      card.classList.remove('is-visible', 'is-sliding', 'is-hiding');
-      card.style.display = 'none';
-    }
-  });
-
-  function revealMetric(card, { sliding = false } = {}) {
-    if (!card) return;
-    card.classList.remove('is-visible', 'is-sliding', 'is-hiding');
-    card.style.display = 'flex';
-    requestAnimationFrame(() => {
-      if (sliding) {
-        card.classList.add('is-sliding');
-      }
-      card.classList.add('is-visible');
-    });
-  }
-
-  function hideMetric(card) {
-    if (!card || card.style.display === 'none') return Promise.resolve();
-    return new Promise((resolve) => {
-      card.classList.remove('is-sliding');
-      card.classList.add('is-hiding');
-      const handleEnd = () => {
-        card.removeEventListener('transitionend', handleEnd);
-        card.classList.remove('is-visible', 'is-hiding');
-        card.style.display = 'none';
-        resolve();
-      };
-      card.addEventListener('transitionend', handleEnd);
-      requestAnimationFrame(() => {
-        card.classList.remove('is-visible');
-      });
-      setTimeout(handleEnd, 420);
-    });
-  }
-
-  function renderStats(items = []) {
-    if (!statsContainer) return;
-    statsContainer.innerHTML = '';
-    const hasItems = Array.isArray(items) && items.length > 0;
-    statsContainer.classList.toggle('is-visible', hasItems);
-    if (!hasItems) return;
-    items.forEach((item) => {
-      const row = document.createElement('div');
-      row.className = 'post-game-stats__item';
-      const label = document.createElement('dt');
-      label.textContent = item.label;
-      const value = document.createElement('dd');
-      value.textContent = item.value;
-      row.appendChild(label);
-      row.appendChild(value);
-      statsContainer.appendChild(row);
-    });
-  }
-
-  function renderCpm(beforeValue, afterValue) {
-    if (!cpmCard || !cpmValueEl) return Promise.resolve();
-    const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
-    const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
-    cpmValueEl.textContent = before.toLocaleString('pt-BR');
-    revealMetric(cpmCard, { sliding: true });
-    return animateNumberChange(cpmValueEl, before, after, 1000).then(() => hideMetric(cpmCard));
+  if (balanceCard) {
+    balanceCard.classList.remove('is-visible', 'is-sliding', 'is-hiding');
+    balanceCard.style.display = 'none';
   }
 
   function renderBalance(beforeValue, afterValue) {
@@ -1882,15 +1817,17 @@ function openPostGameScreen(summary) {
     const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
     const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
     balanceValueEl.textContent = before.toLocaleString('pt-BR');
-    revealMetric(balanceCard, { sliding: true });
+    balanceCard.classList.remove('is-visible', 'is-sliding', 'is-hiding');
+    balanceCard.style.display = 'flex';
+    requestAnimationFrame(() => {
+      balanceCard.classList.add('is-visible');
+    });
     return animateNumberChange(balanceValueEl, before, after, 1000);
   }
 
   if (summary.isLevelFinder) {
     if (medalEl) medalEl.style.display = 'none';
     if (medalLabelEl) medalLabelEl.textContent = '';
-    if (statusEl) statusEl.textContent = summary.statusText || '';
-    renderStats(summary.customStats);
   } else {
     if (medalEl) {
       medalEl.style.display = 'block';
@@ -1904,18 +1841,11 @@ function openPostGameScreen(summary) {
       const label = summary.medal?.label || summary.medalKey || MEDAL_LABEL_TO_KEY[summary.medal?.label] || '';
       medalLabelEl.textContent = label ? String(label).toLowerCase() : '';
     }
-    if (statusEl) {
-      statusEl.textContent = '';
-    }
-    renderStats([]);
   }
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
-  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm).then(() => renderBalance(
-    summary.balanceBefore,
-    summary.balanceAfter
-  ));
+  renderBalance(summary.balanceBefore, summary.balanceAfter);
 
   if (wooshAudio) {
     try {
@@ -1936,14 +1866,11 @@ function closePostGameScreen() {
   if (!overlay) {
     return;
   }
-  const cpmCard = document.getElementById('post-game-cpm');
   const balanceCard = document.getElementById('post-game-balance');
-  [cpmCard, balanceCard].forEach((card) => {
-    if (card) {
-      card.classList.remove('is-visible', 'is-sliding', 'is-hiding');
-      card.style.display = 'none';
-    }
-  });
+  if (balanceCard) {
+    balanceCard.classList.remove('is-visible', 'is-sliding', 'is-hiding');
+    balanceCard.style.display = 'none';
+  }
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
   if (window.playtalkLens && typeof window.playtalkLens.hideLens === 'function') {
@@ -3518,14 +3445,6 @@ async function initGame() {
       roundTarget = LEVEL_FINDER_ROUND_TARGET;
       setRoundSelection(mode, roundTarget);
       beginGame();
-    });
-  }
-
-  const postReplayBtn = document.getElementById('post-game-replay');
-  if (postReplayBtn) {
-    postReplayBtn.addEventListener('click', () => {
-      closePostGameScreen();
-      startGame(selectedMode);
     });
   }
 
