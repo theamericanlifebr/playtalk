@@ -654,7 +654,8 @@ let levelFinderBaseColor = '#333333';
 let inplayActive = false;
 let pendingModeStart = null;
 let preRoundGeneralCpm = null;
-let postGameCpmTimer = null;
+let postGameBalanceTimer = null;
+let preRoundBalance = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
 let levelFinderTimer = null;
@@ -1317,15 +1318,23 @@ function showModeFiveIntro({ level, library }) {
   });
 
   return new Promise(resolve => {
-    const finishIntro = () => {
+    function finishIntro() {
       intro.dataset.awaitingTap = 'false';
       intro.classList.add('is-leaving');
       document.body.classList.remove('mode-five-intro-active');
+      document.removeEventListener('pointerdown', handleGlobalPointer);
+      intro.removeEventListener('click', finishIntro);
       setTimeout(() => {
         hideModeFiveIntro();
         resolve();
       }, 260);
-    };
+    }
+
+    function handleGlobalPointer() {
+      if (intro.dataset.awaitingTap === 'true') {
+        finishIntro();
+      }
+    }
 
     const handleKeyDown = (event) => {
       if ((event.key === 'Enter' || event.key === ' ') && intro.dataset.awaitingTap === 'true') {
@@ -1335,9 +1344,11 @@ function showModeFiveIntro({ level, library }) {
     };
 
     intro.addEventListener('click', finishIntro, { once: true });
+    document.addEventListener('pointerdown', handleGlobalPointer);
     intro.addEventListener('keydown', handleKeyDown);
     modeFiveIntroCleanup = () => {
       intro.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('pointerdown', handleGlobalPointer);
     };
 
     setTimeout(() => {
@@ -1748,30 +1759,37 @@ function closePreGameScreen() {
   }
 }
 
-function animateNumberChange(el, fromValue, toValue, duration = 1000) {
-  if (!el) return;
-  const start = Math.round(Number.isFinite(fromValue) ? fromValue : 0);
-  const end = Math.round(Number.isFinite(toValue) ? toValue : start);
-  el.textContent = start.toLocaleString('pt-BR');
-  if (start === end) return;
-  const totalSteps = Math.max(1, Math.abs(end - start));
-  const stepDuration = duration / totalSteps;
-  const direction = end > start ? 1 : -1;
-  let lastUpdate = performance.now();
-  let current = start;
-
-  function step(now) {
-    if (now - lastUpdate >= stepDuration) {
-      current += direction;
-      lastUpdate = now;
-      el.textContent = current.toLocaleString('pt-BR');
+function animateNumberChange(el, fromValue, toValue, duration = 500) {
+  if (!el) return Promise.resolve();
+  return new Promise((resolve) => {
+    const start = Math.round(Number.isFinite(fromValue) ? fromValue : 0);
+    const end = Math.round(Number.isFinite(toValue) ? toValue : start);
+    el.textContent = start.toLocaleString('pt-BR');
+    if (start === end) {
+      resolve();
+      return;
     }
-    if (current !== end) {
-      requestAnimationFrame(step);
-    }
-  }
+    const totalSteps = Math.max(1, Math.abs(end - start));
+    const stepDuration = duration / totalSteps;
+    const direction = end > start ? 1 : -1;
+    let lastUpdate = performance.now();
+    let current = start;
 
-  requestAnimationFrame(step);
+    function step(now) {
+      if (now - lastUpdate >= stepDuration) {
+        current += direction;
+        lastUpdate = now;
+        el.textContent = current.toLocaleString('pt-BR');
+      }
+      if (current !== end) {
+        requestAnimationFrame(step);
+      } else {
+        resolve();
+      }
+    }
+
+    requestAnimationFrame(step);
+  });
 }
 
 function openPostGameScreen(summary) {
@@ -1785,13 +1803,32 @@ function openPostGameScreen(summary) {
   const statsContainer = overlay.querySelector('.post-game-stats');
   const cpmCard = document.getElementById('post-game-cpm');
   const cpmValueEl = document.getElementById('post-game-cpm-value');
-  const cpmLogoEl = document.getElementById('post-game-mode-logo');
+  const balanceCard = document.getElementById('post-game-balance');
+  const balanceValueEl = document.getElementById('post-game-balance-value');
   const wooshAudio = document.getElementById('somWoosh');
 
-  if (cpmLogoEl) {
-    const detail = getModeDetail(selectedMode);
-    cpmLogoEl.src = detail.logo;
-    cpmLogoEl.alt = `Logo do ${detail.title}`;
+  if (postGameBalanceTimer) {
+    clearTimeout(postGameBalanceTimer);
+    postGameBalanceTimer = null;
+  }
+
+  [cpmCard, balanceCard].forEach((card) => {
+    if (card) {
+      card.classList.remove('is-visible', 'is-sliding');
+      card.style.display = 'none';
+    }
+  });
+
+  function revealMetric(card, { sliding = false } = {}) {
+    if (!card) return;
+    card.classList.remove('is-visible', 'is-sliding');
+    card.style.display = 'flex';
+    requestAnimationFrame(() => {
+      if (sliding) {
+        card.classList.add('is-sliding');
+      }
+      card.classList.add('is-visible');
+    });
   }
 
   function renderStats(items = []) {
@@ -1814,17 +1851,21 @@ function openPostGameScreen(summary) {
   }
 
   function renderCpm(beforeValue, afterValue) {
-    if (!cpmCard || !cpmValueEl) return;
-    if (postGameCpmTimer) {
-      clearTimeout(postGameCpmTimer);
-      postGameCpmTimer = null;
-    }
+    if (!cpmCard || !cpmValueEl) return Promise.resolve();
     const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
     const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
     cpmValueEl.textContent = before.toLocaleString('pt-BR');
-    postGameCpmTimer = setTimeout(() => {
-      animateNumberChange(cpmValueEl, before, after, 1000);
-    }, 1000);
+    revealMetric(cpmCard);
+    return animateNumberChange(cpmValueEl, before, after, 500);
+  }
+
+  function renderBalance(beforeValue, afterValue) {
+    if (!balanceCard || !balanceValueEl) return Promise.resolve();
+    const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
+    const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
+    balanceValueEl.textContent = before.toLocaleString('pt-BR');
+    revealMetric(balanceCard, { sliding: true });
+    return animateNumberChange(balanceValueEl, before, after, 500);
   }
 
   if (summary.isLevelFinder) {
@@ -1853,7 +1894,12 @@ function openPostGameScreen(summary) {
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
-  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm);
+  renderCpm(summary.preGeneralCpm, summary.postGeneralCpm).then(() => {
+    postGameBalanceTimer = setTimeout(() => {
+      renderBalance(summary.balanceBefore, summary.balanceAfter);
+      postGameBalanceTimer = null;
+    }, 1000);
+  });
 
   if (wooshAudio) {
     try {
@@ -1874,10 +1920,18 @@ function closePostGameScreen() {
   if (!overlay) {
     return;
   }
-  if (postGameCpmTimer) {
-    clearTimeout(postGameCpmTimer);
-    postGameCpmTimer = null;
+  if (postGameBalanceTimer) {
+    clearTimeout(postGameBalanceTimer);
+    postGameBalanceTimer = null;
   }
+  const cpmCard = document.getElementById('post-game-cpm');
+  const balanceCard = document.getElementById('post-game-balance');
+  [cpmCard, balanceCard].forEach((card) => {
+    if (card) {
+      card.classList.remove('is-visible', 'is-sliding');
+      card.style.display = 'none';
+    }
+  });
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
   if (window.playtalkLens && typeof window.playtalkLens.hideLens === 'function') {
@@ -2423,6 +2477,11 @@ function beginGame() {
   const targetLevel = getSelectedPreGameLevel(selectedMode);
   const generalStatsBefore = calcGeneralStats();
   preRoundGeneralCpm = Math.round((generalStatsBefore.cps || 0) * 60);
+  if (window.playtalkBalance && typeof window.playtalkBalance.getBalance === 'function') {
+    preRoundBalance = window.playtalkBalance.getBalance();
+  } else {
+    preRoundBalance = null;
+  }
   sessionStart = Date.now();
   modeStartTimes[selectedMode] = Date.now();
   consecutiveErrors = 0;
@@ -3226,12 +3285,19 @@ function finishMode() {
 
     const postGeneralCpm = Math.round(calcGeneralStats().cps * 60);
     const cpmBefore = Number.isFinite(preRoundGeneralCpm) ? preRoundGeneralCpm : postGeneralCpm;
+    const balanceApi = window.playtalkBalance;
+    const balanceAfter = balanceApi && typeof balanceApi.getBalance === 'function'
+      ? balanceApi.getBalance()
+      : null;
+    const balanceBefore = Number.isFinite(preRoundBalance) ? preRoundBalance : balanceAfter;
 
     openPostGameScreen({
       isLevelFinder: true,
       statusText: 'Resumo do LevelFinder',
       preGeneralCpm: cpmBefore,
       postGeneralCpm,
+      balanceBefore,
+      balanceAfter,
       customStats: [
         { label: 'Nível máximo', value: maxLevel.toFixed(0) },
         { label: 'Média dos últimos 20 níveis ÷ 10', value: recentAverage.toFixed(1) },
@@ -3242,6 +3308,7 @@ function finishMode() {
       ]
     });
     preRoundGeneralCpm = null;
+    preRoundBalance = null;
     return;
   }
 
@@ -3276,6 +3343,11 @@ function finishMode() {
 
   const postGeneralCpm = Math.round(calcGeneralStats().cps * 60);
   const cpmBefore = Number.isFinite(preRoundGeneralCpm) ? preRoundGeneralCpm : postGeneralCpm;
+  const balanceApi = window.playtalkBalance;
+  const balanceAfter = balanceApi && typeof balanceApi.getBalance === 'function'
+    ? balanceApi.getBalance()
+    : null;
+  const balanceBefore = Number.isFinite(preRoundBalance) ? preRoundBalance : balanceAfter;
 
   openPostGameScreen({
     accuracy,
@@ -3285,9 +3357,12 @@ function finishMode() {
     previousLevel,
     newLevel: nextLevel,
     preGeneralCpm: cpmBefore,
-    postGeneralCpm
+    postGeneralCpm,
+    balanceBefore,
+    balanceAfter
   });
   preRoundGeneralCpm = null;
+  preRoundBalance = null;
 }
 
 function nextMode() {
