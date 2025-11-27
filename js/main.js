@@ -557,6 +557,18 @@ let speechPauseToken = 0;
 const isMobileViewport = typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches;
 const recognitionSilenceMs = isMobileViewport ? 6000 : 800;
 
+function bounceMobileMicrophone() {
+  if (!isMobileViewport || !reconhecimento || microphonePaused) {
+    return;
+  }
+  try { reconhecimento.stop(); } catch (err) {}
+  setTimeout(() => {
+    if (reconhecimento && reconhecimentoAtivo && !microphonePaused) {
+      try { reconhecimento.start(); } catch (err) {}
+    }
+  }, 150);
+}
+
 const SpeechRecognizerClass = window.KitSpeechRecognizer || window.OpenAISpeechRecognizer;
 if (SpeechRecognizerClass) {
   reconhecimento = new SpeechRecognizerClass({
@@ -601,6 +613,7 @@ if (SpeechRecognizerClass) {
       } else {
         document.getElementById("pt").value = transcript;
         verificarResposta();
+        bounceMobileMicrophone();
       }
     }
   };

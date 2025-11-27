@@ -1465,6 +1465,12 @@ body.game-active #visor {
   }
 }
 
+@media (min-width: 1024px) {
+  body.game-active #visor {
+    transform: translateY(-120px);
+  }
+}
+
 #menu {
   display: flex;
   flex-direction: column;
@@ -3724,6 +3730,12 @@ body.theme-blue .fun-actions button {
   gap: clamp(20px, 4vw, 40px);
 }
 
+@media (min-width: 1024px) {
+  #post-game-screen .game-overlay__panel {
+    transform: translateY(-200px);
+  }
+}
+
 .game-overlay__panel > * {
   max-width: min(880px, 100%);
 }
@@ -4227,7 +4239,4 @@ body.dark-mode .post-game-metric__caption {
     margin-top: calc(var(--header-height) + var(--content-offset) + 25px);
   }
 
-  #post-game-replay {
-    display: none;
-  }
 }
