@@ -2354,7 +2354,6 @@ body.page-play #play-content.stats-wrapper {
   align-items: stretch;
   gap: 24px;
   width: 100%;
-  transform: translateY(-100px);
 }
 
 .stats-layout {
@@ -2722,7 +2721,7 @@ body.theme-blue .stats-medal-board__empty {
 
   .stats-section {
     width: 100%;
-    padding: 0;
+    padding: 18px 20px;
   }
 
   .stats-medal-board__grid {
@@ -3734,7 +3733,7 @@ body.theme-blue .fun-actions button {
 
 @media (min-width: 1024px) {
   #post-game-screen .game-overlay__panel {
-    transform: translateY(150px);
+    transform: translateY(-200px);
   }
 }
 
@@ -4170,18 +4169,14 @@ body.dark-mode .game-overlay__secondary {
 @media (min-width: 769px) {
   #post-game-screen .post-game-medal-wrapper,
   #post-game-screen #post-game-balance {
-    transform: translateY(150px);
+    transform: none;
   }
 }
 
 @media (max-width: 768px) {
   #post-game-screen .post-game-medal-wrapper,
   #post-game-screen #post-game-balance {
-    transform: translateY(-100px);
-  }
-
-  #post-game-screen #post-game-balance {
-    transform: translateY(-150px);
+    transform: none;
   }
 }
 
