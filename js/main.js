@@ -654,6 +654,7 @@ let levelFinderBaseColor = '#333333';
 let inplayActive = false;
 let pendingModeStart = null;
 let preRoundGeneralCpm = null;
+let preRoundGeneralAccuracy = null;
 let preRoundBalance = null;
 const roundSelections = {};
 const preGameLevelSelection = {};
@@ -1763,36 +1764,46 @@ function closePreGameScreen() {
   }
 }
 
-function animateNumberChange(el, fromValue, toValue, duration = 1000) {
+function animateNumberChange(el, fromValue, toValue, options = {}) {
+  const { duration = 1000, step = 1, formatter } = options || {};
   if (!el) return Promise.resolve();
   return new Promise((resolve) => {
-    const start = Math.round(Number.isFinite(fromValue) ? fromValue : 0);
-    const end = Math.round(Number.isFinite(toValue) ? toValue : start);
-    el.textContent = start.toLocaleString('pt-BR');
-    if (start === end) {
-      resolve();
-      return;
-    }
-    const totalSteps = Math.max(1, Math.abs(end - start));
-    const stepDuration = duration / totalSteps;
-    const direction = end > start ? 1 : -1;
-    let lastUpdate = performance.now();
-    let current = start;
+    const start = Number.isFinite(fromValue) ? fromValue : 0;
+    const end = Number.isFinite(toValue) ? toValue : start;
+    const safeStep = Math.max(step || 1, 0.0001);
+    const totalSteps = Math.max(1, Math.round(Math.abs(end - start) / safeStep));
+    const direction = end >= start ? 1 : -1;
+    const decimals = Math.max(0, String(safeStep).split('.')[1]?.length || 0);
+    const startTime = performance.now();
 
-    function step(now) {
-      if (now - lastUpdate >= stepDuration) {
-        current += direction;
-        lastUpdate = now;
-        el.textContent = current.toLocaleString('pt-BR');
+    const renderValue = (value) => {
+      if (typeof formatter === 'function') {
+        el.textContent = formatter(value);
+      } else {
+        el.textContent = Number(value).toLocaleString('pt-BR', {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals
+        });
       }
-      if (current !== end) {
-        requestAnimationFrame(step);
+    };
+
+    renderValue(start);
+
+    function stepFrame(now) {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const currentStep = Math.round(progress * totalSteps);
+      const rawValue = start + direction * currentStep * safeStep;
+      const clamped = direction === 1 ? Math.min(rawValue, end) : Math.max(rawValue, end);
+      const rounded = Number(clamped.toFixed(decimals));
+      renderValue(rounded);
+      if (progress < 1) {
+        requestAnimationFrame(stepFrame);
       } else {
         resolve();
       }
     }
 
-    requestAnimationFrame(step);
+    requestAnimationFrame(stepFrame);
   });
 }
 
@@ -1803,27 +1814,76 @@ function openPostGameScreen(summary) {
   }
   const medalEl = document.getElementById('post-game-medal');
   const medalLabelEl = document.getElementById('post-game-medal-label');
-  const balanceCard = document.getElementById('post-game-balance');
-  const balanceValueEl = document.getElementById('post-game-balance-value');
+  const metrics = [
+    {
+      container: document.getElementById('post-game-cpm'),
+      valueEl: document.getElementById('post-game-cpm-value'),
+      before: summary.preGeneralCpm,
+      after: summary.postGeneralCpm,
+      step: 1,
+      decimals: 0,
+      formatter: (value) => Math.round(value).toLocaleString('pt-BR')
+    },
+    {
+      container: document.getElementById('post-game-balance'),
+      valueEl: document.getElementById('post-game-balance-value'),
+      before: summary.balanceBefore,
+      after: summary.balanceAfter,
+      step: 1,
+      decimals: 0,
+      formatter: (value) => Math.round(value).toLocaleString('pt-BR')
+    },
+    {
+      container: document.getElementById('post-game-accuracy'),
+      valueEl: document.getElementById('post-game-accuracy-value'),
+      before: summary.preGeneralAccuracy,
+      after: summary.postGeneralAccuracy,
+      step: 0.1,
+      decimals: 1,
+      formatter: (value) => `${Number(value).toFixed(1).replace('.', ',')}%`
+    }
+  ].filter(entry => entry.container && entry.valueEl);
   const wooshAudio = document.getElementById('somWoosh');
 
-  if (balanceCard) {
-    balanceCard.classList.remove('is-visible', 'is-sliding', 'is-hiding');
-    balanceCard.style.display = 'none';
-  }
+  const normalizeValue = (value, fallback, decimals = 0) => {
+    const resolved = Number.isFinite(value) ? value : fallback;
+    if (!Number.isFinite(resolved)) {
+      return 0;
+    }
+    return decimals > 0 ? Number(resolved.toFixed(decimals)) : Math.round(resolved);
+  };
 
-  function renderBalance(beforeValue, afterValue) {
-    if (!balanceCard || !balanceValueEl) return Promise.resolve();
-    const before = Number.isFinite(beforeValue) ? Math.round(beforeValue) : Math.round(afterValue || 0);
-    const after = Number.isFinite(afterValue) ? Math.round(afterValue) : before;
-    balanceValueEl.textContent = before.toLocaleString('pt-BR');
-    balanceCard.classList.remove('is-visible', 'is-sliding', 'is-hiding');
-    balanceCard.style.display = 'flex';
-    requestAnimationFrame(() => {
-      balanceCard.classList.add('is-visible');
+  const resetMetricCards = () => {
+    metrics.forEach((metric) => {
+      metric.container.classList.remove('is-visible', 'is-entering', 'is-exiting', 'is-sliding', 'is-hiding');
+      metric.container.style.display = 'none';
     });
-    return animateNumberChange(balanceValueEl, before, after, 1000);
-  }
+  };
+
+  const playMetricSequence = async () => {
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    for (const metric of metrics) {
+      const start = normalizeValue(metric.before, metric.after, metric.decimals);
+      const end = normalizeValue(metric.after, start, metric.decimals);
+      metric.container.style.display = 'flex';
+      metric.container.classList.add('is-visible', 'is-entering');
+      await wait(500);
+      metric.container.classList.remove('is-entering');
+      await wait(300);
+      await animateNumberChange(metric.valueEl, start, end, {
+        duration: 1000,
+        step: metric.step,
+        formatter: metric.formatter
+      });
+      await wait(500);
+      metric.container.classList.add('is-exiting');
+      await wait(500);
+      metric.container.classList.remove('is-visible', 'is-exiting');
+      metric.container.style.display = 'none';
+    }
+  };
+
+  resetMetricCards();
 
   if (summary.isLevelFinder) {
     if (medalEl) medalEl.style.display = 'none';
@@ -1845,7 +1905,7 @@ function openPostGameScreen(summary) {
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
 
-  renderBalance(summary.balanceBefore, summary.balanceAfter);
+  playMetricSequence();
 
   if (wooshAudio) {
     try {
@@ -1866,11 +1926,11 @@ function closePostGameScreen() {
   if (!overlay) {
     return;
   }
-  const balanceCard = document.getElementById('post-game-balance');
-  if (balanceCard) {
-    balanceCard.classList.remove('is-visible', 'is-sliding', 'is-hiding');
-    balanceCard.style.display = 'none';
-  }
+  const metricCards = Array.from(document.querySelectorAll('#post-game-screen .container-animado-score'));
+  metricCards.forEach((card) => {
+    card.classList.remove('is-visible', 'is-entering', 'is-exiting', 'is-sliding', 'is-hiding');
+    card.style.display = 'none';
+  });
   overlay.classList.add('hidden');
   overlay.setAttribute('aria-hidden', 'true');
   if (window.playtalkLens && typeof window.playtalkLens.hideLens === 'function') {
@@ -2416,6 +2476,9 @@ function beginGame() {
   const targetLevel = getSelectedPreGameLevel(selectedMode);
   const generalStatsBefore = calcGeneralStats();
   preRoundGeneralCpm = Math.round((generalStatsBefore.cps || 0) * 60);
+  preRoundGeneralAccuracy = Number.isFinite(generalStatsBefore.accPerc)
+    ? Number(generalStatsBefore.accPerc.toFixed(1))
+    : null;
   if (window.playtalkBalance && typeof window.playtalkBalance.getBalance === 'function') {
     preRoundBalance = window.playtalkBalance.getBalance();
   } else {
@@ -3222,8 +3285,15 @@ function finishMode() {
       window.playtalkAuth.persistProgress();
     }
 
-    const postGeneralCpm = Math.round(calcGeneralStats().cps * 60);
+    const postGeneralStats = calcGeneralStats();
+    const postGeneralCpm = Math.round(postGeneralStats.cps * 60);
+    const postGeneralAccuracy = Number.isFinite(postGeneralStats.accPerc)
+      ? Number(postGeneralStats.accPerc.toFixed(1))
+      : null;
     const cpmBefore = Number.isFinite(preRoundGeneralCpm) ? preRoundGeneralCpm : postGeneralCpm;
+    const accuracyBefore = Number.isFinite(preRoundGeneralAccuracy)
+      ? preRoundGeneralAccuracy
+      : (Number.isFinite(postGeneralAccuracy) ? postGeneralAccuracy : null);
     const balanceApi = window.playtalkBalance;
     const balanceAfter = balanceApi && typeof balanceApi.getBalance === 'function'
       ? balanceApi.getBalance()
@@ -3235,6 +3305,8 @@ function finishMode() {
       statusText: 'Resumo do LevelFinder',
       preGeneralCpm: cpmBefore,
       postGeneralCpm,
+      preGeneralAccuracy: accuracyBefore,
+      postGeneralAccuracy,
       balanceBefore,
       balanceAfter,
       customStats: [
@@ -3247,6 +3319,7 @@ function finishMode() {
       ]
     });
     preRoundGeneralCpm = null;
+    preRoundGeneralAccuracy = null;
     preRoundBalance = null;
     return;
   }
@@ -3280,7 +3353,11 @@ function finishMode() {
     window.playtalkAuth.persistProgress();
   }
 
-  const postGeneralCpm = Math.round(calcGeneralStats().cps * 60);
+  const postGeneralStats = calcGeneralStats();
+  const postGeneralCpm = Math.round(postGeneralStats.cps * 60);
+  const postGeneralAccuracy = Number.isFinite(postGeneralStats.accPerc)
+    ? Number(postGeneralStats.accPerc.toFixed(1))
+    : null;
   const cpmBefore = Number.isFinite(preRoundGeneralCpm) ? preRoundGeneralCpm : postGeneralCpm;
   const balanceApi = window.playtalkBalance;
   const balanceAfter = balanceApi && typeof balanceApi.getBalance === 'function'
@@ -3297,10 +3374,15 @@ function finishMode() {
     newLevel: nextLevel,
     preGeneralCpm: cpmBefore,
     postGeneralCpm,
+    preGeneralAccuracy: Number.isFinite(preRoundGeneralAccuracy)
+      ? preRoundGeneralAccuracy
+      : postGeneralAccuracy,
+    postGeneralAccuracy,
     balanceBefore,
     balanceAfter
   });
   preRoundGeneralCpm = null;
+  preRoundGeneralAccuracy = null;
   preRoundBalance = null;
 }
 
