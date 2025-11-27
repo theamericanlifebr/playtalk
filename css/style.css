@@ -3735,6 +3735,10 @@ body.theme-blue .fun-actions button {
   #post-game-screen .game-overlay__panel {
     transform: translateY(-200px);
   }
+
+  #post-game-screen .post-game-medal-wrapper {
+    margin-top: 70px;
+  }
 }
 
 .game-overlay__panel > * {
@@ -4046,8 +4050,8 @@ body.dark-mode .game-overlay__secondary {
 }
 
 .post-game-metric__icon--target {
-  background: radial-gradient(circle at 30% 30%, rgba(232, 239, 255, 0.95), rgba(170, 198, 255, 0.95));
-  box-shadow: inset 0 0 0 2px rgba(74, 119, 255, 0.22), 0 18px 32px rgba(71, 116, 255, 0.18);
+  background: transparent;
+  box-shadow: none;
 }
 
 .post-game-metric__icon--target svg {
