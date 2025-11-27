@@ -357,7 +357,7 @@ function initProfilePage(context = {}) {
       return;
     }
     if (!file) {
-      setBackgroundStatus('Escolha um arquivo JPG, PNG ou MP4 para continuar.', { error: true });
+      setBackgroundStatus('Escolha um arquivo JPG, PNG, WEBP ou MP4 para continuar.', { error: true });
       return;
     }
     setBackgroundStatus('Carregando plano de fundo...');

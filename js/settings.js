@@ -253,9 +253,17 @@
     'image/jpeg',
     'image/jpg',
     'image/png',
+    'image/webp',
     'video/mp4'
   ]);
-  const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.mp4'];
+  const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
+  let currentBackground = null;
+
+  function purgeStoredBackground() {
+    try {
+      localStorage.removeItem(BACKGROUND_STORAGE_KEY);
+    } catch {}
+  }
 
   function safeParse(value, fallback = null) {
     if (!value) {
@@ -287,34 +295,22 @@
   }
 
   function readStoredBackground() {
-    const stored = safeParse(localStorage.getItem(BACKGROUND_STORAGE_KEY), null);
-    return normalizeConfig(stored);
+    return normalizeConfig(currentBackground);
   }
 
   function persistBackground(config) {
-    const previous = readStoredBackground();
+    purgeStoredBackground();
     if (!config) {
-      localStorage.removeItem(BACKGROUND_STORAGE_KEY);
+      currentBackground = null;
       return null;
     }
     const normalized = normalizeConfig(config);
     if (!normalized) {
-      localStorage.removeItem(BACKGROUND_STORAGE_KEY);
+      currentBackground = null;
       return null;
     }
-    localStorage.removeItem(BACKGROUND_STORAGE_KEY);
-    try {
-      localStorage.setItem(BACKGROUND_STORAGE_KEY, JSON.stringify(normalized));
-    } catch (error) {
-      console.warn('Não foi possível salvar o plano de fundo localmente.', error);
-      if (previous) {
-        try {
-          localStorage.setItem(BACKGROUND_STORAGE_KEY, JSON.stringify(previous));
-        } catch {}
-      }
-      return null;
-    }
-    return normalized;
+    currentBackground = normalized;
+    return currentBackground;
   }
 
   function ensureBackgroundLayer() {
@@ -406,7 +402,7 @@
       throw new Error('Selecione um arquivo para continuar.');
     }
     if (!isAllowedFile(file)) {
-      throw new Error('Use uma imagem JPG/PNG ou vídeo MP4.');
+      throw new Error('Use uma imagem JPG/PNG/WEBP ou vídeo MP4.');
     }
     if (file.size > MAX_BACKGROUND_SIZE) {
       throw new Error('O limite é de 40 MB. Escolha um arquivo menor.');
@@ -458,11 +454,8 @@
     }
   });
   window.addEventListener('pageshow', applyStoredBackground);
-  window.addEventListener('storage', (event) => {
-    if (event.key === BACKGROUND_STORAGE_KEY) {
-      applyBackground(normalizeConfig(safeParse(event.newValue, null)));
-    }
-  });
+
+  purgeStoredBackground();
 })();
 
 (function() {

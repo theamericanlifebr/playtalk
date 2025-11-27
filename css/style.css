@@ -1943,10 +1943,6 @@ body.mode-five-intro-active .phrase-stack {
   color: #333;
 }
 
-#acertos {
-  display: none;
-}
-
 #timer {
   display: none;
   font-size: 18px;
