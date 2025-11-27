@@ -3724,10 +3724,11 @@ body.theme-blue .fun-actions button {
 
 #post-game-screen .game-overlay__panel {
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
   transform: translateY(0);
-  gap: clamp(20px, 4vw, 40px);
+  gap: clamp(12px, 2vw, 20px);
+  padding-top: 40px;
 }
 
 @media (min-width: 1024px) {
@@ -3936,7 +3937,6 @@ body.dark-mode .game-overlay__secondary {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-height: 42vh;
 }
 
 #post-game-screen .post-game-medal-wrapper,
@@ -3950,7 +3950,7 @@ body.dark-mode .game-overlay__secondary {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(20px, 4vw, 32px);
+  gap: clamp(12px, 2vw, 20px);
 }
 
 .post-game-metrics {
