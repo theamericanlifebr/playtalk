@@ -2279,7 +2279,7 @@ body.page-play #play-content.stats-wrapper {
 .stats-section {
   background: transparent;
   border-radius: 16px;
-  padding: clamp(14px, 3vw, 22px);
+  padding: 0;
   box-shadow: none;
   opacity: 1;
 }
@@ -2538,7 +2538,7 @@ body.theme-blue .stat-metric__detail {
   width: min(520px, 90vw);
   margin: 0 auto;
   background: transparent;
-  padding: 20px 24px;
+  padding: 0;
   border-radius: 22px;
   box-shadow: none;
   display: flex;
