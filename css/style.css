@@ -1562,8 +1562,8 @@ body.dark-mode #clock {
 .mode-logo__icon {
   position: relative;
   z-index: 1;
-  width: 58%;
-  height: 58%;
+  width: 80%;
+  height: 80%;
   color: var(--mode-icon-color, #0b1f44);
   fill: currentColor;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12));
