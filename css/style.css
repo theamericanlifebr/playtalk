@@ -95,6 +95,16 @@ body > *:not(.lens-overlay):not(.site-header) {
   border: none;
 }
 
+#home-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--header-height) - var(--nav-height));
+  padding: calc(var(--header-height) + var(--content-offset)) clamp(16px, 3vw, 32px)
+    calc(var(--nav-height) + clamp(16px, 3vw, 32px));
+  box-sizing: border-box;
+}
+
 body.page-play #play-container {
   --content-offset: 0px;
   padding-top: 0;
@@ -1481,17 +1491,17 @@ body.game-active #visor {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: clamp(24px, 4vw, 40px);
-  width: 100%;
+  width: clamp(320px, 80vw, 1040px);
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  transform: translateY(-40px);
+  transform: none;
 }
 
 #menu > * {
-  width: min(960px, 100%);
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -1526,7 +1536,7 @@ body.dark-mode #clock {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   justify-items: center;
-  width: min(720px, 100%);
+  width: 100%;
 }
 
 .mode-logo {
@@ -3634,9 +3644,14 @@ body.theme-blue .fun-actions button {
     min-width: 48px;
   }
 
+  #home-main {
+    padding: calc(var(--header-height) + 12px) 18px calc(var(--nav-height) + 24px);
+  }
+
   #menu {
-    padding: 12px 16px 116px;
-    gap: 14px;
+    padding: 0;
+    gap: 16px;
+    width: min(94vw, 100%);
   }
 
   #menu-modes {

@@ -9,14 +9,7 @@
   const MODE_ICON_SOURCES = {
     1: { href: 'SVG/vocabulary.svg' },
     2: { href: 'SVG/explore.svg' },
-    3: {
-      markup: `
-        <g transform="translate(6.4 6.4) scale(0.8)">
-          <path d="M32 10c-11.046 0-20 8.954-20 20v10c0 5.523 4.477 10 10 10h4V34h-8v-4c0-7.732 6.268-14 14-14s14 6.268 14 14v4h-8v16h4c5.523 0 10-4.477 10-10V30c0-11.046-8.954-20-20-20Z" opacity="0.9" />
-          <path d="M24 34h4v16h-4a6 6 0 0 1-6-6v-4a6 6 0 0 1 6-6Zm16 0h4a6 6 0 0 1 6 6v4a6 6 0 0 1-6 6h-4z" />
-        </g>
-      `
-    },
+    3: { href: 'SVG/listening.svg' },
     4: { href: 'SVG/reading.svg' },
     5: { href: 'SVG/building.svg' },
     6: { href: 'SVG/fluent.svg' }
