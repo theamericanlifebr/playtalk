@@ -1562,11 +1562,16 @@ body.dark-mode #clock {
 .mode-logo__icon {
   position: relative;
   z-index: 1;
-  width: 80%;
-  height: 80%;
-  color: var(--mode-icon-color, #0b1f44);
+  width: 68%;
+  height: 68%;
+  color: var(--mode-icon-color, #fff);
   fill: currentColor;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12));
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(1)
+    contrast(1.1)
+    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12));
 }
 
 .mode-logo--menu {
