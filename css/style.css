@@ -43,6 +43,17 @@ body {
   position: relative;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url('../SVG/background1.svg') center/300% no-repeat;
+  transform-origin: center;
+  animation: playtalk-background-spin 15s linear infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
 body.has-custom-text-color {
   color: var(--app-text-color, var(--phrase-color, #ffffff));
 }
@@ -1265,8 +1276,8 @@ body.dark-mode #intro-overlay {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
+  background: transparent;
+  backdrop-filter: none;
   z-index: 2000;
   box-sizing: border-box;
 }
@@ -1291,14 +1302,14 @@ body.page-login .container-screen--overlay {
   justify-content: center;
   align-items: center;
   padding: clamp(24px, 4vw, 56px);
-  background: #ffffff;
+  background: transparent;
 }
 
 body.page-login .login-flow {
   position: relative;
   inset: auto;
   height: auto;
-  background: #ffffff;
+  background: transparent;
   backdrop-filter: none;
 }
 
@@ -1306,34 +1317,34 @@ body.page-login .login-flow {
   width: min(340px, 90vw);
   padding: 32px 28px 28px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.24);
+  background: transparent;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  color: #0b3d91;
+  color: #0a6bff;
 }
 
 body.page-login .login-flow__panel {
   width: min(420px, 94vw);
-  background: linear-gradient(140deg, rgba(12, 77, 178, 0.2), rgba(4, 42, 112, 0.2));
-  border: 1px solid rgba(12, 77, 178, 0.4);
-  box-shadow: 0 24px 48px rgba(10, 56, 130, 0.22);
-  color: #0a1f44;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #0a6bff;
   animation: loginFadeIn 520ms ease forwards;
 }
 
 body.dark-mode .login-flow__panel {
-  background: rgba(12, 12, 12, 0.92);
-  color: #fff;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  background: transparent;
+  color: #0a6bff;
+  box-shadow: none;
 }
 
 body.theme-blue .login-flow__panel {
-  background: rgba(3, 18, 46, 0.95);
-  color: #f0f6ff;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  background: transparent;
+  color: #0a6bff;
+  box-shadow: none;
 }
 
 .login-flow__logo {
@@ -1347,6 +1358,7 @@ body.theme-blue .login-flow__panel {
   font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
+  color: #0a6bff;
 }
 
 .login-flow__form {
@@ -1370,30 +1382,31 @@ body.theme-blue .login-flow__panel {
   font-weight: 600;
   font-size: 0.95rem;
   text-align: left;
+  color: #0a6bff;
 }
 
 .login-flow__step input {
   width: 100%;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(11, 61, 145, 0.3);
+  border: 1px solid rgba(10, 107, 255, 0.4);
   font-size: 1rem;
   font-family: inherit;
   background: rgba(255, 255, 255, 0.9);
-  color: inherit;
+  color: #0a6bff;
   box-sizing: border-box;
 }
 
 body.dark-mode .login-flow__step input {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  border-color: rgba(10, 107, 255, 0.4);
+  color: #0a6bff;
 }
 
 body.theme-blue .login-flow__step input {
   background: rgba(240, 246, 255, 0.08);
-  border-color: rgba(240, 246, 255, 0.2);
-  color: #f0f6ff;
+  border-color: rgba(10, 107, 255, 0.4);
+  color: #0a6bff;
 }
 
 .login-flow__submit {
@@ -1403,8 +1416,9 @@ body.theme-blue .login-flow__step input {
   border-radius: 999px;
   font-weight: 700;
   font-size: 1rem;
-  color: #fff;
-  background: linear-gradient(135deg, #0b3d91, #1c68e0);
+  color: #0a6bff;
+  background: transparent;
+  border: 2px solid #0a6bff;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -1412,11 +1426,14 @@ body.theme-blue .login-flow__step input {
 .login-flow__submit:hover,
 .login-flow__submit:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 12px 20px rgba(12, 61, 145, 0.28);
+  box-shadow: none;
 }
 
-body.dark-mode .login-flow__submit {
-  background: linear-gradient(135deg, #0066cc, #249fff);
+body.dark-mode .login-flow__submit,
+body.theme-blue .login-flow__submit {
+  background: transparent;
+  border-color: #0a6bff;
+  color: #0a6bff;
 }
 
 .login-flow__error {
@@ -1424,7 +1441,7 @@ body.dark-mode .login-flow__submit {
   margin: 4px 0 0;
   font-size: 0.85rem;
   text-align: center;
-  color: #c62828;
+  color: #0a6bff;
 }
 
 .login-flow__status {
@@ -1432,23 +1449,23 @@ body.dark-mode .login-flow__submit {
   margin-top: 8px;
   font-size: 0.9rem;
   text-align: center;
-  color: #0f8a5f;
+  color: #0a6bff;
 }
 
 body.dark-mode .login-flow__error {
-  color: #ff8a80;
+  color: #0a6bff;
 }
 
 body.theme-blue .login-flow__error {
-  color: #ffd1d1;
+  color: #0a6bff;
 }
 
 body.dark-mode .login-flow__status {
-  color: #4de1aa;
+  color: #0a6bff;
 }
 
 body.theme-blue .login-flow__status {
-  color: #1ec97f;
+  color: #0a6bff;
 }
 
 body.page-login .login-flow__logo {
@@ -1457,7 +1474,7 @@ body.page-login .login-flow__logo {
 }
 
 body.page-login .login-flow__title {
-  color: #0a1f44;
+  color: #0a6bff;
 }
 
 @keyframes loginFadeIn {
@@ -1469,6 +1486,16 @@ body.page-login .login-flow__title {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes playtalk-background-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -1669,8 +1696,13 @@ body.dark-mode #clock {
 }
 
 .mode-logo--small {
-  width: 117px;
+  width: 60px;
   border-radius: 22px;
+}
+
+.mode-logo--small .mode-logo__icon {
+  width: 45px;
+  height: 45px;
 }
 
 .mode-logo--overlay {
@@ -2262,7 +2294,7 @@ body.page-home #mode-buttons {
   bottom: calc(var(--nav-height) + 210px);
   left: 50%;
   transform: translateX(-50%);
-  width: min(90vw, calc(6 * 117px + 5 * 20px));
+  width: min(90vw, calc(6 * 60px + 5 * 20px));
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
@@ -2318,7 +2350,7 @@ body.game-active #mode-buttons {
 }
 
 body.page-home #mode-buttons .mode-logo {
-  width: 117px;
+  width: 60px;
 }
 
 #play-container {
@@ -2758,7 +2790,10 @@ body.theme-blue .stat-bar-track {
   transform: translateX(24px);
   transition: opacity 320ms ease, transform 320ms ease;
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .stats-numbers-slide.is-active {
@@ -3026,7 +3061,7 @@ body.theme-blue .stats-medal-board__empty {
   }
 
   .stats-medal-board__item {
-    padding: 8px 10px;
+    padding: 0 0;
   }
 
   .stats-block--modes #mode-buttons {
