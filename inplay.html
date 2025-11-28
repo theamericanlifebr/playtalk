@@ -119,18 +119,32 @@
         </div>
       </div>
 
-    <section id="pre-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
+    <section id="pre-game-screen" class="game-overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
-        <div id="pre-game-logo" class="game-overlay__logo mode-logo mode-logo--overlay" data-mode="1" aria-hidden="true"></div>
-        <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
-        <div class="pre-game-level">
-          <div class="pre-game-level__selector">
-            <strong id="pre-game-level" class="pre-game-level__value">Nível 1</strong>
+        <div class="pre-game-hero">
+          <div id="pre-game-logo" class="game-overlay__logo mode-logo mode-logo--overlay" data-mode="1" aria-hidden="true"></div>
+          <div class="pre-game-hero__text">
+            <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
+            <div class="pre-game-level">
+              <div class="pre-game-level__selector">
+                <strong id="pre-game-level" class="pre-game-level__value">Nível 1</strong>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="game-overlay__actions">
-          <button id="pre-game-start" class="game-overlay__primary" type="button">Play</button>
-          <button id="pre-game-level-finder" class="game-overlay__secondary" type="button">Jogar com LevelFinder</button>
+        <div class="game-overlay__actions game-overlay__actions--stacked">
+          <button id="pre-game-start" class="game-overlay__primary game-overlay__primary--play" type="button">
+            <span class="game-overlay__button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="m8 5 12 7-12 7V5Z" /></svg>
+            </span>
+            <span>Play</span>
+          </button>
+          <button id="pre-game-level-finder" class="game-overlay__secondary game-overlay__secondary--muted" type="button">
+            <span class="game-overlay__button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2c.64 0 1.22.4 1.43 1.01l1.21 3.35 3.37 1.19A1.5 1.5 0 0 1 19 9.9l-2.84 2.84.86 3.55a1.5 1.5 0 0 1-2.05 1.73L12 16.8l-3.07 1.22a1.5 1.5 0 0 1-2.05-1.73l.86-3.55L5 9.9a1.5 1.5 0 0 1 .99-2.34l3.37-1.19 1.21-3.35C10.78 2.4 11.36 2 12 2Zm0 6.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" /></svg>
+            </span>
+            <span>Jogar com LevelFinder</span>
+          </button>
         </div>
       </div>
     </section>
