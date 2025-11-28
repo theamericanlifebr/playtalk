@@ -88,13 +88,9 @@ const BOT_PROFILES = [
   { key: 'jimmy', name: 'Jimmy', avatar: 'users/jimmy.png' },
   { key: 'bella', name: 'Bella', avatar: 'users/bella.png' },
   { key: 'charlotte', name: 'Charlotte', avatar: 'users/charlotte.png' },
-  { key: 'willy', name: 'Willy', avatar: 'users/willy.png' },
   { key: 'bit', name: 'Bit', avatar: 'users/bit.png' },
-  { key: 'kim', name: 'Kim', avatar: 'users/kim.png' },
   { key: 'pablo', name: 'Pablo', avatar: 'users/pablo.png' },
   { key: 'tim', name: 'Tim', avatar: 'users/tim.png' },
-  { key: 'theuser', name: 'TheUser', avatar: 'users/theuser.png' },
-  { key: 'luna', name: 'Luna', avatar: DEFAULT_AVATAR_URL },
   { key: 'nova', name: 'Nova', avatar: DEFAULT_AVATAR_URL }
 ];
 
