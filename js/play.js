@@ -312,24 +312,38 @@
     return section;
   }
 
-  function createNumberCard(label, value, detail) {
-    const card = document.createElement('div');
-    card.className = 'stat-metric stat-metric--panel';
-    const labelEl = document.createElement('span');
-    labelEl.className = 'stat-metric__label';
-    labelEl.textContent = label;
+  const METRIC_ICONS = {
+    lightning: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M13 2 3 14h7v8l11-14h-7z"/></svg>',
+    coin: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3C7.029 3 3 5.239 3 8.5v7C3 18.761 7.029 21 12 21s9-2.239 9-5.5v-7C21 5.239 16.971 3 12 3Zm0 2c3.86 0 7 1.57 7 3.5S15.86 12 12 12s-7-1.57-7-3.5S8.14 5 12 5Zm7 6.09V15.5c0 1.93-3.14 3.5-7 3.5s-7-1.57-7-3.5v-4.41C6.5 12.3 9.12 13 12 13s5.5-.7 7-1.91ZM11 7v2H9v2h2v2h2v-2h2V9h-2V7Z"/></svg>',
+    target: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2a1 1 0 0 0-1 1v1.055A7.002 7.002 0 0 0 5.055 11H4a1 1 0 1 0 0 2h1.055A7.002 7.002 0 0 0 11 17.945V19a1 1 0 1 0 2 0v-1.055A7.002 7.002 0 0 0 18.945 13H20a1 1 0 1 0 0-2h-1.055A7.002 7.002 0 0 0 13 4.055V3a1 1 0 0 0-1-1Zm0 4a5 5 0 1 1-5 5 5.006 5.006 0 0 1 5-5Zm0 2a3 3 0 1 0 3 3 3.004 3.004 0 0 0-3-3Zm0 2a1 1 0 1 1-1 1 1.001 1.001 0 0 1 1-1Z"/></svg>'
+  };
+
+  function createNumbersSlide({ value, caption, icon }) {
+    const slide = document.createElement('div');
+    slide.className = 'post-game-metric container-animado-score stats-numbers-slide';
+
+    const values = document.createElement('div');
+    values.className = 'post-game-metric__values';
+
+    const iconEl = document.createElement('span');
+    iconEl.className = `post-game-metric__icon post-game-metric__icon--${icon}`;
+    iconEl.setAttribute('aria-hidden', 'true');
+    iconEl.innerHTML = METRIC_ICONS[icon] || '';
+    values.appendChild(iconEl);
+
     const valueEl = document.createElement('span');
-    valueEl.className = 'stat-metric__value';
+    valueEl.className = 'post-game-metric__value';
     valueEl.textContent = value;
-    card.appendChild(labelEl);
-    card.appendChild(valueEl);
-    if (detail) {
-      const detailEl = document.createElement('span');
-      detailEl.className = 'stat-metric__detail';
-      detailEl.textContent = detail;
-      card.appendChild(detailEl);
-    }
-    return card;
+    values.appendChild(valueEl);
+
+    const captionEl = document.createElement('p');
+    captionEl.className = 'post-game-metric__caption';
+    captionEl.textContent = caption;
+
+    slide.appendChild(values);
+    slide.appendChild(captionEl);
+
+    return slide;
   }
 
   function createNumbersSection(summary) {
@@ -342,12 +356,45 @@
     header.appendChild(title);
     section.appendChild(header);
 
-    const grid = document.createElement('div');
-    grid.className = 'stats-metrics stats-metrics--panel';
-    grid.appendChild(createNumberCard('Velocidade', `${formatCps(summary.cps)} cps`, `${formatInteger(Math.round(summary.cps * 60))} cpm`));
-    grid.appendChild(createNumberCard('Precisão', formatPercent(summary.accuracyPerc)));
-    grid.appendChild(createNumberCard('Melhor sequência', formatInteger(summary.bestStreak || 0), `Atual: ${formatInteger(summary.currentStreak || 0)}`));
-    section.appendChild(grid);
+    const slider = document.createElement('div');
+    slider.className = 'stats-numbers-slider';
+
+    const slidesData = [
+      { value: `${formatInteger(Math.round(summary.cps * 60))} cpm`, caption: 'Caracteres por minuto', icon: 'lightning' },
+      { value: `R$ ${formatBalanceValue()}`, caption: 'Saldo em pontos', icon: 'coin' },
+      { value: formatPercent(summary.accuracyPerc), caption: 'Precisão geral', icon: 'target' }
+    ];
+
+    const slides = slidesData.map((entry, index) => {
+      const slide = createNumbersSlide(entry);
+      if (index === 0) slide.classList.add('is-active');
+      slider.appendChild(slide);
+      return slide;
+    });
+
+    section.appendChild(slider);
+
+    if (slides.length > 1) {
+      let currentIndex = 0;
+      const intervalId = setInterval(() => {
+        if (!section.isConnected) {
+          clearInterval(intervalId);
+          return;
+        }
+
+        const currentSlide = slides[currentIndex];
+        currentIndex = (currentIndex + 1) % slides.length;
+        const nextSlide = slides[currentIndex];
+
+        currentSlide.classList.remove('is-active');
+        currentSlide.classList.add('is-leaving');
+        nextSlide.classList.add('is-active');
+        nextSlide.classList.remove('is-leaving');
+
+        setTimeout(() => currentSlide.classList.remove('is-leaving'), 320);
+      }, 2000);
+    }
+
     return section;
   }
 
