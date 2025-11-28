@@ -288,21 +288,15 @@
     section.appendChild(header);
 
     const counts = normalizeMedals(summary.medals);
-    if (!hasMedals(counts)) {
-      const empty = document.createElement('p');
-      empty.className = 'stats-medal-board__empty';
-      empty.textContent = 'Sem medalhas conquistadas';
-      section.appendChild(empty);
-      return section;
-    }
-
     const list = document.createElement('ul');
     list.className = 'stats-medal-board__grid';
     MEDAL_CONFIG.forEach(({ key, label, icon }) => {
       const count = counts[key];
-      if (!count) return;
       const item = document.createElement('li');
       item.className = 'stats-medal-board__item';
+      if (!count) {
+        item.classList.add('stats-medal-board__item--empty');
+      }
       const image = document.createElement('img');
       image.className = 'stats-medal-board__icon';
       image.src = icon;
