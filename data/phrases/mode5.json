@@ -1,0 +1,315 @@
+{
+  "levels": {
+    "1": {
+      "instruction": "Mude a frase para o negativo",
+      "entries": [
+        "Eu sou#I am not",
+        "Você é#You are not",
+        "Ele é#He is not",
+        "Ela é#She is not",
+        "Isso é#It is not",
+        "Nós somos#We are not",
+        "Eles são#They are not",
+        "Um gato#Not a cat",
+        "Um cão#Not a dog",
+        "Uma cama#Not a bed"
+      ]
+    },
+    "2": {
+      "instruction": "Transforme a frase em pergunta",
+      "entries": [
+        "Eu penso#Do I think?",
+        "Eu sinto#Do I feel?",
+        "Eu sei#Do I know?",
+        "Eu vejo#Do I see?",
+        "Eu gosto#Do I like?",
+        "Eu corro#Do I run?",
+        "Eu ando#Do I walk?",
+        "Eu durmo#Do I sleep?",
+        "Eu rio#Do I laugh?"
+      ]
+    },
+    "3": {
+      "instruction": "Coloque a frase no passado simples",
+      "entries": [
+        "Você pensa#You thought",
+        "Você sente#You felt",
+        "Você sabe#You knew",
+        "Você vê#You saw",
+        "Você gosta#You liked",
+        "Você corre#You ran",
+        "Você anda#You walked",
+        "Você dorme#You slept",
+        "Você dança#You danced"
+      ]
+    },
+    "4": {
+      "instruction": "Adicione 'now' ao final da frase",
+      "entries": [
+        "Você pensa#You think now",
+        "Você sente#You feel now",
+        "Você sabe#You know now",
+        "Você vê#You see now",
+        "Você gosta#You like now",
+        "Você corre#You run now",
+        "Você anda#You walk now",
+        "Você dorme#You sleep now",
+        "Você dança#You dance now"
+      ]
+    },
+    "5": {
+      "instruction": "Adicione o artigo definido 'the' antes dos substantivos",
+      "entries": [
+        "Um gato#The cat",
+        "Um cão#The dog",
+        "Uma cama#The bed",
+        "Um carro#The car",
+        "Uma casa#The house",
+        "Uma árvore#The tree",
+        "Uma mesa#The table",
+        "Uma porta#The door",
+        "Uma janela#The window"
+      ]
+    },
+    "6": {
+      "instruction": "Mude a frase para o futuro com 'will'",
+      "entries": [
+        "Eu penso#I will think",
+        "Eu sinto#I will feel",
+        "Eu sei#I will know",
+        "Eu vejo#I will see",
+        "Eu gosto#I will like",
+        "Eu corro#I will run",
+        "Eu ando#I will walk",
+        "Eu durmo#I will sleep",
+        "Eu rio#I will laugh"
+      ]
+    },
+    "7": {
+      "instruction": "Transforme a frase afirmativa em negativa com 'don't' ou 'doesn't'",
+      "entries": [
+        "Você pensa#You don't think",
+        "Você sente#You don't feel",
+        "Você sabe#You don't know",
+        "Você vê#You don't see",
+        "Você gosta#You don't like",
+        "Ela corre#She doesn't run",
+        "Ele anda#He doesn't walk",
+        "Ela dorme#She doesn't sleep",
+        "Ele dança#He doesn't dance"
+      ]
+    },
+    "8": {
+      "instruction": "Transforme a frase em pergunta com 'Does' ou 'Do'",
+      "entries": [
+        "Ele corre#Does he run?",
+        "Ela anda#Does she walk?",
+        "Ele dorme#Does he sleep?",
+        "Ela dança#Does she dance?",
+        "Você pensa#Do you think?",
+        "Você sente#Do you feel?",
+        "Você sabe#Do you know?",
+        "Você vê#Do you see?",
+        "Você gosta#Do you like?"
+      ]
+    },
+    "9": {
+      "instruction": "Transforme os verbos para a forma -ing",
+      "entries": [
+        "Correr#Running",
+        "Andar#Walking",
+        "Dormir#Sleeping",
+        "Dançar#Dancing",
+        "Pensar#Thinking",
+        "Sentir#Feeling",
+        "Saber#Knowing",
+        "Ver#Seeing",
+        "Gostar#Liking"
+      ]
+    },
+    "10": {
+      "instruction": "Use 'can' para expressar habilidade",
+      "entries": [
+        "Eu corro#I can run",
+        "Você anda#You can walk",
+        "Ele dorme#He can sleep",
+        "Ela dança#She can dance",
+        "Nós pensamos#We can think",
+        "Eles sentem#They can feel",
+        "Ele vê#He can see",
+        "Ela gosta#She can like",
+        "Eu sei#I can know"
+      ]
+    },
+    "11": {
+      "instruction": "Adicione 'a' ou 'an' antes do substantivo",
+      "entries": [
+        "Um gato#A cat",
+        "Um carro#A car",
+        "cUma casa#A house",
+        "Uma maçã#An apple",
+        "Um elefante#An elephant",
+        "Uma ideia#An idea",
+        "Um amigo#A friend",
+        "Uma escola#A school",
+        "Um livro#A book",
+        "Um artista#An artist",
+        "Um estudante#A student",
+        "Uma laranja#An orange"
+      ]
+    },
+    "12": {
+      "instruction": "Complete a frase com 'am', 'is' ou 'are'",
+      "entries": [
+        "Eu feliz#I am happy",
+        "Você cansado#You are tired",
+        "Ele doente#He is sick",
+        "Ela animada#She is excited",
+        "Ele bravo#He is angry",
+        "Ela calma#She is calm",
+        "Nós prontos#We are ready",
+        "Nós ocupados#We are busy",
+        "Eles atrasados#They are late",
+        "Eles felizes#They are happy",
+        "O gato com fome#The cat is hungry",
+        "A casa limpa#The house is clean"
+      ]
+    },
+    "13": {
+      "instruction": "Transforme a frase com 'to be' na forma negativa",
+      "entries": [
+        "Eu feliz#I am not happy",
+        "Você cansado#You are not tired",
+        "Ele doente#He is not sick",
+        "Ela triste#She is not sad",
+        "Ele bravo#He is not angry",
+        "Ela ocupada#She is not busy",
+        "Nós prontos#We are not ready",
+        "Nós com fome#We are not hungry",
+        "Eles atrasados#They are not late",
+        "Eles em casa#They are not at home",
+        "O gato com fome#The cat is not hungry",
+        "A casa suja#The house is not dirty"
+      ]
+    },
+    "14": {
+      "instruction": "Transforme a frase com 'to be' em pergunta",
+      "entries": [
+        "Você feliz#Are you happy?",
+        "Você cansado#Are you tired?",
+        "Ele doente#Is he sick?",
+        "Ela animada#Is she excited?",
+        "Ele em casa#Is he at home?",
+        "Ela na escola#Is she at school?",
+        "Nós prontos#Are we ready?",
+        "Nós atrasados#Are we late?",
+        "Eles ocupados#Are they busy?",
+        "Eles na sala#Are they in the room?",
+        "O gato na cama#Is the cat on the bed?",
+        "A porta fechada#Is the door closed?"
+      ]
+    },
+    "15": {
+      "instruction": "Transforme a frase afirmativa em negativa com 'don't' ou 'doesn't'",
+      "entries": [
+        "Eu trabalho#I don't work",
+        "Eu estudo#I don't study",
+        "Eu gosto de café#I don't like coffee",
+        "Você mora aqui#You don't live here",
+        "Você fala inglês#You don't speak English",
+        "Ele trabalha#He doesn't work",
+        "Ela estuda#She doesn't study",
+        "Ele gosta de futebol#He doesn't like soccer",
+        "Ela mora aqui#She doesn't live here",
+        "Ele fala inglês#He doesn't speak English",
+        "Eles trabalham#They don't work",
+        "Eles estudam#They don't study"
+      ]
+    },
+    "16": {
+      "instruction": "Transforme a frase em pergunta com 'Do' ou 'Does'",
+      "entries": [
+        "Você trabalha#Do you work?",
+        "Você estuda#Do you study?",
+        "Você gosta de café#Do you like coffee?",
+        "Você mora aqui#Do you live here?",
+        "Você fala inglês#Do you speak English?",
+        "Ele trabalha#Does he work?",
+        "Ela estuda#Does she study?",
+        "Ele gosta de futebol#Does he like soccer?",
+        "Ela mora aqui#Does she live here?",
+        "Ele fala inglês#Does he speak English?",
+        "Eles trabalham#Do they work?",
+        "Eles estudam#Do they study?"
+      ]
+    },
+    "17": {
+      "instruction": "Transforme o verbo para a forma -ing",
+      "entries": [
+        "Correr#Running",
+        "Andar#Walking",
+        "Comer#Eating",
+        "Beber#Drinking",
+        "Ler#Reading",
+        "Escrever#Writing",
+        "Estudar#Studying",
+        "Trabalhar#Working",
+        "Nadar#Swimming",
+        "Cantar#Singing",
+        "Dormir#Sleeping",
+        "Jogar#Playing"
+      ]
+    },
+    "18": {
+      "instruction": "Use 'can' para expressar habilidade",
+      "entries": [
+        "Eu nado#I can swim",
+        "Eu canto#I can sing",
+        "Eu corro#I can run",
+        "Eu dirijo#I can drive",
+        "Você nada#You can swim",
+        "Você cozinha#You can cook",
+        "Ele joga futebol#He can play soccer",
+        "Ela fala inglês#She can speak English",
+        "Nós dançamos#We can dance",
+        "Nós ajudamos#We can help",
+        "Eles cozinham#They can cook",
+        "Eles cantam#They can sing"
+      ]
+    },
+    "19": {
+      "instruction": "Transforme o substantivo e o adjetivo em uma frase com 'The ... is ...'",
+      "entries": [
+        "House, big#The house is big",
+        "Girl, smart#The girl is smart",
+        "Boy, tall#The boy is tall",
+        "Car, fast#The car is fast",
+        "Dog, small#The dog is small",
+        "Room, clean#The room is clean",
+        "Movie, boring#The movie is boring",
+        "Book, interesting#The book is interesting",
+        "Teacher, kind#The teacher is kind",
+        "Student, tired#The student is tired",
+        "City, big#The city is big",
+        "Baby, cute#The baby is cute"
+      ]
+    },
+    "20": {
+      "instruction": "Use 'There is' ou 'There are' para dizer que algo existe",
+      "entries": [
+        "Há um livro na mesa#There is a book on the table",
+        "Há uma cadeira na sala#There is a chair in the room",
+        "Há um gato no sofá#There is a cat on the sofa",
+        "Há um carro na garagem#There is a car in the garage",
+        "Há uma criança no parque#There is a child in the park",
+        "Há duas cadeiras na sala#There are two chairs in the room",
+        "Há três livros na mesa#There are three books on the table",
+        "Há muitos alunos na classe#There are many students in the class",
+        "Há algumas pessoas no jardim#There are some people in the garden",
+        "Há quatro janelas no quarto#There are four windows in the bedroom",
+        "Há muitos carros na rua#There are many cars in the street",
+        "Há poucas mesas no restaurante#There are few tables in the restaurant"
+      ]
+    }
+  }
+}

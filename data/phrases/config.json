@@ -1,0 +1,10 @@
+{
+  "modes": {
+    "1": { "file": "data/phrases/mode1.json" },
+    "2": { "file": "data/phrases/mode2.json" },
+    "3": { "file": "data/phrases/mode3.json" },
+    "4": { "file": "data/phrases/mode4.json" },
+    "5": { "file": "data/phrases/mode5.json" },
+    "6": { "file": "data/phrases/mode6.json" }
+  }
+}
