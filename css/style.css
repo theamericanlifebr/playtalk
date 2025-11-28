@@ -2673,15 +2673,15 @@ body.page-play #play-content.stats-wrapper {
   grid-auto-rows: auto;
   justify-items: center;
   align-items: center;
-  gap: clamp(10px, 3vw, 18px);
+  gap: clamp(8px, 2.5vw, 14px);
   width: 100%;
-  max-width: 360px;
+  max-width: 270px;
   margin: 0 auto;
   padding: 0;
 }
 
 .stats-block--modes #mode-buttons .mode-logo {
-  width: min(120px, 100%);
+  width: min(90px, 100%);
   height: auto;
 }
 
@@ -2737,6 +2737,39 @@ body.theme-blue .stat-bar-track {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 18px;
   width: min(520px, 90vw);
+}
+
+.stats-numbers-slider {
+  position: relative;
+  width: min(520px, 100%);
+  margin: 0 auto;
+  min-height: clamp(200px, 32vh, 260px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.stats-numbers-slide {
+  position: absolute;
+  inset: 0;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 320ms ease, transform 320ms ease;
+  display: flex;
+  justify-content: center;
+}
+
+.stats-numbers-slide.is-active {
+  position: relative;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.stats-numbers-slide.is-leaving {
+  opacity: 0;
+  transform: translateX(-24px);
 }
 
 .stat-metric {
@@ -2872,10 +2905,11 @@ body.theme-blue .stats-list__value {
   margin: 0;
   padding: 0;
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-  gap: 20px;
-  justify-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 8px;
+  overflow-x: auto;
 }
 
 .stats-medal-board__item {
@@ -2883,7 +2917,7 @@ body.theme-blue .stats-list__value {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 0;
   border-radius: 18px;
   background: transparent;
   box-shadow: none;
@@ -2996,13 +3030,13 @@ body.theme-blue .stats-medal-board__empty {
   }
 
   .stats-block--modes #mode-buttons {
-    max-width: 320px;
-    gap: 10px;
-    padding: 0 4px;
+    max-width: 270px;
+    gap: 8px;
+    padding: 0 2px;
   }
 
   .stats-block--modes #mode-buttons .mode-logo {
-    width: 104px;
+    width: 90px;
   }
 
   .stats-hub {
@@ -3552,7 +3586,7 @@ body.page-transition-leave [data-page-transition] {
   }
 
   body.page-play .stats-block--modes #mode-buttons .mode-logo {
-    width: min(120px, 100%);
+    width: min(90px, 100%);
   }
 }
 
@@ -3999,12 +4033,12 @@ body.theme-blue .fun-actions button {
   text-align: center;
   transform: translateY(0);
   gap: clamp(12px, 2vw, 20px);
-  padding-top: 0;
+  padding-top: 180px;
 }
 
 @media (min-width: 1024px) {
   #post-game-screen .game-overlay__panel {
-    transform: translateY(-80px);
+    transform: translateY(0);
     gap: 0;
   }
 
@@ -4321,6 +4355,7 @@ body.dark-mode .game-overlay__secondary {
   width: min(520px, 92vw);
   margin: 0 auto;
   padding: 0;
+  border: 0;
   border-radius: 20px;
   background: transparent;
   backdrop-filter: none;
@@ -4333,6 +4368,10 @@ body.dark-mode .game-overlay__secondary {
   transform: translateY(18px);
   transition: opacity 280ms ease, transform 320ms ease;
   pointer-events: none;
+}
+
+.stats-numbers-slide {
+  display: flex;
 }
 
 @media (min-width: 1024px) {
@@ -4395,6 +4434,7 @@ body.dark-mode .game-overlay__secondary {
   justify-content: center;
   align-items: center;
   padding: 12px 16px;
+  border: 0;
   border-radius: 16px;
   background: transparent;
   box-shadow: none;
