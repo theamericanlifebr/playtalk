@@ -54,33 +54,33 @@ const COLOR_STOPS = COLOR_STOP_RATIOS.map(([ratio, color]) => [
 
 const MODE_DETAILS = {
   1: {
-    title: 'Modo 1 — Aquecimento bilingue',
-    shortTitle: 'Aquecimento',
+    title: 'Vocabulary',
+    shortTitle: 'Vocabulary',
     description: 'Escute em inglês, visualize em português e aqueça sua mente traduzindo rapidamente antes de responder.'
   },
   2: {
-    title: 'Modo 2 — Tradução direta',
-    shortTitle: 'Tradução',
+    title: 'Explore',
+    shortTitle: 'Explore',
     description: 'Veja a frase em português e responda em inglês sem hesitar para consolidar vocabulário ativo.'
   },
   3: {
-    title: 'Modo 3 — Listening puro',
+    title: 'Listening',
     shortTitle: 'Listening',
     description: 'Apenas o áudio em inglês e sua resposta. Foque na compreensão auditiva para dominar a estrutura das frases.'
   },
   4: {
-    title: 'Modo 4 — Reading em inglês',
+    title: 'Reading',
     shortTitle: 'Reading',
     description: 'Leia em inglês, pense em inglês. Esse modo solidifica leitura e pronúncia mental em ritmo acelerado.'
   },
   5: {
-    title: 'Modo 5 — Translating',
-    shortTitle: 'Translating',
+    title: 'Building',
+    shortTitle: 'Building',
     description: 'Leia em português e responda em inglês, sem narração, focando em traduções diretas e claras.'
   },
   6: {
-    title: 'Modo 6 — Desafio final',
-    shortTitle: 'Desafio',
+    title: 'Fluent',
+    shortTitle: 'Fluent',
     description: 'Combine leitura, escuta e resposta em inglês em ritmo máximo para provar que você domina o idioma.'
   }
 };
