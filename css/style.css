@@ -47,7 +47,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: url('../SVG/background1.svg') center/300% no-repeat;
+  background: url('../SVG/background1.svg') center/300% 300% no-repeat;
   transform-origin: center;
   animation: playtalk-background-spin 15s linear infinite;
   z-index: -2;
