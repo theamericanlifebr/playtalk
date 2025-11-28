@@ -11,6 +11,7 @@
     const headerEndInput = scope.querySelector('#headerColorEnd');
     const headerGradientToggle = scope.querySelector('#headerGradientEnabled');
     const phraseColorInput = scope.querySelector('#phraseColor');
+    const modeIconColorInput = scope.querySelector('#modeIconColor');
     const lensColorInputs = Array.from(scope.querySelectorAll('.lens-mode-input[data-lens-mode]'));
     const lensOpacityStrongInput = scope.querySelector('#lensOpacityStrong');
     const lensOpacitySoftInput = scope.querySelector('#lensOpacitySoft');
@@ -73,6 +74,7 @@
         headerGradientEnd: headerEndInput ? headerEndInput.value : undefined,
         headerGradientEnabled: headerGradientToggle ? headerGradientToggle.checked : true,
         phraseColor: phraseColorInput ? phraseColorInput.value : '',
+        modeIconColor: modeIconColorInput ? modeIconColorInput.value : undefined,
         lensColor: lensColors['1'] || '',
         lensColors,
         lensOpacityStrong: lensOpacityStrongInput ? lensOpacityStrongInput.value : undefined,
@@ -96,6 +98,9 @@
       }
       if (phraseColorInput && typeof settings.phraseColor === 'string' && settings.phraseColor.trim()) {
         phraseColorInput.value = settings.phraseColor;
+      }
+      if (modeIconColorInput && typeof settings.modeIconColor === 'string' && settings.modeIconColor.trim()) {
+        modeIconColorInput.value = settings.modeIconColor;
       }
       lensColorInputs.forEach(input => {
         const mode = input.dataset.lensMode;
@@ -129,7 +134,7 @@
     load();
     form.addEventListener('submit', save);
 
-    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, lensOpacityStrongInput, lensOpacitySoftInput, ...lensColorInputs].forEach(input => {
+    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, modeIconColorInput, lensOpacityStrongInput, lensOpacitySoftInput, ...lensColorInputs].forEach(input => {
       if (!input) return;
       input.addEventListener('input', () => {
         if (!api) return;

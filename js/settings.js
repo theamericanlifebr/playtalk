@@ -8,6 +8,7 @@
     headerGradientEnd: '#357de0',
     headerGradientEnabled: true,
     phraseColor: '',
+    modeIconColor: '#0b1f44',
     lensColor: '',
     lensColors: {},
     lensOpacityStrong: 0,
@@ -53,6 +54,7 @@
       normalized.headerGradientEnd = normalizeHexColor(value.headerGradientEnd, DEFAULT_SETTINGS.headerGradientEnd);
       normalized.headerGradientEnabled = Boolean(value.headerGradientEnabled);
       normalized.phraseColor = normalizeHexColor(value.phraseColor, '');
+      normalized.modeIconColor = normalizeHexColor(value.modeIconColor, DEFAULT_SETTINGS.modeIconColor);
       normalized.lensColor = normalizeHexColor(value.lensColor, '');
       normalized.lensColors = normalizeLensPalette(value.lensColors);
       normalized.lensOpacityStrong = normalizeOpacity(value.lensOpacityStrong, DEFAULT_SETTINGS.lensOpacityStrong);
@@ -182,11 +184,19 @@
     }
   }
 
-  function applyContextLensColors(lensColors = {}) {
+  function applyModeIconColor(color) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const normalized = normalizeHexColor(color, DEFAULT_SETTINGS.modeIconColor);
+    doc.style.setProperty('--mode-icon-color', normalized);
+  }
+
+  function applyContextLensColors(lensColors = {}, fallbackColor = '') {
     const doc = document.documentElement;
     if (!doc || !lensColors || typeof lensColors !== 'object') return;
+    const fallbackRgb = toRgbString(fallbackColor);
     SUPPORTED_LENS_KEYS.forEach((key) => {
-      const rgb = toRgbString(lensColors[key]);
+      const rgb = toRgbString(lensColors[key]) || fallbackRgb;
       const prop = `--lens-color-${key}-rgb`;
       if (rgb) {
         doc.style.setProperty(prop, rgb);
@@ -209,8 +219,9 @@
     applyTheme(settings.theme);
     applyHeaderGradient(settings);
     applyPhraseColor(settings.phraseColor, settings.theme);
+    applyModeIconColor(settings.modeIconColor);
     applyLensColor(settings.lensColor);
-    applyContextLensColors(settings.lensColors);
+    applyContextLensColors(settings.lensColors, settings.lensColor);
     applyLensOpacity(settings.lensOpacityStrong, settings.lensOpacitySoft);
   }
 
@@ -234,6 +245,7 @@
     applyHeaderGradient,
     applyPhraseColor,
     applyLensColor,
+    applyModeIconColor,
     applyLensOpacity,
     applyVisualPreferences,
     applyTheme,

@@ -11,6 +11,7 @@
   <link rel="icon" type="image/png" href="selos%20modos%20de%20jogo/logoitalk2.png">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/mode-logos.js" defer></script>
   <script src="js/settings.js"></script>
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
@@ -38,30 +39,30 @@
       </div>
     </header>
   <main id="home-main" class="container-screen container-screen--home" data-page-transition>
-    <div id="menu">
+      <div id="menu">
       <div id="menu-modes">
         <button type="button" class="menu-mode" data-mode="1">
-          <img src="selos%20modos%20de%20jogo/modo1.png" alt="Modo Vocabulary" />
+          <span class="mode-logo mode-logo--menu" data-mode="1" aria-hidden="true"></span>
           <span class="menu-mode__label">Vocabulary</span>
         </button>
         <button type="button" class="menu-mode" data-mode="2">
-          <img src="selos%20modos%20de%20jogo/modo2.png" alt="Modo Meaning" />
+          <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
           <span class="menu-mode__label">Meaning</span>
         </button>
         <button type="button" class="menu-mode" data-mode="3">
-          <img src="selos%20modos%20de%20jogo/modo3.png" alt="Modo Listening" />
+          <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
           <span class="menu-mode__label">Listening</span>
         </button>
         <button type="button" class="menu-mode" data-mode="4">
-          <img src="selos%20modos%20de%20jogo/modo4.png" alt="Modo Reading" />
+          <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
           <span class="menu-mode__label">Reading</span>
         </button>
         <button type="button" class="menu-mode" data-mode="5">
-          <img src="selos%20modos%20de%20jogo/modo5.png" alt="Modo Translating" />
+          <span class="mode-logo mode-logo--menu" data-mode="5" aria-hidden="true"></span>
           <span class="menu-mode__label">Translating</span>
         </button>
         <button type="button" class="menu-mode" data-mode="6">
-          <img src="selos%20modos%20de%20jogo/modo6.png" alt="Modo Thinking" />
+          <span class="mode-logo mode-logo--menu" data-mode="6" aria-hidden="true"></span>
           <span class="menu-mode__label">Thinking</span>
         </button>
       </div>
@@ -93,18 +94,30 @@
       <div id="resultado"></div>
       <div id="acertos"></div>
       <div id="mode-buttons">
-        <img src="selos%20modos%20de%20jogo/modo1.png" data-mode="1" class="mode-btn" alt="Modo 1" />
-        <img src="selos%20modos%20de%20jogo/modo2.png" data-mode="2" class="mode-btn" alt="Modo 2" />
-        <img src="selos%20modos%20de%20jogo/modo3.png" data-mode="3" class="mode-btn" alt="Modo 3" />
-        <img src="selos%20modos%20de%20jogo/modo4.png" data-mode="4" class="mode-btn" alt="Modo 4" />
-        <img src="selos%20modos%20de%20jogo/modo5.png" data-mode="5" class="mode-btn" alt="Modo 5" />
-        <img src="selos%20modos%20de%20jogo/modo6.png" data-mode="6" class="mode-btn" alt="Modo 6" />
+        <button type="button" data-mode="1" class="mode-btn" aria-label="Modo 1">
+          <span class="mode-logo mode-logo--small" data-mode="1" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="2" class="mode-btn" aria-label="Modo 2">
+          <span class="mode-logo mode-logo--small" data-mode="2" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="3" class="mode-btn" aria-label="Modo 3">
+          <span class="mode-logo mode-logo--small" data-mode="3" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="4" class="mode-btn" aria-label="Modo 4">
+          <span class="mode-logo mode-logo--small" data-mode="4" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="5" class="mode-btn" aria-label="Modo 5">
+          <span class="mode-logo mode-logo--small" data-mode="5" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="6" class="mode-btn" aria-label="Modo 6">
+          <span class="mode-logo mode-logo--small" data-mode="6" aria-hidden="true"></span>
+        </button>
       </div>
     </div>
 
     <section id="pre-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
       <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
-        <img id="pre-game-logo" class="game-overlay__logo" alt="Logo do modo selecionado">
+        <div id="pre-game-logo" class="game-overlay__logo mode-logo mode-logo--overlay" data-mode="1" aria-hidden="true"></div>
         <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
         <div class="pre-game-level">
           <div class="pre-game-level__selector">

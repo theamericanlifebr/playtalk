@@ -45,7 +45,11 @@ const PROGRESS_SCHEMA = {
       headerGradientEnd: '#357de0',
       headerGradientEnabled: true,
       phraseColor: '',
-      lensColor: ''
+      modeIconColor: '#0b1f44',
+      lensColor: '',
+      lensColors: {},
+      lensOpacityStrong: 0,
+      lensOpacitySoft: 0.5
     }
   },
   generalProgress: { type: 'json', default: { level: 1, xp: 0 } },

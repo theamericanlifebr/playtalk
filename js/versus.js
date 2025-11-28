@@ -94,6 +94,21 @@ document.addEventListener('DOMContentLoaded', () => {
   let versusLog = JSON.parse(localStorage.getItem('versusLog') || '[]');
   let aguardandoVoz = false;
 
+  const modeLogoAPI = window.playtalkModeLogos || null;
+
+  function createModeLogo(mode) {
+    if (modeLogoAPI && typeof modeLogoAPI.createModeLogoElement === 'function') {
+      const logo = modeLogoAPI.createModeLogoElement(mode, 'mode-logo--small');
+      logo.setAttribute('aria-hidden', 'true');
+      return logo;
+    }
+    const fallback = document.createElement('div');
+    fallback.className = 'mode-logo mode-logo--small';
+    fallback.dataset.mode = String(mode);
+    fallback.setAttribute('aria-hidden', 'true');
+    return fallback;
+  }
+
   const fraseEl = document.getElementById('versus-phrase');
   const userImg = document.querySelector('#player-user .player-img');
   const botImg = document.getElementById('bot-avatar');
@@ -133,17 +148,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeList = document.getElementById('mode-list');
     modeList.innerHTML = '';
     for (let i = 1; i <= 6; i++) {
-      const img = document.createElement('img');
-      img.src = `selos%20modos%20de%20jogo/modo${i}.png`;
-      img.alt = `Modo ${i}`;
-      img.dataset.mode = i;
-      img.addEventListener('click', () => {
-        img.style.opacity = '1';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mode-btn';
+      btn.dataset.mode = i;
+      const logo = createModeLogo(i);
+      btn.appendChild(logo);
+      btn.addEventListener('click', () => {
+        btn.style.opacity = '1';
         startVersus(bot, i);
       });
-      modeList.appendChild(img);
+      modeList.appendChild(btn);
     }
     modeList.style.display = 'grid';
+    modeList.style.gap = '12px';
   }
 
   async function startVersus(bot, modo) {
