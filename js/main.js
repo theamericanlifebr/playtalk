@@ -5,7 +5,8 @@ const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   headerGradientStart: '#1a66cc',
   headerGradientEnd: '#357de0',
   headerGradientEnabled: true,
-  phraseColor: ''
+  phraseColor: '',
+  modeIconColor: '#0b1f44'
 };
 
 const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
@@ -55,40 +56,38 @@ const MODE_DETAILS = {
   1: {
     title: 'Modo 1 — Aquecimento bilingue',
     shortTitle: 'Aquecimento',
-    description: 'Escute em inglês, visualize em português e aqueça sua mente traduzindo rapidamente antes de responder.',
-    logo: 'selos%20modos%20de%20jogo/modo1.png'
+    description: 'Escute em inglês, visualize em português e aqueça sua mente traduzindo rapidamente antes de responder.'
   },
   2: {
     title: 'Modo 2 — Tradução direta',
     shortTitle: 'Tradução',
-    description: 'Veja a frase em português e responda em inglês sem hesitar para consolidar vocabulário ativo.',
-    logo: 'selos%20modos%20de%20jogo/modo2.png'
+    description: 'Veja a frase em português e responda em inglês sem hesitar para consolidar vocabulário ativo.'
   },
   3: {
     title: 'Modo 3 — Listening puro',
     shortTitle: 'Listening',
-    description: 'Apenas o áudio em inglês e sua resposta. Foque na compreensão auditiva para dominar a estrutura das frases.',
-    logo: 'selos%20modos%20de%20jogo/modo3.png'
+    description: 'Apenas o áudio em inglês e sua resposta. Foque na compreensão auditiva para dominar a estrutura das frases.'
   },
   4: {
     title: 'Modo 4 — Reading em inglês',
     shortTitle: 'Reading',
-    description: 'Leia em inglês, pense em inglês. Esse modo solidifica leitura e pronúncia mental em ritmo acelerado.',
-    logo: 'selos%20modos%20de%20jogo/modo4.png'
+    description: 'Leia em inglês, pense em inglês. Esse modo solidifica leitura e pronúncia mental em ritmo acelerado.'
   },
   5: {
     title: 'Modo 5 — Translating',
     shortTitle: 'Translating',
-    description: 'Leia em português e responda em inglês, sem narração, focando em traduções diretas e claras.',
-    logo: 'selos%20modos%20de%20jogo/modo5.png'
+    description: 'Leia em português e responda em inglês, sem narração, focando em traduções diretas e claras.'
   },
   6: {
     title: 'Modo 6 — Desafio final',
     shortTitle: 'Desafio',
-    description: 'Combine leitura, escuta e resposta em inglês em ritmo máximo para provar que você domina o idioma.',
-    logo: 'selos%20modos%20de%20jogo/modo6.png'
+    description: 'Combine leitura, escuta e resposta em inglês em ritmo máximo para provar que você domina o idioma.'
   }
 };
+
+const modeLogoAPI = window.playtalkModeLogos || {};
+const renderModeLogo = modeLogoAPI.renderModeLogo || (() => {});
+const renderAllModeLogos = modeLogoAPI.renderAllModeLogos || (() => {});
 
 const MEDAL_RULES = [
   { min: 0, max: 45, image: 'medalhas/bronze.png', label: 'Medalha de Bronze', levelDelta: 0, status: 'Você permanece no nível.' },
@@ -1687,20 +1686,10 @@ if (levelStar) {
 const MEDAL_DOUBLE_TAP_DELAY = 320;
 let lastMedalTapTime = 0;
 
-const modeImages = {
-  1: 'selos%20modos%20de%20jogo/modo1.png',
-  2: 'selos%20modos%20de%20jogo/modo2.png',
-  3: 'selos%20modos%20de%20jogo/modo3.png',
-  4: 'selos%20modos%20de%20jogo/modo4.png',
-  5: 'selos%20modos%20de%20jogo/modo5.png',
-  6: 'selos%20modos%20de%20jogo/modo6.png'
-};
-
 function getModeDetail(mode) {
   return MODE_DETAILS[mode] || {
     title: `Modo ${mode}`,
-    description: 'Prepare-se para a rodada.',
-    logo: modeImages[mode] || modeImages[1]
+    description: 'Prepare-se para a rodada.'
   };
 }
 
@@ -1716,8 +1705,8 @@ function updatePreGameScreen(mode) {
   const simpleTitle = detail.title;
   if (titleEl) titleEl.textContent = simpleTitle;
   if (logoEl) {
-    logoEl.src = detail.logo;
-    logoEl.alt = `Logo do ${simpleTitle}`;
+    logoEl.dataset.mode = String(mode);
+    renderModeLogo(logoEl, mode);
   }
   const savedRound = getStoredRoundState(mode, getSelectedPreGameLevel(mode)) || getStoredRoundState(mode);
   if (savedRound && Number.isFinite(savedRound.level)) {
@@ -2237,16 +2226,16 @@ function updateLevelIcon(options = {}) {
 function unlockMode(mode, duration = 1000) {
   unlockedModes[mode] = true;
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-  document.querySelectorAll(`#menu-modes [data-mode="${mode}"], #mode-buttons [data-mode="${mode}"]`).forEach(img => {
-    img.style.transition = `opacity ${duration}ms linear`;
-    img.style.opacity = '1';
+  document.querySelectorAll(`.menu-mode[data-mode="${mode}"], .mode-btn[data-mode="${mode}"]`).forEach(el => {
+    el.style.transition = `opacity ${duration}ms linear`;
+    el.style.opacity = '1';
   });
 }
 
 function updateModeIcons() {
-  document.querySelectorAll('#mode-buttons [data-mode], #menu-modes [data-mode]').forEach(img => {
-    img.style.opacity = '1';
-    img.style.pointerEvents = 'auto';
+  document.querySelectorAll('.mode-btn[data-mode], .menu-mode[data-mode]').forEach(el => {
+    el.style.opacity = '1';
+    el.style.pointerEvents = 'auto';
   });
   checkForMenuLevelUp();
 }
@@ -2266,21 +2255,16 @@ function performMenuLevelUp() {
   saveGeneralProgress();
   unlockedModes = getAllModesUnlockedState();
   localStorage.setItem('unlockedModes', JSON.stringify(unlockedModes));
-  document.querySelectorAll('#menu-modes [data-mode="6"], #mode-buttons [data-mode="6"]').forEach(el => {
-    const target = el.tagName === 'IMG' ? el : el.querySelector('img');
-    if (target) {
-      target.src = modeImages[6];
-    }
-  });
+  renderAllModeLogos();
   updateLevelIcon();
   updateModeIcons();
   atualizarBarraProgresso();
 }
 
 function enforceStarClick() {
-  const all = document.querySelectorAll('#menu-modes [data-mode], #mode-buttons [data-mode], #top-nav a');
+  const all = document.querySelectorAll('.menu-mode[data-mode], .mode-btn[data-mode], #top-nav a');
   all.forEach(el => { el.style.pointerEvents = 'none'; });
-  const stars = document.querySelectorAll('#menu-modes [data-mode="6"], #mode-buttons [data-mode="6"]');
+  const stars = document.querySelectorAll('.menu-mode[data-mode="6"], .mode-btn[data-mode="6"]');
   if (!stars.length) {
     all.forEach(el => { el.style.pointerEvents = ''; });
     return;
@@ -3493,10 +3477,12 @@ async function initGame() {
   const levelIcon = document.getElementById('nivel-indicador');
   if (levelIcon) levelIcon.style.display = 'block';
 
-  document.querySelectorAll('#mode-buttons [data-mode], #menu-modes [data-mode]').forEach(img => {
-    img.addEventListener('click', () => {
+  renderAllModeLogos();
+
+  document.querySelectorAll('.mode-btn[data-mode], .menu-mode[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
       stopCurrentGame();
-      const modo = parseInt(img.dataset.mode, 10);
+      const modo = parseInt(btn.dataset.mode, 10);
       if (!unlockedModes[modo]) {
         const lock = document.getElementById('somLock');
         if (lock) {
@@ -3561,6 +3547,10 @@ document.addEventListener('playtalk:user-change', () => {
   reloadPersistentProgress();
   selectedMode = 5;
   goHome();
+});
+
+document.addEventListener('playtalk:settings-change', () => {
+  renderAllModeLogos();
 });
 
 let homePageInitialized = false;

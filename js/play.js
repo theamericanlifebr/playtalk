@@ -1,11 +1,11 @@
 (function() {
   const MODE_CONFIG = [
-    { id: 1, title: 'Vocabulary', logline: 'Panorama geral com seu melhor ritmo.', color: '#b22a1c' },
-    { id: 2, title: 'Meaning', logline: 'Interpretações certeiras, no tom dourado.', color: '#c4451c' },
-    { id: 3, title: 'Listening', logline: 'Audição afiada e respostas rápidas.', color: '#d06b1f' },
-    { id: 4, title: 'Reading', logline: 'Leitura premium e foco total.', color: '#a23c28' },
-    { id: 5, title: 'Translating', logline: 'Traduções quentes com clareza.', color: '#8c2f3a' },
-    { id: 6, title: 'Thinking', logline: 'Raciocínio afiado em vermelho vivo.', color: '#7a1f2b' }
+    { id: 1, title: 'Vocabulary', logline: 'Panorama geral com seu melhor ritmo.', color: '#c8e54a' },
+    { id: 2, title: 'Meaning', logline: 'Interpretações certeiras, no tom dourado.', color: '#ffd700' },
+    { id: 3, title: 'Listening', logline: 'Audição afiada e respostas rápidas.', color: '#ff6c3e' },
+    { id: 4, title: 'Reading', logline: 'Leitura premium e foco total.', color: '#2196f3' },
+    { id: 5, title: 'Translating', logline: 'Traduções quentes com clareza.', color: '#1b004b' },
+    { id: 6, title: 'Thinking', logline: 'Raciocínio afiado em ritmo multicolorido.', color: '#c8e54a' }
   ];
 
   const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
@@ -15,6 +15,21 @@
     title: 'Painel geral',
     logline: 'Visão macro com o desempenho combinado dos modos.'
   };
+
+  const modeLogoAPI = window.playtalkModeLogos || null;
+
+  function buildModeLogo(mode, extraClass = '') {
+    if (modeLogoAPI && typeof modeLogoAPI.createModeLogoElement === 'function') {
+      const logo = modeLogoAPI.createModeLogoElement(mode || 1, extraClass);
+      logo.setAttribute('aria-hidden', 'true');
+      return logo;
+    }
+    const fallback = document.createElement('div');
+    fallback.className = ['mode-logo', extraClass].filter(Boolean).join(' ');
+    fallback.dataset.mode = String(mode || 1);
+    fallback.setAttribute('aria-hidden', 'true');
+    return fallback;
+  }
 
   const TOP_CONFIG = {
     streak: {
@@ -349,10 +364,8 @@
     visual.className = 'stats-hero__visual';
     const badge = document.createElement('div');
     badge.className = 'stats-hero__badge';
-    const heroImg = document.createElement('img');
-    heroImg.src = modeMeta.id ? `selos%20modos%20de%20jogo/modo${modeMeta.id}.png` : 'selos%20modos%20de%20jogo/logoitalk2.png';
-    heroImg.alt = modeMeta.title || 'Modo de jogo';
-    badge.appendChild(heroImg);
+    const heroLogo = buildModeLogo(modeMeta.id || 1, 'mode-logo--overlay');
+    badge.appendChild(heroLogo);
     const title = document.createElement('h1');
     title.className = 'stats-title';
     title.textContent = modeMeta.title;
@@ -439,11 +452,8 @@
 
       const rgb = hexToRgb(config.color || '#3fd286');
       button.style.setProperty('--mode-color-rgb', rgb);
-      const image = document.createElement('img');
-      image.className = 'stats-mode-selector__icon';
-      image.src = `selos%20modos%20de%20jogo/modo${config.id}.png`;
-      image.alt = config.title;
-      button.appendChild(image);
+      const logo = buildModeLogo(config.id, 'stats-mode-selector__icon mode-logo--small');
+      button.appendChild(logo);
 
       button.addEventListener('click', () => {
         const modeId = parseInt(button.dataset.mode, 10);
@@ -680,6 +690,10 @@
       applyLens(activeMode);
     } else {
       applyLens('stats');
+    }
+
+    if (modeLogoAPI && typeof modeLogoAPI.renderAllModeLogos === 'function') {
+      modeLogoAPI.renderAllModeLogos(container);
     }
 
     fetch('/api/rankings', { method: 'GET', cache: 'no-store' })

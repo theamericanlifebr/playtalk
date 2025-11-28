@@ -1,11 +1,11 @@
 (function() {
   const MODE_COLORS = {
-    1: '#b22a1c', // vermelho queimado
-    2: '#c4451c', // laranja escuro
-    3: '#d06b1f', // âmbar profundo
-    4: '#a23c28', // terracota
-    5: '#8c2f3a', // vinho quente
-    6: '#7a1f2b'  // rubi fechado
+    1: '#c8e54a', // verde limão
+    2: '#ffd700', // dourado
+    3: '#ff6c3e', // laranja vivo
+    4: '#2196f3', // azul vívido
+    5: '#1b004b', // roxo profundo
+    6: '#c8e54a'  // animação usa todas as cores, lente mantém cor base
   };
 
   const CONTEXT_COLORS = {
