@@ -12,6 +12,7 @@
     const headerGradientToggle = scope.querySelector('#headerGradientEnabled');
     const phraseColorInput = scope.querySelector('#phraseColor');
     const modeIconColorInput = scope.querySelector('#modeIconColor');
+    const modeIconOpacityInput = scope.querySelector('#modeIconOpacity');
     const lensColorInputs = Array.from(scope.querySelectorAll('.lens-mode-input[data-lens-mode]'));
     const lensOpacityStrongInput = scope.querySelector('#lensOpacityStrong');
     const lensOpacitySoftInput = scope.querySelector('#lensOpacitySoft');
@@ -75,6 +76,7 @@
         headerGradientEnabled: headerGradientToggle ? headerGradientToggle.checked : true,
         phraseColor: phraseColorInput ? phraseColorInput.value : '',
         modeIconColor: modeIconColorInput ? modeIconColorInput.value : undefined,
+        modeIconOpacity: modeIconOpacityInput ? modeIconOpacityInput.value : undefined,
         lensColor: lensColors['1'] || '',
         lensColors,
         lensOpacityStrong: lensOpacityStrongInput ? lensOpacityStrongInput.value : undefined,
@@ -101,6 +103,9 @@
       }
       if (modeIconColorInput && typeof settings.modeIconColor === 'string' && settings.modeIconColor.trim()) {
         modeIconColorInput.value = settings.modeIconColor;
+      }
+      if (modeIconOpacityInput && Number.isFinite(Number(settings.modeIconOpacity))) {
+        modeIconOpacityInput.value = settings.modeIconOpacity;
       }
       lensColorInputs.forEach(input => {
         const mode = input.dataset.lensMode;
@@ -134,7 +139,7 @@
     load();
     form.addEventListener('submit', save);
 
-    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, modeIconColorInput, lensOpacityStrongInput, lensOpacitySoftInput, ...lensColorInputs].forEach(input => {
+    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, modeIconColorInput, modeIconOpacityInput, lensOpacityStrongInput, lensOpacitySoftInput, ...lensColorInputs].forEach(input => {
       if (!input) return;
       input.addEventListener('input', () => {
         if (!api) return;

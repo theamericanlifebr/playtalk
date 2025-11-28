@@ -9,6 +9,7 @@
     headerGradientEnabled: true,
     phraseColor: '',
     modeIconColor: '#0b1f44',
+    modeIconOpacity: 1,
     lensColor: '',
     lensColors: {},
     lensOpacityStrong: 0,
@@ -55,6 +56,7 @@
       normalized.headerGradientEnabled = Boolean(value.headerGradientEnabled);
       normalized.phraseColor = normalizeHexColor(value.phraseColor, '');
       normalized.modeIconColor = normalizeHexColor(value.modeIconColor, DEFAULT_SETTINGS.modeIconColor);
+      normalized.modeIconOpacity = normalizeOpacity(value.modeIconOpacity, DEFAULT_SETTINGS.modeIconOpacity);
       normalized.lensColor = normalizeHexColor(value.lensColor, '');
       normalized.lensColors = normalizeLensPalette(value.lensColors);
       normalized.lensOpacityStrong = normalizeOpacity(value.lensOpacityStrong, DEFAULT_SETTINGS.lensOpacityStrong);
@@ -167,10 +169,20 @@
 
   function applyPhraseColor(color, theme) {
     const doc = document.documentElement;
+    const body = document.body;
     if (!doc) return;
     const baseColor = normalizeHexColor(color, '');
     const finalColor = baseColor || getDefaultPhraseColor(theme);
     doc.style.setProperty('--phrase-color', finalColor);
+    if (body) {
+      if (baseColor) {
+        doc.style.setProperty('--app-text-color', finalColor);
+        body.classList.add('has-custom-text-color');
+      } else {
+        doc.style.removeProperty('--app-text-color');
+        body.classList.remove('has-custom-text-color');
+      }
+    }
   }
 
   function applyLensColor(color) {
@@ -189,6 +201,13 @@
     if (!doc) return;
     const normalized = normalizeHexColor(color, DEFAULT_SETTINGS.modeIconColor);
     doc.style.setProperty('--mode-icon-color', normalized);
+  }
+
+  function applyModeIconOpacity(opacity) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const normalized = normalizeOpacity(opacity, DEFAULT_SETTINGS.modeIconOpacity);
+    doc.style.setProperty('--mode-icon-opacity', String(normalized));
   }
 
   function applyContextLensColors(lensColors = {}, fallbackColor = '') {
@@ -220,6 +239,7 @@
     applyHeaderGradient(settings);
     applyPhraseColor(settings.phraseColor, settings.theme);
     applyModeIconColor(settings.modeIconColor);
+    applyModeIconOpacity(settings.modeIconOpacity);
     applyLensColor(settings.lensColor);
     applyContextLensColors(settings.lensColors, settings.lensColor);
     applyLensOpacity(settings.lensOpacityStrong, settings.lensOpacitySoft);
@@ -246,6 +266,7 @@
     applyPhraseColor,
     applyLensColor,
     applyModeIconColor,
+    applyModeIconOpacity,
     applyLensOpacity,
     applyVisualPreferences,
     applyTheme,
