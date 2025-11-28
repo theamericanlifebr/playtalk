@@ -2875,7 +2875,7 @@ body.theme-blue .stats-medal-board__empty {
 
   .stats-section {
     width: 100%;
-    padding: 18px 20px;
+    padding: 0;
   }
 
   .stats-medal-board__grid {
@@ -3855,6 +3855,7 @@ body.theme-blue .fun-actions button {
 
 #pre-game-screen {
   align-items: center;
+  padding: clamp(16px, 3vw, 32px);
 }
 
 .game-overlay__panel {
@@ -3874,8 +3875,13 @@ body.theme-blue .fun-actions button {
 }
 
 #pre-game-screen .game-overlay__panel {
-  justify-content: center;
-  transform: translateY(-200px);
+  width: min(520px, 90vw);
+  height: 80%;
+  max-height: calc(100vh - var(--header-height) - var(--nav-height));
+  padding: clamp(24px, 4vw, 36px);
+  justify-content: space-between;
+  gap: clamp(24px, 4vw, 36px);
+  transform: none;
 }
 
 #post-game-screen .game-overlay__panel {
@@ -3910,6 +3916,21 @@ body.dark-mode .game-overlay__panel {
   width: clamp(200px, 50vw, 300px);
   margin: 0 auto;
   display: block;
+}
+
+.pre-game-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.pre-game-hero__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .game-overlay__title {
@@ -4002,6 +4023,12 @@ body.dark-mode .pre-game-round__option {
   gap: 16px;
 }
 
+.game-overlay__actions--stacked {
+  width: min(420px, 100%);
+  flex-direction: column;
+  align-items: stretch;
+}
+
 #post-game-screen .game-overlay__actions {
   gap: 12px;
   width: min(420px, 90vw);
@@ -4019,6 +4046,10 @@ body.dark-mode .pre-game-round__option {
   font-size: 16px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 #post-game-screen .game-overlay__primary,
@@ -4033,6 +4064,10 @@ body.dark-mode .pre-game-round__option {
   box-shadow: 0 16px 30px rgba(0, 114, 255, 0.25);
 }
 
+.game-overlay__primary--play {
+  width: 100%;
+}
+
 .game-overlay__primary--continue {
   background: linear-gradient(135deg, #ff9600, #ff5e00);
   box-shadow: 0 16px 30px rgba(255, 126, 0, 0.28);
@@ -4045,6 +4080,14 @@ body.dark-mode .pre-game-round__option {
   border: 1px solid rgba(9, 40, 97, 0.2);
 }
 
+.game-overlay__secondary--muted {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  opacity: 0.75;
+  width: 100%;
+}
+
 body.dark-mode .game-overlay__secondary {
   background: rgba(24, 32, 60, 0.8);
   color: #f1f4ff;
@@ -4055,6 +4098,20 @@ body.dark-mode .game-overlay__secondary {
 .game-overlay__secondary:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+.game-overlay__button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.game-overlay__button-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 
 .game-overlay__medal {
