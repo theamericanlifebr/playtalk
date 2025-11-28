@@ -83,21 +83,6 @@ const GENERAL_MODE_KEYS = ['2', '3', '4', '5', '6'];
 const MAX_RANKING_ENTRIES = 30;
 const LEGEND_REQUIREMENTS = { cps: 3.5, accuracy: 80, diamonds: 10 };
 const RECENT_PHRASE_LIMIT = 500;
-const BOT_PROFILES = [
-  { key: 'maya', name: 'Maya', avatar: 'users/maya.png' },
-  { key: 'jimmy', name: 'Jimmy', avatar: 'users/jimmy.png' },
-  { key: 'bella', name: 'Bella', avatar: 'users/bella.png' },
-  { key: 'charlotte', name: 'Charlotte', avatar: 'users/charlotte.png' },
-  { key: 'willy', name: 'Willy', avatar: 'users/willy.png' },
-  { key: 'bit', name: 'Bit', avatar: 'users/bit.png' },
-  { key: 'kim', name: 'Kim', avatar: 'users/kim.png' },
-  { key: 'pablo', name: 'Pablo', avatar: 'users/pablo.png' },
-  { key: 'tim', name: 'Tim', avatar: 'users/tim.png' },
-  { key: 'theuser', name: 'TheUser', avatar: 'users/theuser.png' },
-  { key: 'luna', name: 'Luna', avatar: DEFAULT_AVATAR_URL },
-  { key: 'nova', name: 'Nova', avatar: DEFAULT_AVATAR_URL }
-];
-
 const staticDir = (() => {
   const customDir = process.env.STATIC_DIR;
   if (customDir) {
@@ -397,66 +382,6 @@ function computeRecentCps(stats) {
   return seconds > 0 ? stats.totalChars / seconds : 0;
 }
 
-function seedFromString(value) {
-  return Array.from(String(value)).reduce((acc, char) => acc + char.charCodeAt(0), 0);
-}
-
-function seededRandom(seed) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
-function randomInRange(seed, min, max) {
-  const safeMin = Math.ceil(min);
-  const safeMax = Math.floor(max);
-  return Math.floor(seededRandom(seed) * (safeMax - safeMin + 1)) + safeMin;
-}
-
-function createBotSnapshot(profile, index = 0) {
-  if (!profile || !profile.name) {
-    return null;
-  }
-  const baseSeed = seedFromString(profile.key || profile.name) + index;
-  const totalPhrases = randomInRange(baseSeed, 200, 500);
-  const accuracy = randomInRange(baseSeed + 1, 65, 98);
-  const correctPhrases = Math.min(totalPhrases, Math.max(1, Math.round(totalPhrases * (accuracy / 100))));
-  const avgChars = randomInRange(baseSeed + 2, 14, 26);
-  const correctChars = correctPhrases * avgChars;
-  const secondsPerPhrase = randomInRange(baseSeed + 3, 3, 6);
-  const totalTime = Math.max(1, totalPhrases * secondsPerPhrase * 1000);
-  const cps = correctChars / (totalTime / 1000);
-  const fastCps = cps * 1.05;
-  const diamantes = randomInRange(baseSeed + 4, 5, 40);
-  const points = correctPhrases * randomInRange(baseSeed + 5, 2, 6);
-  const bestStreak = randomInRange(baseSeed + 6, 8, 32);
-  const currentStreak = Math.min(bestStreak, randomInRange(baseSeed + 7, 3, bestStreak));
-  const monthlyPoints = Math.round(points * 0.4);
-  const level = randomInRange(baseSeed + 8, 3, 22);
-  const recentPhraseCount = randomInRange(baseSeed + 9, 12, 48);
-
-  return {
-    key: `bot-${profile.key || profile.name}`,
-    username: profile.name,
-    displayName: profile.name,
-    avatar: profile.avatar || DEFAULT_AVATAR_URL,
-    cps,
-    accuracy,
-    points,
-    diamantes,
-    bestStreak,
-    currentStreak,
-    monthlyPoints,
-    totalPhrases,
-    correctPhrases,
-    totalTime,
-    correctChars,
-    fastCps,
-    recentPhraseCount,
-    level,
-    modes: {}
-  };
-}
-
 function parseAvatar(value) {
   if (typeof value === 'string' && value.trim()) {
     return value.trim();
@@ -499,16 +424,30 @@ function buildPlayerSnapshot(key, entry) {
   const accuracy = totals.totalPhrases > 0
     ? (totals.correctPhrases / totals.totalPhrases) * 100
     : 0;
+  const totalPoints = Math.max(
+    normalizePositiveInteger(data.points),
+    totals.correctPhrases
+  );
+
   const bestStreak = Math.max(
     normalizePositiveInteger(data.bestStreak),
     normalizePositiveInteger(data.currentStreak)
   );
   const fastCps = recentPhraseCount > 0 && recentStats.totalTime > 0 ? recentCps : cps;
+  const monthlyPoints = computeMonthlyPoints(data.monthlyStats);
+  const hasAnyProgress = [
+    totals.totalPhrases,
+    totalPoints,
+    totals.diamantes,
+    bestStreak,
+    data.currentStreak,
+    monthlyPoints,
+    recentPhraseCount
+  ].some(value => normalizePositiveInteger(value) > 0);
 
-  const totalPoints = Math.max(
-    normalizePositiveInteger(data.points),
-    totals.correctPhrases
-  );
+  if (!hasAnyProgress) {
+    return null;
+  }
 
   const level = normalizePositiveInteger(
     data.generalProgress && data.generalProgress.level
@@ -530,7 +469,7 @@ function buildPlayerSnapshot(key, entry) {
     diamantes: totals.diamantes,
     bestStreak,
     currentStreak: normalizePositiveInteger(data.currentStreak),
-    monthlyPoints: computeMonthlyPoints(data.monthlyStats),
+    monthlyPoints,
     totalPhrases: totals.totalPhrases,
     correctPhrases: totals.correctPhrases,
     totalTime: totals.totalTime,
@@ -573,13 +512,6 @@ function computeRankings(users = {}) {
     const snapshot = buildPlayerSnapshot(key, entry);
     if (snapshot) {
       snapshots.push(snapshot);
-    }
-  });
-
-  BOT_PROFILES.forEach((profile, index) => {
-    const botSnapshot = createBotSnapshot(profile, index);
-    if (botSnapshot) {
-      snapshots.push(botSnapshot);
     }
   });
 
