@@ -8,6 +8,15 @@
     { id: 6, title: 'Fluent', logline: 'Raciocínio afiado em ritmo multicolorido.', color: '#c8e54a' }
   ];
 
+  const FLUENCY_MULTIPLIER = {
+    1: 1.20,
+    2: 1.25,
+    3: 1.25,
+    4: 1.15,
+    5: 1.75,
+    6: 1.75
+  };
+
   const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
 
   const GENERAL_META = {
@@ -158,6 +167,19 @@
       ? Math.max(0, Math.round(number * 100) / 100)
       : 0;
     return safe.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function getFluencyMultiplier(mode) {
+    const multiplier = FLUENCY_MULTIPLIER[String(mode || '')];
+    if (!Number.isFinite(multiplier)) return 1;
+    return multiplier;
+  }
+
+  function calcFluencyScore(summary, mode) {
+    const cpm = Math.max(0, Math.round((summary.cps || 0) * 60));
+    const multiplier = getFluencyMultiplier(mode);
+    const score = Math.max(0, Math.round(cpm * multiplier));
+    return { score, multiplier, cpm };
   }
 
   function getEmptyMedalCounts() {
@@ -315,7 +337,11 @@
   const METRIC_ICONS = {
     lightning: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M11 2 3.5 13h6L8.5 22 20 8h-6l2-6Z"/></svg>',
     coin: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3C7.03 3 3 5.686 3 9v6c0 3.314 4.03 6 9 6s9-2.686 9-6V9c0-3.314-4.03-6-9-6Zm0 2c3.86 0 7 1.57 7 3.5S15.86 12 12 12 5 10.43 5 8.5 8.14 5 12 5Zm7 6.758V15c0 1.93-3.14 3.5-7 3.5S5 16.93 5 15v-3.242C6.44 12.742 8.96 13.5 12 13.5s5.56-.758 7-1.742ZM11 7v1.5H9.5V11H11v1.5h2V11h1.5V8.5H13V7Z"/></svg>',
-    target: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2a1 1 0 0 1 1 1v1.25a8.5 8.5 0 0 1 7.75 7.75H22a1 1 0 0 1 0 2h-1.25A8.5 8.5 0 0 1 13 21.75V23a1 1 0 0 1-2 0v-1.25A8.5 8.5 0 0 1 3.25 14H2a1 1 0 1 1 0-2h1.25A8.5 8.5 0 0 1 11 4.25V3a1 1 0 0 1 1-1Zm0 5.5a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7Zm0 3a4 4 0 1 1-4 4 4.004 4.004 0 0 1 4-4Zm0 2a2 2 0 1 0 2 2 2.002 2.002 0 0 0-2-2Z"/></svg>'
+    target: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2a1 1 0 0 1 1 1v1.25a8.5 8.5 0 0 1 7.75 7.75H22a1 1 0 0 1 0 2h-1.25A8.5 8.5 0 0 1 13 21.75V23a1 1 0 0 1-2 0v-1.25A8.5 8.5 0 0 1 3.25 14H2a1 1 0 1 1 0-2h1.25A8.5 8.5 0 0 1 11 4.25V3a1 1 0 0 1 1-1Zm0 5.5a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7Zm0 3a4 4 0 1 1-4 4 4.004 4.004 0 0 1 4-4Zm0 2a2 2 0 1 0 2 2 2.002 2.002 0 0 0-2-2Z"/></svg>',
+    boltSpeed: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M13.5 2 5 13h4.8L8.7 22l9.8-12.5H13.9L16 2z"/></svg>',
+    boltFocus: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2.5 8 11h3.3L9.5 21l6.5-9h-3.6z"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.4"/></svg>',
+    boltFluency: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2 7 12h4l-2 10 8-12h-4l2-8z"/><path d="M5 15c4 2 10 2 14 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/></svg>',
+    boltStreak: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M11 2 5 12h4l-2 10 6-10h-4l2-10z"/><path d="M4 17h16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/></svg>'
   };
 
   function createNumbersSlide({ value, caption, icon }) {
@@ -344,6 +370,85 @@
     slide.appendChild(captionEl);
 
     return slide;
+  }
+
+  function createPerformanceSlide({ value, caption, icon }) {
+    const slide = document.createElement('div');
+    slide.className = 'stats-performance__slide';
+
+    const iconEl = document.createElement('span');
+    iconEl.className = 'stats-performance__icon';
+    iconEl.setAttribute('aria-hidden', 'true');
+    iconEl.innerHTML = METRIC_ICONS[icon] || '';
+
+    const valueEl = document.createElement('p');
+    valueEl.className = 'stats-performance__value';
+    valueEl.textContent = value;
+
+    const captionEl = document.createElement('p');
+    captionEl.className = 'stats-performance__caption';
+    captionEl.textContent = caption;
+
+    slide.appendChild(iconEl);
+    slide.appendChild(valueEl);
+    slide.appendChild(captionEl);
+
+    return slide;
+  }
+
+  function createPerformanceSection(summary, mode) {
+    const section = document.createElement('section');
+    section.className = 'stats-section stats-section--performance';
+
+    const header = document.createElement('div');
+    header.className = 'stats-section__header';
+    const title = document.createElement('h2');
+    title.textContent = 'Desempenho';
+    header.appendChild(title);
+    section.appendChild(header);
+
+    const slider = document.createElement('div');
+    slider.className = 'stats-performance__slider';
+
+    const { score: fluencyScore, multiplier, cpm } = calcFluencyScore(summary, mode);
+    const slidesData = [
+      { value: `${formatInteger(cpm)} cpm`, caption: 'Caracteres por minuto', icon: 'boltSpeed' },
+      { value: formatPercent(summary.accuracyPerc), caption: 'Precisão', icon: 'boltFocus' },
+      { value: `${formatInteger(fluencyScore)} fs`, caption: `Fluency score (x${multiplier.toFixed(2)})`, icon: 'boltFluency' },
+      { value: `${formatInteger(Math.max(0, summary.currentStreak || 0))}x`, caption: 'Streak atual', icon: 'boltStreak' }
+    ];
+
+    const slides = slidesData.map((entry, index) => {
+      const slide = createPerformanceSlide(entry);
+      if (index === 0) slide.classList.add('is-active');
+      slider.appendChild(slide);
+      return slide;
+    });
+
+    section.appendChild(slider);
+
+    if (slides.length > 1) {
+      let currentIndex = 0;
+      const intervalId = setInterval(() => {
+        if (!section.isConnected) {
+          clearInterval(intervalId);
+          return;
+        }
+
+        const currentSlide = slides[currentIndex];
+        currentIndex = (currentIndex + 1) % slides.length;
+        const nextSlide = slides[currentIndex];
+
+        currentSlide.classList.remove('is-active');
+        currentSlide.classList.add('is-leaving');
+        nextSlide.classList.add('is-active');
+        nextSlide.classList.remove('is-leaving');
+
+        setTimeout(() => currentSlide.classList.remove('is-leaving'), 320);
+      }, 2000);
+    }
+
+    return section;
   }
 
   function createNumbersSection(summary) {
@@ -704,6 +809,8 @@
       heroSection = swapSection(container, heroSection, updatedHero);
       const newMedals = createMedalsSection(newSummary);
       medalsSection = swapSection(container, medalsSection, newMedals);
+      const newPerformance = createPerformanceSection(newSummary, mode);
+      performanceSection = swapSection(container, performanceSection, newPerformance);
       const newNumbers = createNumbersSection(newSummary);
       numbersSection = swapSection(container, numbersSection, newNumbers);
       const newPlayerStats = createPlayerStatsSection(newSummary);
@@ -718,6 +825,8 @@
     container.appendChild(selector);
     let medalsSection = createMedalsSection(summary);
     container.appendChild(medalsSection);
+    let performanceSection = createPerformanceSection(summary, activeMode);
+    container.appendChild(performanceSection);
     let numbersSection = createNumbersSection(summary);
     container.appendChild(numbersSection);
 
@@ -755,6 +864,8 @@
       heroSection = swapSection(container, heroSection, refreshedHero);
       const refreshedMedals = createMedalsSection(updated);
       medalsSection = swapSection(container, medalsSection, refreshedMedals);
+      const refreshedPerformance = createPerformanceSection(updated, activeMode);
+      performanceSection = swapSection(container, performanceSection, refreshedPerformance);
       const refreshedNumbers = createNumbersSection(updated);
       numbersSection = swapSection(container, numbersSection, refreshedNumbers);
       const refreshedPlayerStats = createPlayerStatsSection(updated);
