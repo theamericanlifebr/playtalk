@@ -2780,6 +2780,7 @@ body.theme-blue .stat-bar-track {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  text-align: center;
 }
 
 .stats-numbers-slide {
@@ -2789,24 +2790,46 @@ body.theme-blue .stat-bar-track {
   height: 100%;
   margin: 0 auto;
   opacity: 0;
-  transform: scale(0.98);
-  transition: opacity 280ms ease, transform 280ms ease;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
+  gap: 14px;
+  transform: none;
+  pointer-events: none;
 }
 
 .stats-numbers-slide.is-active {
   position: relative;
   opacity: 1;
-  transform: scale(1);
+  pointer-events: auto;
+  animation: statsSlideFadeIn 320ms ease forwards;
 }
 
 .stats-numbers-slide.is-leaving {
   opacity: 0;
-  transform: scale(0.98);
+  animation: statsSlideFadeOut 320ms ease forwards;
+}
+
+@keyframes statsSlideFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes statsSlideFadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 
 .stat-metric {
@@ -4359,6 +4382,10 @@ body.dark-mode .game-overlay__secondary {
   gap: clamp(12px, 2vw, 20px);
 }
 
+#post-game-screen .post-game-summary {
+  padding-bottom: 100px;
+}
+
 .post-game-metrics {
   width: 100%;
   display: flex;
@@ -4369,9 +4396,13 @@ body.dark-mode .game-overlay__secondary {
   min-height: clamp(220px, 32vh, 280px);
 }
 
+#post-game-screen .post-game-metrics {
+  transform: translateY(-100px);
+}
+
 @media (min-width: 1024px) {
   #post-game-screen .post-game-metrics {
-    margin-top: 50px;
+    margin-top: 0;
     gap: 0;
   }
 }
@@ -4409,6 +4440,11 @@ body.dark-mode .game-overlay__secondary {
 
 .stats-numbers-slide {
   display: flex;
+  transform: none;
+}
+
+.stats-numbers-slide.is-active {
+  pointer-events: auto;
 }
 
 @media (min-width: 1024px) {
@@ -4642,7 +4678,7 @@ body.dark-mode .post-game-metric__caption {
   }
 
   .page-inplay .container-screen--home {
-    transform: translateY(-150px);
+    transform: translateY(150px);
   }
 
   .page-ranking .container-screen--ranking {
