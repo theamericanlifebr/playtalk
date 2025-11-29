@@ -104,6 +104,12 @@ body > *:not(.lens-overlay):not(.site-header) {
   border: none;
 }
 
+body.page-inplay .container-screen {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
 #home-main {
   display: flex;
   align-items: center;
@@ -118,6 +124,15 @@ body.page-play #play-container {
   --content-offset: 0px;
   padding-top: 0;
   margin-top: calc(var(--header-height) + var(--content-offset) + 70px);
+}
+
+body.page-inplay #home-main.container-screen--home {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(420px, 1.4fr);
+  gap: clamp(16px, 4vw, 36px);
+  align-items: stretch;
+  padding: calc(var(--header-height) + 24px) clamp(16px, 3vw, 32px)
+    calc(var(--nav-height) + clamp(18px, 2vw, 28px));
 }
 
 .container-screen,
@@ -271,8 +286,21 @@ body.page-ranking {
 }
 
 .ranking-banner__card.is-active {
-  opacity: 1;
+  opacity: 0.5;
   transform: scale(1);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--lens-color-stats-rgb, 0, 0, 0), 0.85),
+    rgba(var(--lens-color-stats-rgb, 0, 0, 0), 0.65)
+  );
+}
+
+.stats-banner .ranking-banner__card.is-active {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--lens-color-stats-rgb, 0, 0, 0), 0.9),
+    rgba(var(--lens-color-stats-rgb, 0, 0, 0), 0.7)
+  );
 }
 
 .ranking-banner__content {
@@ -1280,8 +1308,9 @@ body.login-flow-open {
 }
 
 body.page-login {
-  background: #ffffff;
-  color: #0b1f44;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  backdrop-filter: blur(12px);
 }
 
 body.page-login .container-screen--overlay {
@@ -1295,7 +1324,8 @@ body.page-login .container-screen--overlay {
   justify-content: center;
   align-items: center;
   padding: clamp(24px, 4vw, 56px);
-  background: transparent;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
 }
 
 body.page-login .login-flow {
@@ -1310,21 +1340,21 @@ body.page-login .login-flow {
   width: min(340px, 90vw);
   padding: 32px 28px 28px;
   border-radius: 20px;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.4);
   box-shadow: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 body.page-login .login-flow__panel {
   width: min(420px, 94vw);
-  background: transparent;
+  background: rgba(0, 0, 0, 0.45);
   border: none;
   box-shadow: none;
-  color: #0a6bff;
+  color: #ffffff;
   animation: loginFadeIn 520ms ease forwards;
 }
 
@@ -1351,7 +1381,7 @@ body.theme-blue .login-flow__panel {
   font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 .login-flow__form {
@@ -1375,31 +1405,35 @@ body.theme-blue .login-flow__panel {
   font-weight: 600;
   font-size: 0.95rem;
   text-align: left;
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 .login-flow__step input {
   width: 100%;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(10, 107, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   font-size: 1rem;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.9);
-  color: #0a6bff;
+  background: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
   box-sizing: border-box;
 }
 
+.login-flow__step input::placeholder {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 body.dark-mode .login-flow__step input {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(10, 107, 255, 0.4);
-  color: #0a6bff;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #ffffff;
 }
 
 body.theme-blue .login-flow__step input {
-  background: rgba(240, 246, 255, 0.08);
-  border-color: rgba(10, 107, 255, 0.4);
-  color: #0a6bff;
+  background: rgba(240, 246, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #ffffff;
 }
 
 .login-flow__submit {
@@ -1409,11 +1443,16 @@ body.theme-blue .login-flow__step input {
   border-radius: 999px;
   font-weight: 700;
   font-size: 1rem;
-  color: #0a6bff;
-  background: transparent;
-  border: 2px solid #0a6bff;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0d6efd, #0a3e9b);
+  border: none;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 10px 28px rgba(13, 110, 253, 0.35);
 }
 
 .login-flow__submit:hover,
@@ -1424,9 +1463,21 @@ body.theme-blue .login-flow__step input {
 
 body.dark-mode .login-flow__submit,
 body.theme-blue .login-flow__submit {
-  background: transparent;
-  border-color: #0a6bff;
-  color: #0a6bff;
+  background: linear-gradient(135deg, #0d6efd, #0a3e9b);
+  border: none;
+  color: #ffffff;
+}
+
+.login-flow__submit-icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+}
+
+.login-flow__submit-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 
 .login-flow__error {
@@ -1434,7 +1485,7 @@ body.theme-blue .login-flow__submit {
   margin: 4px 0 0;
   font-size: 0.85rem;
   text-align: center;
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 .login-flow__status {
@@ -1442,23 +1493,23 @@ body.theme-blue .login-flow__submit {
   margin-top: 8px;
   font-size: 0.9rem;
   text-align: center;
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 body.dark-mode .login-flow__error {
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 body.theme-blue .login-flow__error {
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 body.dark-mode .login-flow__status {
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 body.theme-blue .login-flow__status {
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 body.page-login .login-flow__logo {
@@ -1467,7 +1518,7 @@ body.page-login .login-flow__logo {
 }
 
 body.page-login .login-flow__title {
-  color: #0a6bff;
+  color: #ffffff;
 }
 
 @keyframes loginFadeIn {
@@ -1489,6 +1540,14 @@ body.page-login .login-flow__title {
 
   .login-flow__panel {
     padding: 24px 20px 20px;
+  }
+
+  body.page-login .login-flow__form,
+  body.page-login .login-flow__step input,
+  body.page-login .login-flow__submit {
+    width: calc(100% - 60px);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -1512,8 +1571,12 @@ body.page-login .login-flow__title {
   justify-content: flex-start;
   gap: clamp(20px, 4vw, 36px);
   width: 100%;
-  padding: 0;
+  padding: clamp(18px, 3vw, 28px);
   box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 24px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28);
 }
 
 .visor-stack {
@@ -1577,6 +1640,12 @@ body.game-active #visor {
   transform: none;
 }
 
+body.page-inplay #menu {
+  width: 100%;
+  max-width: 640px;
+  align-self: stretch;
+}
+
 #menu > * {
   width: 100%;
   margin: 0 auto;
@@ -1613,6 +1682,10 @@ body.dark-mode #clock {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   justify-items: center;
+  width: 100%;
+}
+
+body.page-inplay #menu-modes {
   width: 100%;
 }
 
@@ -2805,9 +2878,9 @@ body.theme-blue .stat-bar-track {
 }
 
 .stats-performance__slide.is-active {
-  opacity: 1;
+  opacity: 0;
   pointer-events: auto;
-  animation: statsSlideFadeIn 320ms ease forwards;
+  animation: none;
 }
 
 .stats-performance__slide.is-leaving {
@@ -4402,7 +4475,7 @@ body.dark-mode .game-overlay__secondary {
 }
 
 #post-game-screen .game-overlay__medal {
-  width: clamp(260px, 55vw, 340px);
+  width: clamp(182px, 38.5vw, 238px);
 }
 
 .game-overlay__medal.is-animated {
@@ -4410,7 +4483,7 @@ body.dark-mode .game-overlay__secondary {
 }
 
 .game-overlay__medal-label {
-  font-size: clamp(18px, 2.4vw, 20px);
+  font-size: clamp(24px, 3.2vw, 26px);
   font-weight: 700;
   margin: 0;
   text-transform: capitalize;
@@ -4427,7 +4500,7 @@ body.dark-mode .game-overlay__secondary {
 }
 
 #post-game-screen .game-overlay__subtitle {
-  font-size: clamp(25px, 4vw, 28px);
+  font-size: clamp(32px, 4.8vw, 36px);
 }
 .post-game-medal-wrapper {
   display: flex;

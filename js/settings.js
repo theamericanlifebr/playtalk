@@ -295,7 +295,7 @@
     name: 'background1.mp4',
     type: 'video'
   };
-  let currentBackground = null;
+  let currentBackground = DEFAULT_BACKGROUND;
 
   function purgeStoredBackground() {
     try {

@@ -3427,6 +3427,16 @@ function goHome(options = {}) {
   if (visor) visor.style.display = 'none';
   const menu = document.getElementById('menu');
   if (menu) menu.style.display = 'flex';
+  const menuModes = document.getElementById('menu-modes');
+  if (menuModes) {
+    menuModes.style.display = 'grid';
+    menuModes.removeAttribute('aria-hidden');
+    menuModes.querySelectorAll('.menu-mode').forEach((modeButton) => {
+      modeButton.style.display = 'flex';
+      modeButton.style.visibility = 'visible';
+      modeButton.removeAttribute('hidden');
+    });
+  }
   document.body.classList.remove('game-active');
   setInplayState(false);
   closePreGameScreen();
