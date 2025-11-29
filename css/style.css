@@ -1592,10 +1592,10 @@ body.page-login .login-flow__title {
   width: 100%;
   padding: clamp(18px, 3vw, 28px);
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.18);
+  background: transparent;
   border-radius: 24px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28);
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 .visor-stack {
@@ -1631,18 +1631,36 @@ body.page-login .login-flow__title {
 }
 
 body.game-active #visor {
-  transform: translateY(-220px);
+  transform: none;
 }
 
 @media (max-width: 768px) {
   body.game-active #visor {
-    transform: translateY(-180px);
+    transform: none;
   }
 }
 
 @media (min-width: 1024px) {
   body.game-active #visor {
-    transform: translateY(-120px);
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  body.page-inplay #visor {
+    width: min(380px, 100%);
+    min-height: min(633px, calc(100vh - var(--header-height) - var(--nav-height) - 24px));
+    max-height: calc(100vh - var(--header-height) - var(--nav-height) - 24px);
+    margin-top: calc(var(--header-height) + 8px);
+    margin-bottom: calc(var(--nav-height) + 8px);
+  }
+
+  body.page-inplay .mode-emblem {
+    min-height: clamp(195px, 41vw, 270px);
+  }
+
+  body.page-inplay #mode-icon {
+    width: clamp(168px, 34vw, 244px);
   }
 }
 
