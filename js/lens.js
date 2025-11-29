@@ -9,9 +9,9 @@
   };
 
   const CONTEXT_COLORS = {
-    home: '#0d8d9d',
-    game: '#0d8d9d',
-    menus: '#0a1f44',
+    home: '#000000',
+    game: '#000000',
+    menus: '#000000',
     profile: '#0b2f5b',
     stats: '#000000'
   };

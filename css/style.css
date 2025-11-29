@@ -18,9 +18,9 @@
   --lens-color-4-rgb: 33, 150, 243;
   --lens-color-5-rgb: 27, 0, 75;
   --lens-color-6-rgb: 200, 229, 74;
-  --lens-color-home-rgb: 13, 141, 157;
-  --lens-color-game-rgb: 13, 141, 157;
-  --lens-color-menus-rgb: 10, 31, 68;
+  --lens-color-home-rgb: 0, 0, 0;
+  --lens-color-game-rgb: 0, 0, 0;
+  --lens-color-menus-rgb: 0, 0, 0;
   --lens-color-profile-rgb: 11, 47, 91;
   --lens-color-stats-rgb: 0, 0, 0;
 }
@@ -43,17 +43,6 @@ body {
   position: relative;
 }
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: url('../SVG/background1.svg') center/300% 300% no-repeat;
-  transform-origin: center;
-  animation: playtalk-background-spin 15s linear infinite;
-  z-index: -2;
-  pointer-events: none;
-}
-
 body.has-custom-text-color {
   color: var(--app-text-color, var(--phrase-color, #ffffff));
 }
@@ -72,7 +61,7 @@ body.has-custom-text-color * {
   );
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 1s ease, background 1s ease, background-color 1s ease;
   z-index: 0;
 }
 
@@ -656,6 +645,10 @@ body.theme-blue .ranking-tag {
 }
 
 @media (max-width: 720px) {
+  body.page-ranking .container-screen--ranking {
+    margin-top: calc(var(--header-height) + var(--content-offset) + 70px);
+  }
+
   .ranking-row {
     grid-template-columns: 32px 48px 1fr;
     grid-template-areas:
@@ -1489,16 +1482,6 @@ body.page-login .login-flow__title {
   }
 }
 
-@keyframes playtalk-background-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (max-width: 480px) {
   .login-flow {
     padding: 16px;
@@ -1635,15 +1618,16 @@ body.dark-mode #clock {
 
 .mode-logo {
   --mode-color-rgb: 200, 229, 74;
+  --mode-color-base: rgb(var(--mode-color-rgb));
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 26px;
   background: linear-gradient(
       135deg,
-      rgba(var(--mode-color-rgb), 0.94) 0%,
-      rgba(var(--mode-color-rgb), 0.82) 42%,
-      rgba(var(--mode-color-rgb), 0.98) 100%
+      color-mix(in srgb, var(--mode-color-base) 68%, #000 32%) 0%,
+      color-mix(in srgb, var(--mode-color-base) 86%, #000 14%) 50%,
+      color-mix(in srgb, var(--mode-color-base) 100%, #fff 10%) 100%
     ),
     radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.16), transparent 50%);
   box-shadow:
@@ -2247,7 +2231,7 @@ body.mode-five-intro-active .phrase-stack {
   opacity: var(--mode-icon-opacity, 1);
   pointer-events: auto;
   transform: none;
-  transition: opacity 300ms ease, transform 300ms ease;
+  transition: opacity 500ms ease, transform 500ms ease;
 }
 
 #mode-icon.medal-fade-out {
@@ -2807,13 +2791,13 @@ body.theme-blue .stat-bar-track {
   max-width: min(540px, 100%);
   padding: clamp(18px, 3vw, 24px);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(135deg, #0c2a57, #1b4fa3);
   opacity: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   transform: translate(-50%, -50%);
   pointer-events: none;
   color: #fff;
@@ -2832,9 +2816,9 @@ body.theme-blue .stat-bar-track {
 }
 
 .stats-performance__icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, #73c9ff, #6f7cff);
@@ -2843,20 +2827,16 @@ body.theme-blue .stat-bar-track {
 }
 
 .stats-performance__icon svg {
-  width: 32px;
-  height: 32px;
+  width: 80%;
+  height: 80%;
+  fill: currentColor;
+  stroke: currentColor;
 }
 
 .stats-performance__value {
   font-size: clamp(24px, 4vw, 34px);
   font-weight: 700;
   letter-spacing: 0.4px;
-}
-
-.stats-performance__caption {
-  font-size: clamp(14px, 2.2vw, 16px);
-  opacity: 0.85;
-  line-height: 1.4;
 }
 
 .stats-numbers-slide {
@@ -3210,6 +3190,10 @@ body.theme-blue .stats-medal-board__empty {
   flex-direction: column;
   gap: clamp(20px, 3vw, 32px);
   align-items: center;
+}
+
+body.page-fun #fun-container {
+  margin-top: calc(var(--header-height) + var(--content-offset) + 120px);
 }
 
 #fun-container > * {
@@ -3895,9 +3879,17 @@ body.theme-blue .fun-actions button {
     position: static;
   }
 
+  body.page-inplay #mode-icon {
+    margin-top: 200px;
+  }
+
   #texto-exibicao,
   #level-instruction {
     position: static;
+  }
+
+  body.page-inplay #texto-exibicao {
+    margin-top: 200px;
   }
 
   #clock {
@@ -3964,7 +3956,7 @@ body.theme-blue .fun-actions button {
 
   #fun-container {
     padding: 24px 20px 32px;
-    margin: 24px auto;
+    margin: calc(24px + 120px) auto 24px;
   }
 
   .fun-actions {

@@ -312,7 +312,8 @@
     const counts = normalizeMedals(summary.medals);
     const list = document.createElement('ul');
     list.className = 'stats-medal-board__grid';
-    MEDAL_CONFIG.forEach(({ key, label, icon }) => {
+    const visibleMedals = MEDAL_CONFIG.filter(({ key }) => key !== 'bronze');
+    visibleMedals.forEach(({ key, label, icon }) => {
       const count = counts[key];
       const item = document.createElement('li');
       item.className = 'stats-medal-board__item';
@@ -344,35 +345,7 @@
     boltStreak: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M11 2 5 12h4l-2 10 6-10h-4l2-10z"/><path d="M4 17h16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/></svg>'
   };
 
-  function createNumbersSlide({ value, caption, icon }) {
-    const slide = document.createElement('div');
-    slide.className = 'post-game-metric container-animado-score stats-numbers-slide';
-
-    const values = document.createElement('div');
-    values.className = 'post-game-metric__values';
-
-    const iconEl = document.createElement('span');
-    iconEl.className = `post-game-metric__icon post-game-metric__icon--${icon}`;
-    iconEl.setAttribute('aria-hidden', 'true');
-    iconEl.innerHTML = METRIC_ICONS[icon] || '';
-    values.appendChild(iconEl);
-
-    const valueEl = document.createElement('span');
-    valueEl.className = 'post-game-metric__value';
-    valueEl.textContent = value;
-    values.appendChild(valueEl);
-
-    const captionEl = document.createElement('p');
-    captionEl.className = 'post-game-metric__caption';
-    captionEl.textContent = caption;
-
-    slide.appendChild(values);
-    slide.appendChild(captionEl);
-
-    return slide;
-  }
-
-  function createPerformanceSlide({ value, caption, icon }) {
+  function createPerformanceSlide({ value, icon }) {
     const slide = document.createElement('div');
     slide.className = 'stats-performance__slide';
 
@@ -385,13 +358,8 @@
     valueEl.className = 'stats-performance__value';
     valueEl.textContent = value;
 
-    const captionEl = document.createElement('p');
-    captionEl.className = 'stats-performance__caption';
-    captionEl.textContent = caption;
-
     slide.appendChild(iconEl);
     slide.appendChild(valueEl);
-    slide.appendChild(captionEl);
 
     return slide;
   }
@@ -412,66 +380,14 @@
 
     const { score: fluencyScore, multiplier, cpm } = calcFluencyScore(summary, mode);
     const slidesData = [
-      { value: `${formatInteger(cpm)} cpm`, caption: 'Caracteres por minuto', icon: 'boltSpeed' },
-      { value: formatPercent(summary.accuracyPerc), caption: 'Precisão', icon: 'boltFocus' },
-      { value: `${formatInteger(fluencyScore)} fs`, caption: `Fluency score (x${multiplier.toFixed(2)})`, icon: 'boltFluency' },
-      { value: `${formatInteger(Math.max(0, summary.currentStreak || 0))}x`, caption: 'Streak atual', icon: 'boltStreak' }
+      { value: `${formatInteger(cpm)} cpm`, icon: 'boltSpeed' },
+      { value: formatPercent(summary.accuracyPerc), icon: 'boltFocus' },
+      { value: `${formatInteger(fluencyScore)} fs`, icon: 'boltFluency' },
+      { value: `${formatInteger(Math.max(0, summary.currentStreak || 0))}x`, icon: 'boltStreak' }
     ];
 
     const slides = slidesData.map((entry, index) => {
       const slide = createPerformanceSlide(entry);
-      if (index === 0) slide.classList.add('is-active');
-      slider.appendChild(slide);
-      return slide;
-    });
-
-    section.appendChild(slider);
-
-    if (slides.length > 1) {
-      let currentIndex = 0;
-      const intervalId = setInterval(() => {
-        if (!section.isConnected) {
-          clearInterval(intervalId);
-          return;
-        }
-
-        const currentSlide = slides[currentIndex];
-        currentIndex = (currentIndex + 1) % slides.length;
-        const nextSlide = slides[currentIndex];
-
-        currentSlide.classList.remove('is-active');
-        currentSlide.classList.add('is-leaving');
-        nextSlide.classList.add('is-active');
-        nextSlide.classList.remove('is-leaving');
-
-        setTimeout(() => currentSlide.classList.remove('is-leaving'), 320);
-      }, 2000);
-    }
-
-    return section;
-  }
-
-  function createNumbersSection(summary) {
-    const section = document.createElement('section');
-    section.className = 'stats-section stats-section--numbers';
-    const header = document.createElement('div');
-    header.className = 'stats-section__header';
-    const title = document.createElement('h2');
-    title.textContent = 'Números do jogador';
-    header.appendChild(title);
-    section.appendChild(header);
-
-    const slider = document.createElement('div');
-    slider.className = 'stats-numbers-slider';
-
-    const slidesData = [
-      { value: `${formatInteger(Math.round(summary.cps * 60))} cpm`, caption: 'Caracteres por minuto', icon: 'lightning' },
-      { value: `R$ ${formatBalanceValue()}`, caption: 'Saldo em pontos', icon: 'coin' },
-      { value: formatPercent(summary.accuracyPerc), caption: 'Precisão geral', icon: 'target' }
-    ];
-
-    const slides = slidesData.map((entry, index) => {
-      const slide = createNumbersSlide(entry);
       if (index === 0) slide.classList.add('is-active');
       slider.appendChild(slide);
       return slide;
@@ -811,8 +727,6 @@
       medalsSection = swapSection(container, medalsSection, newMedals);
       const newPerformance = createPerformanceSection(newSummary, mode);
       performanceSection = swapSection(container, performanceSection, newPerformance);
-      const newNumbers = createNumbersSection(newSummary);
-      numbersSection = swapSection(container, numbersSection, newNumbers);
       const newPlayerStats = createPlayerStatsSection(newSummary);
       playerStatsSection = swapSection(container, playerStatsSection, newPlayerStats);
       updateTop(rankings, mode);
@@ -827,8 +741,6 @@
     container.appendChild(medalsSection);
     let performanceSection = createPerformanceSection(summary, activeMode);
     container.appendChild(performanceSection);
-    let numbersSection = createNumbersSection(summary);
-    container.appendChild(numbersSection);
 
     const { section: topSection, update: updateTop } = createTopSection();
     container.appendChild(topSection);
@@ -866,8 +778,6 @@
       medalsSection = swapSection(container, medalsSection, refreshedMedals);
       const refreshedPerformance = createPerformanceSection(updated, activeMode);
       performanceSection = swapSection(container, performanceSection, refreshedPerformance);
-      const refreshedNumbers = createNumbersSection(updated);
-      numbersSection = swapSection(container, numbersSection, refreshedNumbers);
       const refreshedPlayerStats = createPlayerStatsSection(updated);
       playerStatsSection = swapSection(container, playerStatsSection, refreshedPlayerStats);
       updateTop(rankings, activeMode);

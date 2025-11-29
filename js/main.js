@@ -2869,9 +2869,9 @@ function runPendingMedalSwap(force = false) {
   }
 
   const now = Date.now();
-  if (!force && now - lastPhraseSwapAt > 400) {
+  if (!force && now - lastPhraseSwapAt > 500) {
     if (!medalSwapTimeout) {
-      medalSwapTimeout = setTimeout(() => runPendingMedalSwap(true), 600);
+      medalSwapTimeout = setTimeout(() => runPendingMedalSwap(true), 700);
     }
     return;
   }
@@ -2893,8 +2893,8 @@ function runPendingMedalSwap(force = false) {
     icon.classList.add('medal-fade-in');
     setTimeout(() => {
       icon.classList.remove('medal-fade-in');
-    }, 300);
-  }, 300);
+    }, 520);
+  }, 500);
 }
 
 function playPhraseSwapSound() {
