@@ -291,9 +291,9 @@
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
   const DEFAULT_BACKGROUND = {
-    src: 'Videos/background1.mp4',
-    name: 'background1.mp4',
-    type: 'video'
+    src: 'SVG/background8.svg',
+    name: 'background8.svg',
+    type: 'image'
   };
   let currentBackground = DEFAULT_BACKGROUND;
 
