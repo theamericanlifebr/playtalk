@@ -290,6 +290,11 @@
     'video/mp4'
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
+  const DEFAULT_BACKGROUND = {
+    src: 'Videos/background1.mp4',
+    name: 'background1.mp4',
+    type: 'video'
+  };
   let currentBackground = null;
 
   function purgeStoredBackground() {
@@ -463,11 +468,11 @@
 
   function clearBackground() {
     persistBackground(null);
-    applyBackground(null);
+    applyBackground(DEFAULT_BACKGROUND);
   }
 
   function applyStoredBackground() {
-    const config = readStoredBackground();
+    const config = readStoredBackground() || DEFAULT_BACKGROUND;
     applyBackground(config);
     return config;
   }
@@ -487,8 +492,6 @@
     }
   });
   window.addEventListener('pageshow', applyStoredBackground);
-
-  purgeStoredBackground();
 })();
 
 (function() {

@@ -14,7 +14,7 @@ const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
 const DATA_DIR = path.dirname(USERS_DB_PATH);
 
 const DEFAULT_USER = {
-  username: 'PlayTalk',
+  username: 'Rafael',
   password: 'tatatata',
   email: '',
   emailVerified: false,
@@ -84,14 +84,14 @@ const MAX_RANKING_ENTRIES = 30;
 const LEGEND_REQUIREMENTS = { cps: 3.5, accuracy: 80, diamonds: 10 };
 const RECENT_PHRASE_LIMIT = 500;
 const BOT_PROFILES = [
-  { key: 'maya', name: 'Maya', avatar: 'users/maya.png' },
-  { key: 'jimmy', name: 'Jimmy', avatar: 'users/jimmy.png' },
-  { key: 'bella', name: 'Bella', avatar: 'users/bella.png' },
-  { key: 'charlotte', name: 'Charlotte', avatar: 'users/charlotte.png' },
-  { key: 'bit', name: 'Bit', avatar: 'users/bit.png' },
-  { key: 'pablo', name: 'Pablo', avatar: 'users/pablo.png' },
-  { key: 'tim', name: 'Tim', avatar: 'users/tim.png' },
-  { key: 'nova', name: 'Nova', avatar: DEFAULT_AVATAR_URL }
+  { key: 'joao', name: 'João', avatar: 'Avatar/avatar-male-man-svgrepo-com.svg' },
+  { key: 'maria', name: 'Maria', avatar: 'Avatar/avatar-female-girl-svgrepo-com.svg' },
+  { key: 'carlos', name: 'Carlos', avatar: 'Avatar/avatar-man-person-svgrepo-com.svg' },
+  { key: 'ana', name: 'Ana', avatar: 'Avatar/avatar-child-girl-svgrepo-com.svg' },
+  { key: 'bruno', name: 'Bruno', avatar: 'Avatar/avatar-boy-male-svgrepo-com.svg' },
+  { key: 'camila', name: 'Camila', avatar: 'Avatar/avatar-person-pilot-svgrepo-com.svg' },
+  { key: 'rafael', name: 'Rafael', avatar: 'Avatar/nerd-svgrepo-com.svg' },
+  { key: 'sofia', name: 'Sofia', avatar: 'Avatar/afro-female-person-svgrepo-com.svg' }
 ];
 
 const staticDir = (() => {
