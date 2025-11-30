@@ -46,10 +46,16 @@
       </section>
       <section class="fun-section">
         <h2>Cabeçalho</h2>
-        <label class="fun-field fun-field--inline">
-          <input type="checkbox" id="headerGradientEnabled" checked>
-          Ativar degradê no cabeçalho
-        </label>
+        <div class="magic-checkbox-group fun-checkbox-group" aria-label="Preferências do cabeçalho">
+          <label class="magic-check">
+            <input type="checkbox" id="headerGradientEnabled" checked>
+            <span class="liquid-box">
+              <span class="liquid-fill"></span>
+              <span class="sparkle"></span>
+            </span>
+            <span class="magic-label">Ativar degradê no cabeçalho</span>
+          </label>
+        </div>
         <div class="fun-color-options">
           <label for="headerColorStart">
             Cor inicial
@@ -161,22 +167,52 @@
               accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
             >
           </label>
-          <button type="button" id="fun-background-clear" class="profile-publish-button profile-publish-button--ghost">
-            Remover plano de fundo
+          <button type="button" id="fun-background-clear" class="profile-publish-button profile-publish-button--ghost neo-button neo-button--ghost">
+            <span class="neo-button__shadow"></span>
+            <span class="neo-button__edge"></span>
+            <span class="neo-button__front">
+              <span>Remover plano de fundo</span>
+              <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+                <path
+                  clip-rule="evenodd"
+                  d="M10 3a1 1 0 0 1 .894.553l5 10A1 1 0 0 1 15 15h-2.382l1.276 2.553a1 1 0 0 1-1.788.894L10 13.618 8.894 17.447a1 1 0 0 1-1.788-.894L8.382 15H6a1 1 0 0 1-.894-1.447l5-10A1 1 0 0 1 10 3Zm0 4a1 1 0 0 0-.894.553L7.618 11h4.764l-1.488-3.447A1 1 0 0 0 10 7Z"
+                  fill-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
           </button>
         </div>
         <p id="fun-background-status" class="profile-background__status" aria-live="polite"></p>
       </section>
       <section class="fun-section">
         <h2>Repetição</h2>
-        <label class="fun-field fun-field--inline">
-          <input type="checkbox" id="retryWrongPhrases">
-          Refazer frases erradas
-        </label>
+        <div class="magic-checkbox-group fun-checkbox-group" aria-label="Opções de repetição">
+          <label class="magic-check">
+            <input type="checkbox" id="retryWrongPhrases">
+            <span class="liquid-box">
+              <span class="liquid-fill"></span>
+              <span class="sparkle"></span>
+            </span>
+            <span class="magic-label">Refazer frases erradas</span>
+          </label>
+        </div>
       </section>
       <p class="fun-note">Ao atingir 25.000 pontos a rodada é concluída automaticamente, sem carregar novas frases.</p>
       <div class="fun-actions">
-        <button type="submit">Salvar configurações</button>
+        <button type="submit" class="neo-button">
+          <span class="neo-button__shadow"></span>
+          <span class="neo-button__edge"></span>
+          <span class="neo-button__front">
+            <span>Salvar configurações</span>
+            <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+              <path
+                clip-rule="evenodd"
+                d="M10.293 3.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 0 1-1.414-1.414L14.586 11H3a1 1 0 1 1 0-2h11.586l-4.293-4.293a1 1 0 0 1 0-1.414Z"
+                fill-rule="evenodd"
+              ></path>
+            </svg>
+          </span>
+        </button>
         <span id="fun-feedback" role="status" aria-live="polite"></span>
       </div>
     </form>

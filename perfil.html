@@ -42,7 +42,7 @@
     <form class="profile-form" autocomplete="on">
       <div class="profile-field">
         <label for="profile-name">Nome</label>
-        <input type="text" id="profile-name" name="profile-name" placeholder="Digite seu nome">
+        <input type="text" id="profile-name" name="profile-name" placeholder="Digite seu nome" class="holo-input">
       </div>
       <div class="profile-photo">
         <div
@@ -69,13 +69,24 @@
           <span>Carregar foto</span>
           <input type="file" id="profile-photo" name="profile-photo" accept=".jpg,.jpeg,.png,.gif,.webp">
         </label>
-        <button type="button" id="profile-photo-publish" class="profile-publish-button" disabled>
-          Publicar foto
+        <button type="button" id="profile-photo-publish" class="profile-publish-button neo-button" disabled>
+          <span class="neo-button__shadow"></span>
+          <span class="neo-button__edge"></span>
+          <span class="neo-button__front">
+            <span>Publicar foto</span>
+            <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+              <path
+                clip-rule="evenodd"
+                d="M2.293 9.293a1 1 0 0 1 1.414 0L9 14.586l7.293-7.293a1 1 0 1 1 1.414 1.414l-8 8a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 0-1.414Z"
+                fill-rule="evenodd"
+              ></path>
+            </svg>
+          </span>
         </button>
       </div>
       <div class="profile-field">
         <label for="profile-username">Nome de usuário</label>
-        <input type="text" id="profile-username" name="profile-username" readonly>
+        <input type="text" id="profile-username" name="profile-username" class="holo-input" readonly>
       </div>
       <div class="profile-share">
         <label class="profile-share-toggle" for="profile-share-results">
@@ -89,16 +100,42 @@
       <button
         type="button"
         id="profile-logout-btn"
-        class="logout-button logout-button--primary"
+        class="logout-button logout-button--primary neo-button"
         data-role="logout"
-      >Encerrar sessão</button>
+      >
+        <span class="neo-button__shadow"></span>
+        <span class="neo-button__edge"></span>
+        <span class="neo-button__front">
+          <span>Encerrar sessão</span>
+          <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+            <path
+              clip-rule="evenodd"
+              d="M3 4a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v4h-2V4H5v12h5v-4h2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4Zm11.293 1.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 1 1-1.414-1.414L15.586 11H9a1 1 0 1 1 0-2h6.586l-1.293-1.293a1 1 0 0 1 0-1.414Z"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
+        </span>
+      </button>
       <button
         type="button"
         id="profile-switch-account-btn"
-        class="logout-button"
+        class="logout-button neo-button neo-button--ghost"
         data-role="logout"
         data-switch-account="true"
-      >Trocar de conta</button>
+      >
+        <span class="neo-button__shadow"></span>
+        <span class="neo-button__edge"></span>
+        <span class="neo-button__front">
+          <span>Trocar de conta</span>
+          <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+            <path
+              clip-rule="evenodd"
+              d="M3 4.75A2.75 2.75 0 0 1 5.75 2h5.5A2.75 2.75 0 0 1 14 4.75V6h-2V4.75a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v10.5a.75.75 0 0 0 .75.75h5.5a.75.75 0 0 0 .75-.75V13h2v2.25A2.75 2.75 0 0 1 11.25 18h-5.5A2.75 2.75 0 0 1 3 15.25V4.75Zm9.72 2.03a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 0 1-1.06-1.06l1.22-1.22H9a.75.75 0 0 1 0-1.5h4.94l-1.22-1.22a.75.75 0 0 1 0-1.06Z"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
+        </span>
+      </button>
     </div>
   </main>
   <footer class="page-footer">

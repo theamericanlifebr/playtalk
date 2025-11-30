@@ -19,13 +19,30 @@
         <form id="login-flow-form" class="login-flow__form" autocomplete="off" novalidate>
           <div class="login-flow__step login-flow__step--active">
             <label for="login-flow-username">Nome de usuário</label>
-            <input type="text" id="login-flow-username" name="login-flow-username" maxlength="40" autocomplete="username" required>
+            <input
+              type="text"
+              id="login-flow-username"
+              name="login-flow-username"
+              maxlength="40"
+              autocomplete="username"
+              class="holo-input"
+              required
+            >
             <label for="login-flow-password">Senha</label>
-            <input type="password" id="login-flow-password" name="login-flow-password" autocomplete="current-password" required>
-            <button type="submit" class="login-flow__submit">
-              <span>Entrar ou cadastrar</span>
-              <span class="login-flow__submit-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 12a1 1 0 0 1 1-1h9.586l-3.293-3.293a1 1 0 0 1 1.414-1.414l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 1 1-1.414-1.414L15.586 13H6a1 1 0 0 1-1-1Z"/></svg>
+            <input
+              type="password"
+              id="login-flow-password"
+              name="login-flow-password"
+              autocomplete="current-password"
+              class="holo-input"
+              required
+            >
+            <button type="submit" class="login-flow__submit neo-button">
+              <span class="neo-button__shadow"></span>
+              <span class="neo-button__edge"></span>
+              <span class="neo-button__front">
+                <span>Entrar ou cadastrar</span>
+                <svg viewBox="0 0 24 24" role="img" focusable="false" class="neo-button__icon" aria-hidden="true"><path d="M5 12a1 1 0 0 1 1-1h9.586l-3.293-3.293a1 1 0 0 1 1.414-1.414l5 5a1 1 0 0 1 0 1.414l-5 5a1 1 0 1 1-1.414-1.414L15.586 13H6a1 1 0 0 1-1-1Z"/></svg>
               </span>
             </button>
           </div>
