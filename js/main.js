@@ -1693,6 +1693,18 @@ function getModeDetail(mode) {
   };
 }
 
+function setPreGameButtonLabel(button, text) {
+  if (!button) {
+    return;
+  }
+  const label = button.querySelector('.playtalk-cta__inner span:last-child');
+  if (label) {
+    label.textContent = text;
+  } else {
+    button.textContent = text;
+  }
+}
+
 function updatePreGameScreen(mode) {
   const overlay = document.getElementById('pre-game-screen');
   if (!overlay) {
@@ -1729,7 +1741,7 @@ function updatePreGameScreen(mode) {
   );
   const startBtn = document.getElementById('pre-game-start');
   if (startBtn) {
-    startBtn.textContent = hasResume ? 'Continuar' : 'Jogar';
+    setPreGameButtonLabel(startBtn, hasResume ? 'Continuar' : 'Jogar agora');
     startBtn.classList.toggle('game-overlay__primary--continue', hasResume);
     startBtn.setAttribute('data-resume', hasResume ? 'true' : 'false');
     startBtn.setAttribute('data-resume-levelfinder', hasResume && savedRound && savedRound.isLevelFinder ? 'true' : 'false');

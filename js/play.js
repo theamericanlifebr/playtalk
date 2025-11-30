@@ -169,6 +169,67 @@
     return safe.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  function parseJSON(value, fallback = null) {
+    try {
+      return value ? JSON.parse(value) : fallback;
+    } catch (err) {
+      console.warn('Não foi possível interpretar os dados locais.', err);
+      return fallback;
+    }
+  }
+
+  function getStoredGeneralLevel() {
+    const headerLevel = document.getElementById('header-level');
+    if (headerLevel && headerLevel.textContent) {
+      const match = headerLevel.textContent.match(/(\d+)/);
+      if (match && Number.isFinite(Number(match[1]))) {
+        return Math.max(1, Math.floor(Number(match[1])));
+      }
+    }
+
+    const storedGeneral = parseJSON(localStorage.getItem('generalProgress'), null);
+    if (storedGeneral && Number.isFinite(storedGeneral.level)) {
+      return Math.max(1, Math.floor(storedGeneral.level));
+    }
+
+    const legacy = parseJSON(localStorage.getItem('levelProgress'), null);
+    if (legacy && Number.isFinite(legacy.level)) {
+      return Math.max(1, Math.floor(legacy.level));
+    }
+
+    return 1;
+  }
+
+  function getStoredModeLevel(mode) {
+    const storedModes = parseJSON(localStorage.getItem('modeProgress'), {});
+    if (storedModes && storedModes[String(mode)] && Number.isFinite(storedModes[String(mode)].level)) {
+      return Math.max(1, Math.floor(storedModes[String(mode)].level));
+    }
+    return 1;
+  }
+
+  function getPerformanceLevel(mode) {
+    if (!mode) {
+      return getStoredGeneralLevel();
+    }
+    return getStoredModeLevel(mode);
+  }
+
+  function getCurrentDisplayName() {
+    const authAPI = window.playtalkAuth;
+    const user = authAPI && typeof authAPI.getCurrentUser === 'function'
+      ? authAPI.getCurrentUser()
+      : null;
+    const stored = localStorage.getItem('displayName');
+    if (stored && stored.trim()) {
+      return stored.trim();
+    }
+    if (user && user.data && user.data.displayName) {
+      return user.data.displayName;
+    }
+    return (user && user.username) || 'Jogador';
+  }
+
   function getFluencyMultiplier(mode) {
     const multiplier = FLUENCY_MULTIPLIER[String(mode || '')];
     if (!Number.isFinite(multiplier)) return 1;
@@ -335,35 +396,6 @@
     return section;
   }
 
-  const METRIC_ICONS = {
-    lightning: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M11 2 3.5 13h6L8.5 22 20 8h-6l2-6Z"/></svg>',
-    coin: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3C7.03 3 3 5.686 3 9v6c0 3.314 4.03 6 9 6s9-2.686 9-6V9c0-3.314-4.03-6-9-6Zm0 2c3.86 0 7 1.57 7 3.5S15.86 12 12 12 5 10.43 5 8.5 8.14 5 12 5Zm7 6.758V15c0 1.93-3.14 3.5-7 3.5S5 16.93 5 15v-3.242C6.44 12.742 8.96 13.5 12 13.5s5.56-.758 7-1.742ZM11 7v1.5H9.5V11H11v1.5h2V11h1.5V8.5H13V7Z"/></svg>',
-    target: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2a1 1 0 0 1 1 1v1.25a8.5 8.5 0 0 1 7.75 7.75H22a1 1 0 0 1 0 2h-1.25A8.5 8.5 0 0 1 13 21.75V23a1 1 0 0 1-2 0v-1.25A8.5 8.5 0 0 1 3.25 14H2a1 1 0 1 1 0-2h1.25A8.5 8.5 0 0 1 11 4.25V3a1 1 0 0 1 1-1Zm0 5.5a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7Zm0 3a4 4 0 1 1-4 4 4.004 4.004 0 0 1 4-4Zm0 2a2 2 0 1 0 2 2 2.002 2.002 0 0 0-2-2Z"/></svg>',
-    boltSpeed: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M13.5 2 5 13h4.8L8.7 22l9.8-12.5H13.9L16 2z"/></svg>',
-    boltFocus: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2.5 8 11h3.3L9.5 21l6.5-9h-3.6z"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.4"/></svg>',
-    boltFluency: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2 7 12h4l-2 10 8-12h-4l2-8z"/><path d="M5 15c4 2 10 2 14 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/></svg>',
-    boltStreak: '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M11 2 5 12h4l-2 10 6-10h-4l2-10z"/><path d="M4 17h16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/></svg>'
-  };
-
-  function createPerformanceSlide({ value, icon }) {
-    const slide = document.createElement('div');
-    slide.className = 'stats-performance__slide';
-
-    const iconEl = document.createElement('span');
-    iconEl.className = 'stats-performance__icon';
-    iconEl.setAttribute('aria-hidden', 'true');
-    iconEl.innerHTML = METRIC_ICONS[icon] || '';
-
-    const valueEl = document.createElement('p');
-    valueEl.className = 'stats-performance__value';
-    valueEl.textContent = value;
-
-    slide.appendChild(iconEl);
-    slide.appendChild(valueEl);
-
-    return slide;
-  }
-
   function createPerformanceSection(summary, mode) {
     const section = document.createElement('section');
     section.className = 'stats-section stats-section--performance';
@@ -375,46 +407,112 @@
     header.appendChild(title);
     section.appendChild(header);
 
-    const slider = document.createElement('div');
-    slider.className = 'stats-performance__slider';
+    const playerName = getCurrentDisplayName();
+    const levelValue = getPerformanceLevel(mode);
+    const accuracyPerc = Math.max(0, Math.min(Number(summary.accuracyPerc) || 0, 100));
+    const accuracyLabel = formatPercent(accuracyPerc);
 
-    const { score: fluencyScore, multiplier, cpm } = calcFluencyScore(summary, mode);
-    const slidesData = [
-      { value: `${formatInteger(cpm)} cpm`, icon: 'boltSpeed' },
-      { value: formatPercent(summary.accuracyPerc), icon: 'boltFocus' },
-      { value: `${formatInteger(fluencyScore)} fs`, icon: 'boltFluency' },
-      { value: `${formatInteger(Math.max(0, summary.currentStreak || 0))}x`, icon: 'boltStreak' }
-    ];
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'performance-card';
+    card.setAttribute('aria-label', `${playerName}, nível ${formatInteger(levelValue)}, precisão de ${accuracyLabel}`);
 
-    const slides = slidesData.map((entry, index) => {
-      const slide = createPerformanceSlide(entry);
-      if (index === 0) slide.classList.add('is-active');
-      slider.appendChild(slide);
-      return slide;
-    });
+    const glow = document.createElement('div');
+    glow.className = 'performance-card__glow';
+    card.appendChild(glow);
 
-    section.appendChild(slider);
+    const body = document.createElement('div');
+    body.className = 'performance-card__body';
 
-    if (slides.length > 1) {
-      let currentIndex = 0;
-      const intervalId = setInterval(() => {
-        if (!section.isConnected) {
-          clearInterval(intervalId);
-          return;
-        }
+    const lineTop = document.createElement('div');
+    lineTop.className = 'performance-card__line performance-card__line--top';
+    body.appendChild(lineTop);
 
-        const currentSlide = slides[currentIndex];
-        currentIndex = (currentIndex + 1) % slides.length;
-        const nextSlide = slides[currentIndex];
+    const lineBottom = document.createElement('div');
+    lineBottom.className = 'performance-card__line performance-card__line--bottom';
+    body.appendChild(lineBottom);
 
-        currentSlide.classList.remove('is-active');
-        currentSlide.classList.add('is-leaving');
-        nextSlide.classList.add('is-active');
-        nextSlide.classList.remove('is-leaving');
+    const content = document.createElement('div');
+    content.className = 'performance-card__content';
 
-        setTimeout(() => currentSlide.classList.remove('is-leaving'), 320);
-      }, 2000);
-    }
+    const player = document.createElement('div');
+    player.className = 'performance-card__player';
+
+    const level = document.createElement('div');
+    level.className = 'performance-card__level';
+    const levelRing = document.createElement('div');
+    levelRing.className = 'performance-card__level-ring';
+    const levelCore = document.createElement('div');
+    levelCore.className = 'performance-card__level-core';
+    const levelLabel = document.createElement('span');
+    levelLabel.className = 'performance-card__level-label';
+    levelLabel.textContent = `L${formatInteger(levelValue)}`;
+    level.appendChild(levelRing);
+    level.appendChild(levelCore);
+    level.appendChild(levelLabel);
+
+    const textBlock = document.createElement('div');
+    textBlock.className = 'performance-card__text';
+    const nameRow = document.createElement('div');
+    nameRow.className = 'performance-card__name-row';
+    const name = document.createElement('span');
+    name.className = 'performance-card__name';
+    name.textContent = playerName;
+    const dot = document.createElement('div');
+    dot.className = 'performance-card__dot';
+    nameRow.appendChild(name);
+    nameRow.appendChild(dot);
+
+    const progress = document.createElement('div');
+    progress.className = 'performance-card__progress';
+    progress.setAttribute('role', 'presentation');
+    const progressFill = document.createElement('div');
+    progressFill.className = 'performance-card__progress-fill';
+    progressFill.style.width = `${accuracyPerc}%`;
+    progress.appendChild(progressFill);
+
+    const accuracySr = document.createElement('span');
+    accuracySr.className = 'sr-only';
+    accuracySr.textContent = `Precisão: ${accuracyLabel}`;
+
+    textBlock.appendChild(nameRow);
+    textBlock.appendChild(progress);
+    textBlock.appendChild(accuracySr);
+
+    player.appendChild(level);
+    player.appendChild(textBlock);
+
+    const status = document.createElement('div');
+    status.className = 'performance-card__status';
+    const statusIcon = document.createElement('div');
+    statusIcon.className = 'performance-card__status-icon';
+    statusIcon.innerHTML = '<svg stroke="currentColor" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>';
+    const statusGlow = document.createElement('div');
+    statusGlow.className = 'performance-card__status-glow';
+    statusIcon.appendChild(statusGlow);
+
+    const statusLabel = document.createElement('span');
+    statusLabel.className = 'performance-card__status-label';
+    statusLabel.textContent = 'READY';
+
+    const statusDots = document.createElement('div');
+    statusDots.className = 'performance-card__status-dots';
+    statusDots.setAttribute('aria-hidden', 'true');
+    statusDots.appendChild(document.createElement('span'));
+    statusDots.appendChild(document.createElement('span'));
+    statusDots.appendChild(document.createElement('span'));
+
+    status.appendChild(statusIcon);
+    status.appendChild(statusLabel);
+    status.appendChild(statusDots);
+
+    content.appendChild(player);
+    content.appendChild(status);
+
+    body.appendChild(content);
+    card.appendChild(body);
+
+    section.appendChild(card);
 
     return section;
   }
