@@ -348,11 +348,7 @@
     'video/mp4'
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
-  const DEFAULT_BACKGROUND = {
-    src: 'Videos/background1.mp4',
-    name: 'background1.mp4',
-    type: 'video'
-  };
+  const DEFAULT_BACKGROUND = null;
   let currentBackground = DEFAULT_BACKGROUND;
 
   function purgeStoredBackground() {
@@ -447,6 +443,7 @@
     const active = Boolean(validConfig);
     document.body.classList.toggle('has-custom-background', active);
     if (!active || !validConfig) {
+      clearLayer(layer);
       return;
     }
     if (validConfig.type === 'video') {
@@ -531,26 +528,20 @@
 
   function applyStoredBackground() {
     const body = typeof document !== 'undefined' ? document.body : null;
-    if (body && body.classList.contains('page-inplay')) {
-      const layer = document.getElementById('playtalk-background-layer');
-      clearLayer(layer);
-      if (layer) {
-        layer.remove();
-      }
-      body.classList.remove('has-custom-background');
-      return null;
-    }
+    const config = readStoredBackground();
 
-    if (body && body.classList.contains('page-login')) {
+    if (!config) {
       const layer = document.getElementById('playtalk-background-layer');
       clearLayer(layer);
       if (layer) {
         layer.remove();
       }
-      body.classList.remove('has-custom-background');
+      if (body) {
+        body.classList.remove('has-custom-background');
+      }
       return DEFAULT_BACKGROUND;
     }
-    const config = readStoredBackground() || DEFAULT_BACKGROUND;
+
     applyBackground(config);
     return config;
   }

@@ -290,15 +290,6 @@ body.page-inplay {
   color: #f7faff;
 }
 
-body.has-custom-background {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-body.page-inplay #playtalk-background-layer {
-  display: none !important;
-}
-
 #playtalk-background-layer {
   position: fixed;
   inset: 0;
@@ -4790,10 +4781,37 @@ body.theme-blue .fun-field input {
   background: rgba(0, 15, 40, 0.75);
 }
 
+.holo-input-wrapper {
+  position: relative;
+}
+
+.holo-input-wrapper .holo-input {
+  padding-right: 54px;
+}
+
+.holo-input__icon {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 210, 255, 0.9);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.holo-input__icon svg {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.35));
+}
+
 .login-flow__form .holo-input,
 .profile-field .holo-input {
   padding-left: 20px;
-  padding-right: 20px;
+  padding-right: 54px;
   height: 54px;
 }
 
