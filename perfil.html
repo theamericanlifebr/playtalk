@@ -64,22 +64,25 @@
             <span id="profile-photo-status" class="profile-photo-preview__status" aria-live="polite"></span>
           </div>
         </div>
-        <label for="profile-photo" class="profile-upload-label">
-          <span aria-hidden="true">📷</span>
-          <span>Carregar foto</span>
+        <label for="profile-photo" class="profile-upload-label playtalk-cta playtalk-cta--wide">
+          <span class="playtalk-cta__inner">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" focusable="false">
+              <path d="M21 6h-3.586l-1.707-1.707A1 1 0 0 0 15 4h-4a1 1 0 0 0-.707.293L8.586 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1Zm-6 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4Zm0-2a2 2 0 1 0-2-2 2 2 0 0 0 2 2Z" />
+            </svg>
+            <span>Carregar foto</span>
+          </span>
           <input type="file" id="profile-photo" name="profile-photo" accept=".jpg,.jpeg,.png,.gif,.webp">
         </label>
-        <button type="button" id="profile-photo-publish" class="profile-publish-button neo-button" disabled>
-          <span class="neo-button__shadow"></span>
-          <span class="neo-button__front">
-            <span>Publicar foto</span>
-            <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+        <button type="button" id="profile-photo-publish" class="profile-publish-button playtalk-cta" disabled>
+          <span class="playtalk-cta__inner">
+            <svg aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" role="img" focusable="false">
               <path
                 clip-rule="evenodd"
                 d="M2.293 9.293a1 1 0 0 1 1.414 0L9 14.586l7.293-7.293a1 1 0 1 1 1.414 1.414l-8 8a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 0-1.414Z"
                 fill-rule="evenodd"
               ></path>
             </svg>
+            <span>Publicar foto</span>
           </span>
         </button>
       </div>
@@ -99,38 +102,18 @@
       <button
         type="button"
         id="profile-logout-btn"
-        class="logout-button logout-button--primary neo-button"
+        class="logout-button logout-button--primary playtalk-cta"
         data-role="logout"
       >
-        <span class="neo-button__shadow"></span>
-        <span class="neo-button__front">
-          <span>Encerrar sessão</span>
-          <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+        <span class="playtalk-cta__inner">
+          <svg aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" role="img" focusable="false">
             <path
               clip-rule="evenodd"
               d="M3 4a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v4h-2V4H5v12h5v-4h2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4Zm11.293 1.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 1 1-1.414-1.414L15.586 11H9a1 1 0 1 1 0-2h6.586l-1.293-1.293a1 1 0 0 1 0-1.414Z"
               fill-rule="evenodd"
             ></path>
           </svg>
-        </span>
-      </button>
-      <button
-        type="button"
-        id="profile-switch-account-btn"
-        class="logout-button neo-button neo-button--ghost"
-        data-role="logout"
-        data-switch-account="true"
-      >
-        <span class="neo-button__shadow"></span>
-        <span class="neo-button__front">
-          <span>Trocar de conta</span>
-          <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
-            <path
-              clip-rule="evenodd"
-              d="M3 4.75A2.75 2.75 0 0 1 5.75 2h5.5A2.75 2.75 0 0 1 14 4.75V6h-2V4.75a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v10.5a.75.75 0 0 0 .75.75h5.5a.75.75 0 0 0 .75-.75V13h2v2.25A2.75 2.75 0 0 1 11.25 18h-5.5A2.75 2.75 0 0 1 3 15.25V4.75Zm9.72 2.03a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 0 1-1.06-1.06l1.22-1.22H9a.75.75 0 0 1 0-1.5h4.94l-1.22-1.22a.75.75 0 0 1 0-1.06Z"
-              fill-rule="evenodd"
-            ></path>
-          </svg>
+          <span>Encerrar sessão</span>
         </span>
       </button>
     </div>

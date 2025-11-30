@@ -182,9 +182,13 @@
         <h2>Plano de fundo do jogo</h2>
         <p class="fun-note">Envie uma imagem JPG/PNG ou um vídeo MP4 de até 40 MB para personalizar o fundo.</p>
         <div class="profile-background__controls">
-          <label for="fun-background-upload" class="profile-upload-label profile-upload-label--wide">
-            <span aria-hidden="true">🖼️</span>
-            <span>Carregar background</span>
+          <label for="fun-background-upload" class="profile-upload-label profile-upload-label--wide playtalk-cta playtalk-cta--wide">
+            <span class="playtalk-cta__inner">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" focusable="false">
+                <path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 2v7.59l-2.3-2.3a1 1 0 0 0-1.4 0L12 15.59 9.7 13.3a1 1 0 0 0-1.4 0L5 16.59V7Zm-7 4a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z" />
+              </svg>
+              <span>Carregar background</span>
+            </span>
             <input
               type="file"
               id="fun-background-upload"
@@ -192,17 +196,16 @@
               accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
             >
           </label>
-          <button type="button" id="fun-background-clear" class="profile-publish-button profile-publish-button--ghost neo-button neo-button--ghost">
-            <span class="neo-button__shadow"></span>
-            <span class="neo-button__front">
-              <span>Remover plano de fundo</span>
-              <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+          <button type="button" id="fun-background-clear" class="profile-publish-button profile-publish-button--ghost playtalk-cta playtalk-cta--ghost playtalk-cta--wide">
+            <span class="playtalk-cta__inner">
+              <svg aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" role="img" focusable="false">
                 <path
                   clip-rule="evenodd"
                   d="M10 3a1 1 0 0 1 .894.553l5 10A1 1 0 0 1 15 15h-2.382l1.276 2.553a1 1 0 0 1-1.788.894L10 13.618 8.894 17.447a1 1 0 0 1-1.788-.894L8.382 15H6a1 1 0 0 1-.894-1.447l5-10A1 1 0 0 1 10 3Zm0 4a1 1 0 0 0-.894.553L7.618 11h4.764l-1.488-3.447A1 1 0 0 0 10 7Z"
                   fill-rule="evenodd"
                 ></path>
               </svg>
+              <span>Remover plano de fundo</span>
             </span>
           </button>
         </div>
