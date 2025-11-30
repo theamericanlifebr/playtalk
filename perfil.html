@@ -42,7 +42,12 @@
     <form class="profile-form" autocomplete="on">
       <div class="profile-field">
         <label for="profile-name">Nome</label>
-        <input type="text" id="profile-name" name="profile-name" placeholder="Digite seu nome" class="holo-input">
+        <div class="holo-input-wrapper">
+          <input type="text" id="profile-name" name="profile-name" placeholder="Digite seu nome" class="holo-input">
+          <span class="holo-input__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2.75-7 5v1h14v-1c0-2.25-3-5-7-5Z"/></svg>
+          </span>
+        </div>
       </div>
       <div class="profile-photo">
         <div
@@ -88,7 +93,12 @@
       </div>
       <div class="profile-field">
         <label for="profile-username">Nome de usuário</label>
-        <input type="text" id="profile-username" name="profile-username" class="holo-input" readonly>
+        <div class="holo-input-wrapper">
+          <input type="text" id="profile-username" name="profile-username" class="holo-input" readonly>
+          <span class="holo-input__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2.75-7 5v1h14v-1c0-2.25-3-5-7-5Z"/></svg>
+          </span>
+        </div>
       </div>
       <div class="profile-share">
         <label class="profile-share-toggle" for="profile-share-results">

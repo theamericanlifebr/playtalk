@@ -19,7 +19,6 @@
     const lensOpacitySoftInput = scope.querySelector('#lensOpacitySoft');
     const feedback = scope.querySelector('#fun-feedback');
     const backgroundInput = scope.querySelector('#fun-background-upload');
-    const backgroundClearButton = scope.querySelector('#fun-background-clear');
     const backgroundStatus = scope.querySelector('#fun-background-status');
     const backgroundAPI = window.playtalkBackground || null;
     const colorInputs = Array.from(scope.querySelectorAll('.fun-color-input'));
@@ -49,21 +48,10 @@
       try {
         await backgroundAPI.setFromFile(file);
         updateBackgroundStatus('Plano de fundo aplicado!');
+        persistSettings(false);
       } catch (error) {
         updateBackgroundStatus(error && error.message ? error.message : 'Não foi possível salvar o plano de fundo.', true);
       }
-    }
-
-    function handleBackgroundClear() {
-      if (!backgroundAPI || typeof backgroundAPI.clear !== 'function') {
-        updateBackgroundStatus('Não foi possível limpar o plano de fundo.', true);
-        return;
-      }
-      backgroundAPI.clear();
-      if (backgroundInput) {
-        backgroundInput.value = '';
-      }
-      updateBackgroundStatus('Plano de fundo removido.');
     }
 
     function getFormSettings() {
@@ -132,17 +120,19 @@
       }
     }
 
-    function save(event) {
-      event.preventDefault();
+    function persistSettings(showFeedback = true) {
       const settings = getFormSettings();
       if (api) {
         api.saveSettings(settings);
         api.applyVisualPreferences(settings);
       }
       if (feedback) {
-        feedback.textContent = 'Configurações salvas!';
-        setTimeout(() => { feedback.textContent = ''; }, 2000);
+        feedback.textContent = showFeedback ? 'Configurações salvas automaticamente' : '';
+        if (showFeedback) {
+          setTimeout(() => { feedback.textContent = ''; }, 1600);
+        }
       }
+      return settings;
     }
 
     function showPalette(input) {
@@ -175,13 +165,14 @@
     }
 
     load();
-    form.addEventListener('submit', save);
+    if (form) {
+      form.addEventListener('submit', (event) => event.preventDefault());
+    }
 
     [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, modeIconColorInput, modeIconOpacityInput, buttonColorInput, lensOpacityStrongInput, lensOpacitySoftInput, ...lensColorInputs].forEach(input => {
       if (!input) return;
       input.addEventListener('input', () => {
-        if (!api) return;
-        api.applyVisualPreferences(getFormSettings());
+        persistSettings();
       });
     });
 
@@ -190,9 +181,6 @@
     }
     if (backgroundInput) {
       backgroundInput.addEventListener('change', handleBackgroundUpload);
-    }
-    if (backgroundClearButton) {
-      backgroundClearButton.addEventListener('click', handleBackgroundClear);
     }
   }
 
