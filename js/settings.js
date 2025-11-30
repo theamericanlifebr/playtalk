@@ -315,18 +315,12 @@
 (function() {
   const BACKGROUND_STORAGE_KEY = 'playtalkBackground';
   const MAX_BACKGROUND_SIZE = 40 * 1024 * 1024;
-  const ACCEPTED_TYPES = new Set([
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/webp',
-    'video/mp4'
-  ]);
-  const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
+  const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+  const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
   const DEFAULT_BACKGROUND = {
-    src: 'Videos/background1.mp4',
-    name: 'background1.mp4',
-    type: 'video'
+    src: '',
+    name: 'Ondas animadas',
+    type: 'waves'
   };
   let currentBackground = DEFAULT_BACKGROUND;
 
@@ -354,18 +348,34 @@
   }
 
   function normalizeConfig(raw) {
-    if (!raw || typeof raw !== 'object' || typeof raw.src !== 'string' || !raw.src.trim()) {
+    if (!raw || typeof raw !== 'object') {
       return null;
     }
-    const type = raw.type === 'video' ? 'video' : 'image';
+    const type = raw.type === 'waves' ? 'waves' : 'image';
+    const extension = getExtension(raw.name || raw.src || '');
+    if (extension === '.mp4') {
+      return null;
+    }
+    const hasSrc = typeof raw.src === 'string' && raw.src.trim();
+    if (type !== 'waves' && !hasSrc) {
+      return null;
+    }
     return {
-      src: raw.src,
+      src: type === 'waves' ? '' : raw.src,
       name: typeof raw.name === 'string' ? raw.name : '',
       type
     };
   }
 
   function readStoredBackground() {
+    try {
+      const stored = safeParse(localStorage.getItem(BACKGROUND_STORAGE_KEY));
+      const normalizedStored = normalizeConfig(stored);
+      if (normalizedStored) {
+        currentBackground = normalizedStored;
+        return normalizedStored;
+      }
+    } catch {}
     return normalizeConfig(currentBackground);
   }
 
@@ -381,6 +391,9 @@
       return null;
     }
     currentBackground = normalized;
+    try {
+      localStorage.setItem(BACKGROUND_STORAGE_KEY, JSON.stringify(normalized));
+    } catch {}
     return currentBackground;
   }
 
@@ -403,7 +416,7 @@
       return;
     }
     layer.style.backgroundImage = '';
-    layer.classList.remove('has-video', 'has-image');
+    layer.classList.remove('has-video', 'has-image', 'playtalk-waves-layer');
     while (layer.firstChild) {
       layer.removeChild(layer.firstChild);
     }
@@ -424,19 +437,16 @@
     if (!active || !validConfig) {
       return;
     }
-    if (validConfig.type === 'video') {
-      const video = document.createElement('video');
-      video.src = validConfig.src;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('aria-hidden', 'true');
-      layer.appendChild(video);
-      layer.classList.add('has-video');
-      requestAnimationFrame(() => {
-        video.play().catch(() => {});
-      });
+    if (validConfig.type === 'waves') {
+      const waves = document.createElement('div');
+      waves.className = 'playtalk-waves';
+      for (let i = 1; i <= 4; i += 1) {
+        const wave = document.createElement('div');
+        wave.className = `playtalk-wave playtalk-wave--${i}`;
+        waves.appendChild(wave);
+      }
+      layer.appendChild(waves);
+      layer.classList.add('playtalk-waves-layer');
       return;
     }
     layer.style.backgroundImage = `url(${validConfig.src})`;
@@ -473,15 +483,13 @@
       throw new Error('Selecione um arquivo para continuar.');
     }
     if (!isAllowedFile(file)) {
-      throw new Error('Use uma imagem JPG/PNG/WEBP ou vídeo MP4.');
+      throw new Error('Use uma imagem JPG/PNG/WEBP.');
     }
     if (file.size > MAX_BACKGROUND_SIZE) {
       throw new Error('O limite é de 40 MB. Escolha um arquivo menor.');
     }
     const dataUrl = await readFileAsDataURL(file);
-    const type = (file.type && file.type.startsWith('video')) || getExtension(file.name) === '.mp4'
-      ? 'video'
-      : 'image';
+    const type = 'image';
     const previousConfig = readStoredBackground();
     const config = {
       src: dataUrl,

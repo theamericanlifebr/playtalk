@@ -214,6 +214,7 @@ body.has-custom-background {
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  background: #3586ff;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -221,11 +222,74 @@ body.has-custom-background {
   transition: opacity 0.3s ease;
 }
 
-#playtalk-background-layer video {
+.playtalk-waves-layer {
+  overflow: hidden;
+}
+
+.playtalk-waves {
+  position: absolute;
+  inset: 0;
+  background: #3586ff;
+}
+
+.playtalk-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: saturate(1.02);
+  height: 120px;
+  background: url(https://1.bp.blogspot.com/-xQUc-TovqDk/XdxogmMqIRI/AAAAAAAACvI/AizpnE509UMGBcTiLJ58BC6iViPYGYQfQCLcBGAsYHQ/s1600/wave.png);
+  background-size: 1000px 120px;
+}
+
+.playtalk-wave--1 {
+  animation: playtalk-wave 30s linear infinite;
+  z-index: 4;
+  opacity: 1;
+  animation-delay: 0s;
+  bottom: 0;
+}
+
+.playtalk-wave--2 {
+  animation: playtalk-wave-reverse 15s linear infinite;
+  z-index: 3;
+  opacity: 0.5;
+  animation-delay: -5s;
+  bottom: 12px;
+}
+
+.playtalk-wave--3 {
+  animation: playtalk-wave 30s linear infinite;
+  z-index: 2;
+  opacity: 0.2;
+  animation-delay: -2s;
+  bottom: 18px;
+}
+
+.playtalk-wave--4 {
+  animation: playtalk-wave-reverse 6s linear infinite;
+  z-index: 1;
+  opacity: 0.7;
+  animation-delay: -5s;
+  bottom: 24px;
+}
+
+@keyframes playtalk-wave {
+  0% {
+    background-position-x: 0px;
+  }
+  100% {
+    background-position-x: 1000px;
+  }
+}
+
+@keyframes playtalk-wave-reverse {
+  0% {
+    background-position-x: 0px;
+  }
+  100% {
+    background-position-x: -1000px;
+  }
 }
 
 body.page-home,
@@ -1543,20 +1607,33 @@ body.theme-blue .login-flow__submit {
 }
 
 .social-account-container .social-accounts .social-button {
-  background: linear-gradient(45deg, #000 0%, #707070 100%);
-  border: 4px solid white;
-  padding: 8px;
-  border-radius: 50%;
-  width: 46px;
-  aspect-ratio: 1;
-  display: grid;
-  place-content: center;
-  box-shadow: rgba(133, 189, 215, 0.7) 0 12px 10px -8px;
+  --playtalk-button-height: 52px;
+  --playtalk-button-padding: 0 16px;
+  border: none;
+  width: auto;
+  min-width: 46px;
+  border-radius: var(--playtalk-button-radius);
+  box-shadow: rgba(133, 189, 215, 0.4) 0 10px 10px -8px;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .social-account-container .social-accounts .social-button .svg {
   fill: white;
+}
+
+.social-account-container .social-accounts .social-button.google {
+  --playtalk-button-bg: linear-gradient(45deg, #4285f4 0%, #0f9d58 100%);
+  --playtalk-button-shadow: rgba(66, 133, 244, 0.45) 0px 7px 0px 0px;
+}
+
+.social-account-container .social-accounts .social-button.apple {
+  --playtalk-button-bg: linear-gradient(45deg, #2c2c2c 0%, #0f0f0f 100%);
+  --playtalk-button-shadow: rgba(44, 44, 44, 0.45) 0px 7px 0px 0px;
+}
+
+.social-account-container .social-accounts .social-button.twitter {
+  --playtalk-button-bg: linear-gradient(45deg, #1da1f2 0%, #0f7bd8 100%);
+  --playtalk-button-shadow: rgba(29, 161, 242, 0.5) 0px 7px 0px 0px;
 }
 
 .social-account-container .social-accounts .social-button:hover,
@@ -4268,161 +4345,157 @@ body.theme-blue .fun-field input {
   height: 54px;
 }
 
-.neo-button {
-  position: relative;
-  border: none;
-  background: transparent;
-  padding: 0;
-  outline: none;
-  cursor: pointer;
-  font-family: monospace;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 1rem;
-  display: inline-block;
-  --btn-start: var(--button-color-base);
-  --btn-end: var(--button-color-contrast);
-  --btn-shadow: var(--button-shadow);
-}
-
-.neo-button__shadow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 0.5rem;
-  transform: translateY(0.125rem);
-  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
-}
-
-.neo-button__front {
+.playtalk-button {
+  --playtalk-button-height: 52px;
+  --playtalk-button-padding: 0 22px;
+  --playtalk-button-bg: hsl(210deg 100% 44%);
+  --playtalk-button-shadow: hsl(210deg 87% 36%) 0px 7px 0px 0px;
+  --playtalk-button-radius: 12px;
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.78rem 1.56rem;
-  color: white;
-  background: linear-gradient(135deg, var(--btn-start), var(--btn-end));
-  border-radius: 0.75rem;
-  transform: translateY(-0.25rem);
-  gap: 0.75rem;
-  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
-  box-shadow: 0 16px 30px var(--btn-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
-  letter-spacing: 0.03em;
+  gap: 10px;
+  height: var(--playtalk-button-height);
+  padding: var(--playtalk-button-padding);
+  border: 0;
+  border-radius: var(--playtalk-button-radius);
+  background-color: var(--playtalk-button-bg);
+  box-shadow: var(--playtalk-button-shadow);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  transition: 31ms cubic-bezier(.5, .7, .4, 1);
 }
 
-.neo-button__icon {
-  margin-left: 0.25rem;
-  display: inline-block;
-  width: 1.1rem;
-  height: 1.1rem;
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-  fill: currentColor;
+.playtalk-button::before {
+  content: attr(data-label);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  inset: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  opacity: 1;
+  text-align: center;
 }
 
-.neo-button:hover .neo-button__shadow {
-  transform: translateY(0.25rem);
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
+.playtalk-button:active {
+  box-shadow: none;
+  transform: translateY(7px);
+  transition: 35ms cubic-bezier(.5, .7, .4, 1);
 }
 
-.neo-button:hover .neo-button__front {
-  transform: translateY(-0.375rem);
-  transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-  filter: brightness(110%);
-  box-shadow: 0 18px 34px var(--btn-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+.playtalk-button:hover::before {
+  transition: all 0s;
+  transform: translateY(100%);
+  opacity: 0;
 }
 
-.neo-button:hover .neo-button__icon {
-  transform: translateX(0.25rem);
+.playtalk-button__letters {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.neo-button:active .neo-button__shadow {
-  transform: translateY(0.0625rem);
-  transition: transform 34ms;
+.playtalk-button__letter {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  font-style: normal;
+  transition: all 0.25s ease;
+  transform: translateY(-20px);
+  opacity: 0;
 }
 
-.neo-button:active .neo-button__front {
-  transform: translateY(-0.125rem);
-  transition: transform 34ms;
+.playtalk-button:hover .playtalk-button__letter {
+  transform: translateY(0px);
+  opacity: 1;
+  transition-delay: calc(0.045s * var(--letter-index, 0));
 }
 
-.neo-button .neo-button__front span {
-  user-select: none;
+.playtalk-button__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  flex-shrink: 0;
 }
 
-.neo-button--ghost .neo-button__front {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.24));
-  color: #f5f7ff;
+.playtalk-button__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.playtalk-button--ghost {
+  --playtalk-button-bg: rgba(255, 255, 255, 0.16);
+  --playtalk-button-shadow: rgba(9, 40, 97, 0.32) 0px 7px 0px 0px;
   border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
 }
 
-.game-overlay__actions .neo-button,
-.login-flow__submit.neo-button,
-.profile-actions .neo-button,
-.profile-photo .neo-button,
-.fun-actions .neo-button {
+.playtalk-button--wide {
+  width: 100%;
+  max-width: 360px;
+  justify-content: center;
+}
+
+.playtalk-button--compact {
+  --playtalk-button-height: 44px;
+  --playtalk-button-padding: 0 14px;
+  letter-spacing: 1px;
+  font-size: 14px;
+}
+
+.playtalk-button--small {
+  --playtalk-button-height: 38px;
+  --playtalk-button-padding: 0 12px;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+}
+
+.playtalk-button:disabled,
+.playtalk-button[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.game-overlay__actions .playtalk-button,
+.login-flow__submit.playtalk-button,
+.profile-actions .playtalk-button,
+.profile-photo .playtalk-button,
+.fun-actions .playtalk-button {
   width: 100%;
   max-width: 360px;
 }
 
-.login-flow__submit.neo-button .neo-button__front,
-.fun-actions .neo-button .neo-button__front {
-  width: 100%;
-  justify-content: center;
+.game-overlay__primary.playtalk-button {
+  --playtalk-button-bg: linear-gradient(120deg, #2d5bff, #00c6ff);
+  --playtalk-button-shadow: rgba(45, 91, 255, 0.55) 0px 7px 0px 0px;
 }
 
-.neo-button,
-.login-flow__submit.neo-button,
-.profile-photo .neo-button,
-.profile-actions .neo-button,
-.game-overlay__actions .neo-button {
-  background: transparent;
-  box-shadow: none;
-}
-
-.profile-publish-button.neo-button,
-.profile-actions .neo-button,
-.fun-actions .neo-button,
-.game-overlay__actions .neo-button,
-.login-flow__submit.neo-button {
-  padding: 0;
-  border-radius: 0;
-}
-
-.login-flow__submit.neo-button .neo-button__front {
-  background: linear-gradient(135deg, #0d6efd, #0a3e9b);
-}
-
-.profile-publish-button.neo-button .neo-button__front,
-.profile-actions .logout-button.neo-button .neo-button__front,
-.fun-actions .neo-button .neo-button__front {
-  background: linear-gradient(90deg, #00b3b3, #00cccc);
-}
-
-.profile-publish-button--ghost.neo-button .neo-button__front,
-.neo-button--ghost .neo-button__front {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.24));
-  color: #f5f7ff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.game-overlay__primary.neo-button,
-.game-overlay__secondary.neo-button {
-  min-width: 0;
-  padding: 0;
-  border-radius: 0;
-}
-
-.game-overlay__primary.neo-button .neo-button__front {
-  background: linear-gradient(120deg, #2d5bff, #00c6ff);
-}
-
-.game-overlay__secondary.neo-button .neo-button__front {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.65));
+.game-overlay__secondary.playtalk-button {
+  --playtalk-button-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.65));
+  --playtalk-button-shadow: rgba(9, 40, 97, 0.32) 0px 7px 0px 0px;
   color: #0d1c3b;
-  border: 1px solid rgba(9, 40, 97, 0.2);
+  text-shadow: none;
 }
 
 @media (max-width: 600px) {
