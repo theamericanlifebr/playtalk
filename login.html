@@ -15,10 +15,10 @@
     <div id="login-flow" class="login-flow" role="dialog" aria-modal="true" aria-labelledby="login-flow-title">
       <div class="login-flow__panel">
         <img src="SVG/logo.svg" alt="Logo PlayTalk" class="login-flow__logo" width="70" height="70">
-        <h1 id="login-flow-title" class="login-flow__title">Bem-vindo</h1>
+        <h1 id="login-flow-title" class="login-flow__title">Bem vindo</h1>
         <form id="login-flow-form" class="login-flow__form" autocomplete="off" novalidate>
           <div class="login-flow__step login-flow__step--active">
-            <label for="login-flow-username">Nome de usuário</label>
+            <label class="sr-only" for="login-flow-username">Nome de usuário</label>
             <input
               type="text"
               id="login-flow-username"
@@ -26,15 +26,17 @@
               maxlength="40"
               autocomplete="username"
               class="holo-input"
+              placeholder="Nome de usuário"
               required
             >
-            <label for="login-flow-password">Senha</label>
+            <label class="sr-only" for="login-flow-password">Senha</label>
             <input
               type="password"
               id="login-flow-password"
               name="login-flow-password"
               autocomplete="current-password"
               class="holo-input"
+              placeholder="Senha"
               required
             >
             <button type="submit" class="login-flow__submit playtalk-cta">
