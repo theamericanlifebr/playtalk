@@ -291,9 +291,9 @@
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
   const DEFAULT_BACKGROUND = {
-    src: 'SVG/background8.svg',
-    name: 'background8.svg',
-    type: 'image'
+    src: 'Videos/background1.mp4',
+    name: 'background1.mp4',
+    type: 'video'
   };
   let currentBackground = DEFAULT_BACKGROUND;
 
@@ -472,6 +472,16 @@
   }
 
   function applyStoredBackground() {
+    const body = typeof document !== 'undefined' ? document.body : null;
+    if (body && body.classList.contains('page-login')) {
+      const layer = document.getElementById('playtalk-background-layer');
+      clearLayer(layer);
+      if (layer) {
+        layer.remove();
+      }
+      body.classList.remove('has-custom-background');
+      return DEFAULT_BACKGROUND;
+    }
     const config = readStoredBackground() || DEFAULT_BACKGROUND;
     applyBackground(config);
     return config;
