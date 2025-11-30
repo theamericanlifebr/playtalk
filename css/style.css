@@ -1327,9 +1327,9 @@ body.login-flow-open {
 }
 
 body.page-login {
-  background: rgba(0, 0, 0, 0.45);
+  background: #0d4ab2;
   color: #ffffff;
-  backdrop-filter: blur(12px);
+  backdrop-filter: none;
 }
 
 body.page-login .container-screen--overlay {
@@ -1343,8 +1343,8 @@ body.page-login .container-screen--overlay {
   justify-content: center;
   align-items: center;
   padding: clamp(24px, 4vw, 56px);
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(18px);
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: none;
 }
 
 body.page-login .login-flow {
@@ -1381,6 +1381,10 @@ body.dark-mode .login-flow__panel {
   background: transparent;
   color: #0a6bff;
   box-shadow: none;
+}
+
+body.page-login #playtalk-background-layer {
+  display: none !important;
 }
 
 body.theme-blue .login-flow__panel {
