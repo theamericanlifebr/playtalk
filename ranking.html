@@ -14,7 +14,6 @@
   <script src="js/settings.js"></script>
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
-  <script src="js/button-effects.js" defer></script>
 </head>
 <body class="page-ranking" data-lens-context="menus">
   <header class="site-header" id="global-header">
@@ -29,15 +28,15 @@
           >
         </div>
       </div>
-    <div class="site-header__text">
-      <span class="site-header__name" id="header-username">Jogador</span>
-      <span class="site-header__level" id="header-level">Nível 1</span>
+      <div class="site-header__text">
+        <span class="site-header__name" id="header-username">Jogador</span>
+        <span class="site-header__level" id="header-level">Nível 1</span>
+      </div>
     </div>
-  </div>
-  <div class="site-header__actions">
-      <button id="login-btn" class="site-header__button playtalk-button playtalk-button--compact" type="button" data-label="Entrar"></button>
-  </div>
-</header>
+    <div class="site-header__actions">
+      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+    </div>
+  </header>
   <main class="container-screen container-screen--ranking" data-page-transition aria-label="Ranking global">
     <h1 class="sr-only">Ranking PlayTalk</h1>
     <section class="ranking-banner" aria-label="Capas dos rankings">
@@ -137,33 +136,25 @@
     <p class="ranking-error" data-ranking-error role="alert" hidden></p>
     <section class="ranking-carousel" aria-label="Rankings públicos">
       <nav class="ranking-carousel__nav" data-ranking-carousel-nav aria-label="Selecionar ranking">
-        <button type="button" class="ranking-carousel__nav-button playtalk-button playtalk-button--small is-active" data-ranking-nav="streak" aria-label="Sequência" aria-pressed="true" data-label="Sequência">
-          <span class="playtalk-button__icon" aria-hidden="true">
-            <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-              <path d="M6 26h4l6-8 6 8h4L20 6h-4Z"/>
-            </svg>
-          </span>
+        <button type="button" class="ranking-carousel__nav-button is-active" data-ranking-nav="streak" aria-label="Sequência" aria-pressed="true">
+          <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
+            <path d="M6 26h4l6-8 6 8h4L20 6h-4Z"/>
+          </svg>
         </button>
-        <button type="button" class="ranking-carousel__nav-button playtalk-button playtalk-button--small" data-ranking-nav="fast" aria-label="Velocidade" aria-pressed="false" data-label="Velocidade">
-          <span class="playtalk-button__icon" aria-hidden="true">
-            <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-              <path d="M4 17h12l-4 6h4l6-8-6-8h-4l4 6H4Z"/>
-            </svg>
-          </span>
+        <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="fast" aria-label="Velocidade" aria-pressed="false">
+          <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
+            <path d="M4 17h12l-4 6h4l6-8-6-8h-4l4 6H4Z"/>
+          </svg>
         </button>
-        <button type="button" class="ranking-carousel__nav-button playtalk-button playtalk-button--small" data-ranking-nav="accuracy" aria-label="Precisão" aria-pressed="false" data-label="Precisão">
-          <span class="playtalk-button__icon" aria-hidden="true">
-            <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-              <path d="M16 4 6 10v12l10 6 10-6V10Zm0 2.31L24 11v10l-8 4.69L8 21V11Zm0 2.69a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 2a2 2 0 1 1-2 2 2 2 0 0 1 2-2Z"/>
-            </svg>
-          </span>
+        <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="accuracy" aria-label="Precisão" aria-pressed="false">
+          <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
+            <path d="M16 4 6 10v12l10 6 10-6V10Zm0 2.31L24 11v10l-8 4.69L8 21V11Zm0 2.69a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 2a2 2 0 1 1-2 2 2 2 0 0 1 2-2Z"/>
+          </svg>
         </button>
-        <button type="button" class="ranking-carousel__nav-button playtalk-button playtalk-button--small" data-ranking-nav="level" aria-label="Nível" aria-pressed="false" data-label="Nível">
-          <span class="playtalk-button__icon" aria-hidden="true">
-            <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-              <path d="M6 26h6V6H6Zm2-18h2v16H8Zm8 18h6V12h-6Zm2-12h2v10h-2Z"/>
-            </svg>
-          </span>
+        <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="level" aria-label="Nível" aria-pressed="false">
+          <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
+            <path d="M6 26h6V6H6Zm2-18h2v16H8Zm8 18h6V12h-6Zm2-12h2v10h-2Z"/>
+          </svg>
         </button>
       </nav>
       <div class="ranking-carousel__viewport" data-ranking-carousel-viewport>
