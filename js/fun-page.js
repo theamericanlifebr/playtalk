@@ -13,6 +13,7 @@
     const phraseColorInput = scope.querySelector('#phraseColor');
     const modeIconColorInput = scope.querySelector('#modeIconColor');
     const modeIconOpacityInput = scope.querySelector('#modeIconOpacity');
+    const buttonColorInput = scope.querySelector('#buttonColor');
     const lensColorInputs = Array.from(scope.querySelectorAll('.lens-mode-input[data-lens-mode]'));
     const lensOpacityStrongInput = scope.querySelector('#lensOpacityStrong');
     const lensOpacitySoftInput = scope.querySelector('#lensOpacitySoft');
@@ -21,6 +22,10 @@
     const backgroundClearButton = scope.querySelector('#fun-background-clear');
     const backgroundStatus = scope.querySelector('#fun-background-status');
     const backgroundAPI = window.playtalkBackground || null;
+    const colorInputs = Array.from(scope.querySelectorAll('.fun-color-input'));
+    const palette = scope.querySelector('#lens-color-palette');
+    const paletteSwatches = palette ? Array.from(palette.querySelectorAll('[data-color-swatch]')) : [];
+    let activeColorInput = colorInputs[0] || null;
 
     function updateBackgroundStatus(message, isError = false) {
       if (!backgroundStatus) {
@@ -77,6 +82,7 @@
         phraseColor: phraseColorInput ? phraseColorInput.value : '',
         modeIconColor: modeIconColorInput ? modeIconColorInput.value : undefined,
         modeIconOpacity: modeIconOpacityInput ? modeIconOpacityInput.value : undefined,
+        buttonColor: buttonColorInput ? buttonColorInput.value : undefined,
         lensColor: lensColors['1'] || '',
         lensColors,
         lensOpacityStrong: lensOpacityStrongInput ? lensOpacityStrongInput.value : undefined,
@@ -107,6 +113,9 @@
       if (modeIconOpacityInput && Number.isFinite(Number(settings.modeIconOpacity))) {
         modeIconOpacityInput.value = settings.modeIconOpacity;
       }
+      if (buttonColorInput && typeof settings.buttonColor === 'string' && settings.buttonColor.trim()) {
+        buttonColorInput.value = settings.buttonColor;
+      }
       lensColorInputs.forEach(input => {
         const mode = input.dataset.lensMode;
         if (!mode) return;
@@ -136,10 +145,39 @@
       }
     }
 
+    function showPalette(input) {
+      if (input) {
+        activeColorInput = input;
+      }
+      if (palette) {
+        palette.classList.add('fun-color-palette--visible');
+      }
+    }
+
+    colorInputs.forEach((input) => {
+      input.addEventListener('focus', () => showPalette(input));
+      input.addEventListener('click', () => showPalette(input));
+    });
+
+    paletteSwatches.forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!activeColorInput) {
+          activeColorInput = colorInputs[0] || null;
+        }
+        if (!activeColorInput) return;
+        activeColorInput.value = button.dataset.colorSwatch;
+        activeColorInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+
+    if (palette && activeColorInput) {
+      palette.classList.add('fun-color-palette--visible');
+    }
+
     load();
     form.addEventListener('submit', save);
 
-    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, modeIconColorInput, modeIconOpacityInput, lensOpacityStrongInput, lensOpacitySoftInput, ...lensColorInputs].forEach(input => {
+    [headerStartInput, headerEndInput, headerGradientToggle, phraseColorInput, modeIconColorInput, modeIconOpacityInput, buttonColorInput, lensOpacityStrongInput, lensOpacitySoftInput, ...lensColorInputs].forEach(input => {
       if (!input) return;
       input.addEventListener('input', () => {
         if (!api) return;

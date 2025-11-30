@@ -10,10 +10,11 @@
     phraseColor: '',
     modeIconColor: '#0b1f44',
     modeIconOpacity: 1,
+    buttonColor: '#3b82f6',
     lensColor: '',
     lensColors: {},
     lensOpacityStrong: 0,
-    lensOpacitySoft: 0.5
+    lensOpacitySoft: 1
   };
   let zoomLockInstalled = false;
 
@@ -34,6 +35,24 @@
     const g = (int >> 8) & 255;
     const b = int & 255;
     return `${r}, ${g}, ${b}`;
+  }
+
+  function toRgbTuple(color) {
+    const normalized = normalizeHexColor(color, '');
+    if (!normalized) return null;
+    const int = parseInt(normalized.slice(1), 16);
+    return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+  }
+
+  function rgbToHex([r, g, b]) {
+    return `#${[r, g, b]
+      .map((value) => Math.max(0, Math.min(255, value)))
+      .map((value) => value.toString(16).padStart(2, '0'))
+      .join('')}`;
+  }
+
+  function lightenRgb(rgb = [0, 0, 0], factor = 0.2) {
+    return rgb.map((value) => Math.round(value + (255 - value) * factor));
   }
 
   function getDefaultPhraseColor(theme) {
@@ -57,6 +76,7 @@
       normalized.phraseColor = normalizeHexColor(value.phraseColor, '');
       normalized.modeIconColor = normalizeHexColor(value.modeIconColor, DEFAULT_SETTINGS.modeIconColor);
       normalized.modeIconOpacity = normalizeOpacity(value.modeIconOpacity, DEFAULT_SETTINGS.modeIconOpacity);
+      normalized.buttonColor = normalizeHexColor(value.buttonColor, DEFAULT_SETTINGS.buttonColor);
       normalized.lensColor = normalizeHexColor(value.lensColor, '');
       normalized.lensColors = normalizeLensPalette(value.lensColors);
       normalized.lensOpacityStrong = normalizeOpacity(value.lensOpacityStrong, DEFAULT_SETTINGS.lensOpacityStrong);
@@ -210,6 +230,17 @@
     doc.style.setProperty('--mode-icon-opacity', String(normalized));
   }
 
+  function applyButtonColor(color) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const normalized = normalizeHexColor(color, DEFAULT_SETTINGS.buttonColor);
+    const rgb = toRgbTuple(normalized) || toRgbTuple(DEFAULT_SETTINGS.buttonColor) || [59, 130, 246];
+    const contrast = rgbToHex(lightenRgb(rgb, 0.35));
+    doc.style.setProperty('--button-color-base', normalized || DEFAULT_SETTINGS.buttonColor);
+    doc.style.setProperty('--button-color-contrast', contrast);
+    doc.style.setProperty('--button-shadow', `rgba(${rgb.join(', ')}, 0.35)`);
+  }
+
   function applyContextLensColors(lensColors = {}, fallbackColor = '') {
     const doc = document.documentElement;
     if (!doc || !lensColors || typeof lensColors !== 'object') return;
@@ -240,6 +271,7 @@
     applyPhraseColor(settings.phraseColor, settings.theme);
     applyModeIconColor(settings.modeIconColor);
     applyModeIconOpacity(settings.modeIconOpacity);
+    applyButtonColor(settings.buttonColor);
     applyLensColor(settings.lensColor);
     applyContextLensColors(settings.lensColors, settings.lensColor);
     applyLensOpacity(settings.lensOpacityStrong, settings.lensOpacitySoft);
@@ -267,6 +299,7 @@
     applyLensColor,
     applyModeIconColor,
     applyModeIconOpacity,
+    applyButtonColor,
     applyLensOpacity,
     applyVisualPreferences,
     applyTheme,

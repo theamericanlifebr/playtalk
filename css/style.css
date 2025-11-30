@@ -10,7 +10,7 @@
   --phrase-color: #ffffff;
   --mode-icon-opacity: 1;
   --lens-opacity-strong: 0;
-  --lens-opacity-soft: 0.5;
+  --lens-opacity-soft: 1;
   --mode-icon-color: #0b1f44;
   --lens-color-1-rgb: 200, 229, 74;
   --lens-color-2-rgb: 255, 215, 0;
@@ -23,6 +23,9 @@
   --lens-color-menus-rgb: 0, 0, 0;
   --lens-color-profile-rgb: 11, 47, 91;
   --lens-color-stats-rgb: 0, 0, 0;
+  --button-color-base: #3b82f6;
+  --button-color-contrast: #8b5cf6;
+  --button-shadow: rgba(59, 130, 246, 0.35);
 }
 
 html,
@@ -1355,32 +1358,32 @@ body.page-login .login-flow {
   backdrop-filter: none;
 }
 
+
 .login-flow__panel {
-  width: min(340px, 90vw);
-  padding: 32px 28px 28px;
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: none;
+  width: min(360px, 92vw);
+  padding: 28px 26px;
+  border-radius: 34px;
+  background: linear-gradient(0deg, #ffffff 0%, #f4f7fb 100%);
+  box-shadow: rgba(133, 189, 215, 0.45) 0 30px 30px -18px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  color: #ffffff;
+  gap: 18px;
+  color: #0d1c3b;
+  border: 5px solid #ffffff;
 }
 
 body.page-login .login-flow__panel {
-  width: min(420px, 94vw);
-  background: rgba(0, 0, 0, 0.45);
-  border: none;
-  box-shadow: none;
-  color: #ffffff;
+  width: min(460px, 96vw);
   animation: loginFadeIn 520ms ease forwards;
 }
 
-body.dark-mode .login-flow__panel {
-  background: transparent;
-  color: #0a6bff;
-  box-shadow: none;
+body.dark-mode .login-flow__panel,
+body.theme-blue .login-flow__panel {
+  background: linear-gradient(0deg, rgba(17, 46, 98, 0.95) 0%, rgba(9, 28, 71, 0.98) 100%);
+  color: #eaf2ff;
+  box-shadow: rgba(9, 28, 71, 0.55) 0 30px 30px -18px;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 body.page-login #playtalk-background-layer {
@@ -1394,17 +1397,17 @@ body.theme-blue .login-flow__panel {
 }
 
 .login-flow__logo {
-  width: 70px;
-  height: 70px;
+  width: 90px;
+  height: 90px;
   object-fit: contain;
 }
 
 .login-flow__title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 900;
   text-align: center;
-  color: #ffffff;
+  color: #1089d3;
 }
 
 .login-flow__form {
@@ -1428,67 +1431,66 @@ body.theme-blue .login-flow__panel {
   font-weight: 600;
   font-size: 0.95rem;
   text-align: left;
-  color: #ffffff;
+  color: #0d1c3b;
 }
 
 .login-flow__step input {
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  padding: 15px 20px;
+  border-radius: 18px;
+  border: 2px solid transparent;
   font-size: 1rem;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.5);
-  color: #ffffff;
+  background: white;
+  color: #0d1c3b;
   box-sizing: border-box;
+  box-shadow: #cff0ff 0 10px 10px -6px;
 }
 
 .login-flow__step input::placeholder {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgb(170, 170, 170);
 }
 
-body.dark-mode .login-flow__step input {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.55);
-  color: #ffffff;
-}
-
+body.dark-mode .login-flow__step input,
 body.theme-blue .login-flow__step input {
-  background: rgba(240, 246, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
   color: #ffffff;
+  box-shadow: rgba(133, 189, 215, 0.6) 0 12px 12px -10px;
+}
+
+body.dark-mode .login-flow__step label,
+body.theme-blue .login-flow__step label {
+  color: #eaf2ff;
 }
 
 .login-flow__submit {
   width: 100%;
-  padding: 12px;
+  padding: 15px;
   border: none;
-  border-radius: 999px;
+  border-radius: 20px;
   font-weight: 700;
   font-size: 1rem;
   color: #ffffff;
-  background: linear-gradient(135deg, #0d6efd, #0a3e9b);
-  border: none;
+  background: linear-gradient(45deg, #1089d3 0%, #12b1d1 100%);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 10px 28px rgba(13, 110, 253, 0.35);
+  box-shadow: rgba(133, 189, 215, 0.8) 0 20px 12px -10px;
 }
 
 .login-flow__submit:hover,
 .login-flow__submit:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: none;
+  transform: scale(1.02);
+  box-shadow: rgba(133, 189, 215, 0.9) 0 22px 14px -10px;
 }
 
 body.dark-mode .login-flow__submit,
 body.theme-blue .login-flow__submit {
-  background: linear-gradient(135deg, #0d6efd, #0a3e9b);
-  border: none;
-  color: #ffffff;
+  background: linear-gradient(45deg, #1089d3 0%, #12b1d1 100%);
 }
 
 .login-flow__submit-icon {
@@ -1508,7 +1510,7 @@ body.theme-blue .login-flow__submit {
   margin: 4px 0 0;
   font-size: 0.85rem;
   text-align: center;
-  color: #ffffff;
+  color: #e11d48;
 }
 
 .login-flow__status {
@@ -1516,32 +1518,89 @@ body.theme-blue .login-flow__submit {
   margin-top: 8px;
   font-size: 0.9rem;
   text-align: center;
-  color: #ffffff;
+  color: #1089d3;
+}
+
+.social-account-container {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.social-account-container .title {
+  display: block;
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(13, 28, 59, 0.8);
+}
+
+.social-account-container .social-accounts {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.social-account-container .social-accounts .social-button {
+  background: linear-gradient(45deg, #000 0%, #707070 100%);
+  border: 4px solid white;
+  padding: 8px;
+  border-radius: 50%;
+  width: 46px;
+  aspect-ratio: 1;
+  display: grid;
+  place-content: center;
+  box-shadow: rgba(133, 189, 215, 0.7) 0 12px 10px -8px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.social-account-container .social-accounts .social-button .svg {
+  fill: white;
+}
+
+.social-account-container .social-accounts .social-button:hover,
+.social-account-container .social-accounts .social-button:focus-visible {
+  transform: scale(1.06);
+  outline: none;
+  box-shadow: rgba(133, 189, 215, 0.9) 0 14px 12px -8px;
+}
+
+.agreement {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.agreement a {
+  text-decoration: none;
+  color: #1089d3;
+  font-size: 0.85rem;
 }
 
 body.dark-mode .login-flow__error {
-  color: #ffffff;
+  color: #ff7a8a;
 }
 
 body.theme-blue .login-flow__error {
-  color: #ffffff;
+  color: #ff7a8a;
 }
 
 body.dark-mode .login-flow__status {
-  color: #ffffff;
+  color: #d3e7ff;
 }
 
 body.theme-blue .login-flow__status {
-  color: #ffffff;
+  color: #d3e7ff;
 }
 
 body.page-login .login-flow__logo {
-  width: 86px;
-  height: 86px;
+  width: 96px;
+  height: 96px;
 }
 
 body.page-login .login-flow__title {
-  color: #ffffff;
+  color: #1089d3;
 }
 
 @keyframes loginFadeIn {
@@ -3755,11 +3814,19 @@ body.page-transition-leave [data-page-transition] {
   gap: 8px;
   padding: 10px 18px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #00b3b3, #00cccc);
+  background: linear-gradient(135deg, var(--button-color-base), var(--button-color-contrast));
   color: #fff;
   font-weight: 600;
   cursor: pointer;
   font-size: 14px;
+  box-shadow: 0 14px 28px var(--button-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.profile-upload-label:hover,
+.profile-upload-label:focus-within {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px var(--button-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .profile-upload-label input {
@@ -3774,12 +3841,18 @@ body.page-transition-leave [data-page-transition] {
   padding: 10px 18px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(90deg, #ff7a18, #ffb347);
+  background: linear-gradient(135deg, var(--button-color-base), var(--button-color-contrast));
   color: #fff;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 14px 28px var(--button-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.profile-publish-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px var(--button-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .profile-publish-button:disabled {
@@ -3878,7 +3951,7 @@ body.theme-blue #fun-container {
 
 .fun-color-options--grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 14px 16px;
 }
 
@@ -3890,19 +3963,77 @@ body.theme-blue #fun-container {
 }
 
 .fun-color-input {
-  width: 140px;
-  height: 44px;
-  padding: 0 6px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.9);
   cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  appearance: none;
+}
+
+.fun-color-input::-webkit-color-swatch,
+.fun-color-input::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
 }
 
 body.dark-mode .fun-color-input,
 body.theme-blue .fun-color-input {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.25);
+}
+
+.fun-color-input:focus-visible,
+.fun-color-input:hover {
+  outline: none;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.16);
+  border-color: rgba(0, 0, 0, 0.16);
+}
+
+.fun-color-palette {
+  width: 100%;
+  margin-top: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fun-color-palette--visible {
+  display: flex;
+}
+
+.fun-color-palette__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 14px;
+  border-radius: 20px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 18px 26px rgba(0, 0, 0, 0.2);
+}
+
+.fun-color-palette__swatch {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color, #8b5cf6);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22), inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.fun-color-palette__swatch:hover,
+.fun-color-palette__swatch:focus-visible {
+  outline: none;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.26), inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+  filter: brightness(1.05);
 }
 
 .fun-opacity {
@@ -4149,6 +4280,9 @@ body.theme-blue .fun-field input {
   text-transform: uppercase;
   font-size: 1rem;
   display: inline-block;
+  --btn-start: var(--button-color-base);
+  --btn-end: var(--button-color-contrast);
+  --btn-shadow: var(--button-shadow);
 }
 
 .neo-button__shadow {
@@ -4163,34 +4297,20 @@ body.theme-blue .fun-field input {
   transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
 }
 
-.neo-button__edge {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 0.5rem;
-  background: linear-gradient(
-    to left,
-    hsl(217, 33%, 16%) 0%,
-    hsl(217, 33%, 32%) 8%,
-    hsl(217, 33%, 32%) 92%,
-    hsl(217, 33%, 16%) 100%
-  );
-}
-
 .neo-button__front {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
+  padding: 0.78rem 1.56rem;
   color: white;
-  background: linear-gradient(to right, #f27121, #e94057, #8a2387);
-  border-radius: 0.5rem;
+  background: linear-gradient(135deg, var(--btn-start), var(--btn-end));
+  border-radius: 0.75rem;
   transform: translateY(-0.25rem);
   gap: 0.75rem;
   transition: transform 600ms cubic-bezier(0.3, 0.7, 0.4, 1);
+  box-shadow: 0 16px 30px var(--btn-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  letter-spacing: 0.03em;
 }
 
 .neo-button__icon {
@@ -4210,7 +4330,8 @@ body.theme-blue .fun-field input {
 .neo-button:hover .neo-button__front {
   transform: translateY(-0.375rem);
   transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
-  filter: brightness(115%);
+  filter: brightness(110%);
+  box-shadow: 0 18px 34px var(--btn-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 .neo-button:hover .neo-button__icon {
