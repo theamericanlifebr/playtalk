@@ -506,6 +506,16 @@
 
   function applyStoredBackground() {
     const body = typeof document !== 'undefined' ? document.body : null;
+    if (body && body.classList.contains('page-inplay')) {
+      const layer = document.getElementById('playtalk-background-layer');
+      clearLayer(layer);
+      if (layer) {
+        layer.remove();
+      }
+      body.classList.remove('has-custom-background');
+      return null;
+    }
+
     if (body && body.classList.contains('page-login')) {
       const layer = document.getElementById('playtalk-background-layer');
       clearLayer(layer);
