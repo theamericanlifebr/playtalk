@@ -125,6 +125,21 @@
             <input type="color" data-lens-mode="stats" class="fun-color-input lens-mode-input" value="#000000">
           </label>
         </div>
+        <div class="fun-color-palette" id="lens-color-palette" aria-label="Paleta rápida de cores da lente">
+          <span class="fun-note">Paleta rápida de destaques</span>
+          <div class="fun-color-palette__grid">
+            <button type="button" class="fun-color-palette__swatch" style="--color: #e11d48" data-color-swatch="#e11d48" aria-label="Aplicar cor #e11d48"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #f472b6" data-color-swatch="#f472b6" aria-label="Aplicar cor #f472b6"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #fb923c" data-color-swatch="#fb923c" aria-label="Aplicar cor #fb923c"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #facc15" data-color-swatch="#facc15" aria-label="Aplicar cor #facc15"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #84cc16" data-color-swatch="#84cc16" aria-label="Aplicar cor #84cc16"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #10b981" data-color-swatch="#10b981" aria-label="Aplicar cor #10b981"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #0ea5e9" data-color-swatch="#0ea5e9" aria-label="Aplicar cor #0ea5e9"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #3b82f6" data-color-swatch="#3b82f6" aria-label="Aplicar cor #3b82f6"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #8b5cf6" data-color-swatch="#8b5cf6" aria-label="Aplicar cor #8b5cf6"></button>
+            <button type="button" class="fun-color-palette__swatch" style="--color: #a78bfa" data-color-swatch="#a78bfa" aria-label="Aplicar cor #a78bfa"></button>
+          </div>
+        </div>
         <p class="fun-note">Defina a opacidade da lente aplicada em qualquer modo.</p>
         <div class="fun-opacity">
           <label for="lensOpacityStrong">
@@ -133,7 +148,7 @@
           </label>
           <label for="lensOpacitySoft">
             Camada suave
-            <input type="range" id="lensOpacitySoft" min="0" max="1" step="0.05" value="0.25">
+            <input type="range" id="lensOpacitySoft" min="0" max="1" step="0.05" value="1">
           </label>
         </div>
       </section>
@@ -153,6 +168,16 @@
           </label>
         </div>
       </section>
+      <section class="fun-section">
+        <h2>Botões</h2>
+        <p class="fun-note">Ajuste a cor principal utilizada nos botões do app.</p>
+        <div class="fun-color-options">
+          <label for="buttonColor">
+            Cor dos botões
+            <input type="color" id="buttonColor" class="fun-color-input" value="#3b82f6">
+          </label>
+        </div>
+      </section>
       <section class="fun-section fun-section--background">
         <h2>Plano de fundo do jogo</h2>
         <p class="fun-note">Envie uma imagem JPG/PNG ou um vídeo MP4 de até 40 MB para personalizar o fundo.</p>
@@ -169,7 +194,6 @@
           </label>
           <button type="button" id="fun-background-clear" class="profile-publish-button profile-publish-button--ghost neo-button neo-button--ghost">
             <span class="neo-button__shadow"></span>
-            <span class="neo-button__edge"></span>
             <span class="neo-button__front">
               <span>Remover plano de fundo</span>
               <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
@@ -201,7 +225,6 @@
       <div class="fun-actions">
         <button type="submit" class="neo-button">
           <span class="neo-button__shadow"></span>
-          <span class="neo-button__edge"></span>
           <span class="neo-button__front">
             <span>Salvar configurações</span>
             <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
