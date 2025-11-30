@@ -14,7 +14,6 @@
   <script src="js/settings.js"></script>
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
-  <script src="js/button-effects.js" defer></script>
 </head>
 <body class="page-profile" data-lens-context="profile">
   <header class="site-header" id="global-header">
@@ -29,15 +28,15 @@
           >
         </div>
       </div>
-  <div class="site-header__text">
-    <span class="site-header__name" id="header-username">Jogador</span>
-    <span class="site-header__level" id="header-level">Nível 1</span>
-  </div>
-</div>
-<div class="site-header__actions">
-        <button id="login-btn" class="site-header__button playtalk-button playtalk-button--compact" type="button" data-label="Entrar"></button>
-</div>
-</header>
+      <div class="site-header__text">
+        <span class="site-header__name" id="header-username">Jogador</span>
+        <span class="site-header__level" id="header-level">Nível 1</span>
+      </div>
+    </div>
+    <div class="site-header__actions">
+      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+    </div>
+  </header>
   <main id="profile-container" class="container-screen container-screen--profile" data-page-transition>
     <h1>Usuário</h1>
     <form class="profile-form" autocomplete="on">
@@ -70,14 +69,18 @@
           <span>Carregar foto</span>
           <input type="file" id="profile-photo" name="profile-photo" accept=".jpg,.jpeg,.png,.gif,.webp">
         </label>
-        <button type="button" id="profile-photo-publish" class="profile-publish-button playtalk-button playtalk-button--wide" data-label="Publicar foto" disabled>
-          <svg fill="currentColor" viewBox="0 0 20 20" class="playtalk-button__icon" aria-hidden="true">
-            <path
-              clip-rule="evenodd"
-              d="M2.293 9.293a1 1 0 0 1 1.414 0L9 14.586l7.293-7.293a1 1 0 1 1 1.414 1.414l-8 8a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 0-1.414Z"
-              fill-rule="evenodd"
-            ></path>
-          </svg>
+        <button type="button" id="profile-photo-publish" class="profile-publish-button neo-button" disabled>
+          <span class="neo-button__shadow"></span>
+          <span class="neo-button__front">
+            <span>Publicar foto</span>
+            <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+              <path
+                clip-rule="evenodd"
+                d="M2.293 9.293a1 1 0 0 1 1.414 0L9 14.586l7.293-7.293a1 1 0 1 1 1.414 1.414l-8 8a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 0-1.414Z"
+                fill-rule="evenodd"
+              ></path>
+            </svg>
+          </span>
         </button>
       </div>
       <div class="profile-field">
@@ -96,33 +99,39 @@
       <button
         type="button"
         id="profile-logout-btn"
-        class="logout-button logout-button--primary playtalk-button playtalk-button--wide"
+        class="logout-button logout-button--primary neo-button"
         data-role="logout"
-        data-label="Encerrar sessão"
       >
-        <svg fill="currentColor" viewBox="0 0 20 20" class="playtalk-button__icon" aria-hidden="true">
-          <path
-            clip-rule="evenodd"
-            d="M3 4a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v4h-2V4H5v12h5v-4h2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4Zm11.293 1.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 1 1-1.414-1.414L15.586 11H9a1 1 0 1 1 0-2h6.586l-1.293-1.293a1 1 0 0 1 0-1.414Z"
-            fill-rule="evenodd"
-          ></path>
-        </svg>
+        <span class="neo-button__shadow"></span>
+        <span class="neo-button__front">
+          <span>Encerrar sessão</span>
+          <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+            <path
+              clip-rule="evenodd"
+              d="M3 4a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v4h-2V4H5v12h5v-4h2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4Zm11.293 1.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 1 1-1.414-1.414L15.586 11H9a1 1 0 1 1 0-2h6.586l-1.293-1.293a1 1 0 0 1 0-1.414Z"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
+        </span>
       </button>
       <button
         type="button"
         id="profile-switch-account-btn"
-        class="logout-button playtalk-button playtalk-button--wide playtalk-button--ghost"
+        class="logout-button neo-button neo-button--ghost"
         data-role="logout"
         data-switch-account="true"
-        data-label="Trocar de conta"
       >
-        <svg fill="currentColor" viewBox="0 0 20 20" class="playtalk-button__icon" aria-hidden="true">
-          <path
-            clip-rule="evenodd"
-            d="M3 4.75A2.75 2.75 0 0 1 5.75 2h5.5A2.75 2.75 0 0 1 14 4.75V6h-2V4.75a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v10.5a.75.75 0 0 0 .75.75h5.5a.75.75 0 0 0 .75-.75V13h2v2.25A2.75 2.75 0 0 1 11.25 18h-5.5A2.75 2.75 0 0 1 3 15.25V4.75Zm9.72 2.03a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 0 1-1.06-1.06l1.22-1.22H9a.75.75 0 0 1 0-1.5h4.94l-1.22-1.22a.75.75 0 0 1 0-1.06Z"
-            fill-rule="evenodd"
-          ></path>
-        </svg>
+        <span class="neo-button__shadow"></span>
+        <span class="neo-button__front">
+          <span>Trocar de conta</span>
+          <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
+            <path
+              clip-rule="evenodd"
+              d="M3 4.75A2.75 2.75 0 0 1 5.75 2h5.5A2.75 2.75 0 0 1 14 4.75V6h-2V4.75a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v10.5a.75.75 0 0 0 .75.75h5.5a.75.75 0 0 0 .75-.75V13h2v2.25A2.75 2.75 0 0 1 11.25 18h-5.5A2.75 2.75 0 0 1 3 15.25V4.75Zm9.72 2.03a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 0 1-1.06-1.06l1.22-1.22H9a.75.75 0 0 1 0-1.5h4.94l-1.22-1.22a.75.75 0 0 1 0-1.06Z"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
+        </span>
       </button>
     </div>
   </main>

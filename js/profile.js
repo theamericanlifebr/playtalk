@@ -342,7 +342,7 @@ function initProfilePage(context = {}) {
       ? backgroundAPI.getConfig()
       : null;
     if (config) {
-      const label = config.name || (config.type === 'waves' ? 'Fundo animado padrão' : 'Imagem personalizada');
+      const label = config.name || (config.type === 'video' ? 'Vídeo personalizado' : 'Imagem personalizada');
       setBackgroundStatus(`Plano de fundo ativo: ${label}`);
       return;
     }
@@ -357,7 +357,7 @@ function initProfilePage(context = {}) {
       return;
     }
     if (!file) {
-      setBackgroundStatus('Escolha um arquivo JPG, PNG ou WEBP para continuar.', { error: true });
+      setBackgroundStatus('Escolha um arquivo JPG, PNG, WEBP ou MP4 para continuar.', { error: true });
       return;
     }
     setBackgroundStatus('Carregando plano de fundo...');
