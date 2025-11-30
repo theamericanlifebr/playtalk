@@ -417,17 +417,17 @@ body.page-ranking {
 }
 
 .ranking-carousel__nav-button {
-  border: 1px solid rgba(15, 82, 186, 0.18);
-  border-radius: 14px;
-  padding: 10px 14px;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   color: #0f52ba;
-  background: rgba(15, 82, 186, 0.06);
+  background: transparent;
   cursor: pointer;
-  opacity: 0.72;
+  opacity: 0.6;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
@@ -445,9 +445,6 @@ body.theme-blue .ranking-carousel__nav-button {
 .ranking-carousel__nav-button.is-active {
   opacity: 1;
   transform: translateY(-2px);
-  background: #0f52ba;
-  color: #ffffff;
-  box-shadow: 0 12px 30px rgba(15, 82, 186, 0.32);
 }
 
 .ranking-carousel__nav-button:focus-visible {
@@ -511,28 +508,17 @@ body.theme-blue .ranking-carousel__nav-button {
 }
 
 .ranking-card {
-  position: relative;
-  background: linear-gradient(160deg, #ffffff 0%, #f3f7ff 45%, #e7f1ff 100%);
+  background: transparent;
   border-radius: 24px;
-  padding: 22px 24px;
-  box-shadow: 0 18px 46px rgba(11, 61, 145, 0.12);
-  border: 1px solid rgba(11, 61, 145, 0.12);
+  padding: 20px;
+  box-shadow: none;
+  border: 1px solid transparent;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  overflow: hidden;
-}
-
-.ranking-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 16% 16%, rgba(15, 82, 186, 0.08), transparent 38%),
-    radial-gradient(circle at 80% 10%, rgba(255, 193, 7, 0.12), transparent 32%);
-  pointer-events: none;
 }
 
 .ranking-card__header {
@@ -540,19 +526,17 @@ body.theme-blue .ranking-carousel__nav-button {
   justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
-  position: relative;
 }
 
 .ranking-card__header h2 {
   margin: 0;
-  font-size: 21px;
+  font-size: 20px;
 }
 
 .ranking-card__header p {
   margin: 4px 0 0;
   font-size: 14px;
   color: #516b9a;
-  max-width: 48ch;
 }
 
 .ranking-tag {
@@ -576,39 +560,20 @@ body.theme-blue .ranking-carousel__nav-button {
 }
 
 .ranking-row {
-  position: relative;
   display: grid;
-  grid-template-columns: auto 64px 1fr auto;
+  grid-template-columns: auto 56px 1fr auto;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 10px 12px;
   border-radius: 18px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(229, 239, 255, 0.85));
-  border: 1px solid rgba(11, 61, 145, 0.12);
-  box-shadow: 0 10px 28px rgba(11, 61, 145, 0.12);
-  overflow: hidden;
-}
-
-.ranking-row::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(15, 82, 186, 0.12), transparent 55%);
-  pointer-events: none;
+  background: transparent;
+  border: 1px solid rgba(11, 61, 145, 0.2);
 }
 
 .ranking-row__position {
   font-weight: 700;
   font-size: 16px;
   color: #0b3d91;
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(15, 82, 186, 0.1);
-  border-radius: 14px;
-  grid-area: pos;
 }
 
 .ranking-row__avatar {
@@ -638,7 +603,6 @@ body.theme-blue .ranking-row__avatar {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  grid-area: info;
 }
 
 .ranking-row__name {
@@ -657,7 +621,6 @@ body.theme-blue .ranking-row__avatar {
   font-size: 16px;
   color: #0b3d91;
   text-align: right;
-  grid-area: value;
 }
 
 .ranking-empty {
@@ -733,22 +696,11 @@ body.theme-blue .ranking-tag {
     margin-top: calc(var(--header-height) + var(--content-offset) + 70px);
   }
 
-  .ranking-carousel__nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .ranking-card {
-    padding: 18px 16px;
-    gap: 12px;
-  }
-
   .ranking-row {
-    grid-template-columns: 44px 1fr auto;
-    grid-template-areas: 'pos info value';
-    min-height: 60px;
-    padding: 10px 14px;
-    gap: 10px;
+    grid-template-columns: 32px 48px 1fr;
+    grid-template-areas:
+      'pos avatar value'
+      'pos info info';
   }
 
   .stats-top__list .ranking-row {
@@ -761,7 +713,9 @@ body.theme-blue .ranking-tag {
   }
 
   .ranking-row__avatar {
-    display: none;
+    grid-area: avatar;
+    width: 48px;
+    height: 48px;
   }
 
   .ranking-row__info {
@@ -4909,8 +4863,7 @@ body.dark-mode .post-game-metric__caption {
 
 @media (max-width: 768px) {
   .page-home .container-screen--home {
-    transform: translateY(-150px) scale(0.8);
-    transform-origin: top center;
+    transform: translateY(-150px);
   }
 
   .page-inplay .container-screen--home {
