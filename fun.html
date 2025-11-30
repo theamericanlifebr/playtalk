@@ -14,6 +14,7 @@
   <script src="js/settings.js"></script>
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/button-effects.js" defer></script>
 </head>
 <body class="page-fun" data-lens-context="menus">
   <header class="site-header" id="global-header">
@@ -27,16 +28,16 @@
             id="header-avatar"
           >
         </div>
-      </div>
-      <div class="site-header__text">
-        <span class="site-header__name" id="header-username">Jogador</span>
-        <span class="site-header__level" id="header-level">Nível 1</span>
-      </div>
-    </div>
-    <div class="site-header__actions">
-      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
-    </div>
-  </header>
+  </div>
+  <div class="site-header__text">
+    <span class="site-header__name" id="header-username">Jogador</span>
+    <span class="site-header__level" id="header-level">Nível 1</span>
+  </div>
+</div>
+<div class="site-header__actions">
+      <button id="login-btn" class="site-header__button playtalk-button playtalk-button--compact" type="button" data-label="Entrar"></button>
+</div>
+</header>
   <main id="fun-container" class="container-screen container-screen--fun" data-page-transition>
     <h1>Opções</h1>
     <form id="fun-form">
@@ -180,7 +181,7 @@
       </section>
       <section class="fun-section fun-section--background">
         <h2>Plano de fundo do jogo</h2>
-        <p class="fun-note">Envie uma imagem JPG/PNG ou um vídeo MP4 de até 40 MB para personalizar o fundo.</p>
+        <p class="fun-note">Envie uma imagem JPG/PNG/WEBP de até 40 MB para personalizar o fundo.</p>
         <div class="profile-background__controls">
           <label for="fun-background-upload" class="profile-upload-label profile-upload-label--wide">
             <span aria-hidden="true">🖼️</span>
@@ -189,21 +190,17 @@
               type="file"
               id="fun-background-upload"
               name="fun-background-upload"
-              accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
             >
           </label>
-          <button type="button" id="fun-background-clear" class="profile-publish-button profile-publish-button--ghost neo-button neo-button--ghost">
-            <span class="neo-button__shadow"></span>
-            <span class="neo-button__front">
-              <span>Remover plano de fundo</span>
-              <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
-                <path
-                  clip-rule="evenodd"
-                  d="M10 3a1 1 0 0 1 .894.553l5 10A1 1 0 0 1 15 15h-2.382l1.276 2.553a1 1 0 0 1-1.788.894L10 13.618 8.894 17.447a1 1 0 0 1-1.788-.894L8.382 15H6a1 1 0 0 1-.894-1.447l5-10A1 1 0 0 1 10 3Zm0 4a1 1 0 0 0-.894.553L7.618 11h4.764l-1.488-3.447A1 1 0 0 0 10 7Z"
-                  fill-rule="evenodd"
-                ></path>
-              </svg>
-            </span>
+          <button type="button" id="fun-background-clear" class="profile-publish-button profile-publish-button--ghost playtalk-button playtalk-button--wide playtalk-button--ghost" data-label="Remover plano de fundo">
+            <svg fill="currentColor" viewBox="0 0 20 20" class="playtalk-button__icon" aria-hidden="true">
+              <path
+                clip-rule="evenodd"
+                d="M10 3a1 1 0 0 1 .894.553l5 10A1 1 0 0 1 15 15h-2.382l1.276 2.553a1 1 0 0 1-1.788.894L10 13.618 8.894 17.447a1 1 0 0 1-1.788-.894L8.382 15H6a1 1 0 0 1-.894-1.447l5-10A1 1 0 0 1 10 3Zm0 4a1 1 0 0 0-.894.553L7.618 11h4.764l-1.488-3.447A1 1 0 0 0 10 7Z"
+                fill-rule="evenodd"
+              ></path>
+            </svg>
           </button>
         </div>
         <p id="fun-background-status" class="profile-background__status" aria-live="polite"></p>
@@ -223,18 +220,14 @@
       </section>
       <p class="fun-note">Ao atingir 25.000 pontos a rodada é concluída automaticamente, sem carregar novas frases.</p>
       <div class="fun-actions">
-        <button type="submit" class="neo-button">
-          <span class="neo-button__shadow"></span>
-          <span class="neo-button__front">
-            <span>Salvar configurações</span>
-            <svg fill="currentColor" viewBox="0 0 20 20" class="neo-button__icon" aria-hidden="true">
-              <path
-                clip-rule="evenodd"
-                d="M10.293 3.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 0 1-1.414-1.414L14.586 11H3a1 1 0 1 1 0-2h11.586l-4.293-4.293a1 1 0 0 1 0-1.414Z"
-                fill-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
+        <button type="submit" class="playtalk-button playtalk-button--wide" data-label="Salvar configurações">
+          <svg fill="currentColor" viewBox="0 0 20 20" class="playtalk-button__icon" aria-hidden="true">
+            <path
+              clip-rule="evenodd"
+              d="M10.293 3.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 0 1-1.414-1.414L14.586 11H3a1 1 0 1 1 0-2h11.586l-4.293-4.293a1 1 0 0 1 0-1.414Z"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
         </button>
         <span id="fun-feedback" role="status" aria-live="polite"></span>
       </div>

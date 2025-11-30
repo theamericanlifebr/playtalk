@@ -15,6 +15,7 @@
   <script src="js/settings.js"></script>
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/button-effects.js" defer></script>
 </head>
 <body class="page-inplay" data-lens-context="game">
     <header class="site-header" id="global-header">
@@ -28,16 +29,16 @@
             id="header-avatar"
           >
         </div>
-      </div>
-      <div class="site-header__text">
-        <span class="site-header__name" id="header-username">Jogador</span>
-        <span class="site-header__level" id="header-level">Nível 1</span>
-      </div>
     </div>
-      <div class="site-header__actions">
-        <button id="login-btn" class="site-header__button" type="button">Entrar</button>
-      </div>
-    </header>
+    <div class="site-header__text">
+      <span class="site-header__name" id="header-username">Jogador</span>
+      <span class="site-header__level" id="header-level">Nível 1</span>
+    </div>
+  </div>
+  <div class="site-header__actions">
+      <button id="login-btn" class="site-header__button playtalk-button playtalk-button--compact" type="button" data-label="Entrar"></button>
+  </div>
+</header>
   <main id="home-main" class="container-screen container-screen--home" data-page-transition>
       <div id="menu">
       <div id="menu-modes">
@@ -133,17 +134,15 @@
           </div>
         </div>
         <div class="game-overlay__actions game-overlay__actions--stacked">
-          <button id="pre-game-start" class="game-overlay__primary game-overlay__primary--play" type="button">
-            <span class="game-overlay__button-icon" aria-hidden="true">
+          <button id="pre-game-start" class="game-overlay__primary game-overlay__primary--play playtalk-button playtalk-button--wide" type="button" data-label="Play">
+            <span class="playtalk-button__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="m8 5 12 7-12 7V5Z" /></svg>
             </span>
-            <span>Play</span>
           </button>
-          <button id="pre-game-level-finder" class="game-overlay__secondary game-overlay__secondary--muted" type="button">
-            <span class="game-overlay__button-icon" aria-hidden="true">
+          <button id="pre-game-level-finder" class="game-overlay__secondary game-overlay__secondary--muted playtalk-button playtalk-button--wide playtalk-button--ghost" type="button" data-label="Jogar com LevelFinder">
+            <span class="playtalk-button__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2c.64 0 1.22.4 1.43 1.01l1.21 3.35 3.37 1.19A1.5 1.5 0 0 1 19 9.9l-2.84 2.84.86 3.55a1.5 1.5 0 0 1-2.05 1.73L12 16.8l-3.07 1.22a1.5 1.5 0 0 1-2.05-1.73l.86-3.55L5 9.9a1.5 1.5 0 0 1 .99-2.34l3.37-1.19 1.21-3.35C10.78 2.4 11.36 2 12 2Zm0 6.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" /></svg>
             </span>
-            <span>Jogar com LevelFinder</span>
           </button>
         </div>
       </div>
