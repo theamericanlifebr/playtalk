@@ -313,6 +313,31 @@
 })();
 
 (function() {
+  function ensureWaveBackground() {
+    const body = document.body;
+    if (!body || body.querySelector('.playtalk-waves')) {
+      return;
+    }
+    const wrapper = document.createElement('div');
+    wrapper.className = 'playtalk-waves';
+
+    for (let index = 0; index < 3; index += 1) {
+      const wave = document.createElement('div');
+      wave.className = 'wave';
+      wrapper.appendChild(wave);
+    }
+
+    body.appendChild(wrapper);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureWaveBackground, { once: true });
+  } else {
+    ensureWaveBackground();
+  }
+})();
+
+(function() {
   const BACKGROUND_STORAGE_KEY = 'playtalkBackground';
   const MAX_BACKGROUND_SIZE = 40 * 1024 * 1024;
   const ACCEPTED_TYPES = new Set([
