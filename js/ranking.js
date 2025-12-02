@@ -80,6 +80,9 @@
   function createRankingRow(entry, index, config) {
     const row = document.createElement('li');
     row.className = 'ranking-row';
+    if (index <= 2) {
+      row.classList.add(`ranking-row--rank-${index + 1}`);
+    }
 
     const position = document.createElement('span');
     position.className = 'ranking-row__position';
@@ -110,7 +113,9 @@
 
     const value = document.createElement('div');
     value.className = 'ranking-row__value';
-    value.textContent = typeof config.value === 'function' ? config.value(entry) : '';
+    const scoreText = typeof config.value === 'function' ? config.value(entry) : '';
+    value.textContent = scoreText;
+    value.setAttribute('aria-label', `Score ${scoreText}`);
 
     row.appendChild(position);
     row.appendChild(avatarWrapper);
