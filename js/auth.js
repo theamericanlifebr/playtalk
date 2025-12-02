@@ -782,6 +782,12 @@
       }
     }
 
+    function setButtonActive(active) {
+      if (loginBtn) {
+        loginBtn.classList.toggle('is-active', Boolean(active));
+      }
+    }
+
     function resetFlow() {
       form.reset();
       setError('');
@@ -794,6 +800,7 @@
       flow.classList.remove('hidden');
       flow.setAttribute('aria-hidden', 'false');
       document.body.classList.add('login-flow-open');
+      setButtonActive(true);
     }
 
     function closeFlow() {
@@ -802,6 +809,7 @@
       document.body.classList.remove('login-flow-open');
       setError('');
       setStatus('');
+      setButtonActive(false);
     }
 
     openLoginFlowHandler = openFlow;
@@ -849,9 +857,13 @@
     });
 
     flow.addEventListener('click', (event) => {
-      if (event.target === flow && cachedCurrentUser) {
+      if (event.target === flow) {
         closeFlow();
       }
+    });
+
+    Array.from(flow.querySelectorAll('[data-login-close]')).forEach((button) => {
+      button.addEventListener('click', () => closeFlow());
     });
   }
 
