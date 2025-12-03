@@ -1,9 +1,6 @@
 (function() {
   const SETTINGS_STORAGE_KEY = 'playtalkSettings';
   const SUPPORTED_LENS_KEYS = ['1', '2', '3', '4', '5', '6', 'home', 'game', 'menus', 'profile', 'stats'];
-  const DEFAULT_APP_FONT = "'Open Sans', sans-serif";
-  const DEFAULT_GAME_FONT = "'Open Sans', sans-serif";
-
   const DEFAULT_SETTINGS = {
     theme: 'dark',
     retryWrongPhrases: false,
@@ -11,9 +8,6 @@
     headerGradientEnd: '#357de0',
     headerGradientEnabled: true,
     phraseColor: '',
-    appTextColor: '',
-    appFont: DEFAULT_APP_FONT,
-    gameFont: DEFAULT_GAME_FONT,
     modeIconColor: '#0b1f44',
     modeIconOpacity: 1,
     buttonColor: '#3b82f6',
@@ -61,12 +55,6 @@
     return rgb.map((value) => Math.round(value + (255 - value) * factor));
   }
 
-  function normalizeFont(value, fallback = DEFAULT_APP_FONT) {
-    if (typeof value !== 'string') return fallback;
-    const normalized = value.trim();
-    return normalized || fallback;
-  }
-
   function getDefaultPhraseColor(theme) {
     return '#ffffff';
   }
@@ -86,9 +74,6 @@
       normalized.headerGradientEnd = normalizeHexColor(value.headerGradientEnd, DEFAULT_SETTINGS.headerGradientEnd);
       normalized.headerGradientEnabled = Boolean(value.headerGradientEnabled);
       normalized.phraseColor = normalizeHexColor(value.phraseColor, '');
-      normalized.appTextColor = normalizeHexColor(value.appTextColor, '');
-      normalized.appFont = normalizeFont(value.appFont, DEFAULT_SETTINGS.appFont);
-      normalized.gameFont = normalizeFont(value.gameFont, DEFAULT_SETTINGS.gameFont);
       normalized.modeIconColor = normalizeHexColor(value.modeIconColor, DEFAULT_SETTINGS.modeIconColor);
       normalized.modeIconOpacity = normalizeOpacity(value.modeIconOpacity, DEFAULT_SETTINGS.modeIconOpacity);
       normalized.buttonColor = normalizeHexColor(value.buttonColor, DEFAULT_SETTINGS.buttonColor);
@@ -204,37 +189,20 @@
 
   function applyPhraseColor(color, theme) {
     const doc = document.documentElement;
+    const body = document.body;
     if (!doc) return;
     const baseColor = normalizeHexColor(color, '');
     const finalColor = baseColor || getDefaultPhraseColor(theme);
     doc.style.setProperty('--phrase-color', finalColor);
-    doc.style.setProperty('--game-phrase-color', finalColor);
-  }
-
-  function applyAppTextColor(color) {
-    const doc = document.documentElement;
-    const body = document.body;
-    if (!doc) return;
-    const normalized = normalizeHexColor(color, '');
-    if (normalized) {
-      doc.style.setProperty('--app-text-color', normalized);
-      if (body) body.classList.add('has-custom-text-color');
-    } else {
-      doc.style.removeProperty('--app-text-color');
-      if (body) body.classList.remove('has-custom-text-color');
+    if (body) {
+      if (baseColor) {
+        doc.style.setProperty('--app-text-color', finalColor);
+        body.classList.add('has-custom-text-color');
+      } else {
+        doc.style.removeProperty('--app-text-color');
+        body.classList.remove('has-custom-text-color');
+      }
     }
-  }
-
-  function applyAppFont(font) {
-    const doc = document.documentElement;
-    if (!doc) return;
-    doc.style.setProperty('--app-font-family', normalizeFont(font, DEFAULT_APP_FONT));
-  }
-
-  function applyGameFont(font) {
-    const doc = document.documentElement;
-    if (!doc) return;
-    doc.style.setProperty('--game-font-family', normalizeFont(font, DEFAULT_GAME_FONT));
   }
 
   function applyLensColor(color) {
@@ -300,9 +268,6 @@
   function applyVisualPreferences(settings = {}) {
     applyTheme(settings.theme);
     applyHeaderGradient(settings);
-    applyAppFont(settings.appFont);
-    applyGameFont(settings.gameFont);
-    applyAppTextColor(settings.appTextColor);
     applyPhraseColor(settings.phraseColor, settings.theme);
     applyModeIconColor(settings.modeIconColor);
     applyModeIconOpacity(settings.modeIconOpacity);
@@ -331,9 +296,6 @@
     saveSettings,
     applyHeaderGradient,
     applyPhraseColor,
-    applyAppTextColor,
-    applyAppFont,
-    applyGameFont,
     applyLensColor,
     applyModeIconColor,
     applyModeIconOpacity,
