@@ -33,6 +33,10 @@
   --button-color-base: #3b82f6;
   --button-color-contrast: #8b5cf6;
   --button-shadow: rgba(59, 130, 246, 0.35);
+  --app-font-family: 'Open Sans', sans-serif;
+  --game-font-family: 'Open Sans', sans-serif;
+  --app-text-color: #ffffff;
+  --game-phrase-color: var(--phrase-color, #ffffff);
 }
 
 html,
@@ -51,8 +55,8 @@ body {
   background-size: 400% 400%;
   background-attachment: fixed;
   animation: gradient 15s ease infinite;
-  font-family: 'Open Sans', sans-serif;
-  color: #ffffff;
+  font-family: var(--app-font-family, 'Open Sans', sans-serif);
+  color: var(--app-text-color, #ffffff);
   position: relative;
 }
 
@@ -170,6 +174,8 @@ body > *:not(.lens-overlay):not(.site-header):not(.playtalk-waves) {
 #pt-container label,
 #pt-container textarea {
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  font-family: var(--game-font-family, 'Open Sans', sans-serif);
+  color: var(--game-phrase-color, var(--phrase-color, #ffffff));
 }
 
 .container-screen {
