@@ -3,11 +3,13 @@
   const SUPPORTED_LENS_KEYS = ['1', '2', '3', '4', '5', '6', 'home', 'game', 'menus', 'profile', 'stats'];
   const DEFAULT_SETTINGS = {
     theme: 'dark',
-    retryWrongPhrases: false,
     headerGradientStart: '#1a66cc',
     headerGradientEnd: '#357de0',
     headerGradientEnabled: true,
-    phraseColor: '',
+    appFont: 'Open Sans',
+    gameFont: 'Open Sans',
+    appTextColor: '',
+    gamePhraseColor: '#ffffff',
     modeIconColor: '#0b1f44',
     modeIconOpacity: 1,
     buttonColor: '#3b82f6',
@@ -66,17 +68,17 @@
     }
     const normalized = { ...base };
     normalized.theme = 'dark';
-    if (typeof value.retryWrongPhrases === 'boolean') {
-      normalized.retryWrongPhrases = value.retryWrongPhrases;
-    }
     if (value && typeof value === 'object') {
       normalized.headerGradientStart = normalizeHexColor(value.headerGradientStart, DEFAULT_SETTINGS.headerGradientStart);
       normalized.headerGradientEnd = normalizeHexColor(value.headerGradientEnd, DEFAULT_SETTINGS.headerGradientEnd);
       normalized.headerGradientEnabled = Boolean(value.headerGradientEnabled);
-      normalized.phraseColor = normalizeHexColor(value.phraseColor, '');
-      normalized.modeIconColor = normalizeHexColor(value.modeIconColor, DEFAULT_SETTINGS.modeIconColor);
-      normalized.modeIconOpacity = normalizeOpacity(value.modeIconOpacity, DEFAULT_SETTINGS.modeIconOpacity);
-      normalized.buttonColor = normalizeHexColor(value.buttonColor, DEFAULT_SETTINGS.buttonColor);
+      normalized.appFont = normalizeFont(value.appFont || value.appFontFamily, DEFAULT_SETTINGS.appFont);
+      normalized.gameFont = normalizeFont(value.gameFont || value.gameFontFamily, DEFAULT_SETTINGS.gameFont);
+      normalized.appTextColor = normalizeHexColor(value.appTextColor, '');
+      normalized.gamePhraseColor = normalizeHexColor(
+        value.gamePhraseColor || value.phraseColor,
+        DEFAULT_SETTINGS.gamePhraseColor
+      );
       normalized.lensColor = normalizeHexColor(value.lensColor, '');
       normalized.lensColors = normalizeLensPalette(value.lensColors);
       normalized.lensOpacityStrong = normalizeOpacity(value.lensOpacityStrong, DEFAULT_SETTINGS.lensOpacityStrong);
@@ -188,21 +190,7 @@
   }
 
   function applyPhraseColor(color, theme) {
-    const doc = document.documentElement;
-    const body = document.body;
-    if (!doc) return;
-    const baseColor = normalizeHexColor(color, '');
-    const finalColor = baseColor || getDefaultPhraseColor(theme);
-    doc.style.setProperty('--phrase-color', finalColor);
-    if (body) {
-      if (baseColor) {
-        doc.style.setProperty('--app-text-color', finalColor);
-        body.classList.add('has-custom-text-color');
-      } else {
-        doc.style.removeProperty('--app-text-color');
-        body.classList.remove('has-custom-text-color');
-      }
-    }
+    applyGamePhraseColor(color, theme);
   }
 
   function applyLensColor(color) {
@@ -234,11 +222,54 @@
     const doc = document.documentElement;
     if (!doc) return;
     const normalized = normalizeHexColor(color, DEFAULT_SETTINGS.buttonColor);
-    const rgb = toRgbTuple(normalized) || toRgbTuple(DEFAULT_SETTINGS.buttonColor) || [59, 130, 246];
+    const rgb = toRgbTuple(normalized) || [59, 130, 246];
     const contrast = rgbToHex(lightenRgb(rgb, 0.35));
-    doc.style.setProperty('--button-color-base', normalized || DEFAULT_SETTINGS.buttonColor);
+    doc.style.setProperty('--button-color-base', normalized || '#3b82f6');
     doc.style.setProperty('--button-color-contrast', contrast);
     doc.style.setProperty('--button-shadow', `rgba(${rgb.join(', ')}, 0.35)`);
+  }
+
+  function normalizeFont(value, fallback = DEFAULT_SETTINGS.appFont) {
+    if (typeof value !== 'string') return fallback;
+    const trimmed = value.trim();
+    return trimmed || fallback;
+  }
+
+  function applyAppFont(font) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const normalized = normalizeFont(font, DEFAULT_SETTINGS.appFont);
+    doc.style.setProperty('--app-font-family', normalized);
+  }
+
+  function applyGameFont(font) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const normalized = normalizeFont(font, DEFAULT_SETTINGS.gameFont);
+    doc.style.setProperty('--game-phrase-font-family', normalized);
+  }
+
+  function applyAppTextColor(color) {
+    const doc = document.documentElement;
+    const body = document.body;
+    if (!doc) return;
+    const normalized = normalizeHexColor(color, '');
+    const fallback = '#ffffff';
+    if (normalized) {
+      doc.style.setProperty('--app-text-color', normalized);
+      body && body.classList.add('has-custom-text-color');
+    } else {
+      doc.style.setProperty('--app-text-color', fallback);
+      body && body.classList.remove('has-custom-text-color');
+    }
+  }
+
+  function applyGamePhraseColor(color, theme) {
+    const doc = document.documentElement;
+    if (!doc) return;
+    const normalized = normalizeHexColor(color, DEFAULT_SETTINGS.gamePhraseColor) || getDefaultPhraseColor(theme);
+    doc.style.setProperty('--game-phrase-color', normalized);
+    doc.style.setProperty('--phrase-color', normalized);
   }
 
   function applyContextLensColors(lensColors = {}, fallbackColor = '') {
@@ -268,7 +299,10 @@
   function applyVisualPreferences(settings = {}) {
     applyTheme(settings.theme);
     applyHeaderGradient(settings);
-    applyPhraseColor(settings.phraseColor, settings.theme);
+    applyAppFont(settings.appFont);
+    applyGameFont(settings.gameFont);
+    applyAppTextColor(settings.appTextColor);
+    applyGamePhraseColor(settings.gamePhraseColor, settings.theme);
     applyModeIconColor(settings.modeIconColor);
     applyModeIconOpacity(settings.modeIconOpacity);
     applyButtonColor(settings.buttonColor);
@@ -296,6 +330,10 @@
     saveSettings,
     applyHeaderGradient,
     applyPhraseColor,
+    applyGamePhraseColor,
+    applyAppTextColor,
+    applyAppFont,
+    applyGameFont,
     applyLensColor,
     applyModeIconColor,
     applyModeIconOpacity,
@@ -375,18 +413,29 @@
   }
 
   function normalizeConfig(raw) {
-    if (!raw || typeof raw !== 'object' || typeof raw.src !== 'string' || !raw.src.trim()) {
+    if (!raw || typeof raw !== 'object') {
       return null;
     }
+    const presetId = typeof raw.presetId === 'string' ? raw.presetId : '';
+    const src = typeof raw.src === 'string' ? raw.src : '';
+    const hasSource = Boolean(src && src.trim());
     const type = raw.type === 'video' ? 'video' : 'image';
+    if (!presetId && !hasSource) {
+      return null;
+    }
     return {
-      src: raw.src,
+      src: hasSource ? src : '',
       name: typeof raw.name === 'string' ? raw.name : '',
-      type
+      type: hasSource ? type : 'image',
+      presetId
     };
   }
 
   function readStoredBackground() {
+    if (currentBackground === DEFAULT_BACKGROUND) {
+      const saved = safeParse(localStorage.getItem(BACKGROUND_STORAGE_KEY));
+      currentBackground = normalizeConfig(saved);
+    }
     return normalizeConfig(currentBackground);
   }
 
@@ -402,6 +451,9 @@
       return null;
     }
     currentBackground = normalized;
+    try {
+      localStorage.setItem(BACKGROUND_STORAGE_KEY, JSON.stringify(currentBackground));
+    } catch {}
     return currentBackground;
   }
 
@@ -440,9 +492,13 @@
     }
     clearLayer(layer);
     const validConfig = normalizeConfig(config);
-    const active = Boolean(validConfig);
+    const active = Boolean(validConfig && validConfig.src);
     document.body.classList.toggle('has-custom-background', active);
-    if (!active || !validConfig) {
+    if (!validConfig) {
+      clearLayer(layer);
+      return;
+    }
+    if (!active) {
       clearLayer(layer);
       return;
     }
@@ -526,6 +582,22 @@
     applyBackground(DEFAULT_BACKGROUND);
   }
 
+  function setBackgroundPreset(preset) {
+    if (!preset) {
+      clearBackground();
+      return null;
+    }
+    const config = {
+      presetId: preset.id || preset.presetId || '',
+      src: preset.src || '',
+      name: preset.name || '',
+      type: preset.type || 'image'
+    };
+    const stored = persistBackground(config);
+    applyBackground(stored);
+    return stored;
+  }
+
   function applyStoredBackground() {
     const body = typeof document !== 'undefined' ? document.body : null;
     const config = readStoredBackground();
@@ -549,6 +621,7 @@
   window.playtalkBackground = {
     applyStoredBackground,
     setFromFile: setBackgroundFromFile,
+    setPreset: setBackgroundPreset,
     clear: clearBackground,
     getConfig: readStoredBackground,
     getMaxSize: () => MAX_BACKGROUND_SIZE
