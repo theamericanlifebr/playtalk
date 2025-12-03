@@ -1,11 +1,13 @@
 const settingsAPI = window.playtalkSettings || {};
 const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
   theme: 'light',
-  retryWrongPhrases: false,
   headerGradientStart: '#1a66cc',
   headerGradientEnd: '#357de0',
   headerGradientEnabled: true,
-  phraseColor: '',
+  appFont: 'Open Sans',
+  gameFont: 'Open Sans',
+  appTextColor: '',
+  gamePhraseColor: '#ffffff',
   modeIconColor: '#0b1f44'
 };
 

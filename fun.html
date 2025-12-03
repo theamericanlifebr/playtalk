@@ -37,13 +37,9 @@
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
-  <main id="fun-container" class="container-screen container-screen--fun" data-page-transition>
-    <h1>Opções</h1>
+  <main id="fun-container" class="fun-layout" data-page-transition>
+    <h1>Opções de jogo</h1>
     <form id="fun-form">
-      <section class="fun-section">
-        <h2>Tema</h2>
-        <p class="fun-note">Tema padrão claro ativado permanentemente.</p>
-      </section>
       <section class="fun-section">
         <h2>Cabeçalho</h2>
         <div class="magic-checkbox-group fun-checkbox-group" aria-label="Preferências do cabeçalho">
@@ -56,88 +52,111 @@
             <span class="magic-label">Ativar degradê no cabeçalho</span>
           </label>
         </div>
-        <div class="fun-color-options">
-          <label for="headerColorStart">
-            Cor inicial
-            <input type="color" id="headerColorStart" class="fun-color-input" value="#1a66cc">
+        <div class="fun-color-row">
+          <div class="fun-color-field">
+            <span class="fun-label">Cor inicial</span>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="headerColorStart" style="--color: #1a66cc" aria-label="Selecionar cor inicial do cabeçalho"></button>
+            <input type="hidden" id="headerColorStart" class="fun-color-input" value="#1a66cc">
+          </div>
+          <div class="fun-color-field">
+            <span class="fun-label">Cor final</span>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="headerColorEnd" style="--color: #357de0" aria-label="Selecionar cor final do cabeçalho"></button>
+            <input type="hidden" id="headerColorEnd" class="fun-color-input" value="#357de0">
+          </div>
+        </div>
+      </section>
+      <section class="fun-section fun-section--fonts">
+        <h2>Fontes</h2>
+        <p class="fun-note">Escolha tipografia e cores tanto para a interface do app quanto para as frases durante o jogo.</p>
+        <div class="fun-fonts-grid">
+          <label class="fun-select">
+            <span>Fontes do app</span>
+            <select id="appFontFamily"></select>
           </label>
-          <label for="headerColorEnd">
-            Cor final
-            <input type="color" id="headerColorEnd" class="fun-color-input" value="#357de0">
+          <label class="fun-select">
+            <span>Fontes das frases de jogo</span>
+            <select id="gameFontFamily"></select>
           </label>
+          <div class="fun-color-field">
+            <span class="fun-label">Cor das frases do app</span>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="appTextColor" style="--color: #ffffff" aria-label="Selecionar cor das frases do app"></button>
+            <input type="hidden" id="appTextColor" class="fun-color-input" value="">
+          </div>
+          <div class="fun-color-field">
+            <span class="fun-label">Cor das frases do ambiente de jogo</span>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="gamePhraseColor" style="--color: #ffffff" aria-label="Selecionar cor das frases do ambiente de jogo"></button>
+            <input type="hidden" id="gamePhraseColor" class="fun-color-input" value="#ffffff">
+          </div>
         </div>
       </section>
       <section class="fun-section">
-        <h2>Frases do jogo</h2>
-        <p class="fun-note">Defina a cor base das frases exibidas nas rodadas.</p>
-        <div class="fun-color-options">
-          <label for="phraseColor">
-            Cor das frases
-            <input type="color" id="phraseColor" class="fun-color-input" value="#ffffff">
-          </label>
-        </div>
-      </section>
-      <section class="fun-section">
-        <h2>Lente</h2>
-        <p class="fun-note">Escolha a cor base da lente degradê que aparece nas telas de pré e pós-jogo.</p>
-        <div class="fun-color-options fun-color-options--grid">
-          <label>
-            Vocabulary
-            <input type="color" data-lens-mode="1" class="fun-color-input lens-mode-input" value="#c8e54a">
-          </label>
-          <label>
-            Meaning
-            <input type="color" data-lens-mode="2" class="fun-color-input lens-mode-input" value="#ffd700">
-          </label>
-          <label>
-            Listening
-            <input type="color" data-lens-mode="3" class="fun-color-input lens-mode-input" value="#ff6c3e">
-          </label>
-          <label>
-            Reading
-            <input type="color" data-lens-mode="4" class="fun-color-input lens-mode-input" value="#2196f3">
-          </label>
-          <label>
-            Translating
-            <input type="color" data-lens-mode="5" class="fun-color-input lens-mode-input" value="#1b004b">
-          </label>
-          <label>
-            Thinking
-            <input type="color" data-lens-mode="6" class="fun-color-input lens-mode-input" value="#c8e54a">
-          </label>
+        <h2>Lente e modos</h2>
+        <p class="fun-note">Toque nos círculos para mudar as cores. As opções aparecem logo abaixo com uma paleta de 36 cores.</p>
+        <div class="fun-mode-colors" id="mode-colors">
+          <div class="fun-mode-color" data-mode="1">
+            <div class="fun-mode-label">
+              <span class="fun-pill">Vocabulary</span>
+            </div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-1" style="--color: #c8e54a" aria-label="Selecionar cor do modo Vocabulary"></button>
+            <input type="hidden" id="lensColor-1" data-lens-mode="1" class="fun-color-input lens-mode-input" value="#c8e54a">
+          </div>
+          <div class="fun-mode-color" data-mode="2">
+            <div class="fun-mode-label">
+              <span class="fun-pill">Meaning</span>
+            </div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-2" style="--color: #ffd700" aria-label="Selecionar cor do modo Meaning"></button>
+            <input type="hidden" id="lensColor-2" data-lens-mode="2" class="fun-color-input lens-mode-input" value="#ffd700">
+          </div>
+          <div class="fun-mode-color" data-mode="3">
+            <div class="fun-mode-label">
+              <span class="fun-pill">Listening</span>
+            </div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-3" style="--color: #ff6c3e" aria-label="Selecionar cor do modo Listening"></button>
+            <input type="hidden" id="lensColor-3" data-lens-mode="3" class="fun-color-input lens-mode-input" value="#ff6c3e">
+          </div>
+          <div class="fun-mode-color" data-mode="4">
+            <div class="fun-mode-label">
+              <span class="fun-pill">Reading</span>
+            </div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-4" style="--color: #2196f3" aria-label="Selecionar cor do modo Reading"></button>
+            <input type="hidden" id="lensColor-4" data-lens-mode="4" class="fun-color-input lens-mode-input" value="#2196f3">
+          </div>
+          <div class="fun-mode-color" data-mode="5">
+            <div class="fun-mode-label">
+              <span class="fun-pill">Translating</span>
+            </div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-5" style="--color: #1b004b" aria-label="Selecionar cor do modo Translating"></button>
+            <input type="hidden" id="lensColor-5" data-lens-mode="5" class="fun-color-input lens-mode-input" value="#1b004b">
+          </div>
+          <div class="fun-mode-color" data-mode="6">
+            <div class="fun-mode-label">
+              <span class="fun-pill">Thinking</span>
+            </div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-6" style="--color: #c8e54a" aria-label="Selecionar cor do modo Thinking"></button>
+            <input type="hidden" id="lensColor-6" data-lens-mode="6" class="fun-color-input lens-mode-input" value="#c8e54a">
+          </div>
         </div>
         <p class="fun-note">Personalize também as lentes para outras telas.</p>
-        <div class="fun-color-options fun-color-options--grid">
-          <label>
-            Home
-            <input type="color" data-lens-mode="home" class="fun-color-input lens-mode-input" value="#000000">
-          </label>
-          <label>
-            Ambiente de jogo
-            <input type="color" data-lens-mode="game" class="fun-color-input lens-mode-input" value="#000000">
-          </label>
-          <label>
-            Menus
-            <input type="color" data-lens-mode="menus" class="fun-color-input lens-mode-input" value="#000000">
-          </label>
-          <label>
-            Estatísticas gerais
-            <input type="color" data-lens-mode="stats" class="fun-color-input lens-mode-input" value="#000000">
-          </label>
-        </div>
-        <div class="fun-color-palette" id="lens-color-palette" aria-label="Paleta rápida de cores da lente">
-          <span class="fun-note">Paleta rápida de destaques</span>
-          <div class="fun-color-palette__grid">
-            <button type="button" class="fun-color-palette__swatch" style="--color: #e11d48" data-color-swatch="#e11d48" aria-label="Aplicar cor #e11d48"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #f472b6" data-color-swatch="#f472b6" aria-label="Aplicar cor #f472b6"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #fb923c" data-color-swatch="#fb923c" aria-label="Aplicar cor #fb923c"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #facc15" data-color-swatch="#facc15" aria-label="Aplicar cor #facc15"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #84cc16" data-color-swatch="#84cc16" aria-label="Aplicar cor #84cc16"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #10b981" data-color-swatch="#10b981" aria-label="Aplicar cor #10b981"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #0ea5e9" data-color-swatch="#0ea5e9" aria-label="Aplicar cor #0ea5e9"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #3b82f6" data-color-swatch="#3b82f6" aria-label="Aplicar cor #3b82f6"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #8b5cf6" data-color-swatch="#8b5cf6" aria-label="Aplicar cor #8b5cf6"></button>
-            <button type="button" class="fun-color-palette__swatch" style="--color: #a78bfa" data-color-swatch="#a78bfa" aria-label="Aplicar cor #a78bfa"></button>
+        <div class="fun-mode-colors fun-mode-colors--secondary">
+          <div class="fun-mode-color">
+            <div class="fun-mode-label"><span class="fun-pill">Home</span></div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-home" style="--color: #000000" aria-label="Selecionar cor da lente Home"></button>
+            <input type="hidden" id="lensColor-home" data-lens-mode="home" class="fun-color-input lens-mode-input" value="#000000">
+          </div>
+          <div class="fun-mode-color">
+            <div class="fun-mode-label"><span class="fun-pill">Ambiente de jogo</span></div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-game" style="--color: #000000" aria-label="Selecionar cor da lente do ambiente de jogo"></button>
+            <input type="hidden" id="lensColor-game" data-lens-mode="game" class="fun-color-input lens-mode-input" value="#000000">
+          </div>
+          <div class="fun-mode-color">
+            <div class="fun-mode-label"><span class="fun-pill">Menus</span></div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-menus" style="--color: #000000" aria-label="Selecionar cor da lente dos menus"></button>
+            <input type="hidden" id="lensColor-menus" data-lens-mode="menus" class="fun-color-input lens-mode-input" value="#000000">
+          </div>
+          <div class="fun-mode-color">
+            <div class="fun-mode-label"><span class="fun-pill">Estatísticas gerais</span></div>
+            <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="lensColor-stats" style="--color: #000000" aria-label="Selecionar cor da lente das estatísticas"></button>
+            <input type="hidden" id="lensColor-stats" data-lens-mode="stats" class="fun-color-input lens-mode-input" value="#000000">
           </div>
         </div>
         <p class="fun-note">Defina a opacidade da lente aplicada em qualquer modo.</p>
@@ -152,71 +171,48 @@
           </label>
         </div>
       </section>
-      <section class="fun-section">
-        <h2>Ícones dos modos</h2>
-        <p class="fun-note">Escolha uma única cor para todos os ícones centrais dos selos animados.</p>
-        <div class="fun-color-options">
-          <label for="modeIconColor">
-            Cor dos ícones
-            <input type="color" id="modeIconColor" class="fun-color-input" value="#0b1f44">
-          </label>
-        </div>
-        <div class="fun-opacity">
-          <label for="modeIconOpacity">
-            Opacidade dos ícones
-            <input type="range" id="modeIconOpacity" min="0" max="1" step="0.05" value="1">
-          </label>
-        </div>
-      </section>
-      <section class="fun-section">
-        <h2>Botões</h2>
-        <p class="fun-note">Ajuste a cor principal utilizada nos botões do app.</p>
-        <div class="fun-color-options">
-          <label for="buttonColor">
-            Cor dos botões
-            <input type="color" id="buttonColor" class="fun-color-input" value="#3b82f6">
-          </label>
-        </div>
-      </section>
       <section class="fun-section fun-section--background">
         <h2>Plano de fundo do jogo</h2>
-        <p class="fun-note">Envie uma imagem JPG/PNG ou um vídeo MP4 de até 40 MB para personalizar o fundo.</p>
-        <div class="profile-background__controls">
-          <label for="fun-background-upload" class="profile-upload-label profile-upload-label--wide playtalk-cta playtalk-cta--wide">
-            <span class="playtalk-cta__inner">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" focusable="false">
-                <path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 2v7.59l-2.3-2.3a1 1 0 0 0-1.4 0L12 15.59 9.7 13.3a1 1 0 0 0-1.4 0L5 16.59V7Zm-7 4a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z" />
-              </svg>
-              <span>Carregar background</span>
-            </span>
-            <input
-              type="file"
-              id="fun-background-upload"
-              name="fun-background-upload"
-              accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
-            >
-          </label>
+        <p class="fun-note">Escolha um dos 6 planos de fundo padrão.</p>
+        <div class="fun-background-grid" id="background-grid">
+          <button type="button" class="fun-background-card" data-background-id="default" aria-label="Plano de fundo 1 (padrão)">
+            <span class="fun-background-card__preview fun-background-card__preview--gradient"></span>
+            <span class="fun-background-card__label">Background 1 (padrão)</span>
+          </button>
+          <button type="button" class="fun-background-card" data-background-id="background2" aria-label="Plano de fundo 2">
+            <span class="fun-background-card__preview" style="background-image: url('backgrounds/background2.jpg');"></span>
+            <span class="fun-background-card__label">Background 2</span>
+          </button>
+          <button type="button" class="fun-background-card" data-background-id="background3" aria-label="Plano de fundo 3">
+            <span class="fun-background-card__preview" style="background-image: url('backgrounds/background3.jpg');"></span>
+            <span class="fun-background-card__label">Background 3</span>
+          </button>
+          <button type="button" class="fun-background-card" data-background-id="background4" aria-label="Plano de fundo 4">
+            <span class="fun-background-card__preview" style="background-image: url('backgrounds/background4.jpg');"></span>
+            <span class="fun-background-card__label">Background 4</span>
+          </button>
+          <button type="button" class="fun-background-card" data-background-id="background5" aria-label="Plano de fundo 5">
+            <span class="fun-background-card__preview" style="background-image: url('backgrounds/background5.jpg');"></span>
+            <span class="fun-background-card__label">Background 5</span>
+          </button>
+          <button type="button" class="fun-background-card" data-background-id="background6" aria-label="Plano de fundo 6">
+            <span class="fun-background-card__preview" style="background-image: url('backgrounds/background6.jpg');"></span>
+            <span class="fun-background-card__label">Background 6</span>
+          </button>
         </div>
         <p id="fun-background-status" class="profile-background__status" aria-live="polite"></p>
       </section>
-      <section class="fun-section">
-        <h2>Repetição</h2>
-        <div class="magic-checkbox-group fun-checkbox-group" aria-label="Opções de repetição">
-          <label class="magic-check">
-            <input type="checkbox" id="retryWrongPhrases">
-            <span class="liquid-box">
-              <span class="liquid-fill"></span>
-              <span class="sparkle"></span>
-            </span>
-            <span class="magic-label">Refazer frases erradas</span>
-          </label>
-        </div>
-      </section>
-      <p class="fun-note">Ao atingir 25.000 pontos a rodada é concluída automaticamente, sem carregar novas frases.</p>
       <div class="fun-actions">
         <span id="fun-feedback" role="status" aria-live="polite"></span>
       </div>
     </form>
+    <section class="fun-color-board" id="fun-color-board" aria-live="polite" aria-label="Paleta rápida de destaques">
+      <div class="fun-color-board__header">
+        <h3>Paleta rápida de destaques</h3>
+        <p>36 opções modernas distribuídas em 6 linhas e 6 colunas.</p>
+      </div>
+      <div class="fun-color-board__grid" id="fun-color-grid" role="listbox" aria-label="Selecionar cor"></div>
+    </section>
   </main>
   <script src="js/fun-page.js" defer></script>
   <footer class="page-footer">
