@@ -11,80 +11,84 @@
   <script src="js/auth.js" defer></script>
 </head>
 <body class="page-login">
-  <main class="container-screen container-screen--overlay" aria-label="Tela de login">
-    <div class="login-launcher">
-      <button id="login-btn" class="login-cta" type="button">
-        <span class="btn-text">Sign In</span>
-      </button>
+  <main class="login-shell" aria-label="Tela de login">
+    <div class="login-brand">
+      <img src="SVG/logo.svg" alt="Logo PlayTalk" class="login-brand__logo" width="80" height="80">
+      <h1 class="login-brand__title">PlayTalk</h1>
     </div>
-    <div
-      id="login-flow"
-      class="login-flow login-modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="login-flow-title"
-    >
-      <div class="login-flow__panel login-modal__panel">
-        <button class="close-button" type="button" data-login-close aria-label="Fechar">×</button>
-        <img src="SVG/logo.svg" alt="Logo PlayTalk" class="login-flow__logo" width="70" height="70">
-        <h1 id="login-flow-title" class="login-flow__title">Bem vindo</h1>
-        <form id="login-flow-form" class="login-flow__form" autocomplete="off" novalidate>
-          <div class="login-flow__step login-flow__step--active">
-            <label class="sr-only" for="login-flow-username">Nome de usuário</label>
-            <div class="input-group">
-              <input
-                type="text"
-                id="login-flow-username"
-                name="login-flow-username"
-                maxlength="40"
-                autocomplete="username"
-                placeholder=" "
-                required
-              >
-              <label for="login-flow-username">Username</label>
-            </div>
-            <label class="sr-only" for="login-flow-password">Senha</label>
-            <div class="input-group">
-              <input
-                type="password"
-                id="login-flow-password"
-                name="login-flow-password"
-                autocomplete="current-password"
-                placeholder=" "
-                required
-              >
-              <label for="login-flow-password">Password</label>
-            </div>
-            <button type="submit" class="login-flow__submit form-button">
-              <span>Entrar ou cadastrar</span>
-            </button>
-          </div>
-          <p id="login-flow-status" class="login-flow__status" role="status" aria-live="polite"></p>
-          <p id="login-flow-error" class="login-flow__error" role="alert"></p>
-          <div class="social-account-container">
-            <span class="title">Ou entre com</span>
-            <div class="social-accounts">
-              <button class="social-button google" type="button" aria-label="Entrar com Google">
-                <svg class="svg" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 488 512">
-                  <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.73.9 24.93.9 41.4z"></path>
-                </svg>
-              </button>
-              <button class="social-button apple" type="button" aria-label="Entrar com Apple">
-                <svg class="svg" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512">
-                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"></path>
-                </svg>
-              </button>
-              <button class="social-button twitter" type="button" aria-label="Entrar com Twitter">
-                <svg class="svg" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
-                  <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <span class="agreement"><a href="#">Saiba sobre o termo de uso</a></span>
-        </form>
+    <section id="login-flow" class="login-card" aria-labelledby="login-form-title">
+      <h2 id="login-form-title" class="login-card__title">Entre para continuar</h2>
+      <form id="login-flow-form" class="login-card__form" autocomplete="off" novalidate>
+        <label class="login-card__label" for="login-flow-username">Nome de usuário</label>
+        <input
+          class="login-card__input"
+          type="text"
+          id="login-flow-username"
+          name="login-flow-username"
+          maxlength="40"
+          autocomplete="username"
+          required
+        >
+
+        <label class="login-card__label" for="login-flow-password">Senha</label>
+        <input
+          class="login-card__input"
+          type="password"
+          id="login-flow-password"
+          name="login-flow-password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button type="submit" class="login-card__submit">Acessar</button>
+      </form>
+      <p id="login-flow-status" class="login-card__status" role="status" aria-live="polite"></p>
+      <p id="login-flow-error" class="login-card__error" role="alert"></p>
+    </section>
+    <section class="login-progress" aria-live="polite">
+      <div class="login-progress__header">
+        <span class="login-progress__label">Carregando o app e salvando com segurança</span>
+        <span class="login-progress__value" id="login-progress-value">0%</span>
       </div>
-    </div>
+      <div class="login-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="login-progress__fill" id="login-progress-fill"></span>
+      </div>
+      <p class="login-progress__note">Os dados ficam protegidos no servidor, não no seu navegador.</p>
+    </section>
+    <button id="login-btn" class="login-launcher" type="button" aria-hidden="true" tabindex="-1">Entrar</button>
   </main>
+
+  <script>
+    (function() {
+      const fill = document.getElementById('login-progress-fill');
+      const valueEl = document.getElementById('login-progress-value');
+      const bar = document.querySelector('.login-progress__bar');
+      let progress = 0;
+
+      function updateProgress(value) {
+        progress = Math.max(0, Math.min(100, value));
+        if (fill) {
+          fill.style.width = `${progress}%`;
+        }
+        if (bar) {
+          bar.setAttribute('aria-valuenow', String(progress));
+        }
+        if (valueEl) {
+          valueEl.textContent = `${progress}%`;
+        }
+      }
+
+      function stepProgress() {
+        if (progress >= 100) return;
+        updateProgress(progress + Math.max(1, Math.round(Math.random() * 8)));
+        requestAnimationFrame(() => {
+          setTimeout(stepProgress, 280);
+        });
+      }
+
+      updateProgress(0);
+      requestAnimationFrame(stepProgress);
+    })();
+  </script>
 </body>
 </html>
