@@ -1,5 +1,6 @@
 (function () {
   const API_ENDPOINT = '/api/rankings';
+  const RANKINGS_CACHE_KEY = 'playtalk:rankings-cache';
   const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
   const MAX_POSITION = 30;
   const CAROUSEL_SECTIONS = ['streak', 'fast', 'accuracy', 'level'];
@@ -63,6 +64,32 @@
 
   function $(selector, scope = document) {
     return scope.querySelector(selector);
+  }
+
+  function readCachedRankings() {
+    try {
+      const raw = localStorage.getItem(RANKINGS_CACHE_KEY);
+      if (!raw) {
+        return null;
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || !parsed.data) {
+        return null;
+      }
+      return parsed;
+    } catch (error) {
+      console.warn('Falha ao ler ranking em cache:', error);
+      return null;
+    }
+  }
+
+  function writeCachedRankings(data, updatedAt) {
+    try {
+      const payload = { data, updatedAt: updatedAt || new Date().toISOString() };
+      localStorage.setItem(RANKINGS_CACHE_KEY, JSON.stringify(payload));
+    } catch (error) {
+      console.warn('Falha ao salvar ranking em cache:', error);
+    }
   }
 
   function getSectionElements(sectionKey) {
@@ -224,8 +251,14 @@
       const rankings = payload && payload.rankings ? payload.rankings : {};
       renderSections(rankings);
       setUpdatedAt(payload.generatedAt, updatedLabel);
+      writeCachedRankings(rankings, payload.generatedAt);
     } catch (error) {
       console.error('Erro ao carregar rankings:', error);
+      const cached = readCachedRankings();
+      if (cached && cached.data) {
+        renderSections(cached.data);
+        setUpdatedAt(cached.updatedAt, updatedLabel);
+      }
       if (errorEl) {
         errorEl.textContent = 'Não foi possível carregar o ranking. Tente novamente em instantes.';
         errorEl.hidden = false;
@@ -388,6 +421,12 @@
     const errorEl = $('[data-ranking-error]', scope);
 
     initRankingCarousel(scope);
+
+    const cached = readCachedRankings();
+    if (cached && cached.data) {
+      renderSections(cached.data);
+      setUpdatedAt(cached.updatedAt, updatedLabel);
+    }
 
     if (refreshButton) {
       refreshButton.addEventListener('click', () => {
