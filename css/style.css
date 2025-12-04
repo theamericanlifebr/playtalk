@@ -1693,7 +1693,7 @@ body.theme-blue #pt,
 body.theme-blue #resultado,
 body.theme-blue #acertos,
 body.theme-blue #nivel-mensagem,
-body.theme-blue #timer {
+body.theme-blue .timer-display {
   color: #ffffff;
   caret-color: #ffffff;
   opacity: 1;
@@ -1707,7 +1707,7 @@ body.dark-mode #pt,
 body.dark-mode #resultado,
 body.dark-mode #acertos,
 body.dark-mode #nivel-mensagem,
-body.dark-mode #timer {
+body.dark-mode .timer-display {
   color: #ffffff;
   caret-color: #ffffff;
   opacity: 1;
@@ -2846,10 +2846,37 @@ body.mode-five-intro-active .phrase-stack {
   color: #333;
 }
 
-#timer {
-  display: none;
+.phrase-timer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.timer-display {
+  min-width: 120px;
+  padding: 10px 16px;
+  border-radius: 14px;
   font-size: 18px;
-  color: #333;
+  font-weight: 700;
+  color: #f5f7ff;
+  background: rgba(255, 255, 255, 0.12);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.timer-display--listening {
+  color: #1b8cff;
+  background: rgba(27, 140, 255, 0.16);
+  border-color: rgba(27, 140, 255, 0.32);
+}
+
+.timer-display--inactive {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.18);
+  border-color: rgba(255, 107, 107, 0.32);
 }
 
 #nivel-mensagem {

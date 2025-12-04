@@ -579,9 +579,11 @@ if (SpeechRecognizerClass) {
     silenceCutoffMs: recognitionSilenceMs
   });
   reconhecimento.lang = 'en-US';
+  bindSpeechWaveformEvents(reconhecimento);
 
   reconhecimento.onstart = () => {
     reconhecimentoRodando = true;
+    setTimerState(TIMER_STATES.LISTENING);
   };
 
   reconhecimento.onresult = (event) => {
@@ -626,6 +628,7 @@ if (SpeechRecognizerClass) {
 
   reconhecimento.onend = () => {
     reconhecimentoRodando = false;
+    setTimerState(TIMER_STATES.INACTIVE);
   };
 } else {
   alert('Reconhecimento de voz não é suportado neste navegador. Use o Chrome.');
@@ -679,6 +682,45 @@ let levelFinderActive = false;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
+const TIMER_STATES = {
+  LISTENING: 'timer-display--listening',
+  INACTIVE: 'timer-display--inactive'
+};
+
+function getTimerElement() {
+  return document.getElementById('timer');
+}
+
+function setTimerState(state) {
+  const timerEl = getTimerElement();
+  if (!timerEl) {
+    return;
+  }
+  timerEl.classList.remove(TIMER_STATES.LISTENING, TIMER_STATES.INACTIVE);
+  if (state === TIMER_STATES.LISTENING) {
+    timerEl.classList.add(TIMER_STATES.LISTENING);
+  } else if (state === TIMER_STATES.INACTIVE) {
+    timerEl.classList.add(TIMER_STATES.INACTIVE);
+  }
+}
+
+function resetTimerDisplay() {
+  const timerEl = getTimerElement();
+  if (!timerEl) {
+    return;
+  }
+  timerEl.textContent = '0 ms';
+  setTimerState(null);
+}
+
+function bindSpeechWaveformEvents(recognizer) {
+  const nativeRecognizer = recognizer && recognizer._recognition;
+  if (!nativeRecognizer || typeof nativeRecognizer.addEventListener !== 'function') {
+    return;
+  }
+  nativeRecognizer.addEventListener('speechstart', () => setTimerState(TIMER_STATES.LISTENING));
+  nativeRecognizer.addEventListener('speechend', () => setTimerState(TIMER_STATES.INACTIVE));
+}
 
 function setMicrophoneSpeechState(active, token = null) {
   if (active) {
@@ -2991,15 +3033,17 @@ function mostrarFrase() {
   if (voz === 'en') falar(en, 'en');
   else if (voz === 'pt') falar(pt, 'pt');
   bloqueado = false;
-  const timerEl = document.getElementById('timer');
+  const timerEl = getTimerElement();
   const toleranceMs = getComprehensionDelayMs(selectedMode, expected.length);
   phraseStartTime = Date.now() + toleranceMs;
-  timerEl.textContent = 'Tempo: 0s';
-  timerInterval = setInterval(() => {
-    const elapsed = Math.max(0, Date.now() - phraseStartTime);
-    const secs = Math.floor(elapsed / 1000);
-    timerEl.textContent = `Tempo: ${secs}s`;
-  }, 200);
+  resetTimerDisplay();
+  if (timerInterval) clearInterval(timerInterval);
+  if (timerEl) {
+    timerInterval = setInterval(() => {
+      const elapsed = Math.max(0, Date.now() - phraseStartTime);
+      timerEl.textContent = `${elapsed} ms`;
+    }, 50);
+  }
   if (!isLevelFinderActive()) {
     if (prizeTimer) clearInterval(prizeTimer);
     prizeStart = Date.now();
