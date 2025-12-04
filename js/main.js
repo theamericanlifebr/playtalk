@@ -583,12 +583,15 @@ if (SpeechRecognizerClass) {
 
   reconhecimento.onstart = () => {
     reconhecimentoRodando = true;
-    setTimerState(TIMER_STATES.LISTENING);
   };
 
   reconhecimento.onresult = (event) => {
     if (microphonePaused) {
       return;
+    }
+    if (!phraseWaveformStarted) {
+      phraseWaveformStarted = true;
+      setTimerState(TIMER_STATES.LISTENING);
     }
     const transcript = event.results[event.results.length - 1][0].transcript.trim();
     const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -673,6 +676,7 @@ let pendingModeStart = null;
 let preRoundGeneralCpm = null;
 let preRoundGeneralAccuracy = null;
 let preRoundBalance = null;
+let phraseWaveformStarted = false;
 const roundSelections = {};
 const preGameLevelSelection = {};
 let levelFinderTimer = null;
@@ -718,7 +722,14 @@ function bindSpeechWaveformEvents(recognizer) {
   if (!nativeRecognizer || typeof nativeRecognizer.addEventListener !== 'function') {
     return;
   }
-  nativeRecognizer.addEventListener('speechstart', () => setTimerState(TIMER_STATES.LISTENING));
+  nativeRecognizer.addEventListener('soundstart', () => {
+    phraseWaveformStarted = true;
+    setTimerState(TIMER_STATES.LISTENING);
+  });
+  nativeRecognizer.addEventListener('speechstart', () => {
+    phraseWaveformStarted = true;
+    setTimerState(TIMER_STATES.LISTENING);
+  });
   nativeRecognizer.addEventListener('speechend', () => setTimerState(TIMER_STATES.INACTIVE));
 }
 
@@ -3036,6 +3047,7 @@ function mostrarFrase() {
   const timerEl = getTimerElement();
   const toleranceMs = getComprehensionDelayMs(selectedMode, expected.length);
   phraseStartTime = Date.now() + toleranceMs;
+  phraseWaveformStarted = false;
   resetTimerDisplay();
   if (timerInterval) clearInterval(timerInterval);
   if (timerEl) {
@@ -3135,6 +3147,7 @@ function verificarResposta() {
   if (!isInplayActive()) return;
   if (inputTimeout) clearTimeout(inputTimeout);
   if (timerInterval) clearInterval(timerInterval);
+  setTimerState(TIMER_STATES.INACTIVE);
   const input = document.getElementById("pt");
   const resposta = input.value.trim();
   const resultado = document.getElementById("resultado");
