@@ -554,9 +554,13 @@ let reconhecimentoRodando = false;
 let listeningForCommand = false;
 let microphonePaused = false;
 let speechPauseToken = 0;
+let waveformSilenceTimer = null;
+let lastWaveformAt = 0;
 
 const isMobileViewport = typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches;
 const recognitionSilenceMs = isMobileViewport ? 6000 : 800;
+const MIN_WAVEFORM_EVENT_GAP_MS = 160;
+const WAVEFORM_SILENCE_THRESHOLD_MS = 1000;
 
 function bounceMobileMicrophone() {
   if (!isMobileViewport || !reconhecimento || microphonePaused) {
@@ -589,10 +593,7 @@ if (SpeechRecognizerClass) {
     if (microphonePaused) {
       return;
     }
-    if (!phraseWaveformStarted) {
-      phraseWaveformStarted = true;
-      setTimerState(TIMER_STATES.LISTENING);
-    }
+    markWaveformActivity();
     const transcript = event.results[event.results.length - 1][0].transcript.trim();
     const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (awaitingRetry && (normCmd.includes('try again') || normCmd.includes('tentar de novo'))) {
@@ -708,12 +709,51 @@ function setTimerState(state) {
   }
 }
 
+function stopWaveformSilenceMonitor() {
+  if (waveformSilenceTimer) {
+    clearInterval(waveformSilenceTimer);
+    waveformSilenceTimer = null;
+  }
+}
+
+function ensureWaveformSilenceMonitor() {
+  if (waveformSilenceTimer) {
+    return;
+  }
+  waveformSilenceTimer = setInterval(() => {
+    if (!isInplayActive() || microphonePaused || !reconhecimentoAtivo || !lastWaveformAt) {
+      return;
+    }
+    const elapsedSilence = Date.now() - lastWaveformAt;
+    if (elapsedSilence >= WAVEFORM_SILENCE_THRESHOLD_MS) {
+      setTimerState(TIMER_STATES.INACTIVE);
+    }
+  }, 120);
+}
+
+function primeWaveformSilenceBaseline() {
+  lastWaveformAt = Date.now();
+  ensureWaveformSilenceMonitor();
+}
+
+function markWaveformActivity() {
+  const now = Date.now();
+  if (phraseWaveformStarted && lastWaveformAt && now - lastWaveformAt < MIN_WAVEFORM_EVENT_GAP_MS) {
+    return;
+  }
+  lastWaveformAt = now;
+  phraseWaveformStarted = true;
+  setTimerState(TIMER_STATES.LISTENING);
+  ensureWaveformSilenceMonitor();
+}
+
 function resetTimerDisplay() {
   const timerEl = getTimerElement();
   if (!timerEl) {
     return;
   }
   timerEl.textContent = '0 ms';
+  primeWaveformSilenceBaseline();
   setTimerState(null);
 }
 
@@ -722,15 +762,9 @@ function bindSpeechWaveformEvents(recognizer) {
   if (!nativeRecognizer || typeof nativeRecognizer.addEventListener !== 'function') {
     return;
   }
-  nativeRecognizer.addEventListener('soundstart', () => {
-    phraseWaveformStarted = true;
-    setTimerState(TIMER_STATES.LISTENING);
-  });
-  nativeRecognizer.addEventListener('speechstart', () => {
-    phraseWaveformStarted = true;
-    setTimerState(TIMER_STATES.LISTENING);
-  });
-  nativeRecognizer.addEventListener('speechend', () => setTimerState(TIMER_STATES.INACTIVE));
+  nativeRecognizer.addEventListener('soundstart', markWaveformActivity);
+  nativeRecognizer.addEventListener('speechstart', markWaveformActivity);
+  nativeRecognizer.addEventListener('speechend', primeWaveformSilenceBaseline);
 }
 
 function setMicrophoneSpeechState(active, token = null) {
@@ -797,6 +831,8 @@ function setInplayState(active) {
   document.body.classList.toggle('inplay-active', inplayActive);
   updateLevelFinderLevelIndicator();
   if (!inplayActive) {
+    stopWaveformSilenceMonitor();
+    lastWaveformAt = 0;
     renderLevelInstruction({ mode: null, level: null });
   }
 }
