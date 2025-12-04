@@ -77,6 +77,8 @@
     const colorTriggers = Array.from(scope.querySelectorAll('.fun-color-trigger'));
     const colorBoard = scope.querySelector('#fun-color-board');
     const colorGrid = scope.querySelector('#fun-color-grid');
+    const fontPickers = Array.from(scope.querySelectorAll('.fun-font-picker'));
+    const fontPanels = Array.from(scope.querySelectorAll('.fun-font-picker__panel'));
     let activeColorInput = colorInputs[0] || null;
     let activeTrigger = colorTriggers[0] || null;
 
@@ -86,18 +88,87 @@
       backgroundStatus.classList.toggle('profile-background__status--error', Boolean(isError));
     }
 
-    function populateFonts() {
-      const addOptions = (select) => {
-        if (!select || select.options.length) return;
+    function closeFontPanels() {
+      fontPanels.forEach((panel) => {
+        panel.hidden = true;
+        const trigger = panel.previousElementSibling;
+        if (trigger && trigger.classList.contains('fun-font-picker__trigger')) {
+          trigger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    function setFontTriggerCopy(targetKey, fontName) {
+      const triggerText = scope.querySelector(`[data-font-trigger-text="${CSS.escape(targetKey)}"]`);
+      if (triggerText) {
+        triggerText.textContent = fontName;
+        triggerText.style.fontFamily = `'${fontName}', sans-serif`;
+      }
+    }
+
+    function setFontValue(targetKey, fontName) {
+      const targetInput = targetKey === 'app' ? appFontSelect : gameFontSelect;
+      if (targetInput) {
+        targetInput.value = fontName;
+      }
+      setFontTriggerCopy(targetKey, fontName);
+    }
+
+    function renderFontOptions() {
+      fontPickers.forEach((picker) => {
+        const targetKey = picker.dataset.fontPicker;
+        const optionsContainer = picker.querySelector('[data-font-options]');
+        const panel = picker.querySelector('.fun-font-picker__panel');
+        if (!targetKey || !optionsContainer || !panel) return;
+        const groupName = `font-${targetKey}`;
+        optionsContainer.innerHTML = '';
         FONT_OPTIONS.forEach((font) => {
-          const option = document.createElement('option');
-          option.value = font;
-          option.textContent = font;
-          select.appendChild(option);
+          const label = document.createElement('label');
+          label.className = 'label';
+          label.style.fontFamily = `'${font}', sans-serif`;
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = groupName;
+          input.value = font;
+          input.setAttribute('role', 'option');
+          const text = document.createElement('span');
+          text.className = 'text';
+          text.textContent = font;
+          label.appendChild(input);
+          label.appendChild(text);
+          input.addEventListener('change', () => {
+            setFontValue(targetKey, font);
+            closeFontPanels();
+            persistSettings();
+          });
+          optionsContainer.appendChild(label);
         });
-      };
-      addOptions(appFontSelect);
-      addOptions(gameFontSelect);
+
+        const trigger = picker.querySelector('.fun-font-picker__trigger');
+        if (trigger) {
+          trigger.addEventListener('click', () => {
+            const isOpen = panel.hidden === false;
+            closeFontPanels();
+            panel.hidden = isOpen;
+            trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+            if (!isOpen) {
+              panel.hidden = false;
+            }
+          });
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!event.target.closest('.fun-font-picker')) {
+          closeFontPanels();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeFontPanels();
+        }
+      });
     }
 
     function syncTriggerColor(trigger, value) {
@@ -131,6 +202,12 @@
       }
       if (colorBoard) {
         colorBoard.classList.add('fun-color-board--visible');
+      }
+    }
+
+    function hideColorBoard() {
+      if (colorBoard) {
+        colorBoard.classList.remove('fun-color-board--visible');
       }
     }
 
@@ -189,7 +266,6 @@
     }
 
     function load() {
-      populateFonts();
       const settings = api ? api.loadSettings() : {};
       if (headerStartInput && settings.headerGradientStart) {
         headerStartInput.value = settings.headerGradientStart;
@@ -202,11 +278,19 @@
       if (headerGradientToggle) {
         headerGradientToggle.checked = settings.headerGradientEnabled !== false;
       }
-      if (appFontSelect && settings.appFont) {
-        appFontSelect.value = settings.appFont;
+      if (appFontSelect) {
+        const fontName = settings.appFont || FONT_OPTIONS[0];
+        appFontSelect.value = fontName;
+        setFontTriggerCopy('app', fontName);
+        const appRadio = scope.querySelector(`input[name="font-app"][value="${CSS.escape(fontName)}"]`);
+        if (appRadio) appRadio.checked = true;
       }
-      if (gameFontSelect && settings.gameFont) {
-        gameFontSelect.value = settings.gameFont;
+      if (gameFontSelect) {
+        const fontName = settings.gameFont || FONT_OPTIONS[0];
+        gameFontSelect.value = fontName;
+        setFontTriggerCopy('game', fontName);
+        const gameRadio = scope.querySelector(`input[name="font-game"][value="${CSS.escape(fontName)}"]`);
+        if (gameRadio) gameRadio.checked = true;
       }
       if (appTextColorInput && settings.appTextColor !== undefined) {
         appTextColorInput.value = settings.appTextColor;
@@ -257,12 +341,22 @@
       });
     });
 
-    if (colorBoard && activeColorInput) {
-      colorBoard.classList.add('fun-color-board--visible');
-    }
-
+    renderFontOptions();
     renderColorGrid();
     load();
+
+    if (colorBoard) {
+      colorBoard.addEventListener('click', (event) => {
+        if (event.target.closest('[data-color-dismiss]')) {
+          hideColorBoard();
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          hideColorBoard();
+        }
+      });
+    }
 
     if (form) {
       form.addEventListener('submit', (event) => event.preventDefault());

@@ -92,6 +92,69 @@
     }
   };
 
+  const RANKING_SECTION_CONFIG = {
+    streak: {
+      title: 'Sequência',
+      tag: 'sequência',
+      description: 'Jogadores com maiores sequências de acertos consecutivos.',
+      value(entry) {
+        return formatInteger(Math.max(0, entry.bestStreak || 0));
+      },
+      detail(entry) {
+        return `Sequência atual ${formatInteger(Math.max(0, entry.currentStreak || 0))}`;
+      }
+    },
+    fast: {
+      title: 'Velocidade',
+      tag: 'cps',
+      description: 'Ritmo de caracteres por segundo em alta.',
+      value(entry) {
+        const cps = Number.isFinite(entry.cps)
+          ? entry.cps
+          : Number.isFinite(entry.fastCps)
+            ? entry.fastCps
+            : Number.isFinite(entry.cpm)
+              ? entry.cpm
+              : 0;
+        return `${formatCps(Math.max(0, cps))} cps`;
+      },
+      detail(entry) {
+        const accuracyText = `${formatPercent(Math.max(0, Math.min(100, entry.accuracy || 0)))} de precisão`;
+        const recentCount = Math.max(0, entry && entry.recentPhraseCount ? entry.recentPhraseCount : 0);
+        if (!recentCount) {
+          return accuracyText;
+        }
+        const label = recentCount === 1 ? 'frase recente' : 'frases recentes';
+        const prefix = recentCount === 1 ? 'Baseado na última' : 'Baseado nas últimas';
+        return `${accuracyText} • ${prefix} ${formatInteger(recentCount)} ${label}`;
+      }
+    },
+    accuracy: {
+      title: 'Precisão',
+      tag: 'precisão',
+      description: 'Quem mantém a pontaria mais alta ao longo das rodadas.',
+      value(entry) {
+        return formatPercent(Math.max(0, Math.min(100, entry.accuracy || 0)));
+      },
+      detail(entry) {
+        const phrases = Math.max(0, entry.totalPhrases || entry.phrases || 0);
+        const label = phrases === 1 ? 'frase registrada' : 'frases registradas';
+        return `${formatInteger(phrases)} ${label}`;
+      }
+    },
+    level: {
+      title: 'Nível',
+      tag: 'nível',
+      description: 'Quem subiu mais degraus na jornada.',
+      value(entry) {
+        return `Nível ${formatInteger(Math.max(0, entry.level || 0))}`;
+      },
+      detail(entry) {
+        return `${formatInteger(Math.max(0, entry.points || 0))} pts totais`;
+      }
+    }
+  };
+
   const MEDAL_CONFIG = [
     { key: 'diamante', label: 'Diamante', icon: 'medalhas/diamante.png' },
     { key: 'ouro', label: 'Ouro', icon: 'medalhas/ouro.png' },
@@ -764,6 +827,200 @@
     } };
   }
 
+  function createRankingRow(entry, index, config) {
+    const row = document.createElement('li');
+    row.className = 'ranking-row';
+    if (index <= 2) {
+      row.classList.add(`ranking-row--rank-${index + 1}`);
+    }
+    const position = document.createElement('span');
+    position.className = 'ranking-row__position';
+    position.textContent = index + 1;
+    position.setAttribute('aria-label', `Posição ${index + 1}`);
+
+    const avatarWrapper = document.createElement('div');
+    avatarWrapper.className = 'ranking-row__avatar';
+    const avatar = document.createElement('img');
+    avatar.loading = 'lazy';
+    avatar.src = entry.avatar || DEFAULT_AVATAR_URL;
+    avatar.alt = `Foto de ${entry.displayName || entry.username || 'Jogador'}`;
+    avatarWrapper.appendChild(avatar);
+
+    const info = document.createElement('div');
+    info.className = 'ranking-row__info';
+    const name = document.createElement('strong');
+    name.className = 'ranking-row__name';
+    name.textContent = entry.displayName || entry.username || 'Jogador';
+    info.appendChild(name);
+    const detailText = typeof config.detail === 'function' ? config.detail(entry) : '';
+    if (detailText) {
+      const meta = document.createElement('span');
+      meta.className = 'ranking-row__meta';
+      meta.textContent = detailText;
+      info.appendChild(meta);
+    }
+
+    const value = document.createElement('div');
+    value.className = 'ranking-row__value';
+    const scoreText = typeof config.value === 'function' ? config.value(entry) : '';
+    value.textContent = scoreText;
+    value.setAttribute('aria-label', `Score ${scoreText}`);
+
+    row.appendChild(position);
+    row.appendChild(avatarWrapper);
+    row.appendChild(info);
+    row.appendChild(value);
+    return row;
+  }
+
+  function createRankingCard(sectionKey, config) {
+    const card = document.createElement('article');
+    card.className = 'ranking-card';
+    card.dataset.rankingSection = sectionKey;
+    card.setAttribute('aria-hidden', sectionKey === 'streak' ? 'false' : 'true');
+    if (sectionKey === 'streak') {
+      card.classList.add('is-active');
+    }
+
+    const header = document.createElement('div');
+    header.className = 'ranking-card__header';
+    const headerCopy = document.createElement('div');
+    const title = document.createElement('h3');
+    title.textContent = config.title;
+    const description = document.createElement('p');
+    description.textContent = config.description;
+    headerCopy.appendChild(title);
+    headerCopy.appendChild(description);
+    const tag = document.createElement('span');
+    tag.className = 'ranking-tag';
+    tag.textContent = config.tag;
+    header.appendChild(headerCopy);
+    header.appendChild(tag);
+    card.appendChild(header);
+
+    const tableHead = document.createElement('div');
+    tableHead.className = 'leaderboard-table__head';
+    tableHead.setAttribute('aria-hidden', 'true');
+    ['Rank', 'Jogador', 'Score'].forEach(label => {
+      const span = document.createElement('span');
+      if (label === 'Score') {
+        span.className = 'leaderboard-table__head-score';
+      }
+      span.textContent = label;
+      tableHead.appendChild(span);
+    });
+    card.appendChild(tableHead);
+
+    const list = document.createElement('ol');
+    list.className = 'ranking-list';
+    list.dataset.rankingList = sectionKey;
+    list.setAttribute('aria-live', 'polite');
+    card.appendChild(list);
+
+    const empty = document.createElement('p');
+    empty.className = 'ranking-empty';
+    empty.dataset.rankingEmpty = sectionKey;
+    empty.hidden = true;
+    empty.textContent = 'Sem jogadores neste ranking ainda.';
+    card.appendChild(empty);
+
+    return card;
+  }
+
+  function createRankingEmbedSection() {
+    const section = document.createElement('section');
+    section.className = 'stats-section stats-section--rankings';
+
+    const header = document.createElement('div');
+    header.className = 'stats-section__header';
+    const headerCopy = document.createElement('div');
+    const title = document.createElement('h2');
+    title.textContent = 'Rankings públicos';
+    const subtitle = document.createElement('p');
+    subtitle.textContent = 'Visual igual à aba dedicada, com navegação por cartões.';
+    headerCopy.appendChild(title);
+    headerCopy.appendChild(subtitle);
+    header.appendChild(headerCopy);
+    section.appendChild(header);
+
+    const nav = document.createElement('nav');
+    nav.className = 'ranking-carousel__nav';
+    nav.setAttribute('aria-label', 'Selecionar ranking');
+
+    const viewport = document.createElement('div');
+    viewport.className = 'ranking-carousel__viewport';
+    const track = document.createElement('section');
+    track.className = 'ranking-grid';
+    track.dataset.rankingCarouselTrack = '';
+    viewport.appendChild(track);
+
+    const cards = {};
+
+    Object.entries(RANKING_SECTION_CONFIG).forEach(([key, config], index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ranking-carousel__nav-button';
+      button.dataset.rankingNav = key;
+      button.setAttribute('aria-label', config.title);
+      button.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
+      if (index === 0) {
+        button.classList.add('is-active');
+      }
+      button.textContent = config.title;
+      nav.appendChild(button);
+
+      const card = createRankingCard(key, config);
+      track.appendChild(card);
+      cards[key] = card;
+    });
+
+    function setActive(key) {
+      Object.entries(cards).forEach(([sectionKey, card]) => {
+        const isActive = sectionKey === key;
+        card.classList.toggle('is-active', isActive);
+        card.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+      });
+      nav.querySelectorAll('[data-ranking-nav]').forEach((btn) => {
+        const isActive = btn.dataset.rankingNav === key;
+        btn.classList.toggle('is-active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+    }
+
+    nav.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-ranking-nav]');
+      if (!button) return;
+      const key = button.dataset.rankingNav;
+      setActive(key);
+    });
+
+    section.appendChild(nav);
+    section.appendChild(viewport);
+
+    function update(data = {}, targetKey = 'streak') {
+      Object.entries(RANKING_SECTION_CONFIG).forEach(([key, config]) => {
+        const entries = Array.isArray(data[key]) ? data[key] : [];
+        const card = cards[key];
+        if (!card) return;
+        const list = card.querySelector(`[data-ranking-list="${CSS.escape(key)}"]`);
+        const empty = card.querySelector(`[data-ranking-empty="${CSS.escape(key)}"]`);
+        if (!list || !empty) return;
+        list.innerHTML = '';
+        if (!entries.length) {
+          empty.hidden = false;
+          return;
+        }
+        empty.hidden = true;
+        entries.slice(0, 10).forEach((entry, index) => {
+          list.appendChild(createRankingRow(entry, index, config));
+        });
+      });
+      setActive(targetKey);
+    }
+
+    return { section, update };
+  }
+
   function hexToRgb(hex) {
     const int = parseInt(hex.slice(1), 16);
     return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
@@ -786,19 +1043,7 @@
       container.insertBefore(newSection, container.firstChild);
       return newSection;
     }
-    newSection.classList.add('stats-slide', 'is-entering');
-    oldSection.classList.add('stats-slide', 'is-leaving');
-    oldSection.after(newSection);
-    requestAnimationFrame(() => {
-      newSection.classList.add('is-active');
-      oldSection.classList.add('is-off');
-    });
-    setTimeout(() => {
-      if (oldSection.parentNode) {
-        oldSection.parentNode.removeChild(oldSection);
-      }
-      newSection.classList.remove('stats-slide', 'is-entering', 'is-active');
-    }, 240);
+    container.replaceChild(newSection, oldSection);
     return newSection;
   }
 
@@ -827,7 +1072,7 @@
       performanceSection = swapSection(container, performanceSection, newPerformance);
       const newPlayerStats = createPlayerStatsSection(newSummary);
       playerStatsSection = swapSection(container, playerStatsSection, newPlayerStats);
-      updateTop(rankings, mode);
+      updateRanking(rankings);
       if (mode) {
         applyLens(mode);
       } else {
@@ -840,8 +1085,8 @@
     let performanceSection = createPerformanceSection(summary, activeMode);
     container.appendChild(performanceSection);
 
-    const { section: topSection, update: updateTop } = createTopSection();
-    container.appendChild(topSection);
+    const { section: rankingSection, update: updateRanking } = createRankingEmbedSection();
+    container.appendChild(rankingSection);
 
     let playerStatsSection = createPlayerStatsSection(summary);
     container.appendChild(playerStatsSection);
@@ -860,7 +1105,7 @@
       .then(res => res.json())
       .then(payload => {
         rankings = payload && payload.rankings ? payload.rankings : {};
-        updateTop(rankings, activeMode);
+        updateRanking(rankings);
       })
       .catch(error => {
         console.warn('Não foi possível carregar os rankings', error);
@@ -878,7 +1123,7 @@
       performanceSection = swapSection(container, performanceSection, refreshedPerformance);
       const refreshedPlayerStats = createPlayerStatsSection(updated);
       playerStatsSection = swapSection(container, playerStatsSection, refreshedPlayerStats);
-      updateTop(rankings, activeMode);
+      updateRanking(rankings);
     });
   }
 

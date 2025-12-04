@@ -69,14 +69,28 @@
         <h2>Fontes</h2>
         <p class="fun-note">Escolha tipografia e cores tanto para a interface do app quanto para as frases durante o jogo.</p>
         <div class="fun-fonts-grid">
-          <label class="fun-select">
-            <span>Fontes do app</span>
-            <select id="appFontFamily"></select>
-          </label>
-          <label class="fun-select">
-            <span>Fontes das frases de jogo</span>
-            <select id="gameFontFamily"></select>
-          </label>
+          <div class="fun-font-picker" data-font-picker="app">
+            <div class="fun-font-picker__label">Fontes do app</div>
+            <input type="hidden" id="appFontFamily">
+            <button type="button" class="fun-font-picker__trigger" aria-haspopup="true" aria-expanded="false">
+              <span class="fun-font-picker__trigger-text" data-font-trigger-text="app">Escolha uma fonte</span>
+              <span class="fun-font-picker__chevron" aria-hidden="true">▼</span>
+            </button>
+            <div class="fun-font-picker__panel" role="listbox" aria-label="Fontes do app" hidden>
+              <div class="radio-input" data-font-options="app"></div>
+            </div>
+          </div>
+          <div class="fun-font-picker" data-font-picker="game">
+            <div class="fun-font-picker__label">Fontes das frases de jogo</div>
+            <input type="hidden" id="gameFontFamily">
+            <button type="button" class="fun-font-picker__trigger" aria-haspopup="true" aria-expanded="false">
+              <span class="fun-font-picker__trigger-text" data-font-trigger-text="game">Escolha uma fonte</span>
+              <span class="fun-font-picker__chevron" aria-hidden="true">▼</span>
+            </button>
+            <div class="fun-font-picker__panel" role="listbox" aria-label="Fontes das frases de jogo" hidden>
+              <div class="radio-input" data-font-options="game"></div>
+            </div>
+          </div>
           <div class="fun-color-field">
             <span class="fun-label">Cor das frases do app</span>
             <button type="button" class="fun-color-trigger fun-color-palette__swatch" data-color-target="appTextColor" style="--color: #ffffff" aria-label="Selecionar cor das frases do app"></button>
@@ -207,11 +221,19 @@
       </div>
     </form>
     <section class="fun-color-board" id="fun-color-board" aria-live="polite" aria-label="Paleta rápida de destaques">
-      <div class="fun-color-board__header">
-        <h3>Paleta rápida de destaques</h3>
-        <p>36 opções modernas distribuídas em 6 linhas e 6 colunas.</p>
+      <div class="fun-color-board__backdrop" data-color-dismiss></div>
+      <div class="fun-color-board__dialog" role="dialog" aria-modal="true">
+        <div class="fun-color-board__header">
+          <div>
+            <h3>Paleta rápida de destaques</h3>
+            <p>36 opções modernas distribuídas em 6 linhas e 6 colunas.</p>
+          </div>
+          <button type="button" class="fun-color-board__close" data-color-dismiss aria-label="Fechar paleta">
+            ✕
+          </button>
+        </div>
+        <div class="fun-color-board__grid" id="fun-color-grid" role="listbox" aria-label="Selecionar cor"></div>
       </div>
-      <div class="fun-color-board__grid" id="fun-color-grid" role="listbox" aria-label="Selecionar cor"></div>
     </section>
   </main>
   <script src="js/fun-page.js" defer></script>
