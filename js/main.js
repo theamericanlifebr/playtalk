@@ -12,6 +12,7 @@ const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
 };
 
 const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
+const WORD_ALTERNATIVES_PATH = 'data/phrases/word-alternatives.json';
 const MODE_PROGRESS_KEY = 'modeProgress';
 const ROUND_STATE_KEY = 'modeRoundState';
 const GENERAL_PROGRESS_KEY = 'generalProgress';
@@ -227,6 +228,32 @@ const phraseLibrary = {
   instructions: {},
   loaded: false
 };
+
+const wordAlternatives = {
+  normalizedToCanonical: {},
+  loaded: false
+};
+
+function normalizeWordKey(word) {
+  return String(word || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9']/gi, '')
+    .toLowerCase();
+}
+
+function applyWordAlternatives(text) {
+  if (!text || !wordAlternatives.loaded || !Object.keys(wordAlternatives.normalizedToCanonical).length) {
+    return text || '';
+  }
+
+  return String(text).replace(/\b([A-Za-zÀ-ÿ0-9']+)\b/g, (match, word) => {
+    const normalized = normalizeWordKey(word);
+    const canonical = wordAlternatives.normalizedToCanonical[normalized];
+    if (!canonical) return match;
+    return match.replace(word, canonical);
+  });
+}
 
 function normalizePhraseLine(line) {
   if (typeof line !== 'string') {
@@ -497,7 +524,10 @@ async function carregarPastas() {
       );
     });
 
-    await Promise.all(fetches);
+    await Promise.all([
+      ...fetches,
+      loadWordAlternatives()
+    ]);
     phraseLibrary.loaded = true;
   } catch (error) {
     console.error('Erro ao carregar frases do jogo:', error);
@@ -509,6 +539,47 @@ async function carregarPastas() {
   }
 
   return phraseLibrary;
+}
+
+async function loadWordAlternatives() {
+  if (wordAlternatives.loaded) {
+    return wordAlternatives;
+  }
+
+  try {
+    const response = await fetch(WORD_ALTERNATIVES_PATH);
+    if (!response.ok) {
+      throw new Error(`Alternativas de palavras não encontradas (${response.status})`);
+    }
+    const data = await response.json();
+    const normalized = {};
+
+    if (data && typeof data === 'object') {
+      Object.entries(data).forEach(([key, values]) => {
+        const canonical = String(key || '').trim();
+        if (!canonical) return;
+        const normalizedCanonical = normalizeWordKey(canonical);
+        normalized[normalizedCanonical] = canonical;
+        if (Array.isArray(values)) {
+          values.forEach(value => {
+            const normalizedValue = normalizeWordKey(value);
+            if (normalizedValue) {
+              normalized[normalizedValue] = canonical;
+            }
+          });
+        }
+      });
+    }
+
+    wordAlternatives.normalizedToCanonical = normalized;
+    wordAlternatives.loaded = true;
+  } catch (error) {
+    console.error('Erro ao carregar alternativas de palavras:', error);
+    wordAlternatives.normalizedToCanonical = {};
+    wordAlternatives.loaded = true;
+  }
+
+  return wordAlternatives;
 }
 
 function ehQuaseCorreto(res, esp) {
@@ -3198,19 +3269,22 @@ function verificarResposta() {
   const pt = getPtFromPhrase(currentEntry);
   const enVariants = getEnVariantsFromPhrase(currentEntry);
   const expectedOptions = esperadoLang === 'pt' ? [pt] : (enVariants.length ? enVariants : ['']);
+  const adjustedExpectedOptions = expectedOptions.map(option => applyWordAlternatives(option || ''));
   const expectedPhrase = expectedOptions[0] || '';
   const phraseLength = expectedPhrase ? expectedPhrase.length : 0;
   const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
-  let normalizadoResp = norm(resposta);
-  const correto = expectedOptions.some(opcao => {
+  const adjustedResposta = applyWordAlternatives(resposta);
+  let normalizadoResp = norm(adjustedResposta);
+  const correto = adjustedExpectedOptions.some(opcao => {
     const normalizadoEsp = norm(opcao || '');
     return normalizadoResp === normalizadoEsp ||
       ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
-      ehQuaseCorretoPalavras(resposta, opcao || '');
+      ehQuaseCorretoPalavras(adjustedResposta, opcao || '');
   });
 
-  const expectedChars = countCorrectCharacters(expectedPhrase, expectedPhrase);
-  const correctChars = countCorrectCharacters(expectedPhrase, resposta);
+  const comparisonExpected = adjustedExpectedOptions[0] || expectedPhrase;
+  const expectedChars = countCorrectCharacters(comparisonExpected, comparisonExpected);
+  const correctChars = countCorrectCharacters(comparisonExpected, adjustedResposta);
   stats.totalChars += expectedChars;
   stats.correctChars += correctChars;
   roundCorrectChars += correctChars;
