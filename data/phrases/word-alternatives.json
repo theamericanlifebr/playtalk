@@ -1,3 +1,5 @@
 {
-  "like": ["I", "You", "He", "She", "It", "Is", "Are", "Do", "Have", "Like", "Want", "A", "The", "And", "But", "Not", "Time", "People", "Music", "Life", "Man", "Good", "New", "Big", "Old", "Happy", "Now", "Very"]
+  "like": ["I", "You", "He", "She", "It", "Is", "Are", "Do", "Have", "Like", "Want", "A", "The", "And", "But", "Not", "Time", "People", "Music", "Life", "Man", "Good", "New", "Big", "Old", "Happy", "Now", "Very"],
+  "we can": ["weekend", "we ken"],
+  "weekend": ["we can"]
 }

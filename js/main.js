@@ -33,6 +33,7 @@ const MODE_SCORE_FACTORS = {
 const ROUND_OPTIONS = [12];
 const DEFAULT_ROUND_SIZE = ROUND_OPTIONS[0];
 const MAX_PROGRESS_POINTS = DEFAULT_ROUND_SIZE;
+const PRE_GAME_OPTIONS_KEY = 'playtalkPreGameOptions';
 const COLOR_STOP_RATIOS = [
   [0, '#ff0000'],
   [0.08, '#ff3b00'],
@@ -221,6 +222,45 @@ function getMedalForAccuracy(accuracy) {
 
 let userSettings = { ...SETTINGS_FALLBACK };
 
+const DEFAULT_MODE_OPTIONS = {
+  playVoice: true,
+  showPortuguese: false,
+  showTranscript: false
+};
+
+function loadModeOptions(mode) {
+  const stored = localStorage.getItem(PRE_GAME_OPTIONS_KEY);
+  let parsed = {};
+  if (stored) {
+    try {
+      parsed = JSON.parse(stored) || {};
+    } catch (error) {
+      parsed = {};
+    }
+  }
+  const key = String(mode);
+  const defaults = { ...DEFAULT_MODE_OPTIONS };
+  if (mode === 2) {
+    defaults.showPortuguese = true;
+  }
+  return { ...defaults, ...(parsed[key] || {}) };
+}
+
+function saveModeOptions(mode, options) {
+  if (!Number.isFinite(mode)) return;
+  const stored = localStorage.getItem(PRE_GAME_OPTIONS_KEY);
+  let parsed = {};
+  if (stored) {
+    try {
+      parsed = JSON.parse(stored) || {};
+    } catch (error) {
+      parsed = {};
+    }
+  }
+  parsed[String(mode)] = { ...loadModeOptions(mode), ...(options || {}) };
+  localStorage.setItem(PRE_GAME_OPTIONS_KEY, JSON.stringify(parsed));
+}
+
 const phraseLibrary = {
   config: {},
   modes: {},
@@ -231,6 +271,7 @@ const phraseLibrary = {
 
 const wordAlternatives = {
   normalizedToCanonical: {},
+  phraseAlternatives: [],
   loaded: false
 };
 
@@ -242,12 +283,70 @@ function normalizeWordKey(word) {
     .toLowerCase();
 }
 
+function normalizePhraseKey(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9']+/gi, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+function getWordMatches(text) {
+  return [...String(text || '').matchAll(/\b([A-Za-zÀ-ÿ0-9']+)\b/g)];
+}
+
+function applyPhraseAlternatives(text) {
+  if (!wordAlternatives.phraseAlternatives.length) {
+    return text;
+  }
+
+  let adjusted = text;
+  const matches = getWordMatches(adjusted);
+  if (!matches.length) {
+    return adjusted;
+  }
+
+  const normalizedWords = matches.map(match => normalizeWordKey(match[1]));
+  const replacements = [];
+
+  wordAlternatives.phraseAlternatives.forEach(entry => {
+    entry.variants.forEach(variant => {
+      const variantWords = variant.split(' ');
+      if (!variantWords.length) return;
+      for (let i = 0; i <= normalizedWords.length - variantWords.length; i++) {
+        const windowMatches = normalizedWords.slice(i, i + variantWords.length);
+        const isMatch = windowMatches.every((word, idx) => word === variantWords[idx]);
+        if (isMatch) {
+          const start = matches[i].index;
+          const end = matches[i + variantWords.length - 1].index + matches[i + variantWords.length - 1][0].length;
+          replacements.push({ start, end, replacement: entry.canonical });
+        }
+      }
+    });
+  });
+
+  replacements.sort((a, b) => b.start - a.start);
+  const occupied = [];
+  replacements.forEach(rep => {
+    const overlaps = occupied.some(([s, e]) => !(rep.end <= s || rep.start >= e));
+    if (overlaps) return;
+    adjusted = adjusted.slice(0, rep.start) + rep.replacement + adjusted.slice(rep.end);
+    occupied.push([rep.start, rep.end]);
+  });
+
+  return adjusted;
+}
+
 function applyWordAlternatives(text) {
   if (!text || !wordAlternatives.loaded || !Object.keys(wordAlternatives.normalizedToCanonical).length) {
     return text || '';
   }
 
-  return String(text).replace(/\b([A-Za-zÀ-ÿ0-9']+)\b/g, (match, word) => {
+  const phraseAdjusted = applyPhraseAlternatives(String(text));
+
+  return phraseAdjusted.replace(/\b([A-Za-zÀ-ÿ0-9']+)\b/g, (match, word) => {
     const normalized = normalizeWordKey(word);
     const canonical = wordAlternatives.normalizedToCanonical[normalized];
     if (!canonical) return match;
@@ -553,18 +652,45 @@ async function loadWordAlternatives() {
     }
     const data = await response.json();
     const normalized = {};
+    const phraseAlternatives = [];
+
+    const ensurePhraseEntry = (canonical, normalizedCanonical) => {
+      const existing = phraseAlternatives.find(entry => entry.canonical === canonical && entry.normalized === normalizedCanonical);
+      if (existing) {
+        return existing;
+      }
+      const created = { canonical, normalized: normalizedCanonical, variants: new Set([normalizedCanonical]) };
+      phraseAlternatives.push(created);
+      return created;
+    };
 
     if (data && typeof data === 'object') {
       Object.entries(data).forEach(([key, values]) => {
         const canonical = String(key || '').trim();
         if (!canonical) return;
-        const normalizedCanonical = normalizeWordKey(canonical);
-        normalized[normalizedCanonical] = canonical;
+        const normalizedCanonicalWord = normalizeWordKey(canonical);
+        const normalizedCanonicalPhrase = normalizePhraseKey(canonical);
+        const isPhrase = normalizedCanonicalPhrase.includes(' ');
+        if (isPhrase) {
+          const entry = ensurePhraseEntry(canonical, normalizedCanonicalPhrase);
+          entry.variants.add(normalizedCanonicalPhrase);
+        } else {
+          normalized[normalizedCanonicalWord] = canonical;
+        }
         if (Array.isArray(values)) {
           values.forEach(value => {
-            const normalizedValue = normalizeWordKey(value);
-            if (normalizedValue) {
-              normalized[normalizedValue] = canonical;
+            const normalizedValueWord = normalizeWordKey(value);
+            const normalizedValuePhrase = normalizePhraseKey(value);
+            const isValuePhrase = normalizedValuePhrase.includes(' ');
+            if (isPhrase || isValuePhrase) {
+              const entry = ensurePhraseEntry(canonical, normalizePhraseKey(canonical));
+              if (isValuePhrase) {
+                entry.variants.add(normalizedValuePhrase);
+              } else if (normalizedValueWord) {
+                entry.variants.add(normalizedValueWord);
+              }
+            } else if (normalizedValueWord) {
+              normalized[normalizedValueWord] = canonical;
             }
           });
         }
@@ -572,10 +698,15 @@ async function loadWordAlternatives() {
     }
 
     wordAlternatives.normalizedToCanonical = normalized;
+    wordAlternatives.phraseAlternatives = phraseAlternatives.map(entry => ({
+      canonical: entry.canonical,
+      variants: new Set(Array.from(entry.variants).map(item => normalizePhraseKey(item)).filter(Boolean))
+    }));
     wordAlternatives.loaded = true;
   } catch (error) {
     console.error('Erro ao carregar alternativas de palavras:', error);
     wordAlternatives.normalizedToCanonical = {};
+    wordAlternatives.phraseAlternatives = [];
     wordAlternatives.loaded = true;
   }
 
@@ -627,6 +758,68 @@ let microphonePaused = false;
 let speechPauseToken = 0;
 let waveformSilenceTimer = null;
 let lastWaveformAt = 0;
+
+function clearUserTranscript() {
+  const el = document.getElementById('user-transcript');
+  if (el) {
+    el.innerHTML = '';
+  }
+}
+
+function animateTranscript(text) {
+  return new Promise(resolve => {
+    const el = document.getElementById('user-transcript');
+    if (!el || !showUserTranscript) {
+      resolve();
+      return;
+    }
+    el.innerHTML = '';
+    const content = String(text || '');
+    if (!content) {
+      resolve();
+      return;
+    }
+    const letters = Array.from(content);
+    if (!letters.length) {
+      resolve();
+      return;
+    }
+    letters.forEach((char, index) => {
+      setTimeout(() => {
+        if (!showUserTranscript) {
+          resolve();
+          return;
+        }
+        const span = document.createElement('span');
+        span.textContent = char;
+        span.className = 'user-transcript__letter';
+        el.appendChild(span);
+        if (index === letters.length - 1) {
+          setTimeout(() => {
+            el.textContent = content;
+            resolve();
+          }, 500);
+        }
+      }, index * 50);
+    });
+  });
+}
+
+async function processTranscriptQueue() {
+  if (transcriptAnimating) return;
+  transcriptAnimating = true;
+  while (transcriptQueue.length) {
+    const next = transcriptQueue.shift();
+    await animateTranscript(next);
+  }
+  transcriptAnimating = false;
+}
+
+function queueUserTranscript(text) {
+  if (!showUserTranscript) return;
+  transcriptQueue.push(String(text || ''));
+  processTranscriptQueue();
+}
 
 const isMobileViewport = typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches;
 const recognitionSilenceMs = isMobileViewport ? 6000 : 800;
@@ -690,6 +883,9 @@ if (SpeechRecognizerClass) {
         reportLastError();
       } else {
         document.getElementById("pt").value = transcript;
+        if (showUserTranscript) {
+          queueUserTranscript(transcript);
+        }
         verificarResposta();
         bounceMobileMicrophone();
       }
@@ -758,6 +954,11 @@ let levelFinderActive = false;
 const timeGoals = {1:1.8, 2:2.2, 3:2.2, 4:3.0, 5:3.5, 6:2.0};
 const MAX_TIME = 6.0;
 const ALL_MODES = [1, 2, 3, 4, 5, 6];
+let currentModeOptions = { ...DEFAULT_MODE_OPTIONS };
+let showUserTranscript = false;
+let transcriptQueue = [];
+let transcriptAnimating = false;
+let phraseSwipeStart = null;
 const TIMER_STATES = {
   LISTENING: 'timer-display--listening',
   INACTIVE: 'timer-display--inactive'
@@ -852,6 +1053,10 @@ function setMicrophoneSpeechState(active, token = null) {
 
 function getCurrentThreshold() {
   return roundTarget;
+}
+
+function isTrainingMode(mode = selectedMode) {
+  return mode === 2 && !isLevelFinderActive();
 }
 
 function getRoundSelection(mode) {
@@ -1893,6 +2098,27 @@ function updatePreGameScreen(mode) {
     const level = setSelectedPreGameLevel(mode, getSelectedPreGameLevel(mode));
     levelEl.textContent = `Nível ${level}`;
   }
+  const optionsWrapper = document.getElementById('pre-game-options');
+  const voiceToggle = document.getElementById('pre-game-voice-toggle');
+  const languageToggle = document.getElementById('pre-game-language-toggle');
+  const transcriptToggle = document.getElementById('pre-game-transcript-toggle');
+  const modeOptions = loadModeOptions(mode);
+  const shouldShowOptions = mode === 2 || mode === 4;
+  if (optionsWrapper) {
+    optionsWrapper.style.display = shouldShowOptions ? 'grid' : 'none';
+  }
+  if (shouldShowOptions) {
+    if (voiceToggle) {
+      voiceToggle.checked = Boolean(modeOptions.playVoice);
+    }
+    if (languageToggle) {
+      languageToggle.checked = Boolean(modeOptions.showPortuguese);
+    }
+    if (transcriptToggle) {
+      transcriptToggle.checked = Boolean(modeOptions.showTranscript);
+      transcriptToggle.parentElement.parentElement.style.display = mode === 2 ? 'block' : 'none';
+    }
+  }
   const targetLevel = getSelectedPreGameLevel(mode);
   const hasResume = Boolean(
     savedRound &&
@@ -2636,6 +2862,7 @@ function startGame(modo) {
     reconhecimentoAtivo = false;
     reconhecimento.stop();
   }
+  currentModeOptions = loadModeOptions(modo);
   openPreGameScreen(modo);
 }
 
@@ -2692,6 +2919,7 @@ function beginGame() {
     updateLevelIcon({ scope: 'mode' });
     updateModeIcons();
     let recognitionLanguage = 'en-US';
+    const modeOpts = currentModeOptions || loadModeOptions(selectedMode);
     switch (selectedMode) {
       case 1:
         mostrarTexto = 'pt';
@@ -2699,8 +2927,8 @@ function beginGame() {
         esperadoLang = 'en';
         break;
       case 2:
-        mostrarTexto = 'pt';
-        voz = 'en';
+        mostrarTexto = modeOpts.showPortuguese ? 'pt' : 'en';
+        voz = modeOpts.playVoice ? 'en' : null;
         esperadoLang = 'en';
         break;
       case 3:
@@ -2709,8 +2937,8 @@ function beginGame() {
         esperadoLang = 'en';
         break;
       case 4:
-        mostrarTexto = 'en';
-        voz = null;
+        mostrarTexto = modeOpts.showPortuguese ? 'pt' : 'en';
+        voz = modeOpts.playVoice ? 'en' : null;
         esperadoLang = 'en';
         break;
       case 5:
@@ -2724,6 +2952,14 @@ function beginGame() {
         voz = null;
         esperadoLang = 'en';
         break;
+    }
+    showUserTranscript = selectedMode === 2 && Boolean(modeOpts.showTranscript);
+    if (!showUserTranscript) {
+      clearUserTranscript();
+      transcriptQueue = [];
+    }
+    if (isTrainingMode(selectedMode)) {
+      roundTarget = Number.MAX_SAFE_INTEGER;
     }
     if (reconhecimento) {
       reconhecimento.lang = recognitionLanguage;
@@ -2914,6 +3150,18 @@ function carregarFrases() {
     renderLevelInstruction({ level: levelToUse });
     const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
     const anteriores = [];
+
+    if (selectedMode === 4) {
+      roundTarget = Math.max(1, principais.length || DEFAULT_ROUND_SIZE);
+      frasesArr = principais.slice(0, roundTarget);
+      fraseIndex = 0;
+      points = 0;
+      setTimeout(() => mostrarFrase(), 300);
+      atualizarBarraProgresso();
+      dispatchModeProgressUpdate(selectedMode);
+      persistCurrentRoundState();
+      return;
+    }
 
     const totalNecessario = Math.max(1, roundTarget);
     const erradas = userSettings.retryWrongPhrases
@@ -3126,6 +3374,7 @@ function mostrarFrase() {
   if (!isInplayActive()) {
     return;
   }
+  clearUserTranscript();
   if (fraseIndex >= frasesArr.length) {
     fraseIndex = fraseIndex % Math.max(1, frasesArr.length);
   }
@@ -3235,7 +3484,86 @@ function handleNoInput() {
   verificarResposta();
 }
 
+function handleTrainingResponse({ correto, expectedPhrase, resposta }) {
+  const input = document.getElementById('pt');
+  const resultado = document.getElementById('resultado');
+  const totalFrases = Math.max(1, frasesArr.length);
+  if (correto) {
+    document.getElementById("somAcerto").play();
+    consecutiveErrors = 0;
+    if (resultado) resultado.textContent = '';
+    flashSuccess(() => {
+      fraseIndex = (fraseIndex + 1) % totalFrases;
+      roundAttempts = 0;
+      points = 0;
+      roundWrongCount = 0;
+      mostrarFrase();
+    });
+  } else {
+    document.getElementById("somErro").play();
+    errosTotais++;
+    lastExpected = expectedPhrase;
+    lastInput = resposta;
+    lastWasError = true;
+    if (resultado) {
+      resultado.textContent = '';
+      resultado.style.color = 'red';
+    }
+    if (input) {
+      input.value = '';
+      input.disabled = true;
+    }
+    bloqueado = true;
+    if (selectedMode !== 1 && currentModeOptions.playVoice !== false) {
+      falar(expectedPhrase, esperadoLang);
+    }
+    flashError(expectedPhrase, () => {
+      if (input) {
+        input.disabled = false;
+      }
+      bloqueado = false;
+    });
+  }
+  atualizarBarraProgresso();
+}
+
+function repeatCurrentPhraseAudio() {
+  if (!isInplayActive()) return;
+  const pt = getPtFromPhrase(frasesArr[fraseIndex]);
+  const en = getPrimaryEnFromPhrase(frasesArr[fraseIndex]);
+  if (voz === 'en' && currentModeOptions.playVoice !== false) {
+    falar(en, 'en');
+  } else if (voz === 'pt') {
+    falar(pt, 'pt');
+  }
+}
+
+function navigateTraining(offset) {
+  if (!isTrainingMode()) return;
+  const total = Math.max(1, frasesArr.length);
+  fraseIndex = (fraseIndex + offset + total) % total;
+  mostrarFrase();
+}
+
+function handlePhrasePointerDown(event) {
+  if (!isTrainingMode()) return;
+  phraseSwipeStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+}
+
+function handlePhrasePointerUp(event) {
+  if (!isTrainingMode() || !phraseSwipeStart || phraseSwipeStart.id !== event.pointerId) return;
+  const dx = event.clientX - phraseSwipeStart.x;
+  const dy = event.clientY - phraseSwipeStart.y;
+  phraseSwipeStart = null;
+  if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+  navigateTraining(dx < 0 ? 1 : -1);
+}
+
 function proceedAfterAnswer(isCorrect, reachedRoundEnd) {
+  if (isTrainingMode()) {
+    continuar();
+    return;
+  }
   if (isLevelFinderActive()) {
     adjustLevelFinderLevel(isCorrect ? 3 : -2);
     if (hasLevelFinderTimeExpired()) {
@@ -3261,9 +3589,12 @@ function verificarResposta() {
   tentativasTotais++;
   saveTotals();
   lastWasError = false;
+  const trainingMode = isTrainingMode();
 
   const stats = ensureModeStats(selectedMode);
-  stats.totalPhrases++;
+  if (!trainingMode) {
+    stats.totalPhrases++;
+  }
 
   const currentEntry = Array.isArray(frasesArr[fraseIndex]) ? frasesArr[fraseIndex] : ['', []];
   const pt = getPtFromPhrase(currentEntry);
@@ -3281,6 +3612,16 @@ function verificarResposta() {
       ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
       ehQuaseCorretoPalavras(adjustedResposta, opcao || '');
   });
+
+  if (trainingMode) {
+    handleTrainingResponse({
+      correto,
+      expectedPhrase,
+      pt,
+      resposta: adjustedResposta
+    });
+    return;
+  }
 
   const comparisonExpected = adjustedExpectedOptions[0] || expectedPhrase;
   const expectedChars = countCorrectCharacters(comparisonExpected, comparisonExpected);
@@ -3379,8 +3720,10 @@ function continuar() {
     return;
   }
   if (roundAttempts >= roundTarget) {
-    finishMode();
-    return;
+    if (!isTrainingMode()) {
+      finishMode();
+      return;
+    }
   }
   fraseIndex++;
   mostrarFrase();
@@ -3719,6 +4062,33 @@ async function initGame() {
       beginGame();
     });
   }
+
+  const preGameVoiceToggle = document.getElementById('pre-game-voice-toggle');
+  const preGameLanguageToggle = document.getElementById('pre-game-language-toggle');
+  const preGameTranscriptToggle = document.getElementById('pre-game-transcript-toggle');
+
+  const persistPreGameOptions = () => {
+    const mode = pendingModeStart ?? selectedMode;
+    saveModeOptions(mode, {
+      playVoice: preGameVoiceToggle ? preGameVoiceToggle.checked : true,
+      showPortuguese: preGameLanguageToggle ? preGameLanguageToggle.checked : false,
+      showTranscript: preGameTranscriptToggle ? preGameTranscriptToggle.checked : false
+    });
+  };
+
+  [preGameVoiceToggle, preGameLanguageToggle, preGameTranscriptToggle]
+    .filter(Boolean)
+    .forEach(toggle => {
+      toggle.addEventListener('change', persistPreGameOptions);
+    });
+
+  const phraseStack = document.querySelector('.phrase-stack');
+  const textoExibicao = document.getElementById('texto-exibicao');
+  [phraseStack, textoExibicao].filter(Boolean).forEach(element => {
+    element.addEventListener('click', repeatCurrentPhraseAudio);
+    element.addEventListener('pointerdown', handlePhrasePointerDown);
+    element.addEventListener('pointerup', handlePhrasePointerUp);
+  });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'r') falarFrase();

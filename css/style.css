@@ -2717,6 +2717,29 @@ body.theme-blue .auth-message {
   will-change: color, transform, opacity;
 }
 
+.user-transcript {
+  font-family: 'Colombia', var(--app-font-family, 'Open Sans', sans-serif);
+  font-size: 60%;
+  opacity: 0.8;
+  min-height: 1.2em;
+  text-align: center;
+  margin-top: 8px;
+  color: var(--phrase-color, #333333);
+  letter-spacing: 0.2px;
+}
+
+.user-transcript__letter {
+  opacity: 0;
+  display: inline-block;
+  animation: transcriptFadeIn 500ms ease forwards;
+}
+
+@keyframes transcriptFadeIn {
+  0% { opacity: 0; transform: translateY(4px); }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 .phrase-slide {
   animation: phraseSlideRight 300ms ease;
 }
@@ -6005,6 +6028,26 @@ body.dark-mode .game-overlay__title {
   transform: translateY(-2px);
   border-color: #2d5bff;
   box-shadow: 0 12px 22px rgba(45, 91, 255, 0.18);
+}
+
+.pre-game-options {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.pre-game-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pre-game-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2d5bff;
 }
 
 body.dark-mode .pre-game-round__option {
