@@ -87,6 +87,7 @@
             <div id="pt-container">
               <textarea id="pt" rows="1" readonly></textarea>
             </div>
+            <div id="user-transcript" class="user-transcript" aria-live="polite"></div>
           </div>
         </div>
       <div id="nivel-mensagem"></div>
@@ -122,6 +123,26 @@
         <div class="pre-game-level">
           <div class="pre-game-level__selector">
             <strong id="pre-game-level" class="pre-game-level__value">Nível 1</strong>
+          </div>
+        </div>
+        <div id="pre-game-options" class="pre-game-options">
+          <div class="pre-game-toggle">
+            <label class="toggle">
+              <input type="checkbox" id="pre-game-voice-toggle" />
+              <span>Ouvir inglês</span>
+            </label>
+          </div>
+          <div class="pre-game-toggle">
+            <label class="toggle">
+              <input type="checkbox" id="pre-game-language-toggle" />
+              <span>Mostrar frases em português</span>
+            </label>
+          </div>
+          <div class="pre-game-toggle">
+            <label class="toggle">
+              <input type="checkbox" id="pre-game-transcript-toggle" />
+              <span>Exibir o que falei</span>
+            </label>
           </div>
         </div>
         <div class="game-overlay__actions">

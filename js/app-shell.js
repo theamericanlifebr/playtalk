@@ -130,44 +130,10 @@
     }
   }
 
-  function handlePointerDown(event) {
-    if (animating) {
-      return;
-    }
-    activePointer = event.pointerId;
-    swipeStartX = event.clientX;
-    swipeStartY = event.clientY;
-  }
-
-  function handlePointerUp(event) {
-    if (animating || activePointer !== event.pointerId) {
-      return;
-    }
-    const dx = event.clientX - swipeStartX;
-    const dy = event.clientY - swipeStartY;
-    activePointer = null;
-
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) {
-      return;
-    }
-
-    const currentIndex = VIEW_ORDER.indexOf(currentView);
-    if (dx < 0 && currentIndex < VIEW_ORDER.length - 1) {
-      showView(VIEW_ORDER[currentIndex + 1]);
-    } else if (dx > 0 && currentIndex > 0) {
-      showView(VIEW_ORDER[currentIndex - 1]);
-    }
-  }
-
   const navTargets = document.querySelectorAll('[data-nav-target]');
   navTargets.forEach(element => {
     element.addEventListener('click', handleNav);
   });
-
-  if (viewStack) {
-    viewStack.addEventListener('pointerdown', handlePointerDown);
-    viewStack.addEventListener('pointerup', handlePointerUp);
-  }
 
   window.addEventListener('hashchange', handleHashChange);
 
