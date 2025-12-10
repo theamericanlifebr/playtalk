@@ -2717,35 +2717,6 @@ body.theme-blue .auth-message {
   will-change: color, transform, opacity;
 }
 
-.fluent-progress {
-  width: 100%;
-  max-width: min(90vw, 960px);
-  height: 6px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin: 6px auto 4px;
-}
-
-.fluent-progress__fill {
-  height: 100%;
-  width: 0;
-  background: var(--fluent-progress-color, var(--phrase-color, currentColor));
-  transition: width 180ms ease;
-}
-
-.fluent-next-level {
-  align-self: center;
-  margin-top: 8px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-  background: transparent;
-  color: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 .user-transcript {
   font-family: 'Colombia', var(--app-font-family, 'Open Sans', sans-serif);
   font-size: 60%;
