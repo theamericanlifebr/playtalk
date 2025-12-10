@@ -945,15 +945,9 @@ let preRoundGeneralCpm = null;
 let preRoundGeneralAccuracy = null;
 let preRoundBalance = null;
 let phraseWaveformStarted = false;
-const FLUENT_SEQUENCE = [6];
+const FLUENT_SEQUENCE = [1, 2, 3, 4, 5, 6];
 function createEmptyFluentSession() {
-  return {
-    active: false,
-    level: null,
-    index: 0,
-    results: [],
-    elimination: { total: 0, mastered: 0 }
-  };
+  return { active: false, level: null, index: 0, results: [] };
 }
 let fluentSession = createEmptyFluentSession();
 const roundSelections = {};
@@ -1006,8 +1000,7 @@ function startFluentSession(level) {
     active: true,
     level: normalizedLevel,
     index: 0,
-    results: [],
-    elimination: { total: 0, mastered: 0 }
+    results: []
   };
 }
 
@@ -1044,35 +1037,6 @@ function getFluentAggregate() {
     },
     { correct: 0, wrong: 0, chars: 0, timeMs: 0 }
   );
-}
-
-function isFluentMode() {
-  return getActivePlayMode() === 6;
-}
-
-function setFluentEliminationPool(phrases) {
-  const total = Array.isArray(phrases) ? phrases.length : 0;
-  const normalized = Array.isArray(phrases) ? [...phrases] : [];
-  fluentSession.elimination = {
-    total,
-    mastered: 0
-  };
-  frasesArr = embaralhar(normalized);
-  fraseIndex = frasesArr.length ? Math.floor(Math.random() * frasesArr.length) : 0;
-  roundTarget = Math.max(1, total || DEFAULT_ROUND_SIZE);
-  points = 0;
-}
-
-function getFluentProgress() {
-  const total = Math.max(0, Math.floor(fluentSession.elimination?.total || 0));
-  const mastered = Math.min(total, Math.max(0, Math.floor(fluentSession.elimination?.mastered || 0)));
-  const ratio = total > 0 ? mastered / total : 0;
-  return { total, mastered, ratio };
-}
-
-function isFluentEliminationComplete() {
-  const { total, mastered } = getFluentProgress();
-  return total > 0 && mastered >= total;
 }
 
 function stopWaveformSilenceMonitor() {
@@ -1403,12 +1367,6 @@ function restoreRoundState(saved, expectedLevel) {
   frasesArr = sanitizedPhrases;
   roundAttempts = Math.max(0, Math.floor(saved.roundAttempts || 0));
   points = Math.max(0, Math.min(Math.floor(saved.points || 0), roundTarget));
-  if (isFluentMode()) {
-    fluentSession.elimination = {
-      total: roundTarget,
-      mastered: points
-    };
-  }
   roundWrongCount = Math.max(0, Math.floor(saved.roundWrongCount || 0));
   roundCorrectChars = Math.max(0, Math.floor(saved.roundCorrectChars || 0));
   const nextIndex = Math.max(0, Math.min(roundAttempts, frasesArr.length - 1));
@@ -3270,15 +3228,6 @@ function carregarFrases() {
     const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
     const anteriores = [];
 
-    if (isFluentMode()) {
-      setFluentEliminationPool(principais);
-      setTimeout(() => mostrarFrase(), 300);
-      atualizarBarraProgresso();
-      dispatchModeProgressUpdate(selectedMode);
-      persistCurrentRoundState();
-      return;
-    }
-
     if (playMode === 4) {
       roundTarget = Math.max(1, principais.length || DEFAULT_ROUND_SIZE);
       frasesArr = principais.slice(0, roundTarget);
@@ -3491,57 +3440,11 @@ function getPhraseBaseColor(element) {
   return cssVar && cssVar.trim() ? cssVar.trim() : style.color || '#333333';
 }
 
-function updateFluentProgressUI() {
-  const wrapper = document.getElementById('fluent-progress');
-  const bar = document.getElementById('fluent-progress-fill');
-  const label = document.getElementById('fluent-progress-label');
-  const nextBtn = document.getElementById('fluent-next-level');
-  const isActive = isFluentMode() && isInplayActive();
-  if (!wrapper || !bar || !label || !nextBtn) {
-    return;
-  }
-  if (!isActive) {
-    wrapper.classList.remove('is-visible');
-    nextBtn.classList.add('hidden');
-    return;
-  }
-  const { ratio, mastered, total } = getFluentProgress();
-  const percent = Math.min(100, Math.round(ratio * 100));
-  const texto = document.getElementById('texto-exibicao');
-  const baseColor = getPhraseBaseColor(texto);
-  const currentLevel = fluentSession.level || getSelectedPreGameLevel(selectedMode) || 1;
-  const { max } = getAvailableLevelBounds(selectedMode);
-  const canAdvance = ratio >= 0.9 && currentLevel < max;
-  wrapper.classList.add('is-visible');
-  bar.style.width = `${percent}%`;
-  bar.style.backgroundColor = baseColor;
-  label.textContent = `${percent}% (${mastered}/${total})`;
-  label.style.color = baseColor;
-  nextBtn.classList.toggle('hidden', !canAdvance);
-  nextBtn.disabled = !canAdvance;
-}
-
-function goToNextFluentLevel() {
-  if (!isFluentMode()) {
-    return;
-  }
-  const currentLevel = fluentSession.level || getSelectedPreGameLevel(selectedMode) || 1;
-  const { max } = getAvailableLevelBounds(selectedMode);
-  const nextLevel = Math.min(max, currentLevel + 1);
-  stopCurrentGame();
-  setInplayState(false);
-  resetRoundState();
-  resetFluentSession();
-  setSelectedPreGameLevel(selectedMode, nextLevel);
-  startFluentSession(nextLevel);
-  openPreGameScreen(getActivePlayMode());
-}
-
 function mostrarFrase() {
   refreshUserSettings();
   if (inputTimeout) clearTimeout(inputTimeout);
   if (timerInterval) clearInterval(timerInterval);
-  if (!isLevelFinderActive() && !isFluentMode() && roundAttempts >= roundTarget) {
+  if (!isLevelFinderActive() && roundAttempts >= roundTarget) {
     finishMode();
     return;
   }
@@ -3549,13 +3452,7 @@ function mostrarFrase() {
     return;
   }
   clearUserTranscript();
-  if (isFluentMode()) {
-    if (isFluentEliminationComplete() || !frasesArr.length) {
-      finishMode();
-      return;
-    }
-    fraseIndex = frasesArr.length ? Math.max(0, Math.min(fraseIndex, frasesArr.length - 1)) : 0;
-  } else if (fraseIndex >= frasesArr.length) {
+  if (fraseIndex >= frasesArr.length) {
     fraseIndex = fraseIndex % Math.max(1, frasesArr.length);
   }
   const pt = getPtFromPhrase(frasesArr[fraseIndex]);
@@ -3598,7 +3495,6 @@ function mostrarFrase() {
     prizeTimer = setInterval(atualizarBarraProgresso, 50);
   }
   atualizarBarraProgresso();
-  updateFluentProgressUI();
   persistCurrentRoundState();
 }
 
@@ -3820,25 +3716,14 @@ function verificarResposta() {
   }
   roundAttempts++;
   triggerMedalResponseSpin();
-  const reachedRoundEnd = !isLevelFinderActive() && !isFluentMode() && roundAttempts >= roundTarget;
+  const reachedRoundEnd = !isLevelFinderActive() && roundAttempts >= roundTarget;
 
   if (correto) {
     stats.correct++;
     saveModeStats();
     document.getElementById("somAcerto").play();
     acertosTotais++;
-    if (isFluentMode()) {
-      if (fraseIndex >= 0 && fraseIndex < frasesArr.length) {
-        frasesArr.splice(fraseIndex, 1);
-      }
-      fluentSession.elimination = {
-        total: roundTarget,
-        mastered: Math.min(roundTarget, (fluentSession.elimination?.mastered || 0) + 1)
-      };
-      points = fluentSession.elimination.mastered;
-    } else {
-      points = Math.min(roundTarget, points + 1);
-    }
+    points = Math.min(roundTarget, points + 1);
     saveTotals();
     handleCorrectStreak(selectedMode);
     const reward = rewardBalanceForPhrase(expectedPhrase, selectedMode);
@@ -3896,8 +3781,7 @@ function verificarResposta() {
     });
   }
   atualizarBarraProgresso();
-  updateFluentProgressUI();
-}
+  }
 
 function continuar() {
   if (transitioning) {
@@ -3909,15 +3793,6 @@ function continuar() {
       return;
     }
     loadLevelFinderNextPhrase();
-    mostrarFrase();
-    return;
-  }
-  if (isFluentMode()) {
-    if (!frasesArr.length || isFluentEliminationComplete()) {
-      finishMode();
-      return;
-    }
-    fraseIndex = Math.floor(Math.random() * frasesArr.length);
     mostrarFrase();
     return;
   }
@@ -3945,9 +3820,6 @@ function atualizarBarraProgresso() {
   const currentPoints = Math.max(0, Math.min(points, limite));
   const accuracyRatio = currentPoints / limite;
   updateModeMedalIcon(accuracyRatio);
-  if (isFluentMode()) {
-    updateFluentProgressUI();
-  }
 }
 
 function finishMode() {
@@ -3981,12 +3853,21 @@ function finishMode() {
   let cps = seconds > 0 ? (roundCorrectChars / seconds) : 0;
 
   if (isFluentSessionActive() && !isLevelFinderActive()) {
-    const { total, mastered, ratio } = getFluentProgress();
-    const uniqueWrong = Math.max(0, total - mastered);
-    correct = Math.max(correct, mastered);
-    wrong = Math.max(wrong, uniqueWrong);
-    attemptsForAccuracy = Math.max(attemptsForAccuracy, correct + uniqueWrong);
-    accuracy = Math.max(accuracy, ratio * 100);
+    addFluentResult({ correct, wrong, chars: roundCorrectChars, timeMs: elapsedMs });
+    if (advanceFluentSession()) {
+      roundActive = false;
+      paused = false;
+      currentModeOptions = loadModeOptions(getActivePlayMode());
+      openPreGameScreen(getActivePlayMode());
+      return;
+    }
+    const aggregate = getFluentAggregate();
+    correct = aggregate.correct;
+    wrong = aggregate.wrong;
+    attemptsForAccuracy = Math.max(0, correct + wrong);
+    accuracy = attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
+    const totalSeconds = aggregate.timeMs > 0 ? aggregate.timeMs / 1000 : seconds;
+    cps = totalSeconds > 0 ? (aggregate.chars / totalSeconds) : cps;
   }
 
   if (isLevelFinderActive()) {
@@ -4302,11 +4183,6 @@ async function initGame() {
     .forEach(toggle => {
       toggle.addEventListener('change', persistPreGameOptions);
     });
-
-  const fluentNextBtn = document.getElementById('fluent-next-level');
-  if (fluentNextBtn) {
-    fluentNextBtn.addEventListener('click', goToNextFluentLevel);
-  }
 
   const phraseStack = document.querySelector('.phrase-stack');
   const textoExibicao = document.getElementById('texto-exibicao');
