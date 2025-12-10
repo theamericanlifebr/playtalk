@@ -945,6 +945,11 @@ let preRoundGeneralCpm = null;
 let preRoundGeneralAccuracy = null;
 let preRoundBalance = null;
 let phraseWaveformStarted = false;
+const FLUENT_SEQUENCE = [1, 2, 3, 4, 5, 6];
+function createEmptyFluentSession() {
+  return { active: false, level: null, index: 0, results: [] };
+}
+let fluentSession = createEmptyFluentSession();
 const roundSelections = {};
 const preGameLevelSelection = {};
 let levelFinderTimer = null;
@@ -979,6 +984,59 @@ function setTimerState(state) {
   } else if (state === TIMER_STATES.INACTIVE) {
     timerEl.classList.add(TIMER_STATES.INACTIVE);
   }
+}
+
+function isFluentSessionActive() {
+  return fluentSession.active;
+}
+
+function getActivePlayMode() {
+  return isFluentSessionActive() ? FLUENT_SEQUENCE[fluentSession.index] : selectedMode;
+}
+
+function startFluentSession(level) {
+  const normalizedLevel = Number.isFinite(level) ? Math.max(1, Math.floor(level)) : null;
+  fluentSession = {
+    active: true,
+    level: normalizedLevel,
+    index: 0,
+    results: []
+  };
+}
+
+function resetFluentSession() {
+  fluentSession = createEmptyFluentSession();
+}
+
+function advanceFluentSession() {
+  if (!isFluentSessionActive()) {
+    return false;
+  }
+  if (fluentSession.index < FLUENT_SEQUENCE.length - 1) {
+    fluentSession.index += 1;
+    return true;
+  }
+  return false;
+}
+
+function addFluentResult(result) {
+  if (!isFluentSessionActive()) {
+    return;
+  }
+  fluentSession.results.push(result);
+}
+
+function getFluentAggregate() {
+  return fluentSession.results.reduce(
+    (acc, entry) => {
+      acc.correct += entry.correct || 0;
+      acc.wrong += entry.wrong || 0;
+      acc.chars += entry.chars || 0;
+      acc.timeMs += entry.timeMs || 0;
+      return acc;
+    },
+    { correct: 0, wrong: 0, chars: 0, timeMs: 0 }
+  );
 }
 
 function stopWaveformSilenceMonitor() {
@@ -1617,7 +1675,7 @@ function updateLevelFinderLevelIndicator() {
   }
 }
 
-function renderLevelInstruction({ mode = selectedMode, level = pastaAtual || getSelectedPreGameLevel(selectedMode) } = {}) {
+function renderLevelInstruction({ mode = getActivePlayMode(), level = pastaAtual || getSelectedPreGameLevel(selectedMode) } = {}) {
   const instructionEl = document.getElementById('level-instruction');
   if (!instructionEl) {
     return;
@@ -1655,7 +1713,7 @@ function hideModeFiveIntro() {
 }
 
 function showModeFiveIntro({ level, library }) {
-  if (selectedMode !== 5) {
+  if (getActivePlayMode() !== 5) {
     hideModeFiveIntro();
     return Promise.resolve();
   }
@@ -2078,6 +2136,7 @@ function updatePreGameScreen(mode) {
     return;
   }
   const detail = getModeDetail(mode);
+  const isFluent = isFluentSessionActive();
   const titleEl = document.getElementById('pre-game-title');
   const logoEl = document.getElementById('pre-game-logo');
   const levelEl = document.getElementById('pre-game-level');
@@ -2087,7 +2146,9 @@ function updatePreGameScreen(mode) {
     logoEl.dataset.mode = String(mode);
     renderModeLogo(logoEl, mode);
   }
-  const savedRound = getStoredRoundState(mode, getSelectedPreGameLevel(mode)) || getStoredRoundState(mode);
+  const savedRound = isFluent
+    ? null
+    : getStoredRoundState(mode, getSelectedPreGameLevel(mode)) || getStoredRoundState(mode);
   if (savedRound && Number.isFinite(savedRound.level)) {
     setSelectedPreGameLevel(mode, savedRound.level);
   }
@@ -2095,7 +2156,9 @@ function updatePreGameScreen(mode) {
     setRoundSelection(mode, Math.max(1, Math.floor(savedRound.roundTarget)));
   }
   if (levelEl) {
-    const level = setSelectedPreGameLevel(mode, getSelectedPreGameLevel(mode));
+    const level = isFluent
+      ? (fluentSession.level || getSelectedPreGameLevel(selectedMode))
+      : setSelectedPreGameLevel(mode, getSelectedPreGameLevel(mode));
     levelEl.textContent = `Nível ${level}`;
   }
   const optionsWrapper = document.getElementById('pre-game-options');
@@ -2103,7 +2166,7 @@ function updatePreGameScreen(mode) {
   const languageToggle = document.getElementById('pre-game-language-toggle');
   const transcriptToggle = document.getElementById('pre-game-transcript-toggle');
   const modeOptions = loadModeOptions(mode);
-  const shouldShowOptions = mode === 2 || mode === 4;
+  const shouldShowOptions = !isFluent && (mode === 2 || mode === 4);
   if (optionsWrapper) {
     optionsWrapper.style.display = shouldShowOptions ? 'grid' : 'none';
   }
@@ -2120,7 +2183,7 @@ function updatePreGameScreen(mode) {
     }
   }
   const targetLevel = getSelectedPreGameLevel(mode);
-  const hasResume = Boolean(
+  const hasResume = !isFluent && Boolean(
     savedRound &&
     Number.isFinite(savedRound.roundTarget) &&
     Number.isFinite(savedRound.roundAttempts) &&
@@ -2129,7 +2192,7 @@ function updatePreGameScreen(mode) {
   );
   const startBtn = document.getElementById('pre-game-start');
   if (startBtn) {
-    setPreGameButtonLabel(startBtn, hasResume ? 'Continuar' : 'Jogar agora');
+    setPreGameButtonLabel(startBtn, isFluent ? 'Jogar' : hasResume ? 'Continuar' : 'Jogar agora');
     startBtn.classList.toggle('game-overlay__primary--continue', hasResume);
     startBtn.setAttribute('data-resume', hasResume ? 'true' : 'false');
     startBtn.setAttribute('data-resume-levelfinder', hasResume && savedRound && savedRound.isLevelFinder ? 'true' : 'false');
@@ -2143,13 +2206,14 @@ function openPreGameScreen(mode) {
     beginGame();
     return;
   }
-  pendingModeStart = mode;
-  roundTarget = getRoundSelection(mode);
-  updatePreGameScreen(mode);
+  const targetMode = mode || getActivePlayMode();
+  pendingModeStart = targetMode;
+  roundTarget = getRoundSelection(selectedMode);
+  updatePreGameScreen(targetMode);
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
   if (window.playtalkLens && typeof window.playtalkLens.applyLens === 'function') {
-    window.playtalkLens.applyLens(mode);
+    window.playtalkLens.applyLens(targetMode);
   }
 }
 
@@ -2841,6 +2905,13 @@ function startGame(modo) {
     recordModeTime(prevMode);
   }
   selectedMode = modo;
+  if (modo === 6) {
+    startFluentSession(getSelectedPreGameLevel(modo));
+    pendingModeStart = getActivePlayMode();
+  } else {
+    resetFluentSession();
+    pendingModeStart = null;
+  }
   refreshUserSettings();
   resetRoundState();
   levelFinderActive = false;
@@ -2862,8 +2933,8 @@ function startGame(modo) {
     reconhecimentoAtivo = false;
     reconhecimento.stop();
   }
-  currentModeOptions = loadModeOptions(modo);
-  openPreGameScreen(modo);
+  currentModeOptions = loadModeOptions(getActivePlayMode());
+  openPreGameScreen(isFluentSessionActive() ? getActivePlayMode() : modo);
 }
 
 function beginGame() {
@@ -2871,7 +2942,9 @@ function beginGame() {
   closePostGameScreen();
   resetRoundState();
   roundTarget = isLevelFinderActive() ? LEVEL_FINDER_ROUND_TARGET : getRoundSelection(selectedMode);
-  const targetLevel = getSelectedPreGameLevel(selectedMode);
+  const targetLevel = isFluentSessionActive()
+    ? (fluentSession.level || getSelectedPreGameLevel(selectedMode))
+    : getSelectedPreGameLevel(selectedMode);
   const generalStatsBefore = calcGeneralStats();
   preRoundGeneralCpm = Math.round((generalStatsBefore.cps || 0) * 60);
   preRoundGeneralAccuracy = Number.isFinite(generalStatsBefore.accPerc)
@@ -2919,8 +2992,9 @@ function beginGame() {
     updateLevelIcon({ scope: 'mode' });
     updateModeIcons();
     let recognitionLanguage = 'en-US';
-    const modeOpts = currentModeOptions || loadModeOptions(selectedMode);
-    switch (selectedMode) {
+    const modeOpts = currentModeOptions || loadModeOptions(getActivePlayMode());
+    const playMode = getActivePlayMode();
+    switch (playMode) {
       case 1:
         mostrarTexto = 'pt';
         voz = null;
@@ -2953,7 +3027,7 @@ function beginGame() {
         esperadoLang = 'en';
         break;
     }
-    showUserTranscript = selectedMode === 2 && Boolean(modeOpts.showTranscript);
+    showUserTranscript = playMode === 2 && Boolean(modeOpts.showTranscript);
     if (!showUserTranscript) {
       clearUserTranscript();
       transcriptQueue = [];
@@ -2964,7 +3038,7 @@ function beginGame() {
     if (reconhecimento) {
       reconhecimento.lang = recognitionLanguage;
     }
-    const savedState = getStoredRoundState(selectedMode, targetLevel);
+    const savedState = isFluentSessionActive() ? null : getStoredRoundState(selectedMode, targetLevel);
     const restored = restoreRoundState(savedState, targetLevel);
     if (reconhecimento) {
       reconhecimentoAtivo = true;
@@ -2976,7 +3050,7 @@ function beginGame() {
           loadLevelFinderNextPhrase();
           mostrarFrase();
         };
-        showModeFiveIntro({ level: pastaAtual, library: getModeLibrary(selectedMode) })
+        showModeFiveIntro({ level: pastaAtual, library: getModeLibrary(playMode) })
           .then(startLevelFinderRound);
       } else {
         atualizarBarraProgresso();
@@ -3143,15 +3217,18 @@ function carregarFrases() {
   if (!isInplayActive()) {
     return;
   }
-  const library = getModeLibrary(selectedMode);
-  const levelToUse = getSelectedPreGameLevel(selectedMode);
+  const playMode = getActivePlayMode();
+  const library = getModeLibrary(playMode);
+  const levelToUse = isFluentSessionActive()
+    ? (fluentSession.level || getSelectedPreGameLevel(selectedMode))
+    : getSelectedPreGameLevel(selectedMode);
   pastaAtual = levelToUse;
   const iniciarRodada = () => {
-    renderLevelInstruction({ level: levelToUse });
+    renderLevelInstruction({ mode: playMode, level: levelToUse });
     const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
     const anteriores = [];
 
-    if (selectedMode === 4) {
+    if (playMode === 4) {
       roundTarget = Math.max(1, principais.length || DEFAULT_ROUND_SIZE);
       frasesArr = principais.slice(0, roundTarget);
       fraseIndex = 0;
@@ -3165,7 +3242,7 @@ function carregarFrases() {
 
     const totalNecessario = Math.max(1, roundTarget);
     const erradas = userSettings.retryWrongPhrases
-      ? getWrongPhrasePool(selectedMode, levelToUse)
+      ? getWrongPhrasePool(playMode, levelToUse)
       : [];
 
     const allocationPlan = userSettings.retryWrongPhrases
@@ -3401,7 +3478,7 @@ function mostrarFrase() {
   else if (voz === 'pt') falar(pt, 'pt');
   bloqueado = false;
   const timerEl = getTimerElement();
-  const toleranceMs = getComprehensionDelayMs(selectedMode, expected.length);
+  const toleranceMs = getComprehensionDelayMs(getActivePlayMode(), expected.length);
   phraseStartTime = Date.now() + toleranceMs;
   phraseWaveformStarted = false;
   resetTimerDisplay();
@@ -3762,10 +3839,10 @@ function finishMode() {
   renderLevelFinderLevel();
   recordModeTime(selectedMode);
   const totalAttempts = Math.max(roundAttempts, points + roundWrongCount);
-  const correct = Math.min(points, roundTarget);
-  const wrong = Math.max(0, totalAttempts - correct);
-  const attemptsForAccuracy = correct + wrong;
-  const accuracy = attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
+  let correct = Math.min(points, roundTarget);
+  let wrong = Math.max(0, totalAttempts - correct);
+  let attemptsForAccuracy = correct + wrong;
+  let accuracy = attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
   const elapsedMsRaw = roundAdjustedTimeMs > 0
     ? roundAdjustedTimeMs
     : (roundStartTime ? Date.now() - roundStartTime : 0);
@@ -3773,7 +3850,25 @@ function finishMode() {
     ? Math.max(elapsedMsRaw, getLevelFinderElapsedMs())
     : elapsedMsRaw;
   const seconds = elapsedMs > 0 ? (elapsedMs / 1000) : 0;
-  const cps = seconds > 0 ? (roundCorrectChars / seconds) : 0;
+  let cps = seconds > 0 ? (roundCorrectChars / seconds) : 0;
+
+  if (isFluentSessionActive() && !isLevelFinderActive()) {
+    addFluentResult({ correct, wrong, chars: roundCorrectChars, timeMs: elapsedMs });
+    if (advanceFluentSession()) {
+      roundActive = false;
+      paused = false;
+      currentModeOptions = loadModeOptions(getActivePlayMode());
+      openPreGameScreen(getActivePlayMode());
+      return;
+    }
+    const aggregate = getFluentAggregate();
+    correct = aggregate.correct;
+    wrong = aggregate.wrong;
+    attemptsForAccuracy = Math.max(0, correct + wrong);
+    accuracy = attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
+    const totalSeconds = aggregate.timeMs > 0 ? aggregate.timeMs / 1000 : seconds;
+    cps = totalSeconds > 0 ? (aggregate.chars / totalSeconds) : cps;
+  }
 
   if (isLevelFinderActive()) {
     const levelSum = levelFinderLevelHistory.reduce((sum, lvl) => sum + lvl, 0);
@@ -3845,6 +3940,7 @@ function finishMode() {
     return;
   }
 
+  const effectiveRoundTarget = isFluentSessionActive() ? roundTarget * FLUENT_SEQUENCE.length : roundTarget;
   const medal = getMedalForAccuracy(accuracy);
   const stats = ensureModeStats(selectedMode);
   const medalKey = medal && MEDAL_LABEL_TO_KEY[medal.label];
@@ -3856,7 +3952,9 @@ function finishMode() {
   const lockedLevel = Math.max(progress.level || 1, getSelectedPreGameLevel(selectedMode));
   const { max: maxLevel } = getAvailableLevelBounds(selectedMode);
   const previousLevel = lockedLevel;
-  const shouldLevelUp = medalKey === 'ouro' || medalKey === 'diamante';
+  const shouldLevelUp = isFluentSessionActive()
+    ? medalKey === 'diamante'
+    : (medalKey === 'ouro' || medalKey === 'diamante');
   const nextLevel = shouldLevelUp ? Math.min(maxLevel, lockedLevel + 1) : lockedLevel;
   progress.level = nextLevel;
   modeProgress[String(selectedMode)] = progress;
@@ -3867,7 +3965,7 @@ function finishMode() {
   updateModeIcons();
   updateMonthlyStatsProgress({
     totalAttempts,
-    eligibleAttempts: roundTarget,
+    eligibleAttempts: effectiveRoundTarget,
     correctAttempts: correct
   });
   if (window.playtalkAuth && typeof window.playtalkAuth.persistProgress === 'function') {
@@ -3905,6 +4003,9 @@ function finishMode() {
   preRoundGeneralCpm = null;
   preRoundGeneralAccuracy = null;
   preRoundBalance = null;
+  if (isFluentSessionActive()) {
+    resetFluentSession();
+  }
 }
 
 function nextMode() {
@@ -3934,6 +4035,7 @@ function goHome(options = {}) {
   paused = false;
   consecutiveErrors = 0;
   bloqueado = false;
+  resetFluentSession();
   if (sessionStart) {
     const total = parseInt(localStorage.getItem('totalTime') || '0', 10);
     localStorage.setItem('totalTime', total + (Date.now() - sessionStart));
@@ -4046,7 +4148,7 @@ async function initGame() {
         levelFinderActive = false;
         resetLevelFinderTracking();
       }
-      setRoundSelection(mode, roundTarget);
+      setRoundSelection(selectedMode, roundTarget);
       beginGame();
     });
   }
@@ -4058,7 +4160,7 @@ async function initGame() {
       levelFinderActive = true;
       resetLevelFinderTracking();
       roundTarget = LEVEL_FINDER_ROUND_TARGET;
-      setRoundSelection(mode, roundTarget);
+      setRoundSelection(selectedMode, roundTarget);
       beginGame();
     });
   }
