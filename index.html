@@ -1,319 +1,260 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>PlayTalk | O game da fluência</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>PlayTalk | App da Fluência</title>
   <meta
     name="description"
-    content="PlayTalk transforma treino de inglês em um jogo de voz com modos, eventos, rankings e feedback em tempo real."
+    content="PlayTalk, o app da fluência, transforma desafios de vocabulário, listening e speaking em uma jornada gamificada para dominar o inglês."
   >
   <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
-  <link rel="dns-prefetch" href="//fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css?family=Rubik:300,400,500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="landingpage/css/bootstrap.min.css">
-  <link rel="stylesheet" href="landingpage/css/themify-icons.css">
-  <link rel="stylesheet" href="landingpage/css/owl.carousel.min.css">
-  <link rel="stylesheet" href="landingpage/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/mode-logos.js" defer></script>
+  <script src="js/settings.js"></script>
+  <script src="js/lens.js"></script>
+  <script src="js/auth.js"></script>
 </head>
-<body data-spy="scroll" data-target="#navbar" data-offset="30">
-  <div class="nav-menu fixed-top">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          <nav class="navbar navbar-dark navbar-expand-lg" id="navbar">
-            <a class="navbar-brand" href="#home">
-              <img src="landingpage/images/logo.png" class="img-fluid" alt="PlayTalk logo">
-            </a>
-            <button
-              class="navbar-toggler"
-              type="button"
-              data-toggle="collapse"
-              data-target="#navbarContent"
-              aria-controls="navbarContent"
-              aria-expanded="false"
-              aria-label="Alternar navegação"
-            >
-              <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarContent">
-              <ul class="navbar-nav ml-auto">
-                <li class="nav-item"><a class="nav-link active" href="#home">Início</a></li>
-                <li class="nav-item"><a class="nav-link" href="#sobre">Sobre</a></li>
-                <li class="nav-item"><a class="nav-link" href="#capitulos">Capítulos</a></li>
-                <li class="nav-item"><a class="nav-link" href="#recursos">Recursos</a></li>
-                <li class="nav-item"><a class="nav-link" href="#premium">Premium</a></li>
-                <li class="nav-item"><a href="login.html" class="btn btn-outline-light my-3 my-sm-0 ml-lg-3">Entrar</a></li>
-              </ul>
-            </div>
-          </nav>
+  <body class="page-home" data-lens-context="game">
+    <header class="site-header" id="global-header">
+    <div class="site-header__profile">
+      <div class="site-header__avatar-container" id="header-avatar-container">
+        <div class="site-header__avatar-ring">
+          <img
+            src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E"
+            alt="Foto do usuário"
+            class="site-header__avatar"
+            id="header-avatar"
+          >
         </div>
+      </div>
+      <div class="site-header__text">
+        <span class="site-header__name" id="header-username">Jogador</span>
+        <span class="site-header__level" id="header-level">Nível 1</span>
       </div>
     </div>
-  </div>
-
-  <header class="bg-gradient" id="home">
-    <div class="container mt-5">
-      <h1>PlayTalk | O game da fluência</h1>
-      <p class="tagline">
-        Um ambiente de jogo por voz onde cada ponto, selo e métrica nasce do que você realmente fala. Treine inglês de forma
-        natural, divertida e mensurável.
-      </p>
-      <div class="mt-4">
-        <a href="login.html" class="btn btn-light btn-lg mr-3">Jogar agora</a>
-        <a href="#capitulos" class="btn btn-outline-light btn-lg">Conheça os capítulos</a>
+      <div class="site-header__actions">
+        <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+      </div>
+    </header>
+  <main id="home-main" class="home-layout" data-page-transition>
+      <div id="menu">
+      <div id="menu-modes">
+        <button type="button" class="menu-mode" data-mode="1">
+          <span class="mode-logo mode-logo--menu" data-mode="1" aria-hidden="true"></span>
+          <span class="menu-mode__label">Vocabulary</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="2">
+          <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
+          <span class="menu-mode__label">Meaning</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="3">
+          <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
+          <span class="menu-mode__label">Listening</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="4">
+          <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
+          <span class="menu-mode__label">Reading</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="5">
+          <span class="mode-logo mode-logo--menu" data-mode="5" aria-hidden="true"></span>
+          <span class="menu-mode__label">Translating</span>
+        </button>
+        <button type="button" class="menu-mode" data-mode="6">
+          <span class="mode-logo mode-logo--menu" data-mode="6" aria-hidden="true"></span>
+          <span class="menu-mode__label">Thinking</span>
+        </button>
       </div>
     </div>
-    <div class="img-holder mt-3"><img src="landingpage/images/dualphone.png" alt="Celulares mostrando o PlayTalk" class="img-fluid"></div>
-  </header>
 
-  <div class="client-logos my-5">
-    <div class="container text-center">
-      <img src="landingpage/images/client-logos.png" alt="Parceiros PlayTalk" class="img-fluid">
-    </div>
-  </div>
-
-  <div class="section light-bg" id="sobre">
-    <div class="container">
-      <div class="section-title">
-        <small>O que é o PlayTalk?</small>
-        <h3>A fluência tratada como esporte</h3>
-      </div>
-      <div class="row align-items-center">
-        <div class="col-lg-6">
-          <p class="lead">PlayTalk é um ecossistema vivo onde tudo acontece falando, ouvindo e respondendo.</p>
-          <p>
-            Modos de jogo, eventos, rankings, selos, pontos, estatísticas e perfil compõem a jornada. Cada interação gera dados
-            reais para acompanhar evolução, constância e confiança.
-          </p>
-          <p>
-            Personalize estética, temas, sons e acessibilidade enquanto avança como se estivesse em um esporte mental de alto
-            desempenho.
-          </p>
-          <a class="btn btn-primary" href="login.html">Começar agora</a>
-        </div>
-        <div class="col-lg-6 text-center">
-          <img src="landingpage/images/screen1.jpg" alt="Tela do PlayTalk" class="img-fluid rounded shadow">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section" id="capitulos">
-    <div class="container">
-      <div class="section-title">
-        <small>12 capítulos oficiais</small>
-        <h3>Um sistema completo de voz</h3>
-      </div>
-      <div class="row">
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">1. Capítulo Inicial</h4>
-              <p class="card-text">Boas-vindas ao portal onde cada jogo é uma prova viva da sua fluência.</p>
+      <div id="visor">
+        <!-- conteúdo visual aqui -->
+        <div id="score"></div>
+        <div class="visor-stack">
+          <div id="level-instruction" class="level-instruction" role="status" aria-live="polite"></div>
+          <div id="mode-five-intro" class="mode-five-intro" aria-live="polite">
+            <p class="mode-five-intro__instruction"></p>
+            <p class="mode-five-intro__example mode-five-intro__example--pt"></p>
+            <p class="mode-five-intro__example mode-five-intro__example--en"></p>
+          </div>
+          <div class="mode-emblem">
+            <img id="mode-icon" alt="Mode Icon" style="display:none" />
+            <div id="level-finder-level" class="level-finder-level"></div>
+          </div>
+          <div class="phrase-stack">
+            <div id="texto-exibicao"></div>
+            <div id="pt-container">
+              <textarea id="pt" rows="1" readonly></textarea>
             </div>
+            <div id="user-transcript" class="user-transcript" aria-live="polite"></div>
           </div>
         </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">2. Ambiente de Jogo</h4>
-              <p class="card-text">Modo de voz adaptável: você ouve, responde e o fluxo reage ao seu nível.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">3. Modos que funcionam</h4>
-              <p class="card-text">Construa memória auditiva, produção oral, fluência, velocidade e confiança.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">4. Eventos</h4>
-              <p class="card-text">Ligas, copas e battles para competir, pontuar e colecionar selos especiais.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">5. Rankings</h4>
-              <p class="card-text">Diário, semanal, mensal e geral: veja onde sua dedicação te coloca.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">6. Social</h4>
-              <p class="card-text">Perfil, interações e pertencimento para jogar em comunidade.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">7. Pontos</h4>
-              <p class="card-text">Moeda da jornada para loja, inscrições, upgrades, colecionáveis e personalizações.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">8. Selo</h4>
-              <p class="card-text">Indicador supremo da qualidade do jogador, baseado em desempenho real.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">9. Estatísticas</h4>
-              <p class="card-text">Painel com acertos, velocidade, históricos e picos para interpretar sua evolução.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">10. Perfil</h4>
-              <p class="card-text">Identidade pública com selo, métricas principais e progressão.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">11. Opções de Jogo</h4>
-              <p class="card-text">Temas, sons, narrações, acessibilidade e packs especiais para personalizar.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="card features">
-            <div class="card-body">
-              <h4 class="card-title">12. Premium</h4>
-              <p class="card-text">OpenAI para narração natural, correção em tempo real e microtreinos personalizados.</p>
-            </div>
-          </div>
-        </div>
+      <div id="nivel-mensagem"></div>
+      <div id="timer"></div>
+      <div id="resultado"></div>
+      <div id="acertos"></div>
+      <div id="mode-buttons">
+        <button type="button" data-mode="1" class="mode-btn" aria-label="Modo 1">
+          <span class="mode-logo mode-logo--small" data-mode="1" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="2" class="mode-btn" aria-label="Modo 2">
+          <span class="mode-logo mode-logo--small" data-mode="2" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="3" class="mode-btn" aria-label="Modo 3">
+          <span class="mode-logo mode-logo--small" data-mode="3" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="4" class="mode-btn" aria-label="Modo 4">
+          <span class="mode-logo mode-logo--small" data-mode="4" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="5" class="mode-btn" aria-label="Modo 5">
+          <span class="mode-logo mode-logo--small" data-mode="5" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-mode="6" class="mode-btn" aria-label="Modo 6">
+          <span class="mode-logo mode-logo--small" data-mode="6" aria-hidden="true"></span>
+        </button>
       </div>
     </div>
-  </div>
 
-  <div class="section light-bg" id="recursos">
-    <div class="container">
-      <div class="section-title">
-        <small>Recursos do ecossistema</small>
-        <h3>Treine, jogue e evolua</h3>
-      </div>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="media d-flex flex-column flex-md-row mb-4">
-            <span class="ti-headphone-alt gradient-fill ti-3x mr-3"></span>
-            <div class="media-body">
-              <h4>Feedback em voz</h4>
-              <p>Prática guiada com narração, correção de pronúncia e fluência acompanhada.</p>
-            </div>
-          </div>
-          <div class="media d-flex flex-column flex-md-row mb-4">
-            <span class="ti-trophy gradient-fill ti-3x mr-3"></span>
-            <div class="media-body">
-              <h4>Eventos competitivos</h4>
-              <p>Entre em ligas e copas, dispute battles e desbloqueie selos raros.</p>
-            </div>
-          </div>
-          <div class="media d-flex flex-column flex-md-row mb-4">
-            <span class="ti-bar-chart-alt gradient-fill ti-3x mr-3"></span>
-            <div class="media-body">
-              <h4>Métricas transparentes</h4>
-              <p>Rankings por período, pontos globais e painel de estatísticas para cada jogador.</p>
-            </div>
+    <section id="pre-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
+      <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
+        <div id="pre-game-logo" class="game-overlay__logo mode-logo mode-logo--overlay" data-mode="1" aria-hidden="true"></div>
+        <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
+        <div class="pre-game-level">
+          <div class="pre-game-level__selector">
+            <strong id="pre-game-level" class="pre-game-level__value">Nível 1</strong>
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="media d-flex flex-column flex-md-row mb-4">
-            <span class="ti-palette gradient-fill ti-3x mr-3"></span>
-            <div class="media-body">
-              <h4>Estética personalizável</h4>
-              <p>Temas, cores, sons e narrações deixam o jogo com a sua cara.</p>
-            </div>
+        <div id="pre-game-options" class="pre-game-options">
+          <div class="pre-game-toggle">
+            <label class="toggle">
+              <input type="checkbox" id="pre-game-voice-toggle" />
+              <span>Ouvir inglês</span>
+            </label>
           </div>
-          <div class="media d-flex flex-column flex-md-row mb-4">
-            <span class="ti-microphone gradient-fill ti-3x mr-3"></span>
-            <div class="media-body">
-              <h4>Modos 100% por voz</h4>
-              <p>Foco em produção oral, compreensão e velocidade com feedback imediato.</p>
-            </div>
+          <div class="pre-game-toggle">
+            <label class="toggle">
+              <input type="checkbox" id="pre-game-language-toggle" />
+              <span>Mostrar frases em português</span>
+            </label>
           </div>
-          <div class="media d-flex flex-column flex-md-row mb-4">
-            <span class="ti-shield gradient-fill ti-3x mr-3"></span>
-            <div class="media-body">
-              <h4>Economia de pontos</h4>
-              <p>Pontue jogando e gaste na loja, em upgrades, inscrições e colecionáveis.</p>
-            </div>
+          <div class="pre-game-toggle">
+            <label class="toggle">
+              <input type="checkbox" id="pre-game-transcript-toggle" />
+              <span>Exibir o que falei</span>
+            </label>
           </div>
+        </div>
+        <div class="game-overlay__actions">
+          <button id="pre-game-start" class="game-overlay__primary playtalk-cta playtalk-cta--wide" type="button">
+            <span class="playtalk-cta__inner">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" focusable="false">
+                <path d="m8 5 12 7-12 7V5Z" />
+              </svg>
+              <span>Jogar agora</span>
+            </span>
+          </button>
+          <button id="pre-game-level-finder" class="game-overlay__secondary playtalk-cta playtalk-cta--ghost playtalk-cta--wide" type="button">
+            <span class="playtalk-cta__inner">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" focusable="false">
+                <path
+                  d="M12 2c.64 0 1.22.4 1.43 1.01l1.21 3.35 3.36 1.19A1.5 1.5 0 0 1 19 9.9l-2.84 2.84.86 3.55a1.5 1.5 0 0 1-2.05 1.73L12 16.8l-3.07 1.22a1.5 1.5 0 0 1-2.05-1.73l.86-3.55L5 9.9a1.5 1.5 0 0 1 .99-2.34l3.37-1.19 1.21-3.35C10.78 2.4 11.36 2 12 2Zm0 6.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"
+                />
+              </svg>
+              <span>Level finder</span>
+            </span>
+          </button>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="section" id="premium">
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col-lg-6">
-          <h2>Camada Premium</h2>
-          <p class="lead">Powered by OpenAI para acelerar sua fluência.</p>
-          <ul class="list-unstyled">
-            <li>• Narração natural avançada.</li>
-            <li>• Correção de pronúncia em tempo real.</li>
-            <li>• Análises profundas e recomendações inteligentes.</li>
-            <li>• Relatórios e microtreinos personalizados.</li>
-          </ul>
-          <a href="login.html" class="btn btn-primary">Assinar e jogar</a>
+    <section id="post-game-screen" class="game-overlay hidden" aria-hidden="true">
+      <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
+        <h2 id="post-game-title" class="game-overlay__title game-overlay__title--hidden">Fim de jogo</h2>
+        <div class="post-game-medal-wrapper">
+          <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
+          <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label sr-only"></p>
         </div>
-        <div class="col-lg-6 text-center">
-          <img src="landingpage/images/perspective.png" alt="Camada premium PlayTalk" class="img-fluid">
+        <div class="post-game-metrics">
+          <div id="post-game-cpm" class="post-game-metric container-animado-score" aria-live="polite">
+            <div class="post-game-metric__values">
+              <span class="post-game-metric__icon post-game-metric__icon--lightning" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M11 2 3.5 13h6L8.5 22 20 8h-6l2-6Z"/></svg>
+              </span>
+              <span id="post-game-cpm-value" class="post-game-metric__value">0</span>
+            </div>
+            <p class="post-game-metric__caption">Caracteres por minuto</p>
+          </div>
+          <div id="post-game-balance" class="post-game-metric container-animado-score" aria-live="polite">
+            <div class="post-game-metric__values">
+              <span class="post-game-metric__icon post-game-metric__icon--coin" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3C7.03 3 3 5.686 3 9v6c0 3.314 4.03 6 9 6s9-2.686 9-6V9c0-3.314-4.03-6-9-6Zm0 2c3.86 0 7 1.57 7 3.5S15.86 12 12 12 5 10.43 5 8.5 8.14 5 12 5Zm7 6.758V15c0 1.93-3.14 3.5-7 3.5S5 16.93 5 15v-3.242C6.44 12.742 8.96 13.5 12 13.5s5.56-.758 7-1.742ZM11 7v1.5H9.5V11H11v1.5h2V11h1.5V8.5H13V7Z"/></svg>
+              </span>
+              <span id="post-game-balance-value" class="post-game-metric__value">0</span>
+            </div>
+            <p class="post-game-metric__caption">Saldo em pontos</p>
+          </div>
+          <div id="post-game-accuracy" class="post-game-metric container-animado-score" aria-live="polite">
+            <div class="post-game-metric__values">
+              <span class="post-game-metric__icon post-game-metric__icon--target" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2a1 1 0 0 1 1 1v1.25a8.5 8.5 0 0 1 7.75 7.75H22a1 1 0 0 1 0 2h-1.25A8.5 8.5 0 0 1 13 21.75V23a1 1 0 0 1-2 0v-1.25A8.5 8.5 0 0 1 3.25 14H2a1 1 0 1 1 0-2h1.25A8.5 8.5 0 0 1 11 4.25V3a1 1 0 0 1 1-1Zm0 5.5a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7Zm0 3a4 4 0 1 1-4 4 4.004 4.004 0 0 1 4-4Zm0 2a2 2 0 1 0 2 2 2.002 2.002 0 0 0-2-2Z"/></svg>
+              </span>
+              <span id="post-game-accuracy-value" class="post-game-metric__value">0</span>
+            </div>
+            <p class="post-game-metric__caption">Precisão geral</p>
+          </div>
         </div>
+        <p id="post-game-level-status" class="game-overlay__subtitle"></p>
+        <dl class="post-game-stats" aria-live="polite"></dl>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <div class="section light-bg">
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col-lg-6">
-          <h2>Resumo final</h2>
-          <p>
-            PlayTalk é um universo gamificado, competitivo, social, mensurável e escalável. É treino, jogo, evolução e
-            comunidade em um só lugar.
-          </p>
-          <p class="mb-4">Transforme prática em fluência e sinta sua voz destravar a cada partida.</p>
-          <a href="login.html" class="btn btn-primary">Entrar agora</a>
-        </div>
-        <div class="col-lg-6 text-center">
-          <img src="landingpage/images/graphic.png" alt="Gráfico de evolução" class="img-fluid rounded">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <footer class="my-5 text-center">
-    <p class="mb-2"><small>PlayTalk | O game da fluência</small></p>
-    <small>
-      <a href="#home" class="m-2">Topo</a>
-      <a href="login.html" class="m-2">Login</a>
-    </small>
+  <footer class="page-footer">
+    <nav id="main-nav">
+      <a
+        href="inplay.html"
+        id="home-link"
+        class="nav-item"
+        aria-label="Inplay"
+        data-nav-index="0"
+      >
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+        </span>
+        <span class="sr-only">Inplay</span>
+      </a>
+      <a href="fun.html" class="nav-item" aria-label="Opções" data-nav-index="1">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19.14 12.94a7.97 7.97 0 0 0 .06-.94 7.97 7.97 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.88 7.88 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.65 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.97 7.97 0 0 0-.06.94c0 .32.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.49.39 1.04.7 1.63.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.14-.55 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64Zm-7.14 1.56a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/></svg>
+        </span>
+        <span class="sr-only">Opções</span>
+      </a>
+      <a href="play.html" class="nav-item" aria-label="Estatísticas" data-nav-index="2">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 21a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5Zm6 0a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-2Zm6 0a1 1 0 0 1-1-1V13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2Z"/></svg>
+        </span>
+        <span class="sr-only">Estatísticas</span>
+      </a>
+      <a href="ranking.html" class="nav-item" aria-label="Ranking" data-nav-index="3">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" role="img" focusable="false"><path d="M14 6a2 2 0 0 0-2 2v4H7a2 2 0 0 0-2 2v4a9 9 0 0 0 9 9 9.06 9.06 0 0 0 8 4.3V38h-4a2 2 0 0 0-2 2v4h20v-4a2 2 0 0 0-2-2h-4v-6.7a9.06 9.06 0 0 0 8-4.3 9 9 0 0 0 9-9v-4a2 2 0 0 0-2-2h-5V8a2 2 0 0 0-2-2Zm2 4h16v2a4 4 0 0 0 4 4h5v2a5 5 0 0 1-5 5H16a5 5 0 0 1-5-5v-2h5a4 4 0 0 0 4-4Zm6 18a9.07 9.07 0 0 0 4 0v6h-4Z"/></svg>
+        </span>
+        <span class="sr-only">Ranking</span>
+      </a>
+      <a href="perfil.html" class="nav-item" aria-label="Perfil" data-nav-index="4">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
+        </span>
+        <span class="sr-only">Perfil</span>
+      </a>
+    </nav>
   </footer>
+  <audio id="somAcerto" src="gamesounds/success.mp3"></audio>
+  <audio id="somErro" src="gamesounds/error.mp3"></audio>
+  <audio id="somLock" src="gamesounds/lock.wav"></audio>
 
-  <script src="landingpage/js/jquery-3.2.1.min.js"></script>
-  <script src="landingpage/js/bootstrap.bundle.min.js"></script>
-  <script src="landingpage/js/owl.carousel.min.js"></script>
-  <script src="landingpage/js/script.js"></script>
+  <script src="js/kit-speech.js" defer></script>
+  <script src="js/main.js" defer></script>
 </body>
 </html>
