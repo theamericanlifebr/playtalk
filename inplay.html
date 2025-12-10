@@ -135,7 +135,19 @@
             </div>
             <div id="user-transcript" class="user-transcript" aria-live="polite"></div>
             <div class="phrase-timer">
-              <div id="timer" class="timer-display" aria-live="polite">0 ms</div>
+              <div id="timer" class="timer-display phrase-progress" aria-live="polite">
+                <div class="phrase-progress__label">Precisão: 0%</div>
+                <div
+                  class="phrase-progress__track"
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  aria-label="Precisão da fase"
+                >
+                  <div class="phrase-progress__fill"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
