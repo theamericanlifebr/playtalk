@@ -840,7 +840,7 @@
         setTimeout(() => {
           closeFlow();
           if (onLoginPage) {
-            window.location.href = 'inplay.html';
+            window.location.href = 'index.html';
           }
         }, 800);
       } catch (err) {
