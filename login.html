@@ -13,82 +13,43 @@
 <body class="page-login">
   <main class="login-shell" aria-label="Tela de login">
     <div class="login-brand">
-      <img src="SVG/logo.svg" alt="Logo PlayTalk" class="login-brand__logo" width="80" height="80">
-      <h1 class="login-brand__title">PlayTalk</h1>
+      <img src="SVG/logo.svg" alt="Logo PlayTalk" class="login-brand__logo" width="72" height="72">
+      <div class="login-brand__text">
+        <h1 class="login-brand__title">PlayTalk</h1>
+        <p class="login-brand__subtitle">O game da fluência</p>
+      </div>
     </div>
+
     <section id="login-flow" class="login-card" aria-labelledby="login-form-title">
-      <h2 id="login-form-title" class="login-card__title">Entre para continuar</h2>
-      <form id="login-flow-form" class="login-card__form" autocomplete="off" novalidate>
-        <label class="login-card__label" for="login-flow-username">Nome de usuário</label>
+      <h2 id="login-form-title" class="login-card__title">Entre para jogar com sua voz</h2>
+      <form id="login-flow-form" class="form" autocomplete="off" novalidate>
+        <label id="login-lable" for="login-flow-username">Login</label>
         <input
-          class="login-card__input"
+          class="input"
           type="text"
           id="login-flow-username"
           name="login-flow-username"
           maxlength="40"
           autocomplete="username"
           required
+          placeholder="Nome de usuário"
         >
 
-        <label class="login-card__label" for="login-flow-password">Senha</label>
         <input
-          class="login-card__input"
+          class="input"
           type="password"
           id="login-flow-password"
           name="login-flow-password"
           autocomplete="current-password"
           required
+          placeholder="Senha"
         >
 
-        <button type="submit" class="login-card__submit">Acessar</button>
+        <button type="submit" id="btn">Entrar</button>
       </form>
       <p id="login-flow-status" class="login-card__status" role="status" aria-live="polite"></p>
       <p id="login-flow-error" class="login-card__error" role="alert"></p>
     </section>
-    <section class="login-progress" aria-live="polite">
-      <div class="login-progress__header">
-        <span class="login-progress__label">Carregando o app e salvando com segurança</span>
-        <span class="login-progress__value" id="login-progress-value">0%</span>
-      </div>
-      <div class="login-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <span class="login-progress__fill" id="login-progress-fill"></span>
-      </div>
-      <p class="login-progress__note">Os dados ficam protegidos no servidor, não no seu navegador.</p>
-    </section>
-    <button id="login-btn" class="login-launcher" type="button" aria-hidden="true" tabindex="-1">Entrar</button>
   </main>
-
-  <script>
-    (function() {
-      const fill = document.getElementById('login-progress-fill');
-      const valueEl = document.getElementById('login-progress-value');
-      const bar = document.querySelector('.login-progress__bar');
-      let progress = 0;
-
-      function updateProgress(value) {
-        progress = Math.max(0, Math.min(100, value));
-        if (fill) {
-          fill.style.width = `${progress}%`;
-        }
-        if (bar) {
-          bar.setAttribute('aria-valuenow', String(progress));
-        }
-        if (valueEl) {
-          valueEl.textContent = `${progress}%`;
-        }
-      }
-
-      function stepProgress() {
-        if (progress >= 100) return;
-        updateProgress(progress + Math.max(1, Math.round(Math.random() * 8)));
-        requestAnimationFrame(() => {
-          setTimeout(stepProgress, 280);
-        });
-      }
-
-      updateProgress(0);
-      requestAnimationFrame(stepProgress);
-    })();
-  </script>
 </body>
 </html>

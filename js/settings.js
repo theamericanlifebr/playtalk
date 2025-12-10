@@ -386,7 +386,12 @@
     'video/mp4'
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
-  const DEFAULT_BACKGROUND = null;
+  const DEFAULT_BACKGROUND = {
+    presetId: 'background3',
+    src: 'backgrounds/background3.jpg',
+    name: 'Background 3',
+    type: 'image'
+  };
   let currentBackground = DEFAULT_BACKGROUND;
 
   function purgeStoredBackground() {
@@ -611,6 +616,7 @@
       if (body) {
         body.classList.remove('has-custom-background');
       }
+      applyBackground(DEFAULT_BACKGROUND);
       return DEFAULT_BACKGROUND;
     }
 
