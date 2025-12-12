@@ -364,25 +364,6 @@ function normalizePhraseLine(line) {
   return [pt, en];
 }
 
-function normalizeLevelEntries(rawEntries) {
-  if (Array.isArray(rawEntries)) {
-    return rawEntries;
-  }
-
-  if (typeof rawEntries === 'string') {
-    return rawEntries
-      .split(/\r?\n/)
-      .map(line => line.trim())
-      .filter(Boolean);
-  }
-
-  if (rawEntries && typeof rawEntries === 'object') {
-    return normalizeLevelEntries(rawEntries.entries);
-  }
-
-  return [];
-}
-
 function ensurePhraseTuple(entry) {
   if (typeof entry === 'string') {
     return normalizePhraseLine(entry);
@@ -616,10 +597,14 @@ async function carregarPastas() {
               const levelNumber = Number.isFinite(parsedLevel)
                 ? Math.max(1, Math.floor(parsedLevel))
                 : normalizedLevels.length + 1;
-              const levelEntries = normalizeLevelEntries(entries);
-              const normalizedEntries = levelEntries.map(normalizePhraseLine);
-              const instruction = entries && typeof entries === 'object' && typeof entries.instruction === 'string'
-                ? entries.instruction.trim()
+              const levelConfig = Array.isArray(entries)
+                ? { entries }
+                : (entries && typeof entries === 'object' ? entries : { entries: [] });
+              const normalizedEntries = Array.isArray(levelConfig.entries)
+                ? levelConfig.entries.map(normalizePhraseLine)
+                : [];
+              const instruction = typeof levelConfig.instruction === 'string'
+                ? levelConfig.instruction.trim()
                 : '';
               normalizedLevels.push([levelNumber, normalizedEntries, instruction]);
             });
