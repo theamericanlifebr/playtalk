@@ -354,11 +354,18 @@ function applyWordAlternatives(text) {
   });
 }
 
+function stripGrammarTags(text) {
+  if (typeof text !== 'string') {
+    return '';
+  }
+  return text.replace(/(?:@\d+)+$/g, '').trim();
+}
+
 function normalizePhraseLine(line) {
   if (typeof line !== 'string') {
     return ['', []];
   }
-  const parts = line.split('#').map(part => part.trim());
+  const parts = line.split('#').map(part => stripGrammarTags(part.trim()));
   const pt = parts.shift() || '';
   const en = parts.filter(Boolean);
   return [pt, en];
@@ -371,13 +378,13 @@ function ensurePhraseTuple(entry) {
   if (!Array.isArray(entry)) {
     return ['', []];
   }
-  const pt = typeof entry[0] === 'string' ? entry[0] : String(entry[0] ?? '');
+  const pt = stripGrammarTags(typeof entry[0] === 'string' ? entry[0] : String(entry[0] ?? ''));
   const enRaw = entry[1];
   let enList = [];
   if (Array.isArray(enRaw)) {
-    enList = enRaw.map(value => String(value ?? '').trim()).filter(Boolean);
+    enList = enRaw.map(value => stripGrammarTags(String(value ?? ''))).filter(Boolean);
   } else if (typeof enRaw === 'string') {
-    const trimmed = enRaw.trim();
+    const trimmed = stripGrammarTags(enRaw.trim());
     enList = trimmed ? [trimmed] : [];
   }
   return [pt, enList];
