@@ -50,10 +50,17 @@ function colorFromPercent(perc) {
   return calcularCor((perc / 100) * max);
 }
 
+function stripGrammarTags(text) {
+  if (typeof text !== 'string') {
+    return '';
+  }
+  return text.replace(/(?:@\d+)+$/g, '').trim();
+}
+
 async function carregarPastas() {
   const resp = await fetch('data/pastasversus.json');
   const data = await resp.json();
-  return data.frases.map(l => l.split('#').map(s => s.trim()));
+  return data.frases.map(l => l.split('#').map(s => stripGrammarTags(s.trim())));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
