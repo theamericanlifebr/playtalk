@@ -986,34 +986,6 @@ function setTimerState(state) {
   }
 }
 
-function getCurrentRoundAccuracy() {
-  const totalAttempts = Math.max(roundAttempts, points + roundWrongCount);
-  const correct = Math.min(points, roundTarget);
-  const wrong = Math.max(0, totalAttempts - correct);
-  const attemptsForAccuracy = correct + wrong;
-  return attemptsForAccuracy > 0 ? (correct / attemptsForAccuracy) * 100 : 0;
-}
-
-function updateAccuracyProgress() {
-  const timerEl = getTimerElement();
-  if (!timerEl) {
-    return;
-  }
-  const fill = timerEl.querySelector('.phrase-progress__fill');
-  const label = timerEl.querySelector('.phrase-progress__label');
-  const track = timerEl.querySelector('.phrase-progress__track');
-  const accuracy = Math.max(0, Math.min(100, getCurrentRoundAccuracy()));
-  if (fill) {
-    fill.style.width = `${accuracy}%`;
-  }
-  if (label) {
-    label.textContent = `Precisão: ${accuracy.toFixed(0)}%`;
-  }
-  if (track) {
-    track.setAttribute('aria-valuenow', accuracy.toFixed(0));
-  }
-}
-
 function isFluentSessionActive() {
   return fluentSession.active;
 }
@@ -1110,7 +1082,7 @@ function resetTimerDisplay() {
   if (!timerEl) {
     return;
   }
-  updateAccuracyProgress();
+  timerEl.textContent = '0 ms';
   primeWaveformSilenceBaseline();
   setTimerState(null);
 }
@@ -3255,20 +3227,6 @@ function carregarFrases() {
     renderLevelInstruction({ mode: playMode, level: levelToUse });
     const principais = Array.isArray(library[levelToUse]) ? [...library[levelToUse]] : [];
     const anteriores = [];
-    const isFluentMode = selectedMode === 6;
-
-    if (isFluentMode) {
-      const pool = principais.length ? [...principais] : [['', '']];
-      roundTarget = Math.max(1, pool.length || DEFAULT_ROUND_SIZE);
-      frasesArr = embaralhar(pool).slice(0, roundTarget);
-      fraseIndex = 0;
-      points = 0;
-      setTimeout(() => mostrarFrase(), 300);
-      atualizarBarraProgresso();
-      dispatchModeProgressUpdate(selectedMode);
-      persistCurrentRoundState();
-      return;
-    }
 
     if (playMode === 4) {
       roundTarget = Math.max(1, principais.length || DEFAULT_ROUND_SIZE);
@@ -3519,11 +3477,18 @@ function mostrarFrase() {
   if (voz === 'en') falar(en, 'en');
   else if (voz === 'pt') falar(pt, 'pt');
   bloqueado = false;
+  const timerEl = getTimerElement();
   const toleranceMs = getComprehensionDelayMs(getActivePlayMode(), expected.length);
   phraseStartTime = Date.now() + toleranceMs;
   phraseWaveformStarted = false;
   resetTimerDisplay();
   if (timerInterval) clearInterval(timerInterval);
+  if (timerEl) {
+    timerInterval = setInterval(() => {
+      const elapsed = Math.max(0, Date.now() - phraseStartTime);
+      timerEl.textContent = `${elapsed} ms`;
+    }, 50);
+  }
   if (!isLevelFinderActive()) {
     if (prizeTimer) clearInterval(prizeTimer);
     prizeStart = Date.now();
@@ -3845,7 +3810,6 @@ function atualizarBarraProgresso() {
   ensureInplayStateFromContext();
   updateGameBalanceDisplay();
   renderLevelInstruction();
-  updateAccuracyProgress();
   if (isLevelFinderActive()) {
     const elapsed = getLevelFinderElapsedMs();
     renderLevelFinderLevel({ level: pastaAtual, baseColor: levelFinderBaseColor });
@@ -3887,18 +3851,8 @@ function finishMode() {
     : elapsedMsRaw;
   const seconds = elapsedMs > 0 ? (elapsedMs / 1000) : 0;
   let cps = seconds > 0 ? (roundCorrectChars / seconds) : 0;
-  const roundMedal = getMedalForAccuracy(accuracy);
-  const roundMedalKey = roundMedal && MEDAL_LABEL_TO_KEY[roundMedal.label];
 
   if (isFluentSessionActive() && !isLevelFinderActive()) {
-    const fluentAdvanceAllowed = roundMedalKey === 'ouro' || roundMedalKey === 'diamante';
-    if (!fluentAdvanceAllowed) {
-      roundActive = false;
-      paused = false;
-      currentModeOptions = loadModeOptions(getActivePlayMode());
-      openPreGameScreen(getActivePlayMode());
-      return;
-    }
     addFluentResult({ correct, wrong, chars: roundCorrectChars, timeMs: elapsedMs });
     if (advanceFluentSession()) {
       roundActive = false;
