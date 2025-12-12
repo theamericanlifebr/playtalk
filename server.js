@@ -674,9 +674,6 @@ async function ensureDefaultUser() {
 ensureDefaultUser();
 
 app.use(express.json({ limit: '20mb' }));
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'LandingPage', 'index.html'));
-});
 app.use(express.static(staticDir));
 
 app.use((req, res, next) => {
