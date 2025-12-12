@@ -3656,7 +3656,10 @@ function proceedAfterAnswer(isCorrect, reachedRoundEnd) {
 
 function verificarResposta() {
   if (bloqueado) return;
-  if (!isInplayActive()) return;
+  if (!roundActive && !isInplayActive()) return;
+  if (!roundActive && isInplayActive()) {
+    roundActive = true;
+  }
   if (inputTimeout) clearTimeout(inputTimeout);
   if (timerInterval) clearInterval(timerInterval);
   setTimerState(TIMER_STATES.INACTIVE);
