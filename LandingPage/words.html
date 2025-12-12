@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlayTalk | Full Vocabulary Logline: As 30 mil palavras mais comuns do inglês</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1b4f9a 0%, #2c6fbf 40%, #3a86d1 70%, #4c96dc 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .panel {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      margin-bottom: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      margin: 0;
+    }
+
+    .search {
+      width: min(520px, 100%);
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      outline: none;
+      font-size: 16px;
+    }
+    .search::placeholder { color: rgba(255,255,255,0.75); }
+    .search:focus { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.14); }
+
+    .list {
+      margin-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.18);
+      background: transparent;
+    }
+
+    .left {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .pos {
+      opacity: 0.8;
+      font-weight: 700;
+      width: 64px;
+      flex: 0 0 auto;
+    }
+
+    .word {
+      font-family: "Open Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60vw;
+    }
+
+    .qty {
+      opacity: 0.9;
+      font-weight: 700;
+      flex: 0 0 auto;
+      width: 140px;
+      text-align: right;
+    }
+
+    .pager {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding: 12px 0;
+    }
+    .pager .mini {
+      opacity: 0.9;
+      font-weight: 700;
+    }
+
+    .pagejump {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pageInput {
+      width: 90px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      outline: none;
+      font-weight: 700;
+    }
+
+    button {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    button:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .info-note {
+      opacity: 0.88;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 720px) {
+      .topbar { flex-direction: column; align-items: stretch; }
+      .search { width: 100%; }
+      .qty { width: 110px; }
+      .pos { width: 54px; }
+      .word { max-width: 52vw; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <div class="topbar">
+        <div>
+          <h1>PlayTalk Word Ranker 🚀</h1>
+          <p class="info-note">Logline: as 30 mil palavras mais comuns do inglês</p>
+        </div>
+        <input id="searchInput" class="search" placeholder="Buscar palavra... (ex: coast)" />
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="list" class="list"></div>
+      <div class="pager">
+        <div class="pagejump">
+          <button id="prevBtn">◀ Anterior</button>
+          <button id="nextBtn">Próxima ▶</button>
+          <span class="mini" id="pageInfo">Página 1 / 300</span>
+        </div>
+
+        <div class="pagejump">
+          <span class="mini">Ir para:</span>
+          <input id="pageInput" class="pageInput" type="number" min="1" step="1" placeholder="1" />
+          <button id="gotoBtn">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MIN_COUNT = 3;
+    const DB_SLICE_LIMIT = 30000;
+    const PAGE_SIZE = 100;
+
+    let wordDB = {};
+    let currentEntries = [];
+    let currentPage = 1;
+    let totalPages = 1;
+
+    const searchInput = document.getElementById('searchInput');
+    const listEl = document.getElementById('list');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageInfo = document.getElementById('pageInfo');
+    const pageInput = document.getElementById('pageInput');
+    const gotoBtn = document.getElementById('gotoBtn');
+
+    async function loadCorpus() {
+      try {
+        const response = await fetch('../data/phrases/corpus.json');
+        const data = await response.json();
+        wordDB = data.wordDB || {};
+        updateRanking();
+      } catch (error) {
+        listEl.innerHTML = '<div class="row"><div>Não foi possível carregar o corpus.</div></div>';
+        console.error('Erro ao carregar corpus', error);
+      }
+    }
+
+    function updateRanking() {
+      currentEntries = Object.entries(wordDB)
+        .filter(([_, count]) => Number(count) >= MIN_COUNT)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, DB_SLICE_LIMIT);
+
+      totalPages = Math.max(1, Math.ceil(currentEntries.length / PAGE_SIZE));
+      currentPage = Math.min(currentPage, totalPages);
+      renderPage();
+    }
+
+    function getFilteredEntries() {
+      const q = (searchInput.value || '').trim().toLowerCase();
+      if (!q) return currentEntries;
+      return currentEntries.filter(([word]) => word.includes(q));
+    }
+
+    function renderPage() {
+      listEl.innerHTML = '';
+      const filtered = getFilteredEntries();
+      const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      totalPages = pages;
+      currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end = Math.min(start + PAGE_SIZE, filtered.length);
+
+      for (let i = start; i < end; i++) {
+        const [word, qty] = filtered[i];
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <div class="left">
+            <div class="pos">${i + 1}º</div>
+            <div class="word" title="${escapeHtml(word)}">${escapeHtml(word)}</div>
+          </div>
+          <div class="qty">Qtd: ${Number(qty).toLocaleString('pt-BR')}</div>
+        `;
+        listEl.appendChild(row);
+      }
+
+      if (filtered.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'row';
+        empty.style.borderBottom = '0';
+        empty.innerHTML = '<div style="font-weight:800; opacity:0.95;">Nada encontrado 😅</div>';
+        listEl.appendChild(empty);
+      }
+
+      pageInfo.innerText = `Página ${currentPage} / ${totalPages}`;
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= totalPages;
+      listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function nextPage() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderPage();
+      }
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPage();
+      }
+    }
+
+    function goToPageFromInput() {
+      const n = Number(pageInput.value);
+      if (!Number.isFinite(n) || n < 1) return;
+      currentPage = Math.min(totalPages, Math.max(1, Math.floor(n)));
+      renderPage();
+      pageInput.value = '';
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    searchInput.addEventListener('input', () => {
+      currentPage = 1;
+      renderPage();
+    });
+
+    prevBtn.addEventListener('click', prevPage);
+    nextBtn.addEventListener('click', nextPage);
+    gotoBtn.addEventListener('click', goToPageFromInput);
+    pageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') goToPageFromInput();
+    });
+
+    loadCorpus();
+  </script>
+</body>
+</html>
