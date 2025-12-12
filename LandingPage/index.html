@@ -1,201 +1,432 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="zxx">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PlayTalk | App da Fluência</title>
-  <meta
-    name="description"
-    content="PlayTalk é a landing page oficial do app da fluência: pratique inglês jogando, dispute com a comunidade global e avance pelos 6 modos de jogo com gamificação completa."
-  />
-  <link rel="icon" type="image/svg+xml" href="../SVG/logo.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/style.css" />
-  <link rel="stylesheet" href="css/landing.css" />
+	<title>Game Warrior Template</title>
+	<meta charset="UTF-8">
+	<meta name="description" content="Game Warrior Template">
+	<meta name="keywords" content="warrior, game, creative, html">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Favicon -->   
+	<link href="img/favicon.ico" rel="shortcut icon"/>
+
+	<!-- Google Fonts -->
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,400i,500,500i,700,700i" rel="stylesheet">
+
+	<!-- Stylesheets -->
+	<link rel="stylesheet" href="css/bootstrap.min.css"/>
+	<link rel="stylesheet" href="css/font-awesome.min.css"/>
+	<link rel="stylesheet" href="css/owl.carousel.css"/>
+	<link rel="stylesheet" href="css/style.css"/>
+	<link rel="stylesheet" href="css/animate.css"/>
+
+
+	<!--[if lt IE 9]>
+	  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+	  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+
 </head>
-<body class="theme-blue">
-  <header class="site-header landing-header">
-    <div class="landing-brand">
-      <img src="../SVG/logo.svg" alt="PlayTalk" class="landing-brand__logo" />
-      <div class="landing-brand__text">
-        <span class="landing-brand__title">PlayTalk</span>
-        <span class="landing-brand__subtitle">App da Fluência</span>
-      </div>
-    </div>
-    <nav class="landing-nav" aria-label="Navegação principal">
-      <a href="#sobre" class="landing-nav__item">PlayTalk</a>
-      <a href="#modos" class="landing-nav__item">Vocabulário</a>
-      <a href="#vocabulario" class="landing-nav__item">Words</a>
-    </nav>
-    <div class="landing-actions">
-      <button type="button" class="site-header__button js-open-login">Entrar</button>
-    </div>
-  </header>
+<body>
+	<!-- Page Preloder -->
+	<div id="preloder">
+		<div class="loader"></div>
+	</div>
 
-  <main class="landing-main">
-    <section class="hero" id="sobre">
-      <div class="hero__content">
-        <p class="hero__eyebrow">Fluência completa, antes do login</p>
-        <h1 class="hero__title">Um jeito novo e completo de alcançar a fluência jogando.</h1>
-        <p class="hero__lead">
-          Desafie-se em 6 modos, compita na comunidade global e acompanhe tudo no painel de controle da fluência.
-          Conteúdo atualizado (2022-2026), vocabulário vivo com 30 mil palavras e gamificação em cada fase.
-        </p>
-        <div class="hero__actions">
-          <button type="button" class="hero__cta js-open-login">Quero entrar</button>
-          <a class="hero__ghost" href="#vocabulario">Ver vocabulario vivo</a>
-        </div>
-        <div class="hero__highlights">
-          <div class="highlight-card">
-            <span class="highlight-card__title">6 modos de jogo</span>
-            <p class="highlight-card__text">Vocabulary, Meaning, Listening, Reading, Translating e Thinking.</p>
-          </div>
-          <div class="highlight-card">
-            <span class="highlight-card__title">Gamificação completa</span>
-            <p class="highlight-card__text">Missões, painel de controle e progresso nivelado em tempo real.</p>
-          </div>
-          <div class="highlight-card">
-            <span class="highlight-card__title">Comunidade global</span>
-            <p class="highlight-card__text">Competições semanais, rankings e conquistas entre jogadores.</p>
-          </div>
-        </div>
-      </div>
-      <div class="hero__visual" aria-hidden="true">
-        <div class="hero__bubble hero__bubble--primary"></div>
-        <div class="hero__bubble hero__bubble--secondary"></div>
-        <div class="hero__panel">
-          <p class="panel-tag">Fluência rápida</p>
-          <h2>PlayTalk é o app da fluência</h2>
-          <ul>
-            <li>Viva o inglês com jogos temáticos e assuntos atuais.</li>
-            <li>Vocabulário vivo com 30 mil palavras mais comuns.</li>
-            <li>Conteúdo atualizado e progressivo de 2022 a 2026.</li>
-            <li>Saia da conta e volte para a landing a qualquer momento.</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+	<!-- Header section -->
+	<header class="header-section">
+		<div class="container">
+			<!-- logo -->
+			<a class="site-logo" href="index.html">
+				<img src="img/logo.png" alt="">
+			</a>
+			<div class="user-panel">
+				<a href="#">Login</a>  /  <a href="#">Register</a>
+			</div>
+			<!-- responsive -->
+			<div class="nav-switch">
+				<i class="fa fa-bars"></i>
+			</div>
+			<!-- site menu -->
+			<nav class="main-menu">
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="review.html">Games</a></li>
+					<li><a href="categories.html">Blog</a></li>
+					<li><a href="community.html">Forums</a></li>
+					<li><a href="contact.html">Contact</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header>
+	<!-- Header section end -->
 
-    <section class="grid-section" id="modos">
-      <div class="section-header">
-        <p class="section-kicker">Fluência progressiva</p>
-        <h2>Os 6 modos que aceleram sua evolução</h2>
-        <p class="section-lead">Construímos todo o caminho até a fluência: prática ativa, feedback imediato e desafios crescentes.</p>
-      </div>
-      <div class="card-grid">
-        <article class="feature-card">
-          <h3>Vocabulary</h3>
-          <p>Construa um vocabulário vivo, sempre atualizado, com as 30 mil palavras mais comuns do inglês.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Meaning</h3>
-          <p>Aprenda significados em contexto e desbloqueie nuances para usar as palavras do jeito certo.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Listening</h3>
-          <p>Treine compreensão auditiva com temas atuais e missões rápidas para manter o ritmo.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Reading</h3>
-          <p>Leituras curtas com assuntos do momento para acelerar a absorção e manter o foco.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Translating</h3>
-          <p>Traduza, valide e ajuste sua produção para pensar direto em inglês sem travar.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Thinking</h3>
-          <p>Ative o raciocínio em inglês com desafios criativos e debates com a comunidade.</p>
-        </article>
-      </div>
-    </section>
 
-    <section class="split-section">
-      <div class="split-section__content">
-        <p class="section-kicker">Painel da fluência</p>
-        <h2>Controle total e gamificação completa</h2>
-        <p class="section-lead">Acompanhe a precisão, seus pontos e medalhas enquanto joga. Cada vitória libera novas fases e mantém a jornada sempre motivadora.</p>
-        <ul class="feature-list">
-          <li>Painel de controle com progresso em tempo real.</li>
-          <li>Metas semanais, medalhas e conquistas personalizadas.</li>
-          <li>Se sair da conta, você volta direto para esta landing page.</li>
-        </ul>
-      </div>
-      <div class="split-section__card">
-        <div class="progress-card">
-          <div class="progress-card__header">
-            <span>Comunidade global</span>
-            <strong>Competição saudável</strong>
-          </div>
-          <p class="progress-card__text">Entre no ranking mundial, enfrente outros jogadores e desbloqueie posições a cada desafio.</p>
-          <div class="progress-card__meter" aria-hidden="true">
-            <div class="progress-card__fill" style="width: 78%"></div>
-          </div>
-          <div class="progress-card__badges" aria-hidden="true">
-            <span class="badge">Top 1%</span>
-            <span class="badge">Season 2026</span>
-            <span class="badge">XP Booster</span>
-          </div>
-        </div>
-      </div>
-    </section>
+	<!-- Hero section -->
+	<section class="hero-section">
+		<div class="hero-slider owl-carousel">
+			<div class="hs-item set-bg" data-setbg="img/slider-1.jpg">
+				<div class="hs-text">
+					<div class="container">
+						<h2>The Best <span>Games</span> Out There</h2>
+						<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec malesuada <br> lorem maximus mauris scelerisque, at rutrum nulla dictum. Ut ac ligula sapien. <br>Suspendisse cursus faucibus finibus.</p>
+						<a href="#" class="site-btn">Read More</a>
+					</div>
+				</div>
+			</div>
+			<div class="hs-item set-bg" data-setbg="img/slider-2.jpg">
+				<div class="hs-text">
+					<div class="container">
+						<h2>The Best <span>Games</span> Out There</h2>
+						<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec malesuada <br> lorem maximus mauris scelerisque, at rutrum nulla dictum. Ut ac ligula sapien. <br>Suspendisse cursus faucibus finibus.</p>
+						<a href="#" class="site-btn">Read More</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Hero section end -->
 
-    <section class="callout" id="vocabulario">
-      <div class="callout__content">
-        <p class="section-kicker">Vocabulário vivo</p>
-        <h2>Words: 30 mil palavras mais comuns do inglês</h2>
-        <p class="section-lead">
-          Acesso rápido ao corpus mais atualizado, com ranking por frequência e busca instantânea. Baixe, navegue e encontre o vocabulário que move o seu jogo.
-        </p>
-      </div>
-      <div class="callout__actions">
-        <a class="callout__button" href="words.html">Abrir Words</a>
-        <span class="callout__note">Logline: as 30 mil palavras mais comuns do inglês.</span>
-      </div>
-    </section>
 
-    <section class="login-section" id="login">
-      <div class="section-header">
-        <p class="section-kicker">Antes do jogo</p>
-        <h2>Faça login para liberar o menu de iniciar jogo</h2>
-        <p class="section-lead">Mostramos todo o potencial antes do login. Ao entrar, o menu de jogo aparece e você segue direto para a jornada.</p>
-      </div>
-      <div class="login-card">
-        <form class="login-form" id="login-form">
-          <label class="field">
-            <span>Email</span>
-            <input type="email" name="email" required placeholder="voce@playtalk.com" />
-          </label>
-          <label class="field">
-            <span>Senha</span>
-            <input type="password" name="password" required placeholder="********" />
-          </label>
-          <button type="submit" class="hero__cta">Entrar agora</button>
-          <p class="login-hint">Ao sair da conta, você volta para a landing page automaticamente.</p>
-        </form>
-        <div class="login-next" id="login-next" hidden>
-          <h3>Login confirmado!</h3>
-          <p>O menu de iniciar jogo foi liberado. Clique abaixo para jogar.</p>
-          <a class="callout__button" href="../index.html">Iniciar jogo</a>
-        </div>
-      </div>
-    </section>
-  </main>
+	<!-- Latest news section -->
+	<div class="latest-news-section">
+		<div class="ln-title">Latest News</div>
+		<div class="news-ticker">
+			<div class="news-ticker-contant">
+				<div class="nt-item"><span class="new">new</span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. </div>
+				<div class="nt-item"><span class="strategy">strategy</span>Isum dolor sit amet, consectetur adipiscing elit. </div>
+				<div class="nt-item"><span class="racing">racing</span>Isum dolor sit amet, consectetur adipiscing elit. </div>
+			</div>
+		</div>
+	</div>
+	<!-- Latest news section end -->
 
-  <footer class="landing-footer">
-    <div>
-      <strong>PlayTalk</strong>
-      <p>Fluência rápida, progressiva e gamificada.</p>
-    </div>
-    <div class="footer-links">
-      <a href="#sobre">PlayTalk</a>
-      <a href="#modos">Modos</a>
-      <a href="#vocabulario">Words</a>
-    </div>
-  </footer>
 
-  <script src="js/landing.js"></script>
-</body>
+	<!-- Feature section -->
+	<section class="feature-section spad">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-3 col-md-6 p-0">
+					<div class="feature-item set-bg" data-setbg="img/features/1.jpg">
+						<span class="cata new">new</span>
+						<div class="fi-content text-white">
+							<h5><a href="#">Suspendisse ut justo tem por, rutrum</a></h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. </p>
+							<a href="#" class="fi-comment">3 Comments</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-6 p-0">
+					<div class="feature-item set-bg" data-setbg="img/features/2.jpg">
+						<span class="cata strategy">strategy</span>
+						<div class="fi-content text-white">
+							<h5><a href="#">Justo tempor, rutrum erat id, molestie</a></h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. </p>
+							<a href="#" class="fi-comment">3 Comments</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-6 p-0">
+					<div class="feature-item set-bg" data-setbg="img/features/3.jpg">
+						<span class="cata new">new</span>
+						<div class="fi-content text-white">
+							<h5><a href="#">Nullam lacinia ex eleifend orci porttitor</a></h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. </p>
+							<a href="#" class="fi-comment">3 Comments</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-6 p-0">
+					<div class="feature-item set-bg" data-setbg="img/features/4.jpg">
+						<span class="cata racing">racing</span>
+						<div class="fi-content text-white">
+							<h5><a href="#">Lacinia ex eleifend orci suscipit</a></h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. </p>
+							<a href="#" class="fi-comment">3 Comments</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Feature section end -->
+
+
+	<!-- Recent game section  -->
+	<section class="recent-game-section spad set-bg" data-setbg="img/recent-game-bg.png">
+		<div class="container">
+			<div class="section-title">
+				<div class="cata new">new</div>
+				<h2>Recent Games</h2>
+			</div>
+			<div class="row">
+				<div class="col-lg-4 col-md-6">
+					<div class="recent-game-item">
+						<div class="rgi-thumb set-bg" data-setbg="img/recent-game/1.jpg">
+							<div class="cata new">new</div>
+						</div>
+						<div class="rgi-content">
+							<h5>Suspendisse ut justo tem por, rutrum</h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum dolor sit amet, consectetur elit. </p>
+							<a href="#" class="comment">3 Comments</a>
+							<div class="rgi-extra">
+								<div class="rgi-star"><img src="img/icons/star.png" alt=""></div>
+								<div class="rgi-heart"><img src="img/icons/heart.png" alt=""></div>
+							</div>
+						</div>
+					</div>	
+				</div>
+				<div class="col-lg-4 col-md-6">
+					<div class="recent-game-item">
+						<div class="rgi-thumb set-bg" data-setbg="img/recent-game/2.jpg">
+							<div class="cata racing">racing</div>
+						</div>
+						<div class="rgi-content">
+							<h5>Susce pulvinar metus nulla, vel  facilisis sem </h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum dolor sit amet, consectetur elit. </p>
+							<a href="#" class="comment">3 Comments</a>
+							<div class="rgi-extra">
+								<div class="rgi-star"><img src="img/icons/star.png" alt=""></div>
+								<div class="rgi-heart"><img src="img/icons/heart.png" alt=""></div>
+							</div>
+						</div>
+					</div>	
+				</div>
+				<div class="col-lg-4 col-md-6">
+					<div class="recent-game-item">
+						<div class="rgi-thumb set-bg" data-setbg="img/recent-game/3.jpg">
+							<div class="cata adventure">Adventure</div>
+						</div>
+						<div class="rgi-content">
+							<h5>Suspendisse ut justo tem por, rutrum</h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum dolor sit amet, consectetur elit. </p>
+							<a href="#" class="comment">3 Comments</a>
+							<div class="rgi-extra">
+								<div class="rgi-star"><img src="img/icons/star.png" alt=""></div>
+								<div class="rgi-heart"><img src="img/icons/heart.png" alt=""></div>
+							</div>
+						</div>
+					</div>	
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Recent game section end -->
+
+
+	<!-- Tournaments section -->
+	<section class="tournaments-section spad">
+		<div class="container">
+			<div class="tournament-title">Tournaments</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="tournament-item mb-4 mb-lg-0">
+						<div class="ti-notic">Premium Tournament</div>
+						<div class="ti-content">
+							<div class="ti-thumb set-bg" data-setbg="img/tournament/1.jpg"></div>
+							<div class="ti-text">
+								<h4>World Of WarCraft</h4>
+								<ul>
+									<li><span>Tournament Beggins:</span> June 20, 2018</li>
+									<li><span>Tounament Ends:</span> July 01, 2018</li>
+									<li><span>Participants:</span> 10 teams</li>
+									<li><span>Tournament Author:</span> Admin</li>
+								</ul>
+								<p><span>Prizes:</span> 1st place $2000, 2nd place: $1000, 3rd place: $500</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="tournament-item">
+						<div class="ti-notic">Premium Tournament</div>
+						<div class="ti-content">
+							<div class="ti-thumb set-bg" data-setbg="img/tournament/2.jpg"></div>
+							<div class="ti-text">
+								<h4>DOOM</h4>
+								<ul>
+									<li><span>Tournament Beggins:</span> June 20, 2018</li>
+									<li><span>Tounament Ends:</span> July 01, 2018</li>
+									<li><span>Participants:</span> 10 teams</li>
+									<li><span>Tournament Author:</span> Admin</li>
+								</ul>
+								<p><span>Prizes:</span> 1st place $2000, 2nd place: $1000, 3rd place: $500</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Tournaments section bg -->
+
+
+	<!-- Review section -->
+	<section class="review-section spad set-bg" data-setbg="img/review-bg.png">
+		<div class="container">
+			<div class="section-title">
+				<div class="cata new">new</div>
+				<h2>Recent Reviews</h2>
+			</div>
+			<div class="row">
+				<div class="col-lg-3 col-md-6">
+					<div class="review-item">
+						<div class="review-cover set-bg" data-setbg="img/review/1.jpg">
+							<div class="score yellow">9.3</div>
+						</div>
+						<div class="review-text">
+							<h5>Assasin’’s Creed</h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum dolor sit ame.</p>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-6">
+					<div class="review-item">
+						<div class="review-cover set-bg" data-setbg="img/review/2.jpg">
+							<div class="score purple">9.5</div>
+						</div>
+						<div class="review-text">
+							<h5>Doom</h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum dolor sit ame.</p>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-6">
+					<div class="review-item">
+						<div class="review-cover set-bg" data-setbg="img/review/3.jpg">
+							<div class="score green">9.1</div>
+						</div>
+						<div class="review-text">
+							<h5>Overwatch</h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum dolor sit ame.</p>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-6">
+					<div class="review-item">
+						<div class="review-cover set-bg" data-setbg="img/review/4.jpg">
+							<div class="score pink">9.7</div>
+						</div>
+						<div class="review-text">
+							<h5>GTA</h5>
+							<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum dolor sit ame.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Review section end -->
+
+
+	<!-- Footer top section -->
+	<section class="footer-top-section">
+		<div class="container">
+			<div class="footer-top-bg">
+				<img src="img/footer-top-bg.png" alt="">
+			</div>
+			<div class="row">
+				<div class="col-lg-4">
+					<div class="footer-logo text-white">
+						<img src="img/footer-logo.png" alt="">
+						<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum dolor sit ame.</p>
+					</div>
+				</div>
+				<div class="col-lg-4 col-md-6">
+					<div class="footer-widget mb-5 mb-md-0">
+						<h4 class="fw-title">Latest Posts</h4>
+						<div class="latest-blog">
+							<div class="lb-item">
+								<div class="lb-thumb set-bg" data-setbg="img/latest-blog/1.jpg"></div>
+								<div class="lb-content">
+									<div class="lb-date">June 21, 2018</div>
+									<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum </p>
+									<a href="#" class="lb-author">By Admin</a>
+								</div>
+							</div>
+							<div class="lb-item">
+								<div class="lb-thumb set-bg" data-setbg="img/latest-blog/2.jpg"></div>
+								<div class="lb-content">
+									<div class="lb-date">June 21, 2018</div>
+									<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum </p>
+									<a href="#" class="lb-author">By Admin</a>
+								</div>
+							</div>
+							<div class="lb-item">
+								<div class="lb-thumb set-bg" data-setbg="img/latest-blog/3.jpg"></div>
+								<div class="lb-content">
+									<div class="lb-date">June 21, 2018</div>
+									<p>Lorem ipsum dolor sit amet, consectetur adipisc ing ipsum </p>
+									<a href="#" class="lb-author">By Admin</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-4 col-md-6">
+					<div class="footer-widget">
+						<h4 class="fw-title">Top Comments</h4>
+						<div class="top-comment">
+							<div class="tc-item">
+								<div class="tc-thumb set-bg" data-setbg="img/authors/1.jpg"></div>
+								<div class="tc-content">
+									<p><a href="#">James Smith</a> <span>on</span>  Lorem ipsum dolor sit amet, co</p>
+									<div class="tc-date">June 21, 2018</div>
+								</div>
+							</div>
+							<div class="tc-item">
+								<div class="tc-thumb set-bg" data-setbg="img/authors/2.jpg"></div>
+								<div class="tc-content">
+									<p><a href="#">James Smith</a> <span>on</span>  Lorem ipsum dolor sit amet, co</p>
+									<div class="tc-date">June 21, 2018</div>
+								</div>
+							</div>
+							<div class="tc-item">
+								<div class="tc-thumb set-bg" data-setbg="img/authors/3.jpg"></div>
+								<div class="tc-content">
+									<p><a href="#">James Smith</a> <span>on</span>  Lorem ipsum dolor sit amet, co</p>
+									<div class="tc-date">June 21, 2018</div>
+								</div>
+							</div>
+							<div class="tc-item">
+								<div class="tc-thumb set-bg" data-setbg="img/authors/4.jpg"></div>
+								<div class="tc-content">
+									<p><a href="#">James Smith</a> <span>on</span>  Lorem ipsum dolor sit amet, co</p>
+									<div class="tc-date">June 21, 2018</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Footer top section end -->
+
+	
+	<!-- Footer section -->
+	<footer class="footer-section">
+		<div class="container">
+			<ul class="footer-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a href="review.html">Games</a></li>
+				<li><a href="categories.html">Blog</a></li>
+				<li><a href="community.html">Forums</a></li>
+				<li><a href="contact.html">Contact</a></li>
+			</ul>
+			<p class="copyright"><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
+<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+</p>
+		</div>
+	</footer>
+	<!-- Footer section end -->
+
+
+	<!--====== Javascripts & Jquery ======-->
+	<script src="js/jquery-3.2.1.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/owl.carousel.min.js"></script>
+	<script src="js/jquery.marquee.min.js"></script>
+	<script src="js/main.js"></script>
+    </body>
 </html>
