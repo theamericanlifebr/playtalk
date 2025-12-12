@@ -1,0 +1,663 @@
+@import url('https://fontmeme.com/fonts/stand-alone-mjtype-font/');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Netflix Font', 'Rubik', 'Helvetica Neue', Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+html {
+  font-size: 10px;
+  overflow-x: hidden;
+}
+
+body {
+  background: #000000;
+  color: #fff;
+}
+
+header {
+  background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.85) 10%,
+      rgba(0, 0, 0, 0.35) 40%,
+      rgba(0, 0, 0, 0.8)
+    ),
+    url('../backgrounds/background5.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  min-height: 68.5rem;
+  border-bottom: 0.8rem solid #222222;
+}
+
+nav {
+  padding: 1.75rem 17rem;
+}
+
+nav ul {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+}
+
+nav ul li .logo {
+  width: 15rem;
+}
+
+nav ul li .login_btn {
+  background-color: #e50913;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.6rem;
+  border: none;
+  transition: 0.2s;
+  cursor: pointer;
+  font-weight: 550;
+  font-size: 1.45rem;
+}
+
+nav ul li .login_btn:hover {
+  background-color: #c50b14;
+}
+
+header .header_content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 4rem 2rem 8rem;
+}
+
+header .header_content h1 {
+  color: white;
+  font-size: 5.5rem;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+header .header_content h3 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: normal;
+  margin: 2rem 0;
+  max-width: 90rem;
+}
+
+header .header_content h4 {
+  color: white;
+  font-size: 2rem;
+  font-weight: normal;
+  max-width: 80rem;
+}
+
+header .header_content .email_sec {
+  margin: 2rem 0;
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+header .header_content .email_sec input,
+header .header_content .email_sec a {
+  text-decoration: none;
+}
+
+header .header_content .email_sec input {
+  background-color: #1f1919;
+  border: 1px solid grey;
+  color: lightgrey;
+  padding: 1.6rem;
+  outline: none;
+  border-radius: 0.45rem;
+  width: 34rem;
+}
+
+header .header_content .email_sec .get_started_btn {
+  background-color: #e50913;
+  border: none;
+  color: white;
+  height: 100%;
+  padding: 1rem 2rem;
+  font-size: 2.3rem;
+  font-weight: 600;
+  border-radius: 0.45rem;
+  transition: 0.2s;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+header .header_content .email_sec .get_started_btn i {
+  margin-left: 1.2rem;
+}
+
+header .header_content .email_sec .get_started_btn:hover {
+  background-color: #c50b14;
+}
+
+header .header_content .email_sec input::placeholder {
+  color: lightgrey;
+}
+
+section {
+  padding: 10rem 15rem;
+  border-bottom: 0.8rem solid #222222;
+}
+
+#watchTv,
+#downloadShows,
+#kidsProfile {
+  display: grid;
+  grid-template-columns: repeat(2, 50%);
+  gap: 2rem;
+}
+
+#watchTv .content_area,
+#downloadShows .content_area,
+#kidsProfile .content_area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  gap: 1.6rem;
+}
+
+#watchTv .content_area h1,
+#downloadShows .content_area h1,
+#kidsProfile .content_area h1,
+#watchEverywhere .content_area h1,
+#faq h1 {
+  color: white;
+  font-size: 5rem;
+}
+
+#watchTv .content_area h3,
+#downloadShows .content_area h3,
+#kidsProfile .content_area h3,
+#watchEverywhere .content_area h3 {
+  color: white;
+  font-size: 2.4rem;
+  font-weight: normal;
+  margin-top: 1.5rem;
+  line-height: 1.5;
+}
+
+#watchTv .screen_area img,
+#kidsProfile .screen_area img {
+  width: 100%;
+  border-radius: 1.2rem;
+  border: 0.3rem solid #222;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+}
+
+#downloadShows .screen_area img {
+  z-index: 1;
+  width: 90%;
+  border-radius: 1.2rem;
+  border: 0.3rem solid #222;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+}
+
+#downloadShows .screen_area .box_area {
+  position: absolute;
+  bottom: 3rem;
+  left: 12.5rem;
+  background-color: black;
+  border: 2px solid grey;
+  border-radius: 0.7rem;
+  padding: 0.75rem;
+  width: 30rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+}
+
+#downloadShows .screen_area .box_area img {
+  width: 5rem;
+}
+
+#downloadShows .screen_area .box_area .text_area {
+  padding-left: 1.5rem;
+}
+
+#downloadShows .screen_area .box_area .text_area h5 {
+  color: white;
+  font-size: 1.5rem;
+}
+
+#downloadShows .screen_area .box_area .text_area h6 {
+  color: #0071eb;
+  font-size: 1.3rem;
+}
+
+#downloadShows .screen_area .box_area i {
+  color: white;
+  padding-right: 1rem;
+  margin-left: auto;
+  font-size: 1.75rem;
+}
+
+#downloadShows .screen_area {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+#watchEverywhere {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+}
+
+#watchEverywhere .content_area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 1.6rem;
+}
+
+#faq h1 {
+  font-size: 4.8rem;
+  text-align: center;
+  font-weight: bold;
+  color: white;
+}
+
+#faq .faq_area {
+  margin: 2.5rem 0;
+}
+
+#faq .faq_area .faq {
+  background-color: #2d2d2d;
+  color: white;
+  padding: 2.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1rem 0;
+  cursor: pointer;
+  transition: 0.2s;
+  border-radius: 0.6rem;
+}
+
+#faq .faq_area .faq:hover {
+  background-color: #454545;
+}
+
+#faq .faq_area .faq h4 {
+  font-size: 2.2rem;
+  font-weight: normal;
+}
+
+#faq .faq_area .faq i {
+  font-size: 2.5rem;
+}
+
+#faq h4 {
+  color: white;
+  font-size: 2rem;
+  font-weight: normal;
+  text-align: center;
+  line-height: 1.6;
+}
+
+#faq .email_sec {
+  margin: 2rem 0;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#faq .email_sec input {
+  background-color: #1f1919;
+  border: 1px solid grey;
+  color: lightgrey;
+  padding: 1.6rem;
+  outline: none;
+  border-radius: 0.45rem;
+  width: 34rem;
+}
+
+#faq .email_sec .get_started_btn {
+  background-color: #e50913;
+  border: none;
+  color: white;
+  height: 100%;
+  padding: 1rem 2rem;
+  font-size: 2.3rem;
+  font-weight: 600;
+  border-radius: 0.45rem;
+  transition: 0.2s;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#faq .email_sec .get_started_btn i {
+  margin-left: 1.2rem;
+}
+
+#faq .email_sec .get_started_btn:hover {
+  background-color: #c50b14;
+}
+
+#faq .email_sec input::placeholder {
+  color: lightgrey;
+}
+
+footer {
+  padding: 5rem 0;
+  width: 80%;
+  margin: 0 auto;
+}
+
+footer h4 {
+  color: #ffffffb3;
+  font-size: 1.7rem;
+  font-weight: normal;
+  text-decoration: underline;
+}
+
+footer .footer_area {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+footer .footer_area .col {
+  margin-top: 1rem;
+}
+
+footer .footer_area .col ul li {
+  color: #ffffffb3;
+  list-style: none;
+  font-size: 1.4rem;
+  margin: 1.3rem 0;
+  text-decoration: underline;
+}
+
+footer select {
+  color: white;
+  font-size: 1.4rem;
+  background-color: #1f1919;
+  padding: 0.6rem 2.25rem;
+  border-radius: 0.5rem;
+}
+
+footer .tranlation_area {
+  position: relative;
+}
+
+footer .tranlation_area img {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.5rem;
+}
+
+footer p {
+  color: #ffffffb3;
+  font-size: 1.4rem;
+  padding-top: 2rem;
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  nav {
+    padding: 2rem 3rem;
+  }
+
+  nav ul li .logo {
+    width: 15rem;
+  }
+
+  header .header_content h1 {
+    font-size: 4.5rem;
+  }
+
+  section {
+    padding: 7rem 4rem;
+  }
+
+  #watchTv {
+    grid-template-columns: repeat(2, 470px);
+  }
+
+  #downloadShows .screen_area .box_area {
+    left: 8rem;
+    width: 26rem;
+  }
+
+  footer {
+    width: 95%;
+  }
+}
+
+@media (max-width: 768px) and (min-width: 540px) {
+  nav {
+    padding: 2rem 3rem;
+  }
+
+  nav ul li .logo {
+    width: 9.5rem;
+  }
+
+  header .header_content h1 {
+    font-size: 3.5rem;
+  }
+
+  header .header_content .email_sec input {
+    padding: 2rem;
+    height: 6.5rem;
+    width: 42rem;
+  }
+
+  section {
+    padding: 7rem 4rem;
+  }
+
+  #watchTv,
+  #downloadShows,
+  #kidsProfile {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  #watchTv .content_area,
+  #downloadShows .content_area,
+  #kidsProfile .content_area {
+    align-items: center;
+    text-align: center;
+  }
+
+  #watchTv .content_area h1,
+  #downloadShows .content_area h1,
+  #kidsProfile .content_area h1,
+  #watchEverywhere .content_area h1 {
+    font-size: 3rem;
+  }
+
+  #watchTv .content_area h3,
+  #downloadShows .content_area h3,
+  #kidsProfile .content_area h3,
+  #watchEverywhere .content_area h3 {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  #downloadShows .screen_area {
+    grid-row-start: 2;
+    grid-row-end: 3;
+  }
+
+  #downloadShows .screen_area img,
+  #kidsProfile .screen_area img {
+    width: 90%;
+    margin: 0 auto;
+  }
+
+  #downloadShows .screen_area .box_area {
+    width: 37rem;
+  }
+
+  #watchEverywhere {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  footer {
+    width: 90%;
+  }
+
+  footer .footer_area {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 539px) {
+  header {
+    min-height: 50rem;
+  }
+
+  nav {
+    padding: 2rem 3rem;
+  }
+
+  nav ul li .logo {
+    width: 9.5rem;
+  }
+
+  header .header_content {
+    padding: 0 4.5rem;
+  }
+
+  header .header_content h1 {
+    font-size: 3rem;
+    text-align: center;
+  }
+
+  header .header_content h3 {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  header .header_content h4 {
+    font-size: 1.7rem;
+    line-height: 2.75rem;
+    text-align: center;
+  }
+
+  header .header_content .email_sec {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
+  }
+
+  header .header_content .email_sec .get_started_btn {
+    padding: 1rem 2rem;
+    font-size: 1.8rem;
+  }
+
+  section {
+    padding: 7rem 4rem;
+  }
+
+  #watchTv,
+  #downloadShows,
+  #kidsProfile {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  #watchTv .content_area,
+  #downloadShows .content_area,
+  #kidsProfile .content_area {
+    align-items: center;
+    text-align: center;
+  }
+
+  #watchTv .content_area h1,
+  #downloadShows .content_area h1,
+  #kidsProfile .content_area h1,
+  #watchEverywhere .content_area h1 {
+    font-size: 3rem;
+  }
+
+  #watchTv .content_area h3,
+  #downloadShows .content_area h3,
+  #kidsProfile .content_area h3,
+  #watchEverywhere .content_area h3 {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  #watchTv .screen_area img,
+  #downloadShows .screen_area img,
+  #kidsProfile .screen_area img {
+    width: 100%;
+  }
+
+  #downloadShows .screen_area .box_area {
+    width: 27rem;
+    left: 2rem;
+    bottom: 0;
+    padding: 0 1rem;
+  }
+
+  #faq h1 {
+    font-size: 2.8rem;
+  }
+
+  #faq .faq_area .faq {
+    padding: 2.25rem 2rem;
+  }
+
+  #faq .faq_area .faq h4 {
+    font-size: 2rem;
+  }
+
+  #faq .faq_area .faq i {
+    font-size: 2.2rem;
+  }
+
+  #faq h4 {
+    font-size: 1.7rem;
+    line-height: 2.75rem;
+  }
+
+  #faq .email_sec {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
+  }
+
+  #faq .email_sec .get_started_btn {
+    padding: 1rem 2rem;
+    font-size: 1.8rem;
+  }
+
+  footer {
+    width: 90%;
+  }
+
+  footer .footer_area {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  footer .footer_area .col {
+    margin-top: -1rem;
+  }
+}
