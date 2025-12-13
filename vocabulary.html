@@ -301,19 +301,33 @@
     </div>
 
     <div class="panel">
-      <div id="list" class="list"></div>
-
       <div class="pager">
         <div class="pagejump">
-          <button id="prevBtn" onclick="prevPage()">◀ Anterior</button>
-          <button id="nextBtn" onclick="nextPage()">Próxima ▶</button>
-          <span class="mini" id="pageInfo">Página 1 / 1</span>
+          <button class="prevBtn" onclick="prevPage()">◀ Anterior</button>
+          <button class="nextBtn" onclick="nextPage()">Próxima ▶</button>
+          <span class="mini pageInfo">Página 1 / 1</span>
         </div>
 
         <div class="pagejump">
           <span class="mini">Ir para:</span>
-          <input id="pageInput" class="pageInput" type="number" min="1" step="1" placeholder="1" />
-          <button onclick="goToPageFromInput()">OK</button>
+          <input class="pageInput" type="number" min="1" step="1" placeholder="1" />
+          <button class="goPageBtn" onclick="goToPageFromInput(event)">OK</button>
+        </div>
+      </div>
+
+      <div id="list" class="list"></div>
+
+      <div class="pager">
+        <div class="pagejump">
+          <button class="prevBtn" onclick="prevPage()">◀ Anterior</button>
+          <button class="nextBtn" onclick="nextPage()">Próxima ▶</button>
+          <span class="mini pageInfo">Página 1 / 1</span>
+        </div>
+
+        <div class="pagejump">
+          <span class="mini">Ir para:</span>
+          <input class="pageInput" type="number" min="1" step="1" placeholder="1" />
+          <button class="goPageBtn" onclick="goToPageFromInput(event)">OK</button>
         </div>
       </div>
     </div>
@@ -336,11 +350,14 @@
     let totalInserted = 0;
 
     let currentEntries = [];
+    let fullEntries = [];
+    let rankMap = new Map();
     let currentPage = 1;
     let totalPages = 1;
 
     // refs DOM (pra não quebrar)
-    let elSearch, elText, elList, elMsg, elTotalWords, elTotalInserted, elPrev, elNext, elPageInfo, elPageInput;
+    let elSearch, elText, elList, elMsg, elTotalWords, elTotalInserted;
+    let elPrevButtons = [], elNextButtons = [], elPageInfos = [], elPageInputs = [];
 
     // ====== Util ======
     function safeParse(str) {
@@ -406,10 +423,13 @@
 
     // ====== Ranking + UI ======
     function updateRanking() {
-      currentEntries = Object.entries(wordDB)
+      fullEntries = Object.entries(wordDB)
         .filter(([w, c]) => c >= MIN_COUNT)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, DB_SLICE_LIMIT);
+        .sort((a, b) => b[1] - a[1]);
+
+      rankMap = new Map(fullEntries.map(([word], idx) => [word, idx + 1]));
+
+      currentEntries = fullEntries.slice(0, DB_SLICE_LIMIT);
 
       totalPages = Math.max(1, Math.ceil(currentEntries.length / PAGE_SIZE));
       if (currentPage > totalPages) currentPage = totalPages;
@@ -420,7 +440,7 @@
     function getFilteredEntries() {
       const q = (elSearch?.value || '').trim().toLowerCase();
       if (!q) return currentEntries;
-      return currentEntries.filter(([w]) => w.includes(q));
+      return fullEntries.filter(([w]) => w.includes(q));
     }
 
     function renderPage() {
@@ -438,13 +458,14 @@
 
       for (let i = start; i < end; i++) {
         const [word, qty] = filtered[i];
+        const rank = rankMap.get(word) || (i + 1);
 
         const row = document.createElement('div');
         row.className = 'row';
 
         row.innerHTML = `
-          <div class="left">
-            <div class="pos">${i + 1}º</div>
+            <div class="left">
+            <div class="pos">${rank}º</div>
             <div class="word" title="${escapeHtml(word)}">${escapeHtml(word)}</div>
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
@@ -461,9 +482,9 @@
         elList.appendChild(row);
       }
 
-      if (elPageInfo) elPageInfo.innerText = `Página ${currentPage} / ${totalPages}`;
-      if (elPrev) elPrev.disabled = currentPage <= 1;
-      if (elNext) elNext.disabled = currentPage >= totalPages;
+      elPageInfos.forEach(info => { info.innerText = `Página ${currentPage} / ${totalPages}`; });
+      elPrevButtons.forEach(btn => { btn.disabled = currentPage <= 1; });
+      elNextButtons.forEach(btn => { btn.disabled = currentPage >= totalPages; });
 
       if (filtered.length === 0) {
         const empty = document.createElement('div');
@@ -473,7 +494,6 @@
         elList.appendChild(empty);
       }
 
-      elList.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function updateTotals() {
@@ -606,12 +626,14 @@
       renderPage();
     }
 
-    function goToPageFromInput() {
-      const n = Number(elPageInput?.value);
+    function goToPageFromInput(event) {
+      const container = event?.target?.closest('.pagejump');
+      const input = container?.querySelector('.pageInput') || elPageInputs[0];
+      const n = Number(input?.value);
       if (!Number.isFinite(n) || n < 1) return;
       currentPage = Math.min(totalPages, Math.max(1, Math.floor(n)));
       renderPage();
-      if (elPageInput) elPageInput.value = '';
+      if (input) input.value = '';
     }
 
     // ====== Voz sintetizada ======
@@ -649,10 +671,10 @@
       elList = document.getElementById('list');
       elMsg = document.getElementById('message');
       elTotalInserted = document.getElementById('totalInserted');
-      elPrev = document.getElementById('prevBtn');
-      elNext = document.getElementById('nextBtn');
-      elPageInfo = document.getElementById('pageInfo');
-      elPageInput = document.getElementById('pageInput');
+      elPrevButtons = Array.from(document.querySelectorAll('.prevBtn'));
+      elNextButtons = Array.from(document.querySelectorAll('.nextBtn'));
+      elPageInfos = Array.from(document.querySelectorAll('.pageInfo'));
+      elPageInputs = Array.from(document.querySelectorAll('.pageInput'));
 
       // carrega do localStorage primeiro
       wordDB = safeParse(localStorage.getItem('playtalk_wordbank')) || {};
@@ -671,11 +693,11 @@
       }
 
       // enter no input de página faz OK
-      if (elPageInput) {
-        elPageInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') goToPageFromInput();
+      elPageInputs.forEach((input) => {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') goToPageFromInput(e);
         });
-      }
+      });
 
       updateRanking();
       updateTotals();
