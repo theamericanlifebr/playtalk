@@ -676,6 +676,10 @@ ensureDefaultUser();
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(staticDir));
 
+app.get(['/vocabulary', '/vocabulary/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'vocabulary.html'));
+});
+
 app.use((req, res, next) => {
   if (req.method === 'GET' && req.path.endsWith('.html')) {
     res.status(404).send('Página não encontrada.');

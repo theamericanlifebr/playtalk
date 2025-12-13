@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlayTalk Word Ranker</title>
+
+  <!-- Open Sans (bold) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #1b4f9a 0%, #2c6fbf 40%, #3a86d1 70%, #4c96dc 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .panel {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      margin-bottom: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pill {
+      background: rgba(255,255,255,0.16);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      margin: 0;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .cta:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
+
+    .hero {
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 14px;
+      padding: 18px 16px;
+      background: rgba(255,255,255,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero h2 {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .hero p {
+      opacity: 0.92;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .search {
+      width: min(520px, 100%);
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      outline: none;
+      font-size: 16px;
+    }
+    .search::placeholder { color: rgba(255,255,255,0.75); }
+    .search:focus { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.14); }
+
+    textarea {
+      width: 100%;
+      height: 140px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      outline: none;
+      resize: vertical;
+      font-size: 15px;
+    }
+    textarea::placeholder { color: rgba(255,255,255,0.75); }
+
+    .btnrow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    button:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    #message { margin-top: 10px; font-weight: 700; color: rgba(255,255,255,0.98); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat {
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.08);
+      font-weight: 700;
+    }
+
+    .list {
+      margin-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.18);
+      background: transparent;
+    }
+
+    .left {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .pos {
+      opacity: 0.8;
+      font-weight: 700;
+      width: 64px;
+      flex: 0 0 auto;
+    }
+
+    .word {
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60vw;
+    }
+
+    .qty {
+      opacity: 0.9;
+      font-weight: 700;
+      flex: 0 0 auto;
+      width: 140px;
+      text-align: right;
+    }
+
+    .speak {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.30);
+      background: rgba(255,255,255,0.10);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .speak:hover { background: rgba(255,255,255,0.16); transform: translateY(-1px); }
+    .speak svg { width: 20px; height: 20px; fill: rgba(255,255,255,0.92); }
+
+    .pager {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding: 12px 0;
+    }
+    .pager .mini {
+      opacity: 0.9;
+      font-weight: 700;
+    }
+
+    .pagejump {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pageInput {
+      width: 90px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      outline: none;
+      font-weight: 700;
+    }
+
+    @media (max-width: 720px) {
+      .topbar { flex-direction: column; align-items: stretch; }
+      .hero { align-items: flex-start; }
+      .search { width: 100%; }
+      .qty { width: 110px; }
+      .pos { width: 54px; }
+      .word { max-width: 52vw; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="panel">
+      <div class="topbar">
+        <div class="brand">
+          <div class="pill">PlayTalk</div>
+          <h1>Word Ranker 🚀</h1>
+        </div>
+        <a class="cta" href="login.html">Entrar / Login</a>
+      </div>
+    </div>
+
+    <div class="panel hero">
+      <div>
+        <h2>Olá! Esse endereço não está nas nossas páginas.</h2>
+        <p>Fique à vontade para explorar o PlayTalk Word Ranker e navegar pelo corpus.</p>
+      </div>
+      <div class="pill">404</div>
+    </div>
+
+    <div class="panel">
+      <div class="topbar">
+        <h1>PlayTalk Word Ranker 🚀</h1>
+        <input id="searchInput" class="search" placeholder="Buscar palavra no corpus... (ex: coast)" />
+      </div>
+    </div>
+
+    <div class="panel">
+      <textarea id="inputText" placeholder="Cole seu texto aqui..."></textarea>
+      <div class="btnrow">
+        <button onclick="processText()">Enviar texto</button>
+        <button onclick="downloadTXT()">Baixar palavras (.txt)</button>
+        <button onclick="triggerImport()">Importar corpus (.json)</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importCorpus(event)">
+        <button onclick="exportCorpus()">Exportar corpus (.json)</button>
+      </div>
+      <div id="message"></div>
+
+      <div class="stats">
+        <div class="stat" id="totalWords">Palavras únicas salvas: 0</div>
+        <div class="stat" id="totalInserted">Total processadas desde agora: 0</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div style="font-weight:800; opacity:0.95;">Ranking (mín. 3 ocorrências | top 30.000 | 100 por página)</div>
+      <div id="list" class="list"></div>
+
+      <div class="pager">
+        <div class="pagejump">
+          <button id="prevBtn" onclick="prevPage()">◀ Anterior</button>
+          <button id="nextBtn" onclick="nextPage()">Próxima ▶</button>
+          <span class="mini" id="pageInfo">Página 1 / 1</span>
+        </div>
+
+        <div class="pagejump">
+          <span class="mini">Ir para:</span>
+          <input id="pageInput" class="pageInput" type="number" min="1" step="1" placeholder="1" />
+          <button onclick="goToPageFromInput()">OK</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ====== Config ======
+    const MIN_COUNT = 3;
+    const DB_SLICE_LIMIT = 30000; // ranking top 30k
+    const PAGE_SIZE = 100;
+
+    // ✅ limite máximo do banco (palavras únicas)
+    const MAX_WORDS = 100000;
+
+    const CORPUS_URL = 'data/phrases/corpus.json';
+
+    // ====== Estado ======
+    let wordDB = {};
+    let totalInserted = 0;
+
+    let currentEntries = [];
+    let currentPage = 1;
+    let totalPages = 1;
+
+    // refs DOM (pra não quebrar)
+    let elSearch, elText, elList, elMsg, elTotalWords, elTotalInserted, elPrev, elNext, elPageInfo, elPageInput;
+
+    // ====== Util ======
+    function safeParse(str) {
+      try { return JSON.parse(str); } catch { return null; }
+    }
+
+    function saveDB() {
+      localStorage.setItem('playtalk_wordbank', JSON.stringify(wordDB));
+      localStorage.setItem('playtalk_totalInserted', String(totalInserted));
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    // ✅ mantém só as TOP 100k palavras por frequência (desempate alfabético)
+    function pruneToMaxWords() {
+      const size = Object.keys(wordDB).length;
+      if (size <= MAX_WORDS) return;
+
+      const kept = Object.entries(wordDB)
+        .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]))
+        .slice(0, MAX_WORDS);
+
+      wordDB = Object.fromEntries(kept);
+    }
+
+    // ✅ carrega o JSON salvo no repositório
+    async function loadCorpusFromFile() {
+      try {
+        const res = await fetch(CORPUS_URL);
+        if (!res.ok) throw new Error('Falha ao buscar corpus');
+        const data = await res.json();
+        if (!data || typeof data !== 'object' || !data.wordDB) throw new Error('Formato inválido');
+
+        for (const [word, qty] of Object.entries(data.wordDB)) {
+          if (!word) continue;
+          const n = Number(qty) || 0;
+          if (n <= 0) continue;
+          wordDB[word] = (wordDB[word] || 0) + n;
+        }
+
+        const importedTotal = Number(data.totalInserted) || 0;
+        totalInserted = Math.max(totalInserted, importedTotal);
+
+        pruneToMaxWords();
+        saveDB();
+
+        if (elMsg) elMsg.innerText = 'Corpus carregado do repositório ✅';
+      } catch (error) {
+        console.error('Erro ao carregar corpus:', error);
+        if (elMsg) elMsg.innerText = 'Não foi possível carregar o corpus padrão 😢';
+      } finally {
+        updateRanking();
+        updateTotals();
+      }
+    }
+
+    // ====== Ranking + UI ======
+    function updateRanking() {
+      currentEntries = Object.entries(wordDB)
+        .filter(([w, c]) => c >= MIN_COUNT)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, DB_SLICE_LIMIT);
+
+      totalPages = Math.max(1, Math.ceil(currentEntries.length / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      renderPage();
+    }
+
+    function getFilteredEntries() {
+      const q = (elSearch?.value || '').trim().toLowerCase();
+      if (!q) return currentEntries;
+      return currentEntries.filter(([w]) => w.includes(q));
+    }
+
+    function renderPage() {
+      if (!elList) return;
+      elList.innerHTML = '';
+
+      const filtered = getFilteredEntries();
+      totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end = Math.min(start + PAGE_SIZE, filtered.length);
+
+      for (let i = start; i < end; i++) {
+        const [word, qty] = filtered[i];
+
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        row.innerHTML = `
+          <div class="left">
+            <div class="pos">${i + 1}º</div>
+            <div class="word" title="${escapeHtml(word)}">${escapeHtml(word)}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="qty">Qtd: ${Number(qty).toLocaleString('pt-BR')}</div>
+            <button class="speak" title="Ouvir" aria-label="Ouvir">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 10v4c0 .55.45 1 1 1h3l4 3c.65.49 1.6.03 1.6-.78V6.78c0-.81-.95-1.27-1.6-.78l-4 3H4c-.55 0-1 .45-1 1Zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02Zm2.5 0c0 3.04-1.72 5.67-4.25 7.02-.36.19-.75-.08-.75-.48v-1.2c0-.19.1-.36.27-.44C16.08 16 17.5 14.13 17.5 12s-1.42-4-3.23-4.9a.5.5 0 0 1-.27-.44v-1.2c0-.4.39-.67.75-.48C17.28 6.33 19 8.96 19 12Z"/>
+              </svg>
+            </button>
+          </div>
+        `;
+
+        row.querySelector('.speak').addEventListener('click', () => speakWord(word));
+        elList.appendChild(row);
+      }
+
+      if (elPageInfo) elPageInfo.innerText = `Página ${currentPage} / ${totalPages}`;
+      if (elPrev) elPrev.disabled = currentPage <= 1;
+      if (elNext) elNext.disabled = currentPage >= totalPages;
+
+      if (filtered.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'row';
+        empty.style.borderBottom = '0';
+        empty.innerHTML = '<div style="font-weight:800; opacity:0.95;">Nada encontrado 😅</div>';
+        elList.appendChild(empty);
+      }
+
+      elList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function updateTotals() {
+      if (elTotalWords) {
+        elTotalWords.innerText = 'Palavras únicas salvas: ' + Object.keys(wordDB).length.toLocaleString('pt-BR');
+      }
+      if (elTotalInserted) {
+        elTotalInserted.innerText = 'Total processadas desde agora: ' + Number(totalInserted).toLocaleString('pt-BR');
+      }
+    }
+
+    // ====== Ações (precisam ser globais por causa do onclick) ======
+    function processText() {
+      const text = (elText?.value || '').trim();
+      if (!text) return;
+
+      const words = text
+        .toLowerCase()
+        // ✅ mantém apóstrofo para don't, i'm, etc.
+        .replace(/[^a-zA-ZÀ-ú0-9'\s]/g, ' ')
+        .split(/\s+/);
+
+      let countAdded = 0;
+
+      for (const raw of words) {
+        const word = raw.trim();
+        if (!word) continue;
+        if (word.length > 30) continue;
+
+        wordDB[word] = (wordDB[word] || 0) + 1;
+        countAdded++;
+      }
+
+      totalInserted += countAdded;
+
+      // ✅ aplica limite 100k
+      pruneToMaxWords();
+      saveDB();
+
+      if (elMsg) elMsg.innerText = countAdded + ' palavras adicionadas ✅';
+      if (elText) elText.value = '';
+
+      updateRanking();
+      updateTotals();
+    }
+
+    function downloadTXT() {
+      pruneToMaxWords();
+      saveDB();
+
+      const entries = Object.entries(wordDB)
+        .sort((a, b) => b[1] - a[1]);
+
+      const wordsOnly = entries.map(([word]) => word).join('\n');
+      const blob = new Blob([wordsOnly], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'playtalk_wordbank.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportCorpus() {
+      pruneToMaxWords();
+      saveDB();
+
+      const data = { wordDB, totalInserted, exportedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'playtalk_corpus.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function triggerImport() {
+      document.getElementById('importFile').click();
+    }
+
+    function importCorpus(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = safeParse(reader.result);
+          if (!data || typeof data !== 'object' || !data.wordDB) {
+            alert('Esse JSON não parece um corpus válido 😅');
+            return;
+          }
+
+          const importedDB = data.wordDB;
+
+          for (const [word, qty] of Object.entries(importedDB)) {
+            if (!word) continue;
+            const n = Number(qty) || 0;
+            if (n <= 0) continue;
+            wordDB[word] = (wordDB[word] || 0) + n;
+          }
+
+          const importedTotal = Number(data.totalInserted) || 0;
+          totalInserted = (Number(totalInserted) || 0) + importedTotal;
+
+          pruneToMaxWords();
+          saveDB();
+
+          if (elMsg) elMsg.innerText = 'Corpus importado e mesclado ✅';
+          updateRanking();
+          updateTotals();
+
+        } catch (e) {
+          alert('Erro ao ler JSON. Arquivo corrompido ou inválido 😵');
+        } finally {
+          event.target.value = '';
+        }
+      };
+
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function nextPage() {
+      currentPage++;
+      renderPage();
+    }
+
+    function prevPage() {
+      currentPage--;
+      renderPage();
+    }
+
+    function goToPageFromInput() {
+      const n = Number(elPageInput?.value);
+      if (!Number.isFinite(n) || n < 1) return;
+      currentPage = Math.min(totalPages, Math.max(1, Math.floor(n)));
+      renderPage();
+      if (elPageInput) elPageInput.value = '';
+    }
+
+    // ====== Voz sintetizada ======
+    function speakWord(word) {
+      if (!('speechSynthesis' in window)) {
+        alert('Seu navegador não suporta voz sintetizada 😢');
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+
+      const u = new SpeechSynthesisUtterance(word);
+      u.lang = 'en-US';
+      u.rate = 1.0;
+      u.pitch = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      const preferred =
+        voices.find(v => /en(-|_)US/i.test(v.lang)) ||
+        voices.find(v => /^en/i.test(v.lang)) ||
+        null;
+
+      if (preferred) u.voice = preferred;
+      window.speechSynthesis.speak(u);
+    }
+
+    window.speechSynthesis.onvoiceschanged = () => {
+      // só garante que as vozes foram carregadas pelo browser
+      window.speechSynthesis.getVoices();
+    };
+
+    // ====== Init seguro pra não quebrar search/speak ======
+    function init() {
+      elSearch = document.getElementById('searchInput');
+      elText = document.getElementById('inputText');
+      elList = document.getElementById('list');
+      elMsg = document.getElementById('message');
+      elTotalWords = document.getElementById('totalWords');
+      elTotalInserted = document.getElementById('totalInserted');
+      elPrev = document.getElementById('prevBtn');
+      elNext = document.getElementById('nextBtn');
+      elPageInfo = document.getElementById('pageInfo');
+      elPageInput = document.getElementById('pageInput');
+
+      // carrega do localStorage primeiro
+      wordDB = safeParse(localStorage.getItem('playtalk_wordbank')) || {};
+      totalInserted = Number(localStorage.getItem('playtalk_totalInserted')) || 0;
+
+      // garante limite e salva
+      pruneToMaxWords();
+      saveDB();
+
+      // listener da busca
+      if (elSearch) {
+        elSearch.addEventListener('input', () => {
+          currentPage = 1;
+          renderPage();
+        });
+      }
+
+      // enter no input de página faz OK
+      if (elPageInput) {
+        elPageInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') goToPageFromInput();
+        });
+      }
+
+      updateRanking();
+      updateTotals();
+      loadCorpusFromFile();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    // expõe funções pro onclick
+    window.processText = processText;
+    window.downloadTXT = downloadTXT;
+    window.triggerImport = triggerImport;
+    window.importCorpus = importCorpus;
+    window.exportCorpus = exportCorpus;
+    window.nextPage = nextPage;
+    window.prevPage = prevPage;
+    window.goToPageFromInput = goToPageFromInput;
+    window.speakWord = speakWord;
+  </script>
+</body>
+</html>
