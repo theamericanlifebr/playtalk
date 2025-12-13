@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PlayTalk Word Ranker</title>
+  <title>PlayTalk Vocabulário</title>
 
   <!-- Open Sans (bold) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -281,46 +281,26 @@
       <div class="topbar">
         <div class="brand">
           <div class="pill">PlayTalk</div>
-          <h1>Word Ranker 🚀</h1>
+          <h1>Vocabulário</h1>
         </div>
         <a class="cta" href="login.html">Entrar / Login</a>
       </div>
     </div>
 
-    <div class="panel hero">
-      <div>
-        <h2>Olá! Esse endereço não está nas nossas páginas.</h2>
-        <p>Fique à vontade para explorar o PlayTalk Word Ranker e navegar pelo corpus.</p>
-      </div>
-      <div class="pill">404</div>
-    </div>
-
     <div class="panel">
       <div class="topbar">
-        <h1>PlayTalk Word Ranker 🚀</h1>
+        <h1>Vocabulário</h1>
         <input id="searchInput" class="search" placeholder="Buscar palavra no corpus... (ex: coast)" />
       </div>
     </div>
 
     <div class="panel">
-      <textarea id="inputText" placeholder="Cole seu texto aqui..."></textarea>
-      <div class="btnrow">
-        <button onclick="processText()">Enviar texto</button>
-        <button onclick="downloadTXT()">Baixar palavras (.txt)</button>
-        <button onclick="triggerImport()">Importar corpus (.json)</button>
-        <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importCorpus(event)">
-        <button onclick="exportCorpus()">Exportar corpus (.json)</button>
-      </div>
-      <div id="message"></div>
-
       <div class="stats">
-        <div class="stat" id="totalWords">Palavras únicas salvas: 0</div>
-        <div class="stat" id="totalInserted">Total processadas desde agora: 0</div>
+        <div class="stat" id="totalInserted">Palavras procesadas: 0</div>
       </div>
     </div>
 
     <div class="panel">
-      <div style="font-weight:800; opacity:0.95;">Ranking (mín. 3 ocorrências | top 30.000 | 100 por página)</div>
       <div id="list" class="list"></div>
 
       <div class="pager">
@@ -497,11 +477,8 @@
     }
 
     function updateTotals() {
-      if (elTotalWords) {
-        elTotalWords.innerText = 'Palavras únicas salvas: ' + Object.keys(wordDB).length.toLocaleString('pt-BR');
-      }
       if (elTotalInserted) {
-        elTotalInserted.innerText = 'Total processadas desde agora: ' + Number(totalInserted).toLocaleString('pt-BR');
+        elTotalInserted.innerText = 'Palavras procesadas: ' + Number(totalInserted).toLocaleString('pt-BR');
       }
     }
 
@@ -669,10 +646,8 @@
     // ====== Init seguro pra não quebrar search/speak ======
     function init() {
       elSearch = document.getElementById('searchInput');
-      elText = document.getElementById('inputText');
       elList = document.getElementById('list');
       elMsg = document.getElementById('message');
-      elTotalWords = document.getElementById('totalWords');
       elTotalInserted = document.getElementById('totalInserted');
       elPrev = document.getElementById('prevBtn');
       elNext = document.getElementById('nextBtn');
