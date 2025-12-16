@@ -833,12 +833,14 @@ function queueUserTranscript(text) {
 }
 
 const isMobileViewport = typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches;
+const usesBrowserSpeechRecognition = typeof window !== 'undefined'
+  && (window.SpeechRecognition || window.webkitSpeechRecognition);
 const recognitionSilenceMs = isMobileViewport ? 6000 : 800;
 const MIN_WAVEFORM_EVENT_GAP_MS = 160;
 const WAVEFORM_SILENCE_THRESHOLD_MS = 1000;
 
 async function ensureMobileAudioKeepalive() {
-  if (!isMobileViewport) {
+  if (!isMobileViewport || usesBrowserSpeechRecognition) {
     return;
   }
   if (mobileAudioContext) {
