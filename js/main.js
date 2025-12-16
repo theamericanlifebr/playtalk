@@ -765,6 +765,10 @@ let microphonePaused = false;
 let speechPauseToken = 0;
 let waveformSilenceTimer = null;
 let lastWaveformAt = 0;
+let mobileAudioContext = null;
+let mobileAudioSource = null;
+let mobileAudioStream = null;
+let mobileAudioGain = null;
 
 function clearUserTranscript() {
   const el = document.getElementById('user-transcript');
@@ -832,6 +836,56 @@ const isMobileViewport = typeof window !== 'undefined' && window.matchMedia('(ma
 const recognitionSilenceMs = isMobileViewport ? 6000 : 800;
 const MIN_WAVEFORM_EVENT_GAP_MS = 160;
 const WAVEFORM_SILENCE_THRESHOLD_MS = 1000;
+
+async function ensureMobileAudioKeepalive() {
+  if (!isMobileViewport) {
+    return;
+  }
+  if (mobileAudioContext) {
+    if (mobileAudioContext.state === 'suspended') {
+      try { await mobileAudioContext.resume(); } catch (error) {}
+    }
+    return mobileAudioContext;
+  }
+
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (typeof AudioContextClass !== 'function' || !navigator.mediaDevices) {
+      return null;
+    }
+    mobileAudioContext = new AudioContextClass();
+    if (mobileAudioContext.state === 'suspended') {
+      try { await mobileAudioContext.resume(); } catch (error) {}
+    }
+
+    mobileAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    mobileAudioSource = mobileAudioContext.createMediaStreamSource(mobileAudioStream);
+    mobileAudioGain = mobileAudioContext.createGain();
+    mobileAudioGain.gain.value = 0;
+    mobileAudioSource.connect(mobileAudioGain).connect(mobileAudioContext.destination);
+
+    return mobileAudioContext;
+  } catch (error) {
+    console.warn('Não foi possível manter o microfone ativo no mobile:', error);
+    stopMobileAudioKeepalive();
+    return null;
+  }
+}
+
+function stopMobileAudioKeepalive() {
+  if (mobileAudioStream) {
+    try {
+      mobileAudioStream.getTracks().forEach(track => track.stop());
+    } catch (error) {}
+    mobileAudioStream = null;
+  }
+  if (mobileAudioContext) {
+    try { mobileAudioContext.close(); } catch (error) {}
+  }
+  mobileAudioContext = null;
+  mobileAudioSource = null;
+  mobileAudioGain = null;
+}
 
 function bounceMobileMicrophone() {
   if (!isMobileViewport || !reconhecimento || microphonePaused) {
@@ -2493,6 +2547,7 @@ function stopCurrentGame() {
     reconhecimentoAtivo = false;
     try { reconhecimento.stop(); } catch {}
   }
+  stopMobileAudioKeepalive();
   hideModeFiveIntro();
 }
 
@@ -2555,6 +2610,7 @@ function resumeGame() {
     input.value = '';
   }
   bloqueado = false;
+  ensureMobileAudioKeepalive();
   if (reconhecimento) {
     reconhecimentoAtivo = true;
     reconhecimento.start();
@@ -4159,6 +4215,7 @@ async function initGame() {
         resetLevelFinderTracking();
       }
       setRoundSelection(selectedMode, roundTarget);
+      ensureMobileAudioKeepalive();
       beginGame();
     });
   }
@@ -4171,6 +4228,7 @@ async function initGame() {
       resetLevelFinderTracking();
       roundTarget = LEVEL_FINDER_ROUND_TARGET;
       setRoundSelection(selectedMode, roundTarget);
+      ensureMobileAudioKeepalive();
       beginGame();
     });
   }
