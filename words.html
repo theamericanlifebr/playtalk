@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlayTalk | Words</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --card-bg: #0f172a;
+      --card-border: rgba(255, 255, 255, 0.06);
+      --accent: #3b82f6;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --panel: #0b1222;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(circle at 20% 20%, #1e293b 0%, #0a0f1c 35%),
+                  radial-gradient(circle at 80% 0%, #111827 0%, #0a0f1c 40%),
+                  linear-gradient(120deg, #0b1020, #0a0f1c);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 26px 14px 44px;
+    }
+
+    .page {
+      width: min(1100px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 15px;
+      max-width: 720px;
+    }
+
+    .search-area {
+      width: min(560px, 100%);
+      background-color: #0D1117;
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid #1f2937;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .input {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      background-color: #0D1117;
+      justify-content: center;
+      border-radius: 5px;
+    }
+
+    .value {
+      background-color: transparent;
+      border: none;
+      padding: 12px 14px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      position: relative;
+      gap: 10px;
+      cursor: text;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    .value input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .value:not(:active):hover,
+    .value:focus-within {
+      background-color: #21262C;
+    }
+
+    .value:focus-within,
+    .value:active {
+      background-color: #1A1F24;
+      outline: none;
+    }
+
+    .value::before {
+      content: "";
+      position: absolute;
+      top: 6px;
+      left: -10px;
+      width: 5px;
+      height: 80%;
+      background-color: #2F81F7;
+      border-radius: 5px;
+      opacity: 0;
+    }
+
+    .value:focus-within::before,
+    .value:active::before {
+      opacity: 1;
+    }
+
+    .value svg { width: 18px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: linear-gradient(145deg, #0b1326, #0e162f);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .card:hover { transform: translateY(-2px); border-color: rgba(59, 130, 246, 0.35); }
+
+    .card-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .english {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .portuguese {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--muted);
+      opacity: 0;
+      max-height: 0;
+      transition: opacity 0.25s ease, max-height 0.25s ease;
+    }
+
+    .portuguese.visible {
+      opacity: 1;
+      max-height: 200px;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      padding: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .icon-btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); }
+    .icon-btn:active { transform: scale(0.98); }
+
+    .icon-btn img { width: 22px; height: 22px; object-fit: contain; }
+
+    .stats {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .load-more {
+      margin: 8px auto 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .load-more:hover { background: rgba(255,255,255,0.12); transform: translateY(-1px); }
+    .load-more:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    @media (min-width: 768px) {
+      .english { font-size: 27px; }
+      .portuguese { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Vocabulário PlayTalk</h1>
+      <p class="subtitle">Busque palavras em inglês e revele a tradução em português. Toque no ícone de áudio para ouvir a pronúncia.</p>
+      <div class="search-area">
+        <label class="input" aria-label="Buscar palavras">
+          <div class="value">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input id="search" type="search" placeholder="Pesquise por inglês ou português" autocomplete="off" />
+          </div>
+        </label>
+      </div>
+    </header>
+
+    <div class="stats" id="stats">Carregando vocabulário...</div>
+    <div class="grid" id="grid"></div>
+    <button class="load-more" id="loadMore" style="display:none;">Carregar mais</button>
+  </div>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const searchInput = document.getElementById('search');
+    const stats = document.getElementById('stats');
+    const loadMoreBtn = document.getElementById('loadMore');
+    const PAGE_SIZE = 100;
+
+    let vocabulary = [];
+    let filtered = [];
+    let visibleCount = 0;
+
+    async function loadData() {
+      const response = await fetch('data/phrases/mode1.json');
+      const data = await response.json();
+      const levels = data.levels || {};
+      const items = Object.values(levels).flatMap(levelList => levelList || []);
+
+      vocabulary = items.map(item => {
+        const [portuguese, rest] = item.split('#');
+        const english = rest ? rest.split('@')[0] : '';
+        return { english: english.trim(), portuguese: (portuguese || '').trim() };
+      }).filter(entry => entry.english && entry.portuguese);
+
+      filtered = [...vocabulary];
+      render(true);
+    }
+
+    function render(resetCount = false) {
+      if (resetCount) visibleCount = 0;
+      grid.innerHTML = '';
+
+      const query = searchInput.value.trim().toLowerCase();
+      if (query) {
+        filtered = vocabulary.filter(item =>
+          item.english.toLowerCase().includes(query) ||
+          item.portuguese.toLowerCase().includes(query)
+        );
+      } else {
+        filtered = [...vocabulary];
+      }
+
+      const slice = filtered.slice(0, visibleCount + PAGE_SIZE);
+      visibleCount = slice.length;
+
+      stats.textContent = `${filtered.length} palavra(s) encontradas${query ? ` para "${query}"` : ''}`;
+
+      slice.forEach(entry => {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const textWrap = document.createElement('div');
+        textWrap.className = 'card-text';
+
+        const englishEl = document.createElement('div');
+        englishEl.className = 'english';
+        englishEl.textContent = entry.english;
+
+        const portugueseEl = document.createElement('div');
+        portugueseEl.className = 'portuguese';
+        portugueseEl.textContent = entry.portuguese;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const revealBtn = document.createElement('button');
+        revealBtn.className = 'icon-btn';
+        revealBtn.type = 'button';
+        revealBtn.title = 'Mostrar tradução';
+        revealBtn.innerHTML = `<img src="https://img.freeflagicons.com/thumb/round_icon/brazil/brazil_640.png" alt="Revelar tradução" />`;
+        revealBtn.addEventListener('click', () => {
+          portugueseEl.classList.toggle('visible');
+        });
+
+        const audioBtn = document.createElement('button');
+        audioBtn.className = 'icon-btn';
+        audioBtn.type = 'button';
+        audioBtn.title = 'Ouvir pronúncia';
+        audioBtn.innerHTML = `<img src="https://cdn-icons-png.flaticon.com/512/3721/3721694.png" alt="Ouvir">`;
+        audioBtn.addEventListener('click', () => speak(entry.english));
+
+        actions.append(revealBtn, audioBtn);
+        textWrap.append(englishEl, portugueseEl);
+        card.append(textWrap, actions);
+        grid.appendChild(card);
+      });
+
+      const hasMore = visibleCount < filtered.length;
+      loadMoreBtn.style.display = hasMore ? 'inline-flex' : 'none';
+      loadMoreBtn.disabled = !hasMore;
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
+    }
+
+    searchInput.addEventListener('input', () => render(true));
+    loadMoreBtn.addEventListener('click', () => render(false));
+
+    loadData();
+  </script>
+</body>
+</html>
