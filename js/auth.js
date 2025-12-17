@@ -1121,56 +1121,6 @@
       });
     });
 
-    const getCurrentNavIndex = () => {
-      const matchedIndex = navLinks.findIndex(link => resolvePathKey(link.getAttribute('href') || '') === currentKey);
-      return matchedIndex === -1 ? 0 : matchedIndex;
-    };
-
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchActive = false;
-
-    document.addEventListener('touchstart', event => {
-      if (window.innerWidth > 720 || event.touches.length !== 1) {
-        return;
-      }
-      touchActive = true;
-      touchStartX = event.touches[0].clientX;
-      touchStartY = event.touches[0].clientY;
-    }, { passive: true });
-
-    document.addEventListener('touchend', event => {
-      if (!touchActive || window.innerWidth > 720) {
-        touchActive = false;
-        return;
-      }
-      touchActive = false;
-      const touch = event.changedTouches && event.changedTouches[0];
-      if (!touch) {
-        return;
-      }
-      const deltaX = touch.clientX - touchStartX;
-      const deltaY = touch.clientY - touchStartY;
-      const horizontalThreshold = 60;
-      const verticalAllowance = 80;
-      if (Math.abs(deltaX) < horizontalThreshold || Math.abs(deltaY) > verticalAllowance) {
-        return;
-      }
-      const currentIndex = getCurrentNavIndex();
-      if (currentIndex === -1) {
-        return;
-      }
-      let targetIndex = currentIndex;
-      if (deltaX < 0 && currentIndex < navLinks.length - 1) {
-        targetIndex = currentIndex + 1;
-      } else if (deltaX > 0 && currentIndex > 0) {
-        targetIndex = currentIndex - 1;
-      }
-      if (targetIndex !== currentIndex) {
-        navigateTo(navLinks[targetIndex].getAttribute('href'), { pushState: true });
-      }
-    }, { passive: true });
-
     window.addEventListener('popstate', event => {
       const state = event.state && event.state.path ? event.state.path : initialKey;
       navigateTo(state, { pushState: false });
