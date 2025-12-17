@@ -838,6 +838,7 @@ const usesBrowserSpeechRecognition = typeof window !== 'undefined'
 const recognitionSilenceMs = isMobileViewport ? 6000 : 800;
 const MIN_WAVEFORM_EVENT_GAP_MS = 160;
 const WAVEFORM_SILENCE_THRESHOLD_MS = 1000;
+const SPEECH_RECOGNITION_LANGUAGE = 'en-US';
 
 async function ensureMobileAudioKeepalive() {
   // Captura de microfone removida para reduzir o peso do jogo em mobile.
@@ -870,6 +871,61 @@ function bounceMobileMicrophone() {
       try { reconhecimento.start(); } catch (err) {}
     }
   }, 150);
+}
+
+function shouldRestartSpeechRecognition() {
+  return reconhecimentoAtivo && !microphonePaused && isInplayActive();
+}
+
+function extractTranscript(event) {
+  if (!event || !event.results || !event.results.length) {
+    return '';
+  }
+  const index = Number.isInteger(event.resultIndex)
+    ? event.resultIndex
+    : event.results.length - 1;
+  const alternative = event.results[index] && event.results[index][0]
+    ? event.results[index][0]
+    : null;
+  return alternative && alternative.transcript ? String(alternative.transcript).trim() : '';
+}
+
+function handleSpeechRecognitionResult(event) {
+  const transcript = extractTranscript(event);
+  if (!transcript) {
+    return;
+  }
+  verificarResposta(transcript);
+}
+
+function ensureSpeechRecognition() {
+  if (reconhecimento || !usesBrowserSpeechRecognition || typeof window.KitSpeechRecognizer !== 'function') {
+    return;
+  }
+  reconhecimento = new window.KitSpeechRecognizer({ lang: SPEECH_RECOGNITION_LANGUAGE });
+  if (reconhecimento._recognition) {
+    reconhecimento._recognition.continuous = false;
+    reconhecimento._recognition.interimResults = false;
+    reconhecimento._recognition.maxAlternatives = 1;
+  }
+  reconhecimento.onstart = () => {
+    reconhecimentoRodando = true;
+    primeWaveformSilenceBaseline();
+  };
+  reconhecimento.onend = () => {
+    reconhecimentoRodando = false;
+    if (shouldRestartSpeechRecognition()) {
+      try {
+        reconhecimento.start();
+        reconhecimentoRodando = true;
+      } catch (error) {}
+    }
+  };
+  reconhecimento.onerror = () => {
+    reconhecimentoRodando = false;
+  };
+  reconhecimento.onresult = handleSpeechRecognitionResult;
+  bindSpeechWaveformEvents(reconhecimento);
 }
 
 const SpeechRecognizerClass = null;
@@ -3558,7 +3614,7 @@ function proceedAfterAnswer(isCorrect, reachedRoundEnd) {
   continuar();
 }
 
-function verificarResposta() {
+function verificarResposta(overrideText = null) {
   if (bloqueado) return;
   if (!roundActive && !isInplayActive()) return;
   if (!roundActive && isInplayActive()) {
@@ -3568,7 +3624,8 @@ function verificarResposta() {
   if (timerInterval) clearInterval(timerInterval);
   setTimerState(TIMER_STATES.INACTIVE);
   const input = document.getElementById("pt");
-  const resposta = input.value.trim();
+  const rawAnswer = overrideText !== null ? String(overrideText) : input.value;
+  const resposta = rawAnswer.trim();
   const resultado = document.getElementById("resultado");
   tentativasTotais++;
   saveTotals();
@@ -3999,6 +4056,7 @@ function updateClock() {
 
 async function initGame() {
   reloadPersistentProgress();
+  ensureSpeechRecognition();
   try {
     await carregarPastas();
   } catch (error) {
