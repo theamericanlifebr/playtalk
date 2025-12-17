@@ -840,38 +840,9 @@ const MIN_WAVEFORM_EVENT_GAP_MS = 160;
 const WAVEFORM_SILENCE_THRESHOLD_MS = 1000;
 
 async function ensureMobileAudioKeepalive() {
-  if (!isMobileViewport || usesBrowserSpeechRecognition) {
-    return;
-  }
-  if (mobileAudioContext) {
-    if (mobileAudioContext.state === 'suspended') {
-      try { await mobileAudioContext.resume(); } catch (error) {}
-    }
-    return mobileAudioContext;
-  }
-
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (typeof AudioContextClass !== 'function' || !navigator.mediaDevices) {
-      return null;
-    }
-    mobileAudioContext = new AudioContextClass();
-    if (mobileAudioContext.state === 'suspended') {
-      try { await mobileAudioContext.resume(); } catch (error) {}
-    }
-
-    mobileAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    mobileAudioSource = mobileAudioContext.createMediaStreamSource(mobileAudioStream);
-    mobileAudioGain = mobileAudioContext.createGain();
-    mobileAudioGain.gain.value = 0;
-    mobileAudioSource.connect(mobileAudioGain).connect(mobileAudioContext.destination);
-
-    return mobileAudioContext;
-  } catch (error) {
-    console.warn('Não foi possível manter o microfone ativo no mobile:', error);
-    stopMobileAudioKeepalive();
-    return null;
-  }
+  // Captura de microfone removida para reduzir o peso do jogo em mobile.
+  stopMobileAudioKeepalive();
+  return null;
 }
 
 function stopMobileAudioKeepalive() {
@@ -901,79 +872,10 @@ function bounceMobileMicrophone() {
   }, 150);
 }
 
-const SpeechRecognizerClass = window.KitSpeechRecognizer || window.OpenAISpeechRecognizer;
-if (SpeechRecognizerClass) {
-  reconhecimento = new SpeechRecognizerClass({
-    segmentMs: 2400,
-    minBytes: 2048,
-    volumeThresholdDb: 46,
-    silenceCutoffMs: recognitionSilenceMs
-  });
-  reconhecimento.lang = 'en-US';
-  bindSpeechWaveformEvents(reconhecimento);
-
-  reconhecimento.onstart = () => {
-    reconhecimentoRodando = true;
-  };
-
-  reconhecimento.onresult = (event) => {
-    if (microphonePaused) {
-      return;
-    }
-    markWaveformActivity();
-    const transcript = event.results[event.results.length - 1][0].transcript.trim();
-    const normCmd = transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    if (awaitingRetry && (normCmd.includes('try again') || normCmd.includes('tentar de novo'))) {
-      awaitingRetry = false;
-      if (retryCallback) {
-        const cb = retryCallback;
-        retryCallback = null;
-        cb();
-      }
-    } else if (listeningForCommand) {
-      if (normCmd.includes('play')) {
-        listeningForCommand = false;
-        startGame(getHighestUnlockedMode());
-      }
-    } else {
-      if (
-        normCmd.includes('reportar') ||
-        normCmd.includes('report') ||
-        normCmd.includes('my star') ||
-        normCmd.includes('mystar') ||
-        normCmd.includes('estrela')
-      ) {
-        reportLastError();
-      } else {
-        document.getElementById("pt").value = transcript;
-        if (showUserTranscript) {
-          queueUserTranscript(transcript);
-        }
-        verificarResposta();
-        bounceMobileMicrophone();
-      }
-    }
-  };
-
-  reconhecimento.onerror = (event) => {
-    console.error('Erro no reconhecimento de voz:', event.error, event.details || '');
-    if (event.error === 'not-allowed') alert('Permissão do microfone negada.');
-  };
-
-  reconhecimento.onend = () => {
-    reconhecimentoRodando = false;
-    setTimerState(TIMER_STATES.INACTIVE);
-  };
-} else {
-  alert('Reconhecimento de voz não é suportado neste navegador. Use o Chrome.');
-}
-
-
-setInterval(() => {
-  if (reconhecimento && reconhecimentoAtivo && !reconhecimentoRodando && !microphonePaused) {
-    try { reconhecimento.start(); } catch (e) {}
-  }
-}, 4000);
+const SpeechRecognizerClass = null;
+reconhecimento = null;
+reconhecimentoAtivo = false;
+reconhecimentoRodando = false;
 
 let frasesArr = [], fraseIndex = 0;
 let acertosTotais = 0;
@@ -1031,6 +933,14 @@ const TIMER_STATES = {
   LISTENING: 'timer-display--listening',
   INACTIVE: 'timer-display--inactive'
 };
+
+function renderRoundProgressDisplay() {
+  const timerEl = getTimerElement();
+  if (!timerEl) return;
+  const total = Math.max(1, getCurrentThreshold());
+  const current = Math.min(total, Math.max(1, roundAttempts + 1));
+  timerEl.textContent = `Pergunta ${current} de ${total}`;
+}
 
 function getTimerElement() {
   return document.getElementById('timer');
@@ -1145,7 +1055,7 @@ function resetTimerDisplay() {
   if (!timerEl) {
     return;
   }
-  timerEl.textContent = '0 ms';
+  renderRoundProgressDisplay();
   primeWaveformSilenceBaseline();
   setTimerState(null);
 }
@@ -2650,46 +2560,8 @@ function triggerDownPlay() {
 }
 
 function reportLastError() {
-  if (!lastWasError) return;
-  if (!isInplayActive()) return;
-  lastWasError = false;
-  consecutiveErrors = 0;
-  const audio = new Audio('gamesounds/report.wav');
-  audio.play();
-  acertosTotais++;
-  const reward = rewardBalanceForPhrase(lastExpected || '', selectedMode);
-  grantExperience(reward, selectedMode);
-  errosTotais = Math.max(0, errosTotais - 1);
-  points = Math.min(roundTarget, points + 1);
-  if (roundWrongCount > 0) {
-    roundWrongCount -= 1;
-  }
-  const expectedChars = countCorrectCharacters(lastExpected || '', lastExpected || '');
-  roundCorrectChars += expectedChars;
-  saveTotals();
-  atualizarBarraProgresso();
-  const stats = ensureModeStats(selectedMode);
-  stats.correctChars += expectedChars;
-  stats.correct++;
-  stats.wrong = Math.max(0, stats.wrong - 1);
-  stats.report++;
-  const totals = Object.values(modeStats).reduce((acc, s) => {
-    acc.report += s.report || 0;
-    acc.total += s.totalPhrases || 0;
-    return acc;
-  }, { report: 0, total: 0 });
-  const level = totals.total ? ((totals.report / totals.total) * 100).toFixed(2) : '0';
-  stats.reportRanking.push({ expected: lastExpected, input: lastInput, folder: lastFolder, level });
-  saveModeStats();
-  persistCurrentRoundState();
-  if (downPlaying) {
-    downPlaying = false;
-    if (downTimeout) {
-      clearTimeout(downTimeout);
-      downTimeout = null;
-    }
-    resumeGame();
-  }
+  // Função de reporte desativada.
+  return;
 }
 
 function setupModeIconInteractions() {
@@ -2705,35 +2577,10 @@ function setupModeIconInteractions() {
     }
   });
 
-  const triggerReport = (event) => {
-    event.preventDefault();
-    reportLastError();
-  };
-
-  icon.addEventListener('dblclick', triggerReport);
-  icon.addEventListener('pointerdown', (event) => {
-    if (event.pointerType !== 'touch') {
-      return;
-    }
-    const now = Date.now();
-    if (now - lastMedalTapTime <= MEDAL_DOUBLE_TAP_DELAY) {
-      lastMedalTapTime = 0;
-      triggerReport(event);
-    } else {
-      lastMedalTapTime = now;
-    }
-  });
-
   const supportsPointerEvents = typeof window !== 'undefined' && 'onpointerdown' in window;
   if (!supportsPointerEvents) {
     icon.addEventListener('touchstart', (event) => {
-      const now = Date.now();
-      if (now - lastMedalTapTime <= MEDAL_DOUBLE_TAP_DELAY) {
-        lastMedalTapTime = 0;
-        triggerReport(event);
-      } else {
-        lastMedalTapTime = now;
-      }
+      event.preventDefault();
     }, { passive: false });
   }
 }
@@ -3390,11 +3237,8 @@ function triggerMedalResponseSpin() {
   if (!icon) {
     return;
   }
-  const currentRotation = Number.parseFloat(icon.dataset.medalRotation || '0');
-  const safeRotation = Number.isFinite(currentRotation) ? currentRotation : 0;
-  const nextRotation = (safeRotation + 90) % 360;
-  icon.dataset.medalRotation = String(nextRotation);
-  icon.style.transform = `rotate(${nextRotation}deg)`;
+  icon.dataset.medalRotation = '0';
+  icon.style.transform = 'none';
 }
 
 function updateModeMedalIcon(ratio) {
@@ -3548,12 +3392,7 @@ function mostrarFrase() {
   phraseWaveformStarted = false;
   resetTimerDisplay();
   if (timerInterval) clearInterval(timerInterval);
-  if (timerEl) {
-    timerInterval = setInterval(() => {
-      const elapsed = Math.max(0, Date.now() - phraseStartTime);
-      timerEl.textContent = `${elapsed} ms`;
-    }, 50);
-  }
+  timerInterval = null;
   if (!isLevelFinderActive()) {
     if (prizeTimer) clearInterval(prizeTimer);
     prizeStart = Date.now();
@@ -3878,6 +3717,7 @@ function atualizarBarraProgresso() {
   ensureInplayStateFromContext();
   updateGameBalanceDisplay();
   renderLevelInstruction();
+  renderRoundProgressDisplay();
   if (isLevelFinderActive()) {
     const elapsed = getLevelFinderElapsedMs();
     renderLevelFinderLevel({ level: pastaAtual, baseColor: levelFinderBaseColor });
