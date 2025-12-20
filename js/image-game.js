@@ -66,10 +66,12 @@
     return new Promise((resolve) => {
       const handleAnimationEnd = () => {
         elements.target.removeEventListener('animationend', handleAnimationEnd);
-        elements.target.classList.remove(className);
         if (className === 'image-game-target--slide-out') {
           elements.target.classList.add(hiddenClass);
+          resolve();
+          return;
         }
+        elements.target.classList.remove(className);
         resolve();
       };
       elements.target.addEventListener('animationend', handleAnimationEnd);
