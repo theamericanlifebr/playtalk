@@ -5,7 +5,9 @@
     recognizer: null,
     listening: false,
     advanceLock: false,
-    lensOverrides: null
+    lensOverrides: null,
+    preloaded: new Set(),
+    transitionAudio: null
   };
 
   const elements = {
@@ -48,16 +50,55 @@
     return null;
   };
 
-  const updateImage = () => {
+  const clearSlideClasses = () => {
+    if (!elements.target) return;
+    elements.target.classList.remove('image-game-target--slide-in', 'image-game-target--slide-out');
+  };
+
+  const runSlideAnimation = (className) => {
+    if (!elements.target) return Promise.resolve();
+    clearSlideClasses();
+    return new Promise((resolve) => {
+      const handleAnimationEnd = () => {
+        elements.target.removeEventListener('animationend', handleAnimationEnd);
+        elements.target.classList.remove(className);
+        resolve();
+      };
+      elements.target.addEventListener('animationend', handleAnimationEnd);
+      elements.target.classList.add(className);
+    });
+  };
+
+  const preloadUpcomingImages = () => {
+    if (!state.items.length) return;
+    for (let offset = 1; offset <= 5; offset += 1) {
+      const item = state.items[(state.index + offset) % state.items.length];
+      if (!item || state.preloaded.has(item.file)) continue;
+      const img = new Image();
+      img.src = `images/${item.file}`;
+      state.preloaded.add(item.file);
+    }
+  };
+
+  const updateImage = ({ animateIn = false } = {}) => {
     const current = state.items[state.index];
     if (!current || !elements.target) return;
     elements.target.src = `images/${current.file}`;
     elements.target.alt = current.pt ? `Imagem ${current.pt}` : 'Imagem do jogo';
-    elements.target.classList.remove('image-game-target--slide');
-    requestAnimationFrame(() => {
-      elements.target.classList.add('image-game-target--slide');
-    });
+    state.preloaded.add(current.file);
+    if (animateIn) {
+      runSlideAnimation('image-game-target--slide-in');
+    }
     hidePhrase();
+    preloadUpcomingImages();
+  };
+
+  const playTransitionSound = () => {
+    if (!state.transitionAudio) {
+      state.transitionAudio = new Audio('gamesounds/report.wav');
+    }
+    state.transitionAudio.currentTime = 0;
+    state.transitionAudio.play().catch(() => {});
   };
 
   const showStatus = (message, tone = '') => {
@@ -108,14 +149,21 @@
 
   const advanceImage = () => {
     if (state.advanceLock) return;
+    if (!state.items.length) return;
     state.advanceLock = true;
-    state.index = (state.index + 1) % state.items.length;
-    updateImage();
+    const nextIndex = (state.index + 1) % state.items.length;
     showTranscript('');
     showStatus('');
-    setTimeout(() => {
-      state.advanceLock = false;
-    }, 500);
+    playTransitionSound();
+    runSlideAnimation('image-game-target--slide-out')
+      .then(() => {
+        state.index = nextIndex;
+        updateImage();
+        return runSlideAnimation('image-game-target--slide-in');
+      })
+      .finally(() => {
+        state.advanceLock = false;
+      });
   };
 
   const handleSpeechResult = (event) => {
@@ -307,7 +355,7 @@
     }
     if (elements.target) {
       elements.target.addEventListener('animationend', () => {
-        elements.target.classList.remove('image-game-target--slide');
+        clearSlideClasses();
       });
     }
     window.addEventListener('keydown', (event) => {
@@ -340,7 +388,7 @@
       }
 
       state.index = 0;
-      updateImage();
+      updateImage({ animateIn: true });
       showStatus('');
     } catch (error) {
       console.error('Erro ao carregar imagens:', error);
@@ -353,6 +401,25 @@
     bindEvents();
     loadItems();
     updateMicButton();
+    document.body?.addEventListener(
+      'touchmove',
+      (event) => {
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+    window.addEventListener(
+      'wheel',
+      (event) => {
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+    window.addEventListener('scroll', () => {
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    });
   };
 
   if (document.readyState === 'loading') {
