@@ -54,6 +54,10 @@
     if (!current || !elements.target) return;
     elements.target.src = `images/${current.file}`;
     elements.target.alt = current.pt ? `Imagem ${current.pt}` : 'Imagem do jogo';
+    elements.target.classList.remove('image-game-target--slide');
+    requestAnimationFrame(() => {
+      elements.target.classList.add('image-game-target--slide');
+    });
     updateCounter();
   };
 
@@ -144,10 +148,64 @@
     state.recognizer.start();
   };
 
+  const speakCurrentWord = () => {
+    const current = state.items[state.index];
+    if (!current || !current.en) return;
+
+    if (!('speechSynthesis' in window)) {
+      showStatus('Síntese de voz não disponível.', 'warning');
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(current.en);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.95;
+    utterance.onstart = () => showStatus('Repetindo a palavra.', 'info');
+    utterance.onerror = () => showStatus('Não foi possível reproduzir a voz.', 'warning');
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const bindImageGestures = () => {
+    if (!elements.target) return;
+    const gesture = { startX: 0, startY: 0, startTime: 0, pointerId: null };
+    const swipeThreshold = 40;
+
+    elements.target.addEventListener('pointerdown', (event) => {
+      gesture.pointerId = event.pointerId;
+      gesture.startX = event.clientX;
+      gesture.startY = event.clientY;
+      gesture.startTime = Date.now();
+    });
+
+    elements.target.addEventListener('pointerup', (event) => {
+      if (gesture.pointerId !== event.pointerId) return;
+      const deltaX = event.clientX - gesture.startX;
+      const deltaY = event.clientY - gesture.startY;
+      const elapsed = Date.now() - gesture.startTime;
+      const isSwipeLeft = deltaX < -swipeThreshold && Math.abs(deltaY) < 80;
+
+      if (isSwipeLeft) {
+        advanceImage();
+        return;
+      }
+
+      if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10 && elapsed < 500) {
+        speakCurrentWord();
+      }
+    });
+  };
+
   const bindEvents = () => {
     if (elements.startButton) {
       elements.startButton.addEventListener('click', () => startListening());
     }
+    if (elements.target) {
+      elements.target.addEventListener('animationend', () => {
+        elements.target.classList.remove('image-game-target--slide');
+      });
+    }
+    bindImageGestures();
   };
 
   const loadItems = async () => {
@@ -157,6 +215,11 @@
       state.items = (Array.isArray(data) ? data : [])
         .map(parseItem)
         .filter((entry) => entry && entry.file);
+
+      for (let i = state.items.length - 1; i > 0; i -= 1) {
+        const swapIndex = Math.floor(Math.random() * (i + 1));
+        [state.items[i], state.items[swapIndex]] = [state.items[swapIndex], state.items[i]];
+      }
 
       if (!state.items.length) {
         showStatus('Nenhuma imagem encontrada.', 'warning');

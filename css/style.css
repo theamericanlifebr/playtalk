@@ -2310,6 +2310,23 @@ body.page-image-game #visor {
   max-height: 320px;
   object-fit: contain;
   filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.2));
+  transition: opacity 0.2s ease;
+  touch-action: pan-y;
+}
+
+.image-game-target--slide {
+  animation: image-game-slide 0.35s ease both;
+}
+
+@keyframes image-game-slide {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .image-game-status {
