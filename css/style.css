@@ -2404,6 +2404,10 @@ body.page-image-game .image-game-english {
   font-weight: 700;
 }
 
+body.page-image-game .image-game-english:not([hidden]) {
+  transform: translateY(-60px);
+}
+
 body.page-image-game.image-game-mic-lens .lens-overlay {
   transition: opacity 0.5s ease, background 0.5s ease, background-color 0.5s ease;
 }

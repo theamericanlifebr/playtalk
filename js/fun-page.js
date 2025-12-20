@@ -36,7 +36,7 @@
   ];
 
   const BACKGROUND_PRESETS = {
-    default: { id: 'default', name: 'Background 1 (padrão)', src: null, type: 'preset' },
+    default: { id: 'default', name: 'Background 1 (padrão)', src: 'SVG/background1.svg', type: 'preset' },
     background2: { id: 'background2', name: 'Background 2', src: 'backgrounds/background2.jpg', type: 'preset' },
     background3: { id: 'background3', name: 'Background 3', src: 'backgrounds/background3.jpg', type: 'preset' },
     background4: { id: 'background4', name: 'Background 4', src: 'backgrounds/background4.jpg', type: 'preset' },
