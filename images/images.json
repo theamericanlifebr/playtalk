@@ -1149,5 +1149,255 @@
     "pt": "patins de gelo",
     "en": "ice skate",
     "file": "image (230).svg"
+  },
+  {
+    "pt": "maleta",
+    "en": "briefcase",
+    "file": "image (231).svg"
+  },
+  {
+    "pt": "cauda longa",
+    "en": "long tail",
+    "file": "image (232).svg"
+  },
+  {
+    "pt": "amando",
+    "en": "loving",
+    "file": "image (233).svg"
+  },
+  {
+    "pt": "sentindo dor",
+    "en": "hurting",
+    "file": "image (234).svg"
+  },
+  {
+    "pt": "pensando",
+    "en": "thinking",
+    "file": "image (235).svg"
+  },
+  {
+    "pt": "smartphone",
+    "en": "smartphone",
+    "file": "image (236).svg"
+  },
+  {
+    "pt": "calças jeans",
+    "en": "jeans",
+    "file": "image (237).svg"
+  },
+  {
+    "pt": "avião",
+    "en": "airplane",
+    "file": "image (238).svg"
+  },
+  {
+    "pt": "juiz",
+    "en": "judge",
+    "file": "image (239).svg"
+  },
+  {
+    "pt": "fazer malabarismo",
+    "en": "to juggle",
+    "file": "image (240).svg"
+  },
+  {
+    "pt": "teclado",
+    "en": "keyboard",
+    "file": "image (241).svg"
+  },
+  {
+    "pt": "faca",
+    "en": "knife",
+    "file": "image (242).svg"
+  },
+  {
+    "pt": "pipa",
+    "en": "kite",
+    "file": "image (243).svg"
+  },
+  {
+    "pt": "nó",
+    "en": "knot",
+    "file": "image (244).svg"
+  },
+  {
+    "pt": "joaninha",
+    "en": "ladybug",
+    "file": "image (245).svg"
+  },
+  {
+    "pt": "folha",
+    "en": "leaf",
+    "file": "image (246).svg"
+  },
+  {
+    "pt": "alface",
+    "en": "lettuce",
+    "file": "image (247).svg"
+  },
+  {
+    "pt": "perna",
+    "en": "leg",
+    "file": "image (248).svg"
+  },
+  {
+    "pt": "levantar peso",
+    "en": "to lift weights",
+    "file": "image (249).svg"
+  },
+  {
+    "pt": "lâmpada",
+    "en": "light bulb",
+    "file": "image (250).svg"
+  },
+  {
+    "pt": "link",
+    "en": "link",
+    "file": "image (251).svg"
+  },
+  {
+    "pt": "leão",
+    "en": "lion",
+    "file": "image (252).svg"
+  },
+  {
+    "pt": "cabeça de leão",
+    "en": "lion head",
+    "file": "image (253).svg"
+  },
+  {
+    "pt": "batom",
+    "en": "lipstick",
+    "file": "image (254).svg"
+  },
+  {
+    "pt": "lagarto",
+    "en": "lizard",
+    "file": "image (255).svg"
+  },
+  {
+    "pt": "lhama",
+    "en": "llama",
+    "file": "image (256).svg"
+  },
+  {
+    "pt": "lagosta",
+    "en": "lobster",
+    "file": "image (257).svg"
+  },
+  {
+    "pt": "desbloqueado",
+    "en": "unlocked",
+    "file": "image (258).svg"
+  },
+  {
+    "pt": "pirulito",
+    "en": "lollipop",
+    "file": "image (259).svg"
+  },
+  {
+    "pt": "loção",
+    "en": "lotion",
+    "file": "image (260).svg"
+  },
+  {
+    "pt": "pulmões",
+    "en": "lungs",
+    "file": "image (261).svg"
+  },
+  {
+    "pt": "mentindo",
+    "en": "lying",
+    "file": "image (262).svg"
+  },
+  {
+    "pt": "mágico",
+    "en": "magician",
+    "file": "image (263).svg"
+  },
+  {
+    "pt": "ímã",
+    "en": "magnet",
+    "file": "image (264).svg"
+  },
+  {
+    "pt": "lupa",
+    "en": "magnifying glass",
+    "file": "image (265).svg"
+  },
+  {
+    "pt": "mamute",
+    "en": "mammoth",
+    "file": "image (266).svg"
+  },
+  {
+    "pt": "pintor",
+    "en": "painter",
+    "file": "image (267).svg"
+  },
+  {
+    "pt": "super-herói",
+    "en": "superhero",
+    "file": "image (268).svg"
+  },
+  {
+    "pt": "surfar",
+    "en": "to surf",
+    "file": "image (269).svg"
+  },
+  {
+    "pt": "professor",
+    "en": "teacher",
+    "file": "image (270).svg"
+  },
+  {
+    "pt": "certificado",
+    "en": "certificate",
+    "file": "image (271).svg"
+  },
+  {
+    "pt": "mecânico",
+    "en": "mechanic",
+    "file": "image (272).svg"
+  },
+  {
+    "pt": "meditar",
+    "en": "to meditate",
+    "file": "image (273).svg"
+  },
+  {
+    "pt": "sereia",
+    "en": "mermaid",
+    "file": "image (274).svg"
+  },
+  {
+    "pt": "capacete militar",
+    "en": "military helmet",
+    "file": "image (275).svg"
+  },
+  {
+    "pt": "leite",
+    "en": "milk",
+    "file": "image (276).svg"
+  },
+  {
+    "pt": "claquete",
+    "en": "clapperboard",
+    "file": "image (277).svg"
+  },
+  {
+    "pt": "claquete de produção",
+    "en": "production clapperboard",
+    "file": "image (278).svg"
+  },
+  {
+    "pt": "nariz",
+    "en": "nose",
+    "file": "image (279).svg"
+  },
+  {
+    "pt": "caderno",
+    "en": "notebook",
+    "file": "image (280).svg"
   }
 ]
