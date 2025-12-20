@@ -17,7 +17,6 @@
     transcript: document.getElementById('image-game-transcript'),
     english: document.getElementById('image-game-english'),
     gameMain: document.getElementById('game-main'),
-    micButton: document.getElementById('image-game-mic'),
     audioButton: document.getElementById('image-game-audio'),
     translateButton: document.getElementById('image-game-translate')
   };
@@ -198,88 +197,6 @@
     }
   };
 
-  const setupRecognizer = () => {
-    if (state.recognizer || typeof window.KitSpeechRecognizer !== 'function') return;
-    state.recognizer = new window.KitSpeechRecognizer({ lang: 'en-US' });
-    state.recognizer.onresult = handleSpeechResult;
-    state.recognizer.onerror = (event) => {
-      state.listening = false;
-      updateMicButton();
-    };
-    state.recognizer.onend = () => {
-      state.listening = false;
-      updateMicButton();
-    };
-  };
-
-  const setMicLensState = (active) => {
-    const doc = document.documentElement;
-    if (!doc) return;
-
-    if (active) {
-      if (!state.lensOverrides) {
-        state.lensOverrides = {
-          colorGame: doc.style.getPropertyValue('--lens-color-game-rgb'),
-          opacitySoft: doc.style.getPropertyValue('--lens-opacity-soft')
-        };
-      }
-      doc.style.setProperty('--lens-color-game-rgb', '144, 238, 144');
-      doc.style.setProperty('--lens-opacity-soft', '0.7');
-      document.body?.classList.add('image-game-mic-lens');
-      return;
-    }
-
-    if (state.lensOverrides) {
-      const { colorGame, opacitySoft } = state.lensOverrides;
-      if (colorGame) {
-        doc.style.setProperty('--lens-color-game-rgb', colorGame);
-      } else {
-        doc.style.removeProperty('--lens-color-game-rgb');
-      }
-      if (opacitySoft) {
-        doc.style.setProperty('--lens-opacity-soft', opacitySoft);
-      } else {
-        doc.style.removeProperty('--lens-opacity-soft');
-      }
-      state.lensOverrides = null;
-    }
-    document.body?.classList.remove('image-game-mic-lens');
-  };
-
-  const updateMicButton = () => {
-    if (!elements.micButton) return;
-    elements.micButton.classList.toggle('is-active', state.listening);
-    elements.micButton.setAttribute('aria-pressed', state.listening ? 'true' : 'false');
-    elements.micButton.setAttribute(
-      'aria-label',
-      state.listening ? 'Desativar microfone' : 'Ativar microfone'
-    );
-    setMicLensState(state.listening);
-  };
-
-  const startListening = () => {
-    if (!state.recognizer) return;
-    if (state.listening) return;
-    state.listening = true;
-    updateMicButton();
-    state.recognizer.start();
-  };
-
-  const stopListening = () => {
-    if (!state.recognizer || !state.listening) return;
-    state.listening = false;
-    updateMicButton();
-    state.recognizer.stop();
-  };
-
-  const toggleListening = () => {
-    if (state.listening) {
-      stopListening();
-      return;
-    }
-    startListening();
-  };
-
   const speakCurrentWord = () => {
     const current = state.items[state.index];
     if (!current || !current.en) return;
@@ -335,9 +252,6 @@
   };
 
   const bindEvents = () => {
-    if (elements.micButton) {
-      elements.micButton.addEventListener('click', () => toggleListening());
-    }
     if (elements.audioButton) {
       elements.audioButton.addEventListener('click', () => speakCurrentWord());
     }
@@ -355,12 +269,6 @@
     if (elements.english) {
       elements.english.addEventListener('click', () => {
         togglePhraseLanguage();
-      });
-    }
-    if (elements.gameMain) {
-      elements.gameMain.addEventListener('pointerdown', (event) => {
-        if (event.target.closest('#image-game-target')) return;
-        startListening();
       });
     }
     window.addEventListener('keydown', (event) => {
@@ -402,10 +310,8 @@
   };
 
   const init = () => {
-    setupRecognizer();
     bindEvents();
     loadItems();
-    updateMicButton();
     document.body?.addEventListener(
       'touchmove',
       (event) => {

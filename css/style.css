@@ -2329,11 +2329,11 @@ body.page-image-game #visor {
 }
 
 .image-game-target--slide-in {
-  animation: image-game-slide-in 0.4s ease both;
+  animation: image-game-slide-in 0.3s ease both;
 }
 
 .image-game-target--slide-out {
-  animation: image-game-slide-out 0.35s ease both;
+  animation: image-game-slide-out 0.3s ease both;
 }
 
 .image-game-target--hidden {
@@ -2395,6 +2395,7 @@ body.page-image-game .image-game-english,
 body.page-image-game .user-transcript {
   font-size: 150%;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  text-transform: capitalize;
 }
 
 body.page-image-game .image-game-english {
@@ -2431,6 +2432,17 @@ body.page-image-game.image-game-mic-lens .lens-overlay {
 
   .image-game-english {
     margin-top: 50px;
+  }
+
+  body.page-image-game .level-instruction,
+  body.page-image-game .image-game-status,
+  body.page-image-game .image-game-english,
+  body.page-image-game .user-transcript {
+    font-size: 180%;
+  }
+
+  body.page-image-game .image-game-english {
+    font-size: 252%;
   }
 }
 
