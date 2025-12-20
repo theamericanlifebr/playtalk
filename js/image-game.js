@@ -4,7 +4,8 @@
     index: 0,
     recognizer: null,
     listening: false,
-    advanceLock: false
+    advanceLock: false,
+    lensOverrides: null
   };
 
   const elements = {
@@ -13,6 +14,7 @@
     status: document.getElementById('image-game-status'),
     transcript: document.getElementById('image-game-transcript'),
     english: document.getElementById('image-game-english'),
+    gameMain: document.getElementById('game-main'),
     micButton: document.getElementById('image-game-mic'),
     audioButton: document.getElementById('image-game-audio'),
     translateButton: document.getElementById('image-game-translate')
@@ -55,9 +57,7 @@
     requestAnimationFrame(() => {
       elements.target.classList.add('image-game-target--slide');
     });
-    if (elements.english) {
-      elements.english.textContent = current.en || '';
-    }
+    hidePhrase();
   };
 
   const showStatus = (message, tone = '') => {
@@ -69,6 +69,41 @@
   const showTranscript = (message) => {
     if (!elements.transcript) return;
     elements.transcript.textContent = message;
+  };
+
+  const syncTranslateButton = () => {
+    if (!elements.translateButton || !elements.english) return;
+    elements.translateButton.setAttribute(
+      'aria-pressed',
+      elements.english.hasAttribute('hidden') ? 'false' : 'true'
+    );
+  };
+
+  const hidePhrase = () => {
+    if (!elements.english) return;
+    elements.english.textContent = '';
+    elements.english.dataset.language = 'en';
+    elements.english.setAttribute('hidden', '');
+    syncTranslateButton();
+  };
+
+  const showPhrase = (language = 'en') => {
+    if (!elements.english) return;
+    const current = state.items[state.index];
+    if (!current) return;
+    const text = language === 'pt' ? current.pt : current.en;
+    if (!text) return;
+    elements.english.textContent = text;
+    elements.english.dataset.language = language;
+    elements.english.removeAttribute('hidden');
+    syncTranslateButton();
+  };
+
+  const togglePhraseLanguage = () => {
+    if (!elements.english || elements.english.hasAttribute('hidden')) return;
+    const currentLanguage = elements.english.dataset.language === 'pt' ? 'pt' : 'en';
+    const nextLanguage = currentLanguage === 'en' ? 'pt' : 'en';
+    showPhrase(nextLanguage);
   };
 
   const advanceImage = () => {
@@ -123,6 +158,40 @@
     };
   };
 
+  const setMicLensState = (active) => {
+    const doc = document.documentElement;
+    if (!doc) return;
+
+    if (active) {
+      if (!state.lensOverrides) {
+        state.lensOverrides = {
+          colorGame: doc.style.getPropertyValue('--lens-color-game-rgb'),
+          opacitySoft: doc.style.getPropertyValue('--lens-opacity-soft')
+        };
+      }
+      doc.style.setProperty('--lens-color-game-rgb', '0, 200, 0');
+      doc.style.setProperty('--lens-opacity-soft', '0.7');
+      document.body?.classList.add('image-game-mic-lens');
+      return;
+    }
+
+    if (state.lensOverrides) {
+      const { colorGame, opacitySoft } = state.lensOverrides;
+      if (colorGame) {
+        doc.style.setProperty('--lens-color-game-rgb', colorGame);
+      } else {
+        doc.style.removeProperty('--lens-color-game-rgb');
+      }
+      if (opacitySoft) {
+        doc.style.setProperty('--lens-opacity-soft', opacitySoft);
+      } else {
+        doc.style.removeProperty('--lens-opacity-soft');
+      }
+      state.lensOverrides = null;
+    }
+    document.body?.classList.remove('image-game-mic-lens');
+  };
+
   const updateMicButton = () => {
     if (!elements.micButton) return;
     elements.micButton.classList.toggle('is-active', state.listening);
@@ -131,6 +200,7 @@
       'aria-label',
       state.listening ? 'Desativar microfone' : 'Ativar microfone'
     );
+    setMicLensState(state.listening);
   };
 
   const startListening = () => {
@@ -195,9 +265,15 @@
       const deltaY = event.clientY - gesture.startY;
       const elapsed = Date.now() - gesture.startTime;
       const isSwipeLeft = deltaX < -swipeThreshold && Math.abs(deltaY) < 80;
+      const isSwipeDown = deltaY > swipeThreshold && Math.abs(deltaX) < 80;
 
       if (isSwipeLeft) {
         advanceImage();
+        return;
+      }
+
+      if (isSwipeDown) {
+        showPhrase('en');
         return;
       }
 
@@ -218,8 +294,22 @@
       elements.translateButton.addEventListener('click', () => {
         if (!elements.english) return;
         const shouldShow = elements.english.hasAttribute('hidden');
-        elements.english.toggleAttribute('hidden', !shouldShow);
-        elements.translateButton.setAttribute('aria-pressed', shouldShow ? 'true' : 'false');
+        if (shouldShow) {
+          showPhrase('en');
+        } else {
+          hidePhrase();
+        }
+      });
+    }
+    if (elements.english) {
+      elements.english.addEventListener('click', () => {
+        togglePhraseLanguage();
+      });
+    }
+    if (elements.gameMain) {
+      elements.gameMain.addEventListener('pointerdown', (event) => {
+        if (event.target.closest('#image-game-target')) return;
+        startListening();
       });
     }
     if (elements.target) {
@@ -230,6 +320,9 @@
     window.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowRight') {
         advanceImage();
+      }
+      if (event.key === 'ArrowDown') {
+        showPhrase('en');
       }
     });
     bindImageGestures();
