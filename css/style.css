@@ -2298,6 +2298,7 @@ body.page-image-game #visor {
 
 .image-game-visor {
   justify-content: center;
+  padding-bottom: var(--image-game-footer-height, 0px);
 }
 
 .image-game-emblem {
@@ -2348,8 +2349,94 @@ body.page-image-game #visor {
   color: #bfdbfe;
 }
 
-.image-game-start {
-  margin-top: 6px;
+.image-game-english {
+  margin-top: 24px;
+  font-family: var(--game-phrase-font-family, 'Open Sans', sans-serif);
+  font-size: clamp(18px, 3vw, 24px);
+  color: var(--game-phrase-color, #ffffff);
+  text-align: center;
+}
+
+.image-game-footer {
+  margin-top: 18px;
+}
+
+.image-game-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.image-game-action {
+  border: none;
+  background: rgba(0, 0, 0, 0.25);
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.image-game-action svg {
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+  opacity: 0.85;
+}
+
+.image-game-action:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.image-game-action--mic svg {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.image-game-action--mic.is-active svg {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  body.page-image-game {
+    --image-game-footer-height: 92px;
+  }
+
+  .image-game-visor {
+    min-height: calc(100vh - var(--header-height) - var(--image-game-footer-height));
+  }
+
+  .image-game-target {
+    width: clamp(220px, 65vw, 360px);
+    max-height: 420px;
+  }
+
+  .image-game-english {
+    margin-top: 50px;
+  }
+
+  .image-game-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(8, 12, 20, 0.85);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 10;
+  }
+}
+
+@media (min-width: 769px) {
+  .image-game-actions {
+    margin-top: 200px;
+  }
 }
 
 .mode-logo {

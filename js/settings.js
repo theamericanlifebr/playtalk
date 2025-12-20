@@ -386,7 +386,12 @@
     'video/mp4'
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
-  const DEFAULT_BACKGROUND = null;
+  const DEFAULT_BACKGROUND = {
+    presetId: 'background6',
+    src: 'backgrounds/background6.jpg',
+    name: 'Background 6',
+    type: 'image'
+  };
   let currentBackground = DEFAULT_BACKGROUND;
 
   function purgeStoredBackground() {
@@ -434,7 +439,7 @@
   function readStoredBackground() {
     if (currentBackground === DEFAULT_BACKGROUND) {
       const saved = safeParse(localStorage.getItem(BACKGROUND_STORAGE_KEY));
-      currentBackground = normalizeConfig(saved);
+      currentBackground = normalizeConfig(saved) || DEFAULT_BACKGROUND;
     }
     return normalizeConfig(currentBackground);
   }
@@ -442,8 +447,8 @@
   function persistBackground(config) {
     purgeStoredBackground();
     if (!config) {
-      currentBackground = null;
-      return null;
+      currentBackground = DEFAULT_BACKGROUND;
+      return DEFAULT_BACKGROUND;
     }
     const normalized = normalizeConfig(config);
     if (!normalized) {

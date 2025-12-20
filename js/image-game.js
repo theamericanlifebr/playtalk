@@ -12,8 +12,10 @@
     target: document.getElementById('image-game-target'),
     status: document.getElementById('image-game-status'),
     transcript: document.getElementById('image-game-transcript'),
-    counter: document.getElementById('image-game-counter'),
-    startButton: document.getElementById('image-game-start')
+    english: document.getElementById('image-game-english'),
+    micButton: document.getElementById('image-game-mic'),
+    audioButton: document.getElementById('image-game-audio'),
+    translateButton: document.getElementById('image-game-translate')
   };
 
   const normalizeText = (value) => {
@@ -44,11 +46,6 @@
     return null;
   };
 
-  const updateCounter = () => {
-    if (!elements.counter) return;
-    elements.counter.textContent = `Imagem ${state.index + 1} de ${state.items.length}`;
-  };
-
   const updateImage = () => {
     const current = state.items[state.index];
     if (!current || !elements.target) return;
@@ -58,7 +55,9 @@
     requestAnimationFrame(() => {
       elements.target.classList.add('image-game-target--slide');
     });
-    updateCounter();
+    if (elements.english) {
+      elements.english.textContent = current.en || '';
+    }
   };
 
   const showStatus = (message, tone = '') => {
@@ -78,7 +77,7 @@
     state.index = (state.index + 1) % state.items.length;
     updateImage();
     showTranscript('');
-    showStatus('Pronto! Próxima imagem.', 'success');
+    showStatus('');
     setTimeout(() => {
       state.advanceLock = false;
     }, 500);
@@ -101,12 +100,9 @@
     }
 
     if (said && said.includes(expected)) {
-      showStatus('Resposta correta!', 'success');
+      showStatus('');
       advanceImage();
-      return;
     }
-
-    showStatus('Tente novamente.', 'warning');
   };
 
   const setupRecognizer = () => {
@@ -119,18 +115,22 @@
         : 'Não foi possível iniciar o microfone.';
       showStatus(message, 'warning');
       state.listening = false;
-      if (elements.startButton) {
-        elements.startButton.disabled = false;
-        elements.startButton.textContent = 'Iniciar microfone';
-      }
+      updateMicButton();
     };
     state.recognizer.onend = () => {
       state.listening = false;
-      if (elements.startButton) {
-        elements.startButton.disabled = false;
-        elements.startButton.textContent = 'Iniciar microfone';
-      }
+      updateMicButton();
     };
+  };
+
+  const updateMicButton = () => {
+    if (!elements.micButton) return;
+    elements.micButton.classList.toggle('is-active', state.listening);
+    elements.micButton.setAttribute('aria-pressed', state.listening ? 'true' : 'false');
+    elements.micButton.setAttribute(
+      'aria-label',
+      state.listening ? 'Desativar microfone' : 'Ativar microfone'
+    );
   };
 
   const startListening = () => {
@@ -140,12 +140,23 @@
     }
     if (state.listening) return;
     state.listening = true;
-    if (elements.startButton) {
-      elements.startButton.disabled = true;
-      elements.startButton.textContent = 'Microfone ativo';
-    }
-    showStatus('Microfone ativo. Fale a palavra.', 'info');
+    updateMicButton();
     state.recognizer.start();
+  };
+
+  const stopListening = () => {
+    if (!state.recognizer || !state.listening) return;
+    state.listening = false;
+    updateMicButton();
+    state.recognizer.stop();
+  };
+
+  const toggleListening = () => {
+    if (state.listening) {
+      stopListening();
+      return;
+    }
+    startListening();
   };
 
   const speakCurrentWord = () => {
@@ -160,7 +171,7 @@
     const utterance = new SpeechSynthesisUtterance(current.en);
     utterance.lang = 'en-US';
     utterance.rate = 0.95;
-    utterance.onstart = () => showStatus('Repetindo a palavra.', 'info');
+    utterance.onstart = () => showStatus('');
     utterance.onerror = () => showStatus('Não foi possível reproduzir a voz.', 'warning');
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
@@ -197,14 +208,30 @@
   };
 
   const bindEvents = () => {
-    if (elements.startButton) {
-      elements.startButton.addEventListener('click', () => startListening());
+    if (elements.micButton) {
+      elements.micButton.addEventListener('click', () => toggleListening());
+    }
+    if (elements.audioButton) {
+      elements.audioButton.addEventListener('click', () => speakCurrentWord());
+    }
+    if (elements.translateButton) {
+      elements.translateButton.addEventListener('click', () => {
+        if (!elements.english) return;
+        const shouldShow = elements.english.hasAttribute('hidden');
+        elements.english.toggleAttribute('hidden', !shouldShow);
+        elements.translateButton.setAttribute('aria-pressed', shouldShow ? 'true' : 'false');
+      });
     }
     if (elements.target) {
       elements.target.addEventListener('animationend', () => {
         elements.target.classList.remove('image-game-target--slide');
       });
     }
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight') {
+        advanceImage();
+      }
+    });
     bindImageGestures();
   };
 
@@ -228,7 +255,7 @@
 
       state.index = 0;
       updateImage();
-      showStatus('Toque no botão para ativar o microfone.', 'info');
+      showStatus('');
     } catch (error) {
       console.error('Erro ao carregar imagens:', error);
       showStatus('Erro ao carregar as imagens.', 'warning');
@@ -239,6 +266,7 @@
     setupRecognizer();
     bindEvents();
     loadItems();
+    updateMicButton();
   };
 
   if (document.readyState === 'loading') {
