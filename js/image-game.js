@@ -50,6 +50,8 @@
     return null;
   };
 
+  const hiddenClass = 'image-game-target--hidden';
+
   const clearSlideClasses = () => {
     if (!elements.target) return;
     elements.target.classList.remove('image-game-target--slide-in', 'image-game-target--slide-out');
@@ -58,10 +60,16 @@
   const runSlideAnimation = (className) => {
     if (!elements.target) return Promise.resolve();
     clearSlideClasses();
+    if (className === 'image-game-target--slide-in') {
+      elements.target.classList.remove(hiddenClass);
+    }
     return new Promise((resolve) => {
       const handleAnimationEnd = () => {
         elements.target.removeEventListener('animationend', handleAnimationEnd);
         elements.target.classList.remove(className);
+        if (className === 'image-game-target--slide-out') {
+          elements.target.classList.add(hiddenClass);
+        }
         resolve();
       };
       elements.target.addEventListener('animationend', handleAnimationEnd);
