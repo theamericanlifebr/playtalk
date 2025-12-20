@@ -16,7 +16,7 @@
     lensColor: '',
     lensColors: {},
     lensOpacityStrong: 0,
-    lensOpacitySoft: 1
+    lensOpacitySoft: 0
   };
   let zoomLockInstalled = false;
 
@@ -387,9 +387,9 @@
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
   const DEFAULT_BACKGROUND = {
-    presetId: 'background6',
-    src: 'backgrounds/background6.jpg',
-    name: 'Background 6',
+    presetId: 'default',
+    src: 'SVG/background1.svg',
+    name: 'Background 1',
     type: 'image'
   };
   let currentBackground = DEFAULT_BACKGROUND;

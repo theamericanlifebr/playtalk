@@ -888,6 +888,7 @@
     readStoredCurrentUser();
     const user = cachedCurrentUser;
     const isLoginPage = document.body && document.body.classList.contains('page-login');
+    const isGamePage = document.body && document.body.classList.contains('page-image-game');
 
     if (user) {
       applyUserDataToStorage(user);
@@ -904,6 +905,9 @@
     });
 
     if (!user) {
+      if (isGamePage) {
+        return;
+      }
       if (typeof openLoginFlowHandler === 'function') {
         openLoginFlowHandler();
       } else if (!isLoginPage) {
