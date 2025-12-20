@@ -2375,9 +2375,9 @@ body.page-image-game .user-transcript {
   right: 0;
   bottom: 0;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  background: rgba(8, 12, 20, 0.85);
+  background: var(--header-gradient, linear-gradient(135deg, #1a66cc 0%, #357de0 100%));
   backdrop-filter: blur(8px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
   z-index: 10;
 }
 
