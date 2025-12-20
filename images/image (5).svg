@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg version="1.1" id="_x34_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 viewBox="0 0 512 512"  xml:space="preserve">
+<g>
+	<g>
+		<polygon style="fill:#FAFAFB;" points="512,53.446 512,287.031 26.004,287.031 24.341,285.823 0,267.983 0,171.977 
+			45.507,149.753 101.977,60.248 106.286,53.446 		"/>
+		<polygon style="fill:#F0EFEF;" points="512,53.446 106.286,53.446 140,0 499.3,0 501.114,7.559 		"/>
+		<polygon style="fill:#D73D59;" points="163.737,0 130.022,53.446 106.286,53.446 140,0 		"/>
+		<polygon style="fill:#B2DFED;" points="238.241,173.648 238.241,77.862 133.601,77.862 94.767,139.823 94.767,173.648 		"/>
+		<rect y="206.07" style="fill:#D73D59;" width="512" height="34.472"/>
+		<g>
+			<circle style="fill:#494649;" cx="120.475" cy="272.289" r="46.029"/>
+			<circle style="fill:#C9C9C9;" cx="120.475" cy="272.289" r="27.086"/>
+		</g>
+		<g>
+			<circle style="fill:#494649;" cx="395.347" cy="272.289" r="46.029"/>
+			<circle style="fill:#C9C9C9;" cx="395.347" cy="272.289" r="27.086"/>
+		</g>
+		<g>
+			<rect x="433.489" y="94.07" style="fill:#D73D59;" width="23.445" height="70.509"/>
+			
+				<rect x="433.489" y="94.07" transform="matrix(-0.5 -0.866 0.866 -0.5 555.8195 579.5507)" style="fill:#D73D59;" width="23.445" height="70.509"/>
+			
+				<rect x="433.489" y="94.07" transform="matrix(-0.5 0.866 -0.866 -0.5 779.8153 -191.5785)" style="fill:#D73D59;" width="23.445" height="70.509"/>
+		</g>
+		<polygon style="fill:#D6D7D7;" points="512,53.446 512,60.248 101.977,60.248 106.286,53.446 		"/>
+	</g>
+	<path style="opacity:0.06;fill:#040000;" d="M279.242,287.031h72.532c6.151,18.181,23.315,31.286,43.573,31.286
+		c20.258,0,37.422-13.105,43.573-31.286H512v-46.49V206.07V60.248v-5.976L279.242,287.031z"/>
+</g>
+</svg>
