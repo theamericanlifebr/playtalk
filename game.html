@@ -81,19 +81,21 @@
       <button id="login-btn" class="site-header__button" type="button">Entrar</button>
     </div>
   </header>
-  <main id="game-main" class="container-screen container-screen--home" data-page-transition>
-    <div id="visor" class="image-game-visor">
-      <div class="visor-stack">
-        <div id="image-game-instruction" class="level-instruction" role="status" aria-live="polite">
-          Fale a palavra em inglês para a imagem.
-        </div>
-        <div class="mode-emblem image-game-emblem">
-          <img id="image-game-target" class="image-game-target" alt="Imagem do jogo" />
-        </div>
-        <div class="phrase-stack">
-          <div id="image-game-status" class="image-game-status" aria-live="polite"></div>
-          <div id="image-game-transcript" class="user-transcript" aria-live="polite"></div>
-          <div id="image-game-english" class="image-game-english" hidden></div>
+  <main id="game-main" class="container-screen container-screen--home">
+    <div class="image-game-shell" data-page-transition>
+      <div id="visor" class="image-game-visor">
+        <div class="visor-stack">
+          <div id="image-game-instruction" class="level-instruction" role="status" aria-live="polite">
+            Fale a palavra em inglês para a imagem.
+          </div>
+          <div class="mode-emblem image-game-emblem">
+            <img id="image-game-target" class="image-game-target" alt="Imagem do jogo" />
+          </div>
+          <div class="phrase-stack">
+            <div id="image-game-status" class="image-game-status" aria-live="polite"></div>
+            <div id="image-game-transcript" class="user-transcript" aria-live="polite"></div>
+            <div id="image-game-english" class="image-game-english" hidden></div>
+          </div>
         </div>
       </div>
     </div>
