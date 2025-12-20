@@ -2293,6 +2293,11 @@ body.page-inplay #menu-modes {
 
 body.page-image-game {
   --image-game-footer-height: 96px;
+  --image-game-footer-offset: calc(var(--image-game-footer-height) + env(safe-area-inset-bottom));
+}
+
+body.page-image-game #game-main {
+  padding-bottom: var(--image-game-footer-offset);
 }
 
 body.page-image-game #visor {
@@ -2302,7 +2307,7 @@ body.page-image-game #visor {
 
 .image-game-visor {
   justify-content: center;
-  padding-bottom: var(--image-game-footer-height, 0px);
+  padding-bottom: 0;
 }
 
 .image-game-emblem {
@@ -2371,6 +2376,7 @@ body.page-image-game .user-transcript {
 
 .image-game-footer {
   position: fixed;
+  width: 100%;
   left: 0;
   right: 0;
   bottom: 0;
