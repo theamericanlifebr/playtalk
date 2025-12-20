@@ -2394,7 +2394,7 @@ body.page-image-game .image-game-status,
 body.page-image-game .image-game-english,
 body.page-image-game .user-transcript {
   font-size: 150%;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   text-transform: capitalize;
 }
 

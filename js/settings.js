@@ -387,9 +387,9 @@
   ]);
   const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
   const DEFAULT_BACKGROUND = {
-    presetId: 'default',
-    src: 'SVG/background1.svg',
-    name: 'Background 1',
+    presetId: 'background6',
+    src: 'backgrounds/background6.jpg',
+    name: 'Background 6',
     type: 'image'
   };
   let currentBackground = DEFAULT_BACKGROUND;
