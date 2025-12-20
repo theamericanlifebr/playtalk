@@ -649,5 +649,255 @@
     "pt": "vestido",
     "en": "dress",
     "file": "image (130).svg"
+  },
+  {
+    "pt": "chave de fenda",
+    "en": "screwdriver",
+    "file": "image (131).svg"
+  },
+  {
+    "pt": "tambor",
+    "en": "drum",
+    "file": "image (132).svg"
+  },
+  {
+    "pt": "águia",
+    "en": "eagle",
+    "file": "image (133).svg"
+  },
+  {
+    "pt": "águia",
+    "en": "eagle",
+    "file": "image (134).svg"
+  },
+  {
+    "pt": "Terra",
+    "en": "Earth",
+    "file": "image (135).svg"
+  },
+  {
+    "pt": "berinjela",
+    "en": "eggplant",
+    "file": "image (136).svg"
+  },
+  {
+    "pt": "olho",
+    "en": "eye",
+    "file": "image (137).svg"
+  },
+  {
+    "pt": "fábrica",
+    "en": "factory",
+    "file": "image (138).svg"
+  },
+  {
+    "pt": "fazendeiro",
+    "en": "farmer",
+    "file": "image (139).svg"
+  },
+  {
+    "pt": "pena",
+    "en": "feather",
+    "file": "image (140).svg"
+  },
+  {
+    "pt": "cerca",
+    "en": "fence",
+    "file": "image (141).svg"
+  },
+  {
+    "pt": "hóquei em campo",
+    "en": "field hockey",
+    "file": "image (142).svg"
+  },
+  {
+    "pt": "arquivo",
+    "en": "filing cabinet",
+    "file": "image (143).svg"
+  },
+  {
+    "pt": "caminhão de bombeiro",
+    "en": "fire truck",
+    "file": "image (144).svg"
+  },
+  {
+    "pt": "extintor de incêndio",
+    "en": "fire extinguisher",
+    "file": "image (145).svg"
+  },
+  {
+    "pt": "bombeiro",
+    "en": "firefighter",
+    "file": "image (146).svg"
+  },
+  {
+    "pt": "peixe",
+    "en": "fish",
+    "file": "image (147).svg"
+  },
+  {
+    "pt": "Inglaterra",
+    "en": "England",
+    "file": "image (148).svg"
+  },
+  {
+    "pt": "Albânia",
+    "en": "Albania",
+    "file": "image (149).svg"
+  },
+  {
+    "pt": "Argélia",
+    "en": "Algeria",
+    "file": "image (150).svg"
+  },
+  {
+    "pt": "Andorra",
+    "en": "Andorra",
+    "file": "image (151).svg"
+  },
+  {
+    "pt": "Angola",
+    "en": "Angola",
+    "file": "image (152).svg"
+  },
+  {
+    "pt": "Argentina",
+    "en": "Argentina",
+    "file": "image (153).svg"
+  },
+  {
+    "pt": "Austrália",
+    "en": "Australia",
+    "file": "image (154).svg"
+  },
+  {
+    "pt": "Áustria",
+    "en": "Austria",
+    "file": "image (155).svg"
+  },
+  {
+    "pt": "Bélgica",
+    "en": "Belgium",
+    "file": "image (156).svg"
+  },
+  {
+    "pt": "Bolívia",
+    "en": "Bolivia",
+    "file": "image (157).svg"
+  },
+  {
+    "pt": "Brasil",
+    "en": "Brazil",
+    "file": "image (158).svg"
+  },
+  {
+    "pt": "Burkina Faso",
+    "en": "Burkina Faso",
+    "file": "image (159).svg"
+  },
+  {
+    "pt": "Camarões",
+    "en": "Cameroon",
+    "file": "image (160).svg"
+  },
+  {
+    "pt": "Canadá",
+    "en": "Canada",
+    "file": "image (161).svg"
+  },
+  {
+    "pt": "Espanha",
+    "en": "Spain",
+    "file": "image (162).svg"
+  },
+  {
+    "pt": "Chile",
+    "en": "Chile",
+    "file": "image (163).svg"
+  },
+  {
+    "pt": "China",
+    "en": "China",
+    "file": "image (164).svg"
+  },
+  {
+    "pt": "Croácia",
+    "en": "Croatia",
+    "file": "image (165).svg"
+  },
+  {
+    "pt": "Dinamarca",
+    "en": "Denmark",
+    "file": "image (166).svg"
+  },
+  {
+    "pt": "Egito",
+    "en": "Egypt",
+    "file": "image (167).svg"
+  },
+  {
+    "pt": "Alemanha",
+    "en": "Germany",
+    "file": "image (168).svg"
+  },
+  {
+    "pt": "Grécia",
+    "en": "Greece",
+    "file": "image (169).svg"
+  },
+  {
+    "pt": "Islândia",
+    "en": "Iceland",
+    "file": "image (170).svg"
+  },
+  {
+    "pt": "Irlanda",
+    "en": "Ireland",
+    "file": "image (171).svg"
+  },
+  {
+    "pt": "Indonésia",
+    "en": "Indonesia",
+    "file": "image (172).svg"
+  },
+  {
+    "pt": "Holanda",
+    "en": "Netherlands",
+    "file": "image (173).svg"
+  },
+  {
+    "pt": "Coreia do Norte",
+    "en": "North Korea",
+    "file": "image (174).svg"
+  },
+  {
+    "pt": "Portugal",
+    "en": "Portugal",
+    "file": "image (175).svg"
+  },
+  {
+    "pt": "Coreia do Sul",
+    "en": "South Korea",
+    "file": "image (176).svg"
+  },
+  {
+    "pt": "Ucrânia",
+    "en": "Ukraine",
+    "file": "image (177).svg"
+  },
+  {
+    "pt": "Reino Unido",
+    "en": "United Kingdom",
+    "file": "image (178).svg"
+  },
+  {
+    "pt": "Estados Unidos",
+    "en": "United States",
+    "file": "image (179).svg"
+  },
+  {
+    "pt": "Venezuela",
+    "en": "Venezuela",
+    "file": "image (180).svg"
   }
 ]
