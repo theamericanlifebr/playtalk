@@ -2291,6 +2291,10 @@ body.page-inplay #menu-modes {
   width: 100%;
 }
 
+body.page-image-game {
+  --image-game-footer-height: 96px;
+}
+
 body.page-image-game #visor {
   display: flex;
   min-height: calc(100vh - var(--header-height) - var(--nav-height));
@@ -2357,8 +2361,24 @@ body.page-image-game #visor {
   text-align: center;
 }
 
+body.page-image-game .level-instruction,
+body.page-image-game .image-game-status,
+body.page-image-game .image-game-english,
+body.page-image-game .user-transcript {
+  font-size: 150%;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
 .image-game-footer {
-  margin-top: 18px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(8, 12, 20, 0.85);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 10;
 }
 
 .image-game-actions {
@@ -2419,23 +2439,11 @@ body.page-image-game #visor {
   .image-game-english {
     margin-top: 50px;
   }
-
-  .image-game-footer {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    background: rgba(8, 12, 20, 0.85);
-    backdrop-filter: blur(8px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    z-index: 10;
-  }
 }
 
 @media (min-width: 769px) {
-  .image-game-actions {
-    margin-top: 200px;
+  .image-game-visor .visor-stack {
+    padding-top: 200px;
   }
 }
 
