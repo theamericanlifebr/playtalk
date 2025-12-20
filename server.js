@@ -676,6 +676,10 @@ ensureDefaultUser();
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(staticDir));
 
+app.get(['/game', '/game/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'game.html'));
+});
+
 app.get(['/vocabulary', '/vocabulary/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'vocabulary.html'));
 });
