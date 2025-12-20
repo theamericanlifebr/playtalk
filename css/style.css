@@ -2294,6 +2294,9 @@ body.page-inplay #menu-modes {
 body.page-image-game {
   --image-game-footer-height: 0px;
   --image-game-footer-offset: env(safe-area-inset-bottom);
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 body.page-image-game #game-main {
@@ -2322,21 +2325,36 @@ body.page-image-game #visor {
   object-fit: contain;
   filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.2));
   transition: opacity 0.2s ease;
-  touch-action: pan-y;
+  touch-action: none;
 }
 
-.image-game-target--slide {
-  animation: image-game-slide 0.35s ease both;
+.image-game-target--slide-in {
+  animation: image-game-slide-in 0.4s ease both;
 }
 
-@keyframes image-game-slide {
+.image-game-target--slide-out {
+  animation: image-game-slide-out 0.35s ease both;
+}
+
+@keyframes image-game-slide-in {
   from {
     opacity: 0;
-    transform: translateX(18px);
+    transform: translateX(26px);
   }
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes image-game-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-26px);
   }
 }
 
