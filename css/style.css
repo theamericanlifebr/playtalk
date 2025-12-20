@@ -2336,6 +2336,10 @@ body.page-image-game #visor {
   animation: image-game-slide-out 0.35s ease both;
 }
 
+.image-game-target--hidden {
+  opacity: 0;
+}
+
 @keyframes image-game-slide-in {
   from {
     opacity: 0;
