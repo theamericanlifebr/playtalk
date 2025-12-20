@@ -363,11 +363,6 @@
         startListening();
       });
     }
-    if (elements.target) {
-      elements.target.addEventListener('animationend', () => {
-        clearSlideClasses();
-      });
-    }
     window.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowRight') {
         advanceImage();
