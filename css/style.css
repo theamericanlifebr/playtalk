@@ -2298,6 +2298,7 @@ body.page-image-game {
 
 body.page-image-game #game-main {
   padding-bottom: var(--image-game-footer-offset);
+  margin-top: calc(var(--header-height) + var(--content-offset) - 100px);
 }
 
 body.page-image-game #visor {
@@ -2372,6 +2373,16 @@ body.page-image-game .image-game-english,
 body.page-image-game .user-transcript {
   font-size: 150%;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+body.page-image-game .image-game-english {
+  font-size: 210%;
+  font-family: var(--game-phrase-font-family, 'Open Sans', sans-serif);
+  font-weight: 700;
+}
+
+body.page-image-game.image-game-mic-lens .lens-overlay {
+  transition: opacity 0.5s ease, background 0.5s ease, background-color 0.5s ease;
 }
 
 .image-game-footer {
