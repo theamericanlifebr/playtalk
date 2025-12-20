@@ -2292,8 +2292,8 @@ body.page-inplay #menu-modes {
 }
 
 body.page-image-game {
-  --image-game-footer-height: 96px;
-  --image-game-footer-offset: calc(var(--image-game-footer-height) + env(safe-area-inset-bottom));
+  --image-game-footer-height: 0px;
+  --image-game-footer-offset: env(safe-area-inset-bottom);
 }
 
 body.page-image-game #game-main {
@@ -2385,66 +2385,9 @@ body.page-image-game.image-game-mic-lens .lens-overlay {
   transition: opacity 0.5s ease, background 0.5s ease, background-color 0.5s ease;
 }
 
-.image-game-footer {
-  position: fixed;
-  width: 100%;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--image-game-footer-height);
-  margin: 0;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  background: var(--header-gradient, linear-gradient(135deg, #1a66cc 0%, #357de0 100%));
-  backdrop-filter: blur(8px);
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
-  box-sizing: border-box;
-  z-index: 1200;
-}
-
-.image-game-actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-}
-
-.image-game-action {
-  border: none;
-  background: rgba(0, 0, 0, 0.25);
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  color: #ffffff;
-  cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.image-game-action svg {
-  width: 28px;
-  height: 28px;
-  fill: currentColor;
-  opacity: 0.85;
-}
-
-.image-game-action:hover {
-  transform: translateY(-2px);
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.image-game-action--mic svg {
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.image-game-action--mic.is-active svg {
-  opacity: 1;
-}
-
 @media (max-width: 768px) {
   body.page-image-game {
-    --image-game-footer-height: 92px;
+    --image-game-footer-height: 0px;
   }
 
   .image-game-visor {
@@ -2454,6 +2397,14 @@ body.page-image-game.image-game-mic-lens .lens-overlay {
   .image-game-target {
     width: clamp(220px, 65vw, 360px);
     max-height: 420px;
+  }
+
+  .image-game-emblem {
+    transform: translateY(-120px);
+  }
+
+  .phrase-stack {
+    transform: translateY(-120px);
   }
 
   .image-game-english {

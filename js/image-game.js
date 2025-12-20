@@ -145,10 +145,6 @@
     state.recognizer = new window.KitSpeechRecognizer({ lang: 'en-US' });
     state.recognizer.onresult = handleSpeechResult;
     state.recognizer.onerror = (event) => {
-      const message = event && event.error === 'not-supported'
-        ? 'Reconhecimento de voz não suportado neste navegador.'
-        : 'Não foi possível iniciar o microfone.';
-      showStatus(message, 'warning');
       state.listening = false;
       updateMicButton();
     };
@@ -169,7 +165,7 @@
           opacitySoft: doc.style.getPropertyValue('--lens-opacity-soft')
         };
       }
-      doc.style.setProperty('--lens-color-game-rgb', '0, 200, 0');
+      doc.style.setProperty('--lens-color-game-rgb', '144, 238, 144');
       doc.style.setProperty('--lens-opacity-soft', '0.7');
       document.body?.classList.add('image-game-mic-lens');
       return;
@@ -204,10 +200,7 @@
   };
 
   const startListening = () => {
-    if (!state.recognizer) {
-      showStatus('Reconhecimento de voz não disponível.', 'warning');
-      return;
-    }
+    if (!state.recognizer) return;
     if (state.listening) return;
     state.listening = true;
     updateMicButton();
