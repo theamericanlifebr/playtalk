@@ -1679,5 +1679,35 @@
   { "pt": "sol", "en": "sun", "file": "image (352).svg" },
   { "pt": "castelo", "en": "castle", "file": "image (353).svg" },
   { "pt": "surpreso", "en": "surprised", "file": "image (354).svg" },
-  { "pt": "feliz", "en": "happy", "file": "image (355).svg" }
+  { "pt": "feliz", "en": "happy", "file": "image (355).svg" },
+
+   { "pt": "batata doce", "en": "sweet potato", "file": "image (356).svg" },
+  { "pt": "etiqueta", "en": "tag", "file": "image (357).svg" },
+  { "pt": "bule", "en": "teapot", "file": "image (358).svg" },
+  { "pt": "ursinho", "en": "teddy bear", "file": "image (359).svg" },
+  { "pt": "telefone", "en": "telephone", "file": "image (360).svg" },
+
+  { "pt": "telescópio", "en": "telescope", "file": "image (361).svg" },
+  { "pt": "televisão", "en": "television", "file": "image (362).svg" },
+  { "pt": "mesquita", "en": "mosque", "file": "image (363).svg" },
+  { "pt": "barraca", "en": "tent", "file": "image (364).svg" },
+  { "pt": "termômetro", "en": "thermometer", "file": "image (365).svg" },
+
+  { "pt": "chinelo", "en": "flip-flop", "file": "image (366).svg" },
+  { "pt": "fio", "en": "thread", "file": "image (367).svg" },
+  { "pt": "vaso sanitário", "en": "toilet", "file": "image (368).svg" },
+  { "pt": "língua", "en": "tongue", "file": "image (369).svg" },
+  { "pt": "escova de dente", "en": "toothbrush", "file": "image (370).svg" },
+
+  { "pt": "dente", "en": "tooth", "file": "image (371).svg" },
+  { "pt": "lixeira", "en": "trash can", "file": "image (372).svg" },
+  { "pt": "pião", "en": "spinning top", "file": "image (373).svg" },
+  { "pt": "tornado", "en": "tornado", "file": "image (374).svg" },
+  { "pt": "trator", "en": "tractor", "file": "image (375).svg" },
+
+  { "pt": "mala", "en": "suitcase", "file": "image (376).svg" },
+  { "pt": "cone", "en": "traffic cone", "file": "image (377).svg" },
+  { "pt": "tartaruga", "en": "turtle", "file": "image (378).svg" },
+  { "pt": "guarda-chuva", "en": "umbrella", "file": "image (379).svg" },
+  { "pt": "vampiro", "en": "vampire", "file": "image (380).svg" }
 ]
