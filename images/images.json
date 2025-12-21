@@ -1649,5 +1649,35 @@
     "pt": "tubarão",
     "en": "shark",
     "file": "image (330).svg"
-  }
+  },
+
+   { "pt": "escudo", "en": "shield", "file": "image (331).svg" },
+  { "pt": "sacola", "en": "shopping bag", "file": "image (332).svg" },
+  { "pt": "tênis", "en": "sneaker", "file": "image (333).svg" },
+  { "pt": "tomando banho", "en": "showering", "file": "image (334).svg" },
+  { "pt": "portal japonês", "en": "torii gate", "file": "image (335).svg" },
+
+  { "pt": "não sei", "en": "shrugging", "file": "image (336).svg" },
+  { "pt": "doente", "en": "sick", "file": "image (337).svg" },
+  { "pt": "14 de dezembro", "en": "December fourteenth", "file": "image (338).svg" },
+  { "pt": "relógio", "en": "clock", "file": "image (339).svg" },
+  { "pt": "cantando", "en": "singing", "file": "image (340).svg" },
+
+  { "pt": "prédio", "en": "building", "file": "image (341).svg" },
+  { "pt": "dormindo", "en": "sleeping", "file": "image (342).svg" },
+  { "pt": "veado", "en": "deer", "file": "image (343).svg" },
+  { "pt": "bola", "en": "soccer ball", "file": "image (344).svg" },
+  { "pt": "ilha", "en": "island", "file": "image (345).svg" },
+
+  { "pt": "comendo", "en": "eating", "file": "image (346).svg" },
+  { "pt": "anunciando", "en": "announcing", "file": "image (347).svg" },
+  { "pt": "foguete", "en": "rocket", "file": "image (348).svg" },
+  { "pt": "força", "en": "strength", "file": "image (349).svg" },
+  { "pt": "girassol", "en": "sunflower", "file": "image (350).svg" },
+
+  { "pt": "óculos escuros", "en": "sunglasses", "file": "image (351).svg" },
+  { "pt": "sol", "en": "sun", "file": "image (352).svg" },
+  { "pt": "castelo", "en": "castle", "file": "image (353).svg" },
+  { "pt": "surpreso", "en": "surprised", "file": "image (354).svg" },
+  { "pt": "feliz", "en": "happy", "file": "image (355).svg" }
 ]
