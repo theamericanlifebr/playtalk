@@ -1709,5 +1709,30 @@
   { "pt": "cone", "en": "traffic cone", "file": "image (377).svg" },
   { "pt": "tartaruga", "en": "turtle", "file": "image (378).svg" },
   { "pt": "guarda-chuva", "en": "umbrella", "file": "image (379).svg" },
-  { "pt": "vampiro", "en": "vampire", "file": "image (380).svg" }
+  { "pt": "vampiro", "en": "vampire", "file": "image (380).svg" },
+
+  { "pt": "medalha", "en": "medal", "file": "image (381).svg" },
+{ "pt": "violino", "en": "violin", "file": "image (382).svg" },
+{ "pt": "vulcão", "en": "volcano", "file": "image (383).svg" },
+{ "pt": "pimenta", "en": "chili pepper", "file": "image (384).svg" },
+{ "pt": "nadar", "en": "to swim", "file": "image (385).svg" },
+
+{ "pt": "cadeira de rodas", "en": "wheelchair", "file": "image (386).svg" },
+{ "pt": "janela", "en": "window", "file": "image (387).svg" },
+{ "pt": "vinho", "en": "wine", "file": "image (388).svg" },
+{ "pt": "executivo", "en": "businessman", "file": "image (389).svg" },
+{ "pt": "chave inglesa", "en": "wrench", "file": "image (390).svg" },
+
+{ "pt": "escrever", "en": "to write", "file": "image (391).svg" },
+{ "pt": "barco à vela", "en": "sailboat", "file": "image (392).svg" },
+{ "pt": "panela", "en": "pot", "file": "image (393).svg" },
+{ "pt": "cozinhar no vapor", "en": "steaming", "file": "image (394).svg" },
+{ "pt": "chuveiro", "en": "shower", "file": "image (395).svg" },
+
+{ "pt": "colher", "en": "spoon", "file": "image (396).svg" },
+{ "pt": "bule", "en": "teapot", "file": "image (397).svg" },
+{ "pt": "torradeira", "en": "toaster", "file": "image (398).svg" },
+{ "pt": "torradeira", "en": "toaster", "file": "image (399).svg" },
+{ "pt": "espelho", "en": "mirror", "file": "image (400).svg" }
+
 ]
