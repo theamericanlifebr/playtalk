@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg width="800px" height="800px" viewBox="0 -2.5 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>craps</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#E4E6F1" offset="0%">
+</stop>
+            <stop stop-color="#D5D8E4" offset="100%">
+</stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#F8F8FB" offset="0%">
+</stop>
+            <stop stop-color="#EEEFF6" offset="100%">
+</stop>
+        </linearGradient>
+    </defs>
+    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="ui-gambling-website-lined-icnos-casinoshunter" transform="translate(-2290.000000, -2035.000000)" fill-rule="nonzero">
+            <g id="4" transform="translate(50.000000, 1871.000000)">
+                <g id="craps" transform="translate(2238.000000, 163.000000)">
+                    <g id="dice" transform="translate(16.000000, 22.000000) rotate(-30.000000) translate(-16.000000, -22.000000) translate(5.000000, 11.000000)">
+                        <path d="M19.25,0 C20.7687831,0 22,1.23121694 22,2.75 L22,19.25 C22,20.7687831 20.7687831,22 19.25,22 L2.75,22 C1.23121694,22 0,20.7687831 0,19.25 L0,2.75 C0,1.23121694 1.23121694,0 2.75,0 L19.25,0 Z" id="Path" fill="url(#linearGradient-1)">
+</path>
+                        <circle id="Oval" fill="#1C1C1F" cx="7.5625" cy="6.1875" r="1.375">
+</circle>
+                        <circle id="Oval-Copy-2" fill="#1C1C1F" cx="7.5625" cy="11" r="1.375">
+</circle>
+                        <circle id="Oval-Copy-3" fill="#1C1C1F" cx="7.5625" cy="15.8125" r="1.375">
+</circle>
+                        <circle id="Oval-Copy-6" fill="#1C1C1F" cx="14.4375" cy="6.1875" r="1.375">
+</circle>
+                        <circle id="Oval-Copy-5" fill="#1C1C1F" cx="14.4375" cy="11" r="1.375">
+</circle>
+                        <circle id="Oval-Copy-4" fill="#1C1C1F" cx="14.4375" cy="15.8125" r="1.375">
+</circle>
+                    </g>
+                    <g id="dice-copy-2" transform="translate(29.000000, 14.000000) rotate(-345.000000) translate(-29.000000, -14.000000) translate(18.000000, 3.000000)">
+                        <path d="M19.25,0 C20.7687831,0 22,1.23121694 22,2.75 L22,19.25 C22,20.7687831 20.7687831,22 19.25,22 L2.75,22 C1.23121694,22 0,20.7687831 0,19.25 L0,2.75 C0,1.23121694 1.23121694,0 2.75,0 L19.25,0 Z" id="Path" fill="url(#linearGradient-2)">
+</path>
+                        <circle id="Oval" fill="#1C1C1F" cx="7.5625" cy="7.1875" r="1.375">
+</circle>
+                        <circle id="Oval-Copy-2" fill="#1C1C1F" cx="7.5625" cy="14" r="1.375">
+</circle>
+                        <circle id="Oval-Copy-6" fill="#1C1C1F" cx="14.4375" cy="7.1875" r="1.375">
+</circle>
+                        <circle id="Oval-Copy-5" fill="#1C1C1F" cx="14.4375" cy="14" r="1.375">
+</circle>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
