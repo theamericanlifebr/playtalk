@@ -96,9 +96,47 @@
             <div id="image-game-transcript" class="user-transcript" aria-live="polite"></div>
             <div id="image-game-english" class="image-game-english" hidden></div>
           </div>
+          <div class="image-game-controls">
+            <div class="image-game-score">
+              <span id="image-game-round-label" class="image-game-round">Rodada 1</span>
+              <span id="image-game-counts" class="image-game-counts">0 acertos · 0 erros</span>
+            </div>
+            <div class="image-game-manual">
+              <button id="image-game-correct" class="image-game-mark image-game-mark--correct" type="button">
+                Acertei
+              </button>
+              <button id="image-game-wrong" class="image-game-mark image-game-mark--wrong" type="button">
+                Errei
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </main>
+  <div id="image-game-feedback" class="image-game-feedback" hidden>
+    <div class="image-game-feedback__card">
+      <h2 id="image-game-feedback-title">Rodada concluída</h2>
+      <p id="image-game-feedback-description"></p>
+      <div class="image-game-feedback__stats">
+        <div class="image-game-feedback__stat">
+          <span>Acertos</span>
+          <strong id="image-game-feedback-correct">0</strong>
+        </div>
+        <div class="image-game-feedback__stat">
+          <span>Erros</span>
+          <strong id="image-game-feedback-errors">0</strong>
+        </div>
+      </div>
+      <div class="image-game-feedback__actions">
+        <button id="image-game-feedback-primary" class="image-game-feedback__button" type="button"></button>
+        <button
+          id="image-game-feedback-secondary"
+          class="image-game-feedback__button image-game-feedback__button--ghost"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
