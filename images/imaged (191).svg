@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg width="800px" height="800px" viewBox="-1 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>slot</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#E91313" offset="0%">
+</stop>
+            <stop stop-color="#CF0808" offset="100%">
+</stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#DCDCE0" offset="0%">
+</stop>
+            <stop stop-color="#B6B7BE" offset="100%">
+</stop>
+        </linearGradient>
+        <path d="M27.3675214,19.3846154 C26.8577201,19.3846154 26.4444444,18.9713398 26.4444444,18.4615385 C26.4444444,17.9517372 26.8577201,17.5384615 27.3675214,17.5384615 L30.2214444,17.5378462 L30.2222222,11.0982906 C30.2222222,10.5766883 30.6450644,10.1538462 31.1666667,10.1538462 C31.6882689,10.1538462 32.1111111,10.5766883 32.1111111,11.0982906 L32.1111111,18.4401709 L32.111056,18.4513418 C32.1110927,18.4547363 32.1111111,18.4581352 32.1111111,18.4615385 C32.1111111,18.9713398 31.6978355,19.3846154 31.1880342,19.3846154 L27.3675214,19.3846154 Z" id="path-3">
+</path>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-4">
+            <stop stop-color="#F87300" offset="0%">
+</stop>
+            <stop stop-color="#EE3F00" offset="100%">
+</stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-5">
+            <stop stop-color="#F87300" offset="0%">
+</stop>
+            <stop stop-color="#EE3F00" offset="100%">
+</stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-6">
+            <stop stop-color="#F7F8FB" offset="0%">
+</stop>
+            <stop stop-color="#ECEEF5" offset="100%">
+</stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-7">
+            <stop stop-color="#DCDCE0" offset="0%">
+</stop>
+            <stop stop-color="#B6B7BE" offset="100%">
+</stop>
+        </linearGradient>
+    </defs>
+    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="ui-gambling-website-lined-icnos-casinoshunter" transform="translate(-473.000000, -2034.000000)" fill-rule="nonzero">
+            <g id="4" transform="translate(50.000000, 1871.000000)">
+                <g id="slot" transform="translate(423.000000, 163.000000)">
+                    <path d="M8.97222222,-5.19584376e-14 L8.97222222,1.84615385 C8.97222222,3.88535908 10.6635909,5.53846154 12.75,5.53846154 L14.6388889,5.53846154 C16.7252979,5.53846154 18.4166667,3.88535908 18.4166667,1.84615385 L18.4166667,-5.19584376e-14 L8.97222222,-5.19584376e-14 Z" id="Rectangle-Copy-43" fill="url(#linearGradient-1)" transform="translate(13.694444, 2.769231) rotate(-180.000000) translate(-13.694444, -2.769231) ">
+</path>
+                    <g id="Combined-Shape">
+                        <use fill="#000000" xlink:href="#path-3">
+</use>
+                        <use fill="url(#linearGradient-2)" xlink:href="#path-3">
+</use>
+                    </g>
+                    <path d="M31.1666667,6.46153846 C32.7314735,6.46153846 34,7.70136531 34,9.23076923 C34,10.7601732 32.7314735,12 31.1666667,12 C29.6018599,12 28.3333333,10.7601732 28.3333333,9.23076923 C28.3333333,7.70136531 29.6018599,6.46153846 31.1666667,6.46153846 Z" id="Path" fill="url(#linearGradient-4)">
+</path>
+                    <path d="M23.6111111,4.61538462 C25.6975202,4.61538462 27.3888889,6.26848708 27.3888889,8.30769231 L27.3888889,32.3076923 C27.3888889,34.3468975 25.6975202,36 23.6111111,36 L3.77777778,36 C1.69136872,36 1.24344979e-14,34.3468975 1.24344979e-14,32.3076923 L1.24344979e-14,8.30769231 C1.24344979e-14,6.26848708 1.69136872,4.61538462 3.77777778,4.61538462 L23.6111111,4.61538462 Z" id="Path" fill="url(#linearGradient-5)">
+</path>
+                    <path d="M20.3055556,9.23076923 C21.8703623,9.23076923 23.1388889,10.4705961 23.1388889,12 L23.1388889,18.4615385 C23.1388889,19.9909424 21.8703623,21.2307692 20.3055556,21.2307692 L7.08333333,21.2307692 C5.51852654,21.2307692 4.25,19.9909424 4.25,18.4615385 L4.25,12 C4.25,10.4705961 5.51852654,9.23076923 7.08333333,9.23076923 L20.3055556,9.23076923 Z" id="Path" fill="url(#linearGradient-6)">
+</path>
+                    <polygon id="Rectangle" fill="url(#linearGradient-7)" points="9 9.23076923 11 9.23076923 11 21.2307692 9 21.2307692">
+</polygon>
+                    <polygon id="Rectangle-Copy-46" fill="url(#linearGradient-7)" points="16 9.23076923 18 9.23076923 18 21.2307692 16 21.2307692">
+</polygon>
+                    <rect id="Rectangle" fill="#B94107" x="15.1111111" y="24.9230769" width="7.55555556" height="1.84615385" rx="0.923076923">
+</rect>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
