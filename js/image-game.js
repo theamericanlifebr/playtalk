@@ -1,5 +1,9 @@
 (() => {
+  const LEVEL_SIZES = Array.from({ length: 40 }, (_, index) => (index === 39 ? 24 : 25));
+
   const state = {
+    allItems: [],
+    levelBlocks: {},
     items: [],
     index: 0,
     recognizer: null,
@@ -7,7 +11,14 @@
     advanceLock: false,
     lensOverrides: null,
     preloaded: new Set(),
-    transitionAudio: null
+    transitionAudio: null,
+    currentLevel: 1,
+    round: 1,
+    correct: 0,
+    incorrect: 0,
+    roundComplete: false,
+    round1Passed: false,
+    feedbackHandlers: { primary: null, secondary: null }
   };
 
   const elements = {
@@ -18,7 +29,19 @@
     english: document.getElementById('image-game-english'),
     gameMain: document.getElementById('game-main'),
     audioButton: document.getElementById('image-game-audio'),
-    translateButton: document.getElementById('image-game-translate')
+    translateButton: document.getElementById('image-game-translate'),
+    correctButton: document.getElementById('image-game-correct'),
+    wrongButton: document.getElementById('image-game-wrong'),
+    roundLabel: document.getElementById('image-game-round-label'),
+    counts: document.getElementById('image-game-counts'),
+    feedback: document.getElementById('image-game-feedback'),
+    feedbackTitle: document.getElementById('image-game-feedback-title'),
+    feedbackDescription: document.getElementById('image-game-feedback-description'),
+    feedbackCorrect: document.getElementById('image-game-feedback-correct'),
+    feedbackErrors: document.getElementById('image-game-feedback-errors'),
+    feedbackPrimary: document.getElementById('image-game-feedback-primary'),
+    feedbackSecondary: document.getElementById('image-game-feedback-secondary'),
+    headerLevel: document.getElementById('header-level')
   };
 
   const normalizeText = (value) => {
@@ -49,7 +72,55 @@
     return null;
   };
 
+  const getFileIndex = (fileName) => {
+    if (!fileName) return 0;
+    const match = fileName.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
+  const shuffle = (list) => {
+    const array = [...list];
+    for (let i = array.length - 1; i > 0; i -= 1) {
+      const swapIndex = Math.floor(Math.random() * (i + 1));
+      [array[i], array[swapIndex]] = [array[swapIndex], array[i]];
+    }
+    return array;
+  };
+
+  const buildLevelBlocks = (items) => {
+    const sorted = [...items].sort((a, b) => getFileIndex(a.file) - getFileIndex(b.file));
+    const blocks = {};
+    let cursor = sorted.length;
+
+    LEVEL_SIZES.forEach((size, levelIndex) => {
+      const levelNumber = levelIndex + 1;
+      const start = Math.max(cursor - size, 0);
+      const slice = sorted.slice(start, cursor);
+      cursor = start;
+      blocks[levelNumber] = slice;
+    });
+
+    return blocks;
+  };
+
+  const getRoundSize = (level) => LEVEL_SIZES[Math.min(Math.max(level, 1), LEVEL_SIZES.length) - 1] || 25;
+
   const hiddenClass = 'image-game-target--hidden';
+
+  const updateHeaderLevel = () => {
+    if (!elements.headerLevel) return;
+    elements.headerLevel.textContent = `Nível ${state.currentLevel}`;
+  };
+
+  const updateRoundLabel = () => {
+    if (!elements.roundLabel) return;
+    elements.roundLabel.textContent = `Rodada ${state.round}`;
+  };
+
+  const updateCounts = () => {
+    if (!elements.counts) return;
+    elements.counts.textContent = `${state.correct} acertos · ${state.incorrect} erros`;
+  };
 
   const clearSlideClasses = () => {
     if (!elements.target) return;
@@ -121,6 +192,50 @@
     elements.transcript.textContent = message;
   };
 
+  const resetRoundStats = () => {
+    state.correct = 0;
+    state.incorrect = 0;
+    state.roundComplete = false;
+    updateCounts();
+  };
+
+  const hideFeedback = () => {
+    if (!elements.feedback) return;
+    elements.feedback.setAttribute('hidden', '');
+    state.feedbackHandlers = { primary: null, secondary: null };
+  };
+
+  const showFeedback = ({ title, description, primaryLabel, secondaryLabel, onPrimary, onSecondary }) => {
+    if (!elements.feedback || !elements.feedbackTitle || !elements.feedbackDescription) return;
+
+    elements.feedbackTitle.textContent = title;
+    elements.feedbackDescription.textContent = description;
+    elements.feedbackCorrect.textContent = state.correct;
+    elements.feedbackErrors.textContent = state.incorrect;
+
+    if (elements.feedbackPrimary) {
+      elements.feedbackPrimary.textContent = primaryLabel;
+      elements.feedbackPrimary.disabled = !primaryLabel;
+    }
+
+    if (elements.feedbackSecondary) {
+      if (secondaryLabel) {
+        elements.feedbackSecondary.textContent = secondaryLabel;
+        elements.feedbackSecondary.removeAttribute('hidden');
+        elements.feedbackSecondary.disabled = false;
+      } else {
+        elements.feedbackSecondary.setAttribute('hidden', '');
+      }
+    }
+
+    state.feedbackHandlers = {
+      primary: typeof onPrimary === 'function' ? onPrimary : null,
+      secondary: typeof onSecondary === 'function' ? onSecondary : null
+    };
+
+    elements.feedback.removeAttribute('hidden');
+  };
+
   const syncTranslateButton = () => {
     if (!elements.translateButton || !elements.english) return;
     elements.translateButton.setAttribute(
@@ -156,11 +271,47 @@
     showPhrase(nextLanguage);
   };
 
+  const getLevelBlock = (level) => {
+    const block = state.levelBlocks[level] || [];
+    if (block.length) return block;
+    const fallbackSize = getRoundSize(level);
+    return state.allItems.slice(-fallbackSize);
+  };
+
+  const getRoundItems = (round) => {
+    const size = getRoundSize(state.currentLevel);
+    if (round === 1) {
+      return shuffle(getLevelBlock(state.currentLevel)).slice(0, size);
+    }
+
+    const unlocked = [];
+    for (let level = 1; level <= state.currentLevel; level += 1) {
+      unlocked.push(...getLevelBlock(level));
+    }
+
+    const uniqueMap = new Map();
+    unlocked.forEach((item) => {
+      if (!uniqueMap.has(item.file)) {
+        uniqueMap.set(item.file, item);
+      }
+    });
+
+    return shuffle(Array.from(uniqueMap.values())).slice(0, size);
+  };
+
   const advanceImage = () => {
-    if (state.advanceLock) return;
+    if (state.advanceLock || state.roundComplete) return;
     if (!state.items.length) return;
+
+    const hasNext = state.index < state.items.length - 1;
+    if (!hasNext) {
+      state.roundComplete = true;
+      finishRound();
+      return;
+    }
+
     state.advanceLock = true;
-    const nextIndex = (state.index + 1) % state.items.length;
+    const nextIndex = state.index + 1;
     showTranscript('');
     showStatus('');
     playTransitionSound();
@@ -173,6 +324,132 @@
       .finally(() => {
         state.advanceLock = false;
       });
+  };
+
+  const registerAnswer = (isCorrect) => {
+    if (!state.items.length || state.roundComplete) return;
+    if (isCorrect) {
+      state.correct += 1;
+    } else {
+      state.incorrect += 1;
+    }
+
+    updateCounts();
+
+    const isLast = state.index >= state.items.length - 1;
+    if (isLast) {
+      state.roundComplete = true;
+      finishRound();
+      return;
+    }
+
+    advanceImage();
+  };
+
+  const finishRound = () => {
+    const roundTitle = `Rodada ${state.round} concluída`;
+    const perfectRound1 =
+      state.round === 1 && state.incorrect === 0 && state.correct >= state.items.length;
+
+    if (state.round === 1) {
+      state.round1Passed = perfectRound1;
+      showFeedback({
+        title: roundTitle,
+        description: perfectRound1
+          ? `Você acertou todas as ${getRoundSize(state.currentLevel)} imagens. A rodada 2 é obrigatória.`
+          : 'É preciso acertar todas as imagens para subir de nível. Tente novamente.',
+        primaryLabel: perfectRound1 ? 'Iniciar rodada 2' : 'Tentar novamente',
+        secondaryLabel: perfectRound1 ? 'Refazer rodada 1' : '',
+        onPrimary: () => {
+          hideFeedback();
+          startRound(perfectRound1 ? 2 : 1);
+        },
+        onSecondary: perfectRound1
+          ? () => {
+              hideFeedback();
+              startRound(1);
+            }
+          : null
+      });
+      return;
+    }
+
+    const nextLevel = Math.min(state.currentLevel + 1, LEVEL_SIZES.length);
+    const canAdvance = state.round1Passed && state.currentLevel < LEVEL_SIZES.length;
+    const reachedLastLevel = state.currentLevel === LEVEL_SIZES.length && !canAdvance;
+    const primaryLabel = canAdvance
+      ? `Jogar nível ${nextLevel}`
+      : `Repetir nível ${state.currentLevel}`;
+    const description = state.round1Passed
+      ? reachedLastLevel
+        ? 'Você completou o último nível. Continue praticando estas imagens sempre que quiser.'
+        : `Rodada obrigatória concluída. Prepare-se para as próximas ${getRoundSize(nextLevel)} imagens.`
+      : 'Para avançar de nível, finalize a Rodada 1 sem erros e refaça esta rodada se quiser treinar mais.';
+
+    showFeedback({
+      title: state.currentLevel === LEVEL_SIZES.length && canAdvance === false
+        ? 'Rodada 2 concluída'
+        : roundTitle,
+      description,
+      primaryLabel,
+      secondaryLabel: 'Repetir rodada 2',
+      onPrimary: () => {
+        hideFeedback();
+        if (canAdvance) {
+          state.currentLevel = nextLevel;
+          localStorage.setItem('imageGameLevel', String(state.currentLevel));
+          state.round1Passed = false;
+          updateHeaderLevel();
+        }
+        startRound(1);
+      },
+      onSecondary: () => {
+        hideFeedback();
+        startRound(2);
+      }
+    });
+  };
+
+  const startRound = (round = 1) => {
+    if (round === 2 && !state.round1Passed) {
+      showStatus('Conclua a Rodada 1 sem erros para liberar a Rodada 2.', 'warning');
+      return;
+    }
+
+    hideFeedback();
+    state.round = round;
+    state.index = 0;
+    if (round === 1) {
+      state.round1Passed = false;
+    }
+    state.items = getRoundItems(round);
+    state.preloaded.clear();
+    resetRoundStats();
+    updateRoundLabel();
+
+    if (!state.items.length) {
+      showStatus('Nenhuma imagem encontrada para esta rodada.', 'warning');
+      return;
+    }
+
+    if (elements.instruction) {
+      elements.instruction.textContent =
+        round === 1
+          ? 'Revise as 25 imagens mais recentes e marque se acertou ou errou.'
+          : 'Rodada obrigatória: marque se acertou ou errou as imagens já desbloqueadas.';
+    }
+
+    state.roundComplete = false;
+    updateImage({ animateIn: true });
+    showStatus('');
+  };
+
+  const startLevel = (level = 1) => {
+    const normalizedLevel = Math.min(Math.max(level, 1), LEVEL_SIZES.length);
+    state.currentLevel = normalizedLevel;
+    state.round1Passed = false;
+    updateHeaderLevel();
+    startRound(1);
   };
 
   const handleSpeechResult = (event) => {
@@ -193,7 +470,7 @@
 
     if (said && said.includes(expected)) {
       showStatus('');
-      advanceImage();
+      registerAnswer(true);
     }
   };
 
@@ -236,7 +513,7 @@
       const isSwipeDown = deltaY > swipeThreshold && Math.abs(deltaX) < 80;
 
       if (isSwipeLeft) {
-        advanceImage();
+        registerAnswer(true);
         return;
       }
 
@@ -271,9 +548,29 @@
         togglePhraseLanguage();
       });
     }
+    if (elements.correctButton) {
+      elements.correctButton.addEventListener('click', () => registerAnswer(true));
+    }
+    if (elements.wrongButton) {
+      elements.wrongButton.addEventListener('click', () => registerAnswer(false));
+    }
+    if (elements.feedbackPrimary) {
+      elements.feedbackPrimary.addEventListener('click', () => {
+        if (state.feedbackHandlers.primary) {
+          state.feedbackHandlers.primary();
+        }
+      });
+    }
+    if (elements.feedbackSecondary) {
+      elements.feedbackSecondary.addEventListener('click', () => {
+        if (state.feedbackHandlers.secondary) {
+          state.feedbackHandlers.secondary();
+        }
+      });
+    }
     window.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowRight') {
-        advanceImage();
+        registerAnswer(true);
       }
       if (event.key === 'ArrowDown') {
         showPhrase('en');
@@ -286,23 +583,23 @@
     try {
       const response = await fetch('images/images.json', { cache: 'no-store' });
       const data = await response.json();
-      state.items = (Array.isArray(data) ? data : [])
+      state.allItems = (Array.isArray(data) ? data : [])
         .map(parseItem)
         .filter((entry) => entry && entry.file);
 
-      for (let i = state.items.length - 1; i > 0; i -= 1) {
-        const swapIndex = Math.floor(Math.random() * (i + 1));
-        [state.items[i], state.items[swapIndex]] = [state.items[swapIndex], state.items[i]];
-      }
+      state.levelBlocks = buildLevelBlocks(state.allItems);
 
-      if (!state.items.length) {
+      if (!state.allItems.length) {
         showStatus('Nenhuma imagem encontrada.', 'warning');
         return;
       }
 
-      state.index = 0;
-      updateImage({ animateIn: true });
-      showStatus('');
+      const savedLevel = parseInt(localStorage.getItem('imageGameLevel') || '1', 10);
+      const startingLevel = Number.isFinite(savedLevel)
+        ? Math.min(Math.max(savedLevel, 1), LEVEL_SIZES.length)
+        : 1;
+
+      startLevel(startingLevel);
     } catch (error) {
       console.error('Erro ao carregar imagens:', error);
       showStatus('Erro ao carregar as imagens.', 'warning');
