@@ -128,12 +128,18 @@
       position: relative;
       overflow: hidden;
       cursor: pointer;
+      opacity: 1;
     }
 
     .grid-card img { width: 120px; height: 120px; object-fit: contain; }
 
     .grid-card--correct { background: rgba(46, 204, 113, 0.5); }
     .grid-card--wrong { background: rgba(231, 76, 60, 0.5); }
+
+    .grid-card--enter {
+      opacity: 0;
+      animation: cardFadeIn 0.5s ease forwards;
+    }
 
     .board--hidden { opacity: 0; pointer-events: none; }
 
@@ -265,6 +271,11 @@
     @keyframes fadeOut {
       from { opacity: 1; }
       to { opacity: 0; }
+    }
+
+    @keyframes cardFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .sr-only {
