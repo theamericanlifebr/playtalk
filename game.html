@@ -90,8 +90,26 @@
           </div>
           <div class="image-game-folder-panel" aria-label="Pastas de imagens">
             <div id="image-game-folders" class="image-game-folders" role="group" aria-label="Pastas disponíveis"></div>
+            <div class="image-game-level-panel">
+              <label class="image-game-level-label" for="image-game-level">Escolha o nível</label>
+              <div class="image-game-level-control">
+                <input
+                  id="image-game-level"
+                  class="image-game-level-input"
+                  type="range"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value="1"
+                  aria-label="Selecione o nível para jogar"
+                />
+                <span id="image-game-level-value" class="image-game-level-value">Nível 1</span>
+              </div>
+              <p id="image-game-active-count" class="image-game-active-count">0 palavras ativas</p>
+            </div>
             <button id="image-game-start" class="image-game-start" type="button">Iniciar imagens</button>
           </div>
+          <div id="image-game-folder-preview" class="image-game-folder-preview" hidden></div>
           <div class="mode-emblem image-game-emblem">
             <img id="image-game-target" class="image-game-target" alt="Imagem do jogo" />
           </div>
