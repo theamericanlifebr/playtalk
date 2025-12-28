@@ -128,21 +128,28 @@
         resolve();
         return;
       }
+      const cleanup = () => {
+        board.classList.remove('board--hidden', 'hidden-phase');
+        textContainer.classList.remove('hidden-phase');
+        choiceRow.classList.remove('hidden-phase');
+      };
+
+      const finish = () => {
+        audio.removeEventListener('ended', finish);
+        audio.removeEventListener('error', finish);
+        cleanup();
+        resolve();
+      };
+
       board.classList.add('board--hidden', 'hidden-phase');
       textContainer.classList.add('hidden-phase');
       choiceRow.classList.add('hidden-phase');
       showText('');
       choiceRow.innerHTML = '';
       audio.currentTime = 0;
-      const onEnded = () => {
-        audio.removeEventListener('ended', onEnded);
-        board.classList.remove('board--hidden', 'hidden-phase');
-        textContainer.classList.remove('hidden-phase');
-        choiceRow.classList.remove('hidden-phase');
-        resolve();
-      };
-      audio.addEventListener('ended', onEnded);
-      audio.play().catch(() => resolve());
+      audio.addEventListener('ended', finish);
+      audio.addEventListener('error', finish);
+      audio.play().catch(finish);
     });
   }
 
