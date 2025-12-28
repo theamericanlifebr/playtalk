@@ -118,7 +118,7 @@
     .grid-card {
       width: 150px;
       height: 150px;
-      border-radius: 150px;
+      border-radius: 20px;
       background: rgba(128, 128, 128, 0.3);
       border: none;
       display: flex;
@@ -142,6 +142,8 @@
     }
 
     .board--hidden { opacity: 0; pointer-events: none; }
+
+    .hidden-phase { opacity: 0; pointer-events: none; }
 
     .text-container {
       margin-top: 12px;
@@ -172,6 +174,9 @@
       cursor: pointer;
       transition: transform 0.15s ease, background 0.2s ease;
       min-width: 150px;
+      font-size: 20px;
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      text-transform: capitalize;
     }
 
     .choice-btn:hover { transform: translateY(-1px); }
@@ -230,6 +235,29 @@
 
     .overlay-card h1 { margin: 0 0 6px; font-size: 24px; }
     .overlay-card p { margin: 0 0 14px; color: #243b64; }
+
+    .overlay-subtitle {
+      font-weight: 700;
+      color: #1b4f9a;
+      margin-bottom: 8px;
+    }
+
+    .phase-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0 0 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .phase-list li {
+      background: rgba(27, 79, 154, 0.06);
+      border: 1px solid rgba(27, 79, 154, 0.12);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-weight: 600;
+      color: #0b1f44;
+    }
 
     .overlay-actions {
       display: flex;
@@ -320,6 +348,13 @@
       <h1>Modo Vocabulary</h1>
       <p>Comece pelo nível atual e avance acertando todas as imagens sem errar.</p>
       <div class="pill-info" id="pre-game-level">Nível 1</div>
+      <p class="overlay-subtitle">Elementos do modo</p>
+      <ul class="phase-list">
+        <li>Quadro fixo (360px no mobile, 450px no desktop) para exibir as imagens.</li>
+        <li>Contêiner de textos sempre presente logo abaixo do quadro.</li>
+        <li>Barra de progresso 25px acima do rodapé reinicia se houver erro.</li>
+        <li>Apresentações de fase com áudio antes de cada etapa.</li>
+      </ul>
       <div class="overlay-actions">
         <button class="btn-primary" id="start-btn">Jogar</button>
       </div>
