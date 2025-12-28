@@ -312,6 +312,19 @@
 
     .btn-primary:hover { transform: translateY(-1px); }
 
+    .btn-orange {
+      background: linear-gradient(120deg, #ffb347, #ff7a18);
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+
+    .btn-orange:hover { transform: translateY(-1px); }
+
     @keyframes cardFadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -368,6 +381,17 @@
       </ul>
       <div class="overlay-actions">
         <button class="btn-primary" id="start-btn">Jogar</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="game-overlay hidden" id="phase-transition">
+    <div class="overlay-card">
+      <div class="pill-info">Próxima etapa</div>
+      <h1 id="phase-transition-title">Fase 2</h1>
+      <p class="overlay-subtitle" id="phase-transition-instruction">Clique no que ouviu.</p>
+      <div class="overlay-actions">
+        <button class="btn-orange" id="phase-transition-btn">Iniciar fase 2</button>
       </div>
     </div>
   </section>
