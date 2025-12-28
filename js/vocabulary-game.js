@@ -1,4 +1,4 @@
-(function() {
+(function () {
   const STORAGE_KEY = 'vocabulary-level';
   const board = document.getElementById('board');
   const boardInner = document.getElementById('board-inner');
@@ -26,8 +26,8 @@
   let phase = 1;
   let pool = [];
   let cycle = [];
-  let index = 0;   // posição atual no ciclo
-  let score = 0;   // progresso / acertos
+  let index = 0; // posição atual no ciclo
+  let score = 0; // progresso / acertos
 
   let awaiting = false;
   let recognition = null;
@@ -78,26 +78,24 @@
     return arr;
   }
 
- function resetProgress() {
-  index = 0;
-  score = 0;
-  cycle = shuffle(pool);
+  function resetProgress() {
+    index = 0;
+    score = 0;
+    cycle = shuffle(pool);
 
-  if (!cycle.length) {
-    showText('Nenhuma imagem disponível para este nível.');
+    if (!cycle.length) {
+      showText('Nenhuma imagem disponível para este nível.');
+    }
+
+    updateProgressBar();
   }
 
-  updateProgressBar();
-}
- }
+  function updateProgressBar() {
+    if (!progressFill) return;
+    const total = Math.max(cycle.length, 1);
+    const percent = Math.min(100, Math.round((score / total) * 100));
+    progressFill.style.width = `${percent}%`;
   }
-
- function updateProgressBar() {
-  const total = Math.max(cycle.length, 1);
-  const percent = Math.min(100, Math.round((score / total) * 100));
-  progressFill.style.width = `${percent}%`;
-}
-
 
   function speak(text) {
     if (!('speechSynthesis' in window)) return;
@@ -109,13 +107,14 @@
   }
 
   function showText(message) {
+    if (!textContainer) return;
     textContainer.textContent = message || '';
     textContainer.classList.toggle('active', Boolean(message));
   }
 
   function clearBoard() {
-    boardInner.innerHTML = '';
-    choiceRow.innerHTML = '';
+    if (boardInner) boardInner.innerHTML = '';
+    if (choiceRow) choiceRow.innerHTML = '';
   }
 
   function playPhaseIntro(nextPhase) {
@@ -168,18 +167,19 @@
   function handlePhaseOneChoice(btn, correct) {
     if (awaiting) return;
     awaiting = true;
-    choiceRow.querySelectorAll('button').forEach(b => b.disabled = true);
+    choiceRow.querySelectorAll('button').forEach(b => { b.disabled = true; });
     const audio = correct ? successAudio : errorAudio;
-   if (correct) {
-  btn.classList.add('success');
-  score += 1;
-  index += 1;
-} else {
-  btn.classList.add('error');
-  score = 0;
-  index = 0;
-  cycle = shuffle(pool);
-}
+
+    if (correct) {
+      btn.classList.add('success');
+      score += 1;
+      index += 1;
+    } else {
+      btn.classList.add('error');
+      score = 0;
+      index = 0;
+      cycle = shuffle(pool);
+    }
 
     updateProgressBar();
     audio && audio.play().catch(() => {});
@@ -245,14 +245,15 @@
     const isCorrect = card.dataset.correct === 'true';
     const audio = isCorrect ? successAudio : errorAudio;
     highlightCorrectCard();
-if (isCorrect) {
-  score += 1;
-  index += 1;
-} else {
-  score = 0;
-  index = 0;
-  cycle = shuffle(pool);
-}
+
+    if (isCorrect) {
+      score += 1;
+      index += 1;
+    } else {
+      score = 0;
+      index = 0;
+      cycle = shuffle(pool);
+    }
 
     audio && audio.play().catch(() => {});
     updateProgressBar();
@@ -299,14 +300,15 @@ if (isCorrect) {
       const cleanExpected = normalizeText(expected);
       const cleanSpoken = normalizeText(spoken);
       const success = cleanSpoken.includes(cleanExpected);
- if (success) {
-  score += 1;
-  index += 1;
-} else {
-  score = 0;
-  index = 0;
-  cycle = shuffle(pool);
-}
+
+      if (success) {
+        score += 1;
+        index += 1;
+      } else {
+        score = 0;
+        index = 0;
+        cycle = shuffle(pool);
+      }
 
       updateProgressBar();
       setTimeout(() => {
@@ -336,32 +338,17 @@ if (isCorrect) {
     }
   }
 
-function advanceCycle() {
-  if (!cycle.length) return;
+  function advanceCycle() {
+    if (!cycle.length) return;
 
-  if (index >= cycle.length) {
-    handlePhaseComplete();
-    return;
-  }
-
-  const item = cycle[index];
-  showText('');
-
-  switch (phase) {
-    case 1:
-      showPhaseOneCard(item);
-      break;
-    case 2:
-      showPhaseTwoCards(item);
-      break;
-    case 3:
-      showPhaseThreeCard(item);
-      break;
-  }
-}
+    if (index >= cycle.length) {
+      handlePhaseComplete();
+      return;
+    }
 
     const item = cycle[index];
     showText('');
+
     switch (phase) {
       case 1:
         showPhaseOneCard(item);
@@ -398,6 +385,7 @@ function advanceCycle() {
       levelComplete.classList.remove('hidden');
       return;
     }
+
     dissolveEnvironment(() => {
       phase += 1;
       resetProgress();
