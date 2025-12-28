@@ -46,6 +46,7 @@
     phase1Options: document.getElementById('phase1-options'),
     phase2Grid: document.getElementById('phase2-grid'),
     phase3Hint: document.getElementById('phase3-hint'),
+    emblem: document.querySelector('.image-game-emblem'),
     gameMain: document.getElementById('game-main')
   };
 
@@ -138,6 +139,13 @@
   };
 
   const setTargetVisibility = (visible) => {
+    if (elements.emblem) {
+      if (visible) {
+        elements.emblem.removeAttribute('hidden');
+      } else {
+        elements.emblem.setAttribute('hidden', '');
+      }
+    }
     if (!elements.target) return;
     if (visible) {
       elements.target.removeAttribute('hidden');
@@ -290,6 +298,9 @@
       handlePhaseComplete();
       return;
     }
+    elements.phase1Options?.setAttribute('hidden', '');
+    elements.phase2Grid?.removeAttribute('hidden');
+    elements.phase3Hint?.setAttribute('hidden', '');
     state.currentItem = state.pending[0];
     updateImage();
     if (elements.target) {
@@ -354,6 +365,8 @@
       handlePhaseComplete();
       return;
     }
+    elements.phase1Options?.setAttribute('hidden', '');
+    elements.phase2Grid?.setAttribute('hidden', '');
     state.currentItem = state.pending[0];
     updateImage();
     if (elements.target) {
