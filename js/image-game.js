@@ -10,6 +10,7 @@
   };
 
   const state = {
+    allItems: [],
     items: [],
     pending: [],
     currentItem: null,
@@ -41,8 +42,6 @@
     feedbackSecondary: document.getElementById('image-game-feedback-secondary'),
     headerLevel: document.getElementById('header-level'),
     startButton: document.getElementById('image-game-start'),
-    phaseDescription: document.getElementById('image-game-phase-description'),
-    phaseValue: document.getElementById('image-game-phase-value'),
     levelValue: document.getElementById('image-game-level-value'),
     phase1Options: document.getElementById('phase1-options'),
     phase2Grid: document.getElementById('phase2-grid'),
@@ -100,12 +99,7 @@
   };
 
   const updatePhaseDisplay = () => {
-    if (elements.phaseValue) {
-      elements.phaseValue.textContent = state.phase;
-    }
-    if (elements.phaseDescription) {
-      elements.phaseDescription.textContent = PHASES[state.phase] || '';
-    }
+    // Phase details no longer displayed on screen, but keep state updated
   };
 
   const updateCounts = () => {
@@ -151,6 +145,12 @@
   const getRandomDistractors = (count, excludeFile) => {
     const pool = state.items.filter((item) => item.file !== excludeFile);
     return shuffle(pool).slice(0, count);
+  };
+
+  const getItemsForLevel = (level) => {
+    const currentLevel = Number(level);
+    if (Number.isNaN(currentLevel)) return [];
+    return state.allItems.filter((entry) => Number(entry.level) === currentLevel);
   };
 
   const markCycleCompletion = () => {
@@ -387,7 +387,6 @@
     if (elements.gameMain) {
       elements.gameMain.setAttribute('hidden', '');
     }
-    const total = state.items.length;
     elements.feedbackTitle && (elements.feedbackTitle.textContent = `Nível ${state.level} concluído!`);
     elements.feedbackDescription && (elements.feedbackDescription.textContent = 'Você finalizou todas as fases deste nível.');
     elements.feedbackCorrect && (elements.feedbackCorrect.textContent = String(state.cycleCorrect));
@@ -397,8 +396,9 @@
       elements.feedbackPrimary.onclick = () => {
         elements.gameMain?.removeAttribute('hidden');
         state.level += 1;
+        state.items = getItemsForLevel(state.level);
         updateHeaderLevel();
-        startPhase(1);
+        startLevel();
       };
     }
     if (elements.feedbackSecondary) {
@@ -412,8 +412,9 @@
   };
 
   const startLevel = () => {
+    state.items = getItemsForLevel(state.level);
     if (!state.items.length) {
-      showStatus('Nenhuma imagem encontrada.', 'warning');
+      showStatus('Nenhuma imagem encontrada para este nível.', 'warning');
       return;
     }
     elements.feedback?.setAttribute('hidden', '');
@@ -428,11 +429,12 @@
     try {
       const response = await fetch('images/images.json', { cache: 'no-store' });
       const data = await response.json();
-      state.items = Array.isArray(data)
+      state.allItems = Array.isArray(data)
         ? data.filter((entry) => entry && entry.file && entry.en)
         : [];
+      state.items = getItemsForLevel(state.level);
       if (!state.items.length) {
-        showStatus('Nenhuma imagem encontrada.', 'warning');
+        showStatus('Nenhuma imagem encontrada para este nível.', 'warning');
         return;
       }
       showStatus('Pronto para começar!', 'info');

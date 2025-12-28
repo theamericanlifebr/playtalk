@@ -2421,6 +2421,31 @@ body.page-image-game .image-game-english {
   font-weight: 700;
 }
 
+.image-game-level-header {
+  margin: 0 auto 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.image-game-level-title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(22px, 4vw, 32px);
+  text-align: center;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.image-game-level-title span {
+  font-weight: 800;
+}
+
+.image-game-level-header .image-game-start {
+  margin-top: 4px;
+}
+
 body.page-image-game .image-game-english:not([hidden]) {
   transform: translateY(-60px);
 }
