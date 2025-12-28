@@ -2745,34 +2745,39 @@ body.page-image-game.image-game-mic-lens .lens-overlay {
 
   body.page-image-game #game-main {
     margin-top: var(--header-height);
-    padding: 16px 12px var(--image-game-footer-offset);
+    padding: 12px 14px var(--image-game-footer-offset);
   }
 
   .image-game-visor {
     min-height: calc(100vh - var(--header-height) - var(--image-game-footer-height));
-    padding: 8px 0 40px;
+    padding: 12px 0 36px;
   }
 
   .image-game-target {
-    width: clamp(220px, 65vw, 360px);
-    max-height: 420px;
+    width: clamp(220px, 75vw, 420px);
+    max-height: 440px;
+    display: block;
+    margin: 0 auto;
   }
 
   .image-game-emblem {
-    transform: translateY(-120px);
+    transform: none;
+    min-height: 280px;
   }
 
   .phrase-stack {
-    transform: translateY(-120px);
+    transform: none;
+    width: 100%;
   }
 
   .image-game-english {
-    margin-top: 50px;
+    margin-top: 32px;
   }
 
   .image-game-visor .visor-stack {
-    padding-top: 32px;
+    padding-top: 16px;
     width: 100%;
+    gap: 16px;
   }
 
   body.page-image-game #visor {
@@ -2781,6 +2786,9 @@ body.page-image-game.image-game-mic-lens .lens-overlay {
 
   .image-game-folder-panel {
     width: 100%;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 16px;
+    padding: 12px;
   }
 
   .image-game-folders {
@@ -2795,6 +2803,11 @@ body.page-image-game.image-game-mic-lens .lens-overlay {
   .image-game-manual {
     flex-wrap: wrap;
     justify-content: center;
+  }
+
+  body.page-image-game.image-game--playing .image-game-folder-panel,
+  body.page-image-game.image-game--playing .image-game-level-control {
+    display: none;
   }
 
   body.page-image-game.image-game--playing .image-game-emblem,
