@@ -52,6 +52,12 @@
     activeCount: document.getElementById('image-game-active-count')
   };
 
+  const setPlayingLayout = (isPlaying) => {
+    const body = document.body;
+    if (!body) return;
+    body.classList.toggle('image-game--playing', isPlaying);
+  };
+
   const normalizeText = (value) => {
     if (!value) return '';
     return value
@@ -664,6 +670,7 @@
     state.currentLevel = selectedLevel;
     localStorage.setItem('imageGameLevel', String(selectedLevel));
     updateHeaderLevel();
+    setPlayingLayout(true);
     startLevel(selectedLevel);
   };
 
@@ -893,6 +900,7 @@
     if (elements.target) {
       elements.target.classList.add(hiddenClass);
     }
+    setPlayingLayout(false);
     const savedLevel = parseInt(localStorage.getItem('imageGameLevel') || '1', 10);
     const initialLevel = Number.isFinite(savedLevel) ? Math.min(Math.max(savedLevel, 1), MAX_LEVEL) : 1;
     state.currentLevel = initialLevel;
