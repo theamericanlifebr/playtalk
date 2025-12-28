@@ -2,6 +2,11 @@
   const SUCCESS_AUDIO = new Audio('gamesounds/success.mp3');
   const ERROR_AUDIO = new Audio('gamesounds/error.mp3');
   const TRANSITION_AUDIO = new Audio('gamesounds/report.wav');
+  const PHASE_AUDIO = {
+    1: new Audio('gamesounds/fase1.mp3'),
+    2: new Audio('gamesounds/fase2.mp3'),
+    3: new Audio('gamesounds/fase3.mp3')
+  };
 
   const PHASES = {
     1: 'Escolha a palavra correta que você ouviu.',
@@ -40,6 +45,7 @@
     feedbackErrors: document.getElementById('image-game-feedback-errors'),
     feedbackPrimary: document.getElementById('image-game-feedback-primary'),
     feedbackSecondary: document.getElementById('image-game-feedback-secondary'),
+    globalHeader: document.getElementById('global-header'),
     headerLevel: document.getElementById('header-level'),
     startButton: document.getElementById('image-game-start'),
     levelValue: document.getElementById('image-game-level-value'),
@@ -47,7 +53,11 @@
     phase2Grid: document.getElementById('phase2-grid'),
     phase3Hint: document.getElementById('phase3-hint'),
     emblem: document.querySelector('.image-game-emblem'),
-    gameMain: document.getElementById('game-main')
+    gameMain: document.getElementById('game-main'),
+    gameContent: document.getElementById('image-game-content'),
+    audioProgress: document.getElementById('image-game-audio-progress'),
+    audioProgressBar: document.getElementById('image-game-audio-progress-bar'),
+    audioProgressLabel: document.getElementById('image-game-audio-progress-label')
   };
 
   const shuffle = (list) => {
@@ -73,6 +83,85 @@
     } catch (error) {
       // ignore
     }
+  };
+
+  const formatTime = (seconds) => {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const remaining = Math.floor(seconds % 60);
+    return `${minutes}:${String(remaining).padStart(2, '0')}`;
+  };
+
+  const updateAudioProgress = (audio) => {
+    if (!elements.audioProgressBar || !elements.audioProgressLabel) return;
+    const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+    const current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+    const percent = duration ? Math.min(100, (current / duration) * 100) : 0;
+    elements.audioProgressBar.style.width = `${percent}%`;
+    elements.audioProgressBar.setAttribute('aria-valuenow', String(Math.round(percent)));
+    elements.audioProgressBar.setAttribute('aria-valuetext', `${formatTime(current)} de ${formatTime(duration)}`);
+    const totalLabel = duration ? formatTime(duration) : formatTime(current);
+    elements.audioProgressLabel.textContent = `${formatTime(current)}/${totalLabel}`;
+  };
+
+  const setAudioMode = (isActive) => {
+    if (elements.globalHeader) {
+      if (isActive) {
+        elements.globalHeader.setAttribute('hidden', '');
+      } else {
+        elements.globalHeader.removeAttribute('hidden');
+      }
+    }
+    if (elements.gameContent) {
+      if (isActive) {
+        elements.gameContent.setAttribute('hidden', '');
+      } else {
+        elements.gameContent.removeAttribute('hidden');
+      }
+    }
+    if (elements.audioProgress) {
+      if (isActive) {
+        elements.audioProgress.removeAttribute('hidden');
+      } else {
+        elements.audioProgress.setAttribute('hidden', '');
+      }
+    }
+  };
+
+  const playPhaseInstruction = async (phase) => {
+    const audio = PHASE_AUDIO[phase];
+    if (!audio) return;
+    state.blockInput = true;
+    setAudioMode(true);
+    updateAudioProgress(audio);
+    await new Promise((resolve) => {
+      let finished = false;
+      const cleanup = () => {
+        audio.onended = null;
+        audio.ontimeupdate = null;
+        audio.onloadedmetadata = null;
+      };
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        setAudioMode(false);
+        state.blockInput = false;
+        resolve();
+      };
+      audio.onended = finish;
+      audio.ontimeupdate = () => updateAudioProgress(audio);
+      audio.onloadedmetadata = () => updateAudioProgress(audio);
+      try {
+        audio.currentTime = 0;
+        const playPromise = audio.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => finish());
+        }
+      } catch (error) {
+        finish();
+      }
+    });
   };
 
   const speakWord = (word) => {
@@ -174,7 +263,7 @@
   const markCycleCompletion = () => {
     if (state.phase < 3) {
       state.phase += 1;
-      startPhase(state.phase);
+      void startPhase(state.phase);
       return;
     }
     finishLevel();
@@ -388,7 +477,7 @@
     });
   };
 
-  const startPhase = (phase) => {
+  const startPhase = async (phase) => {
     state.phase = phase;
     resetVisualState();
     setPendingFromItems();
@@ -399,6 +488,7 @@
     if (elements.roundLabel) {
       elements.roundLabel.textContent = `Fase ${phase}`;
     }
+    await playPhaseInstruction(phase);
     if (phase === 1) {
       setTargetVisibility(true);
       loadPhase1Step();
@@ -450,7 +540,7 @@
     state.phase = 1;
     setPendingFromItems();
     updateHeaderLevel();
-    startPhase(1);
+    void startPhase(1);
   };
 
   const loadItems = async () => {

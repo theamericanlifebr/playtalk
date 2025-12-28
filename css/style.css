@@ -2591,6 +2591,17 @@ body.page-image-game.image-game--playing .image-game-folder-panel {
   margin-top: 6px;
 }
 
+.image-game-audio-progress {
+  width: 100%;
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.image-game-audio-progress .image-game-progress {
+  width: min(480px, 100%);
+}
+
 .image-game-controls {
   margin-top: 32px;
   display: flex;
