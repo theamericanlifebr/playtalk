@@ -1,5 +1,5 @@
 (() => {
-  const LEVEL_SIZES = Array.from({ length: 50 }, (_, index) => (index === 49 ? 24 : 25));
+  const LEVEL_SIZES = Array.from({ length: 40 }, (_, index) => (index === 39 ? 24 : 25));
 
   const state = {
     allItems: [],
@@ -20,8 +20,7 @@
     round1Passed: false,
     feedbackHandlers: { primary: null, secondary: null },
     filteredItems: [],
-    activeFolders: new Set(),
-    selectedLevel: 1
+    activeFolders: new Set()
   };
 
   const elements = {
@@ -46,14 +45,8 @@
     feedbackSecondary: document.getElementById('image-game-feedback-secondary'),
     headerLevel: document.getElementById('header-level'),
     folderList: document.getElementById('image-game-folders'),
-    startButton: document.getElementById('image-game-start'),
-    levelInput: document.getElementById('image-game-level'),
-    levelValue: document.getElementById('image-game-level-value'),
-    activeCount: document.getElementById('image-game-active-count'),
-    folderPreview: document.getElementById('image-game-folder-preview')
+    startButton: document.getElementById('image-game-start')
   };
-
-  const MAX_LEVEL = LEVEL_SIZES.length;
 
   const normalizeText = (value) => {
     if (!value) return '';
@@ -268,98 +261,9 @@
           state.activeFolders.add(folder);
           updateFolderButtonState(button, true);
         }
-        hideFolderPreview();
-        updateActiveWordCount();
       });
       elements.folderList.appendChild(button);
     });
-
-    updateActiveWordCount();
-  };
-
-  const getActiveFolders = () => (state.activeFolders && state.activeFolders.size ? state.activeFolders : new Set());
-
-  const setSelectedLevel = (level) => {
-    const normalized = Math.min(Math.max(parseInt(level, 10) || 1, 1), MAX_LEVEL);
-    state.selectedLevel = normalized;
-    if (elements.levelInput) {
-      elements.levelInput.value = String(normalized);
-    }
-    if (elements.levelValue) {
-      elements.levelValue.textContent = `Nível ${normalized}`;
-    }
-    hideFolderPreview();
-    updateActiveWordCount();
-  };
-
-  const getActiveSelectionItems = () => {
-    if (!state.allItems.length) return [];
-    const activeFolders = getActiveFolders();
-    const levelLimit = state.selectedLevel || 1;
-    return state.allItems.filter((item) => {
-      const folder = item.folder || 'objetos';
-      return activeFolders.has(folder) && getItemLevel(item) <= levelLimit;
-    });
-  };
-
-  const updateActiveWordCount = () => {
-    if (!elements.activeCount) return;
-    const total = getActiveSelectionItems().length;
-    elements.activeCount.textContent = `${total} palavra${total === 1 ? '' : 's'} ativas`;
-  };
-
-  const hideFolderPreview = () => {
-    if (elements.folderPreview) {
-      elements.folderPreview.setAttribute('hidden', '');
-      elements.folderPreview.innerHTML = '';
-    }
-  };
-
-  const renderFolderPreview = (items) => {
-    if (!elements.folderPreview) return;
-    elements.folderPreview.innerHTML = '';
-    const byFolder = items.reduce((acc, item) => {
-      const folder = item.folder || 'objetos';
-      if (!acc[folder]) {
-        acc[folder] = [];
-      }
-      acc[folder].push(item);
-      return acc;
-    }, {});
-
-    const folders = Object.keys(byFolder).sort((a, b) => a.localeCompare(b));
-    folders.forEach((folder) => {
-      const section = document.createElement('section');
-      section.className = 'image-game-folder-preview__card';
-
-      const title = document.createElement('h3');
-      title.className = 'image-game-folder-preview__title';
-      title.textContent = formatFolderLabel(folder);
-      section.appendChild(title);
-
-      const gallery = document.createElement('div');
-      gallery.className = 'image-game-folder-preview__images';
-
-      const samples = byFolder[folder]
-        .slice()
-        .sort((a, b) => getItemLevel(a) - getItemLevel(b) || getFileIndex(a.file) - getFileIndex(b.file))
-        .slice(0, 3);
-
-      samples.forEach((item) => {
-        const img = document.createElement('img');
-        img.src = `images/${item.file}`;
-        img.alt = item.pt ? `Exemplo ${item.pt}` : 'Exemplo de imagem';
-        img.loading = 'lazy';
-        gallery.appendChild(img);
-      });
-
-      section.appendChild(gallery);
-      elements.folderPreview.appendChild(section);
-    });
-
-    if (folders.length) {
-      elements.folderPreview.removeAttribute('hidden');
-    }
   };
 
   const showFeedback = ({ title, description, primaryLabel, secondaryLabel, onPrimary, onSecondary }) => {
@@ -603,7 +507,7 @@
   };
 
   const startLevel = (level = 1) => {
-    const normalizedLevel = Math.min(Math.max(level, 1), MAX_LEVEL);
+    const normalizedLevel = Math.min(Math.max(level, 1), LEVEL_SIZES.length);
     state.currentLevel = normalizedLevel;
     state.round1Passed = false;
     updateHeaderLevel();
@@ -616,7 +520,11 @@
       return;
     }
 
-    const filtered = getActiveSelectionItems();
+    const activeFolders = state.activeFolders && state.activeFolders.size
+      ? state.activeFolders
+      : new Set();
+
+    const filtered = state.allItems.filter((item) => activeFolders.has(item.folder || 'objetos'));
 
     if (!filtered.length) {
       showStatus('Selecione pelo menos uma pasta para iniciar.', 'warning');
@@ -629,9 +537,11 @@
     state.index = 0;
     state.round = 1;
     state.round1Passed = false;
-    localStorage.setItem('imageGameLevel', String(state.selectedLevel));
-    startLevel(state.selectedLevel);
-    renderFolderPreview(filtered);
+    const savedLevel = parseInt(localStorage.getItem('imageGameLevel') || '1', 10);
+    const startingLevel = Number.isFinite(savedLevel)
+      ? Math.min(Math.max(savedLevel, 1), LEVEL_SIZES.length)
+      : 1;
+    startLevel(startingLevel);
   };
 
   const handleSpeechResult = (event) => {
@@ -755,11 +665,6 @@
         startImageGame();
       });
     }
-    if (elements.levelInput) {
-      elements.levelInput.addEventListener('input', (event) => {
-        setSelectedLevel(event.target.value);
-      });
-    }
     window.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowRight') {
         registerAnswer(true);
@@ -787,8 +692,6 @@
       state.filteredItems = [...state.allItems];
       const summary = buildFolderSummary(state.allItems);
       renderFolderButtons(summary);
-      const savedLevel = parseInt(localStorage.getItem('imageGameLevel') || '1', 10);
-      setSelectedLevel(Number.isFinite(savedLevel) ? savedLevel : 1);
       if (elements.instruction) {
         elements.instruction.textContent =
           'Selecione as pastas desejadas e toque em “Iniciar imagens”.';
