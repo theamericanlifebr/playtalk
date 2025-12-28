@@ -152,14 +152,18 @@
         resolve();
       };
 
-      hidePhaseElements();
-      showText('');
-      choiceRow.innerHTML = '';
       audio.currentTime = 0;
       audio.addEventListener('ended', finish);
       audio.addEventListener('error', finish);
       audio.play().catch(finish);
     });
+  }
+
+  function preparePhaseIntro() {
+    hidePhaseElements();
+    showText('');
+    clearBoard();
+    if (choiceRow) choiceRow.innerHTML = '';
   }
 
   function getRandomWrongItem(excludeFile) {
@@ -495,16 +499,16 @@
     }, PHASE_DISSOLVE_MS);
   }
 
-  function startPhase(nextPhase) {
+  async function startPhase(nextPhase) {
     phase = nextPhase;
     updatePhaseLabel();
     filterPool();
     resetProgress();
-    playPhaseIntro(nextPhase).then(() => {
-      advanceCycle();
-      requestAnimationFrame(() => {
-        showPhaseElements();
-      });
+    preparePhaseIntro();
+    await playPhaseIntro(nextPhase);
+    advanceCycle();
+    requestAnimationFrame(() => {
+      showPhaseElements();
     });
   }
 
