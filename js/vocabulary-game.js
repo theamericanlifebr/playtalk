@@ -5,6 +5,7 @@
   const textContainer = document.getElementById('text-container');
   const choiceRow = document.getElementById('choice-row');
   const progressFill = document.getElementById('progress-fill');
+  const phaseLabel = document.getElementById('phase-label');
   const levelBadge = document.getElementById('level-indicator');
   const preGame = document.getElementById('pre-game');
   const preGameLevel = document.getElementById('pre-game-level');
@@ -48,6 +49,10 @@
   function updateLevelIndicators() {
     if (levelBadge) levelBadge.textContent = `Nível ${level}`;
     if (preGameLevel) preGameLevel.textContent = `Nível ${level}`;
+  }
+
+  function updatePhaseLabel() {
+    if (phaseLabel) phaseLabel.textContent = `Fase ${phase}`;
   }
 
   async function loadImages() {
@@ -303,14 +308,25 @@
     currentItem = item;
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
+    if (recognition && typeof recognition.stop === 'function') {
+      try {
+        recognition.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
     const img = document.createElement('img');
     img.src = `images/${item.file}`;
     img.alt = item.en;
     img.className = 'board__image-single';
+    img.style.opacity = '0.8';
     boardInner.appendChild(img);
     const promptText = 'Toque na imagem e fale em inglês.';
     showText(promptText);
-    const handler = () => handlePhaseThreeSpeak(item.en, handler);
+    const handler = () => {
+      img.style.opacity = '1';
+      handlePhaseThreeSpeak(item.en, handler);
+    };
     img.addEventListener('click', handler);
   }
 
@@ -458,6 +474,7 @@
 
   function startPhase(nextPhase) {
     phase = nextPhase;
+    updatePhaseLabel();
     filterPool();
     resetProgress();
     playPhaseIntro(nextPhase).then(() => {
@@ -487,6 +504,7 @@
 
   function init() {
     loadLevelFromStorage();
+    updatePhaseLabel();
     setupSpeechRecognition();
     loadImages();
     startBtn.addEventListener('click', () => {
@@ -495,6 +513,7 @@
     nextLevelBtn.addEventListener('click', () => {
       levelComplete.classList.add('hidden');
       phase = 1;
+      updatePhaseLabel();
       preGame.classList.remove('hidden');
       updateLevelIndicators();
     });
