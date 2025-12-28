@@ -298,6 +298,7 @@
       handlePhaseComplete();
       return;
     }
+    setTargetVisibility(false);
     elements.phase1Options?.setAttribute('hidden', '');
     elements.phase2Grid?.removeAttribute('hidden');
     elements.phase3Hint?.setAttribute('hidden', '');
