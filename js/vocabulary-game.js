@@ -66,7 +66,7 @@
 
   function filterPool() {
     const numericLevel = Number(level) || 1;
-    pool = images.filter(item => Number(item.level) > numericLevel);
+    pool = images.filter(item => Number(item.level) === numericLevel);
   }
 
   function shuffle(list) {
@@ -143,7 +143,7 @@
   }
 
   function getRandomWrongItem(excludeFile) {
-    const options = images.filter(entry => entry.file !== excludeFile);
+    const options = pool.filter(entry => entry.file !== excludeFile);
     if (!options.length) return null;
     return options[Math.floor(Math.random() * options.length)];
   }
@@ -199,7 +199,7 @@
   }
 
   function buildPhaseTwoOptions(item) {
-    const wrongPool = images.filter(entry => entry.file !== item.file);
+    const wrongPool = pool.filter(entry => entry.file !== item.file);
     const wrongChoices = shuffle(wrongPool).slice(0, 3);
 
     while (wrongChoices.length < 3 && wrongPool.length) {
