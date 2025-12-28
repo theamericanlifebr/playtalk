@@ -218,7 +218,7 @@
     selection.forEach(entry => {
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = 'grid-card';
+      card.className = 'grid-card grid-card--enter';
       card.dataset.correct = String(entry.correct === true);
       const img = document.createElement('img');
       img.src = `images/${entry.file}`;
