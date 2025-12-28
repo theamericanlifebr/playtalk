@@ -127,6 +127,7 @@
     if (elements.target) {
       elements.target.classList.remove('is-engaged');
       elements.target.style.opacity = '1';
+      elements.target.removeAttribute('hidden');
     }
   };
 
@@ -134,6 +135,15 @@
     if (!elements.target || !state.currentItem) return;
     elements.target.src = `images/${state.currentItem.file}`;
     elements.target.alt = state.currentItem.pt || 'Imagem do jogo';
+  };
+
+  const setTargetVisibility = (visible) => {
+    if (!elements.target) return;
+    if (visible) {
+      elements.target.removeAttribute('hidden');
+    } else {
+      elements.target.setAttribute('hidden', '');
+    }
   };
 
   const getRandomOtherWord = (exclude) => {
@@ -330,6 +340,7 @@
   };
 
   const startListening = () => {
+    if (state.phase !== 3) return;
     const recognizer = ensureRecognizer();
     if (!recognizer) {
       showStatus('Reconhecimento de voz não disponível.', 'warning');
@@ -356,7 +367,7 @@
   const bindPhase3Interaction = () => {
     if (!elements.target) return;
     elements.target.addEventListener('click', () => {
-      if (!state.currentItem || state.blockInput) return;
+      if (!state.currentItem || state.blockInput || state.phase !== 3) return;
       elements.target.style.opacity = '1';
       elements.target.classList.add('is-engaged');
       startListening();
@@ -375,10 +386,13 @@
       elements.roundLabel.textContent = `Fase ${phase}`;
     }
     if (phase === 1) {
+      setTargetVisibility(true);
       loadPhase1Step();
     } else if (phase === 2) {
+      setTargetVisibility(false);
       loadPhase2Step();
     } else {
+      setTargetVisibility(true);
       loadPhase3Step();
     }
   };
