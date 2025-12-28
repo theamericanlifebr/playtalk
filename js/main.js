@@ -1129,7 +1129,13 @@ function bindSpeechWaveformEvents(recognizer) {
 function setMicrophoneSpeechState(active, token = null) {
   if (active) {
     speechPauseToken = token || Date.now();
-  } else if (token !== null && token !== speechPauseToken) {
+    microphonePaused = true;
+    if (reconhecimento && reconhecimentoRodando) {
+      try { reconhecimento.stop(); } catch (e) {}
+    }
+    return;
+  }
+  if (token !== null && token !== speechPauseToken) {
     return;
   }
   microphonePaused = false;
