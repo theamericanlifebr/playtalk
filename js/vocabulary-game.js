@@ -13,6 +13,7 @@
   const levelComplete = document.getElementById('level-complete');
   const levelCompleteText = document.getElementById('level-complete-text');
   const nextLevelBtn = document.getElementById('next-level-btn');
+  const PHASE_DISSOLVE_MS = 500;
 
   const faseAudios = {
     1: document.getElementById('audio-fase1'),
@@ -126,6 +127,18 @@
     if (choiceRow) choiceRow.innerHTML = '';
   }
 
+  function hidePhaseElements() {
+    board.classList.add('board--hidden', 'hidden-phase');
+    textContainer.classList.add('hidden-phase');
+    choiceRow.classList.add('hidden-phase');
+  }
+
+  function showPhaseElements() {
+    board.classList.remove('board--hidden', 'hidden-phase');
+    textContainer.classList.remove('hidden-phase');
+    choiceRow.classList.remove('hidden-phase');
+  }
+
   function playPhaseIntro(nextPhase) {
     return new Promise(resolve => {
       const audio = faseAudios[nextPhase];
@@ -133,22 +146,13 @@
         resolve();
         return;
       }
-      const cleanup = () => {
-        board.classList.remove('board--hidden', 'hidden-phase');
-        textContainer.classList.remove('hidden-phase');
-        choiceRow.classList.remove('hidden-phase');
-      };
-
       const finish = () => {
         audio.removeEventListener('ended', finish);
         audio.removeEventListener('error', finish);
-        cleanup();
         resolve();
       };
 
-      board.classList.add('board--hidden', 'hidden-phase');
-      textContainer.classList.add('hidden-phase');
-      choiceRow.classList.add('hidden-phase');
+      hidePhaseElements();
       showText('');
       choiceRow.innerHTML = '';
       audio.currentTime = 0;
@@ -469,7 +473,12 @@
   }
 
   function dissolveEnvironment(callback) {
-    callback();
+    hidePhaseElements();
+    setTimeout(() => {
+      if (typeof callback === 'function') {
+        callback();
+      }
+    }, PHASE_DISSOLVE_MS);
   }
 
   function startPhase(nextPhase) {
@@ -479,6 +488,9 @@
     resetProgress();
     playPhaseIntro(nextPhase).then(() => {
       advanceCycle();
+      requestAnimationFrame(() => {
+        showPhaseElements();
+      });
     });
   }
 
