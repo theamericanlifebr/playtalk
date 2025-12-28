@@ -66,7 +66,7 @@
 
   function filterPool() {
     const numericLevel = Number(level) || 1;
-    pool = images.filter(item => Number(item.level) === numericLevel);
+    pool = images.filter(item => Number(item.level) > numericLevel);
   }
 
   function shuffle(list) {
@@ -124,18 +124,28 @@
         resolve();
         return;
       }
-      board.classList.add('board--hidden');
+      board.classList.add('board--hidden', 'hidden-phase');
+      textContainer.classList.add('hidden-phase');
+      choiceRow.classList.add('hidden-phase');
       showText('');
       choiceRow.innerHTML = '';
       audio.currentTime = 0;
       const onEnded = () => {
         audio.removeEventListener('ended', onEnded);
-        board.classList.remove('board--hidden');
+        board.classList.remove('board--hidden', 'hidden-phase');
+        textContainer.classList.remove('hidden-phase');
+        choiceRow.classList.remove('hidden-phase');
         resolve();
       };
       audio.addEventListener('ended', onEnded);
       audio.play().catch(() => resolve());
     });
+  }
+
+  function getRandomWrongItem(excludeFile) {
+    const options = images.filter(entry => entry.file !== excludeFile);
+    if (!options.length) return null;
+    return options[Math.floor(Math.random() * options.length)];
   }
 
   function showPhaseOneCard(item) {
@@ -147,8 +157,7 @@
     img.className = 'board__image-single';
     boardInner.appendChild(img);
 
-    const wrongPool = pool.filter(entry => entry.file !== item.file);
-    const wrongItem = wrongPool.length ? wrongPool[Math.floor(Math.random() * wrongPool.length)] : item;
+    const wrongItem = getRandomWrongItem(item.file) || item;
     const options = shuffle([
       { label: item.en, correct: true },
       { label: wrongItem.en, correct: false }
@@ -190,7 +199,7 @@
   }
 
   function buildPhaseTwoOptions(item) {
-    const wrongPool = pool.filter(entry => entry.file !== item.file);
+    const wrongPool = images.filter(entry => entry.file !== item.file);
     const wrongChoices = shuffle(wrongPool).slice(0, 3);
 
     while (wrongChoices.length < 3 && wrongPool.length) {
@@ -245,6 +254,11 @@
     const isCorrect = card.dataset.correct === 'true';
     const audio = isCorrect ? successAudio : errorAudio;
     highlightCorrectCard();
+    if (!isCorrect) {
+      card.classList.add('grid-card--wrong');
+    }
+
+    boardInner.querySelectorAll('.grid-card').forEach(btn => { btn.disabled = true; });
 
     if (isCorrect) {
       score += 1;
@@ -304,10 +318,12 @@
       if (success) {
         score += 1;
         index += 1;
+        successAudio && successAudio.play().catch(() => {});
       } else {
         score = 0;
         index = 0;
         cycle = shuffle(pool);
+        errorAudio && errorAudio.play().catch(() => {});
       }
 
       updateProgressBar();
