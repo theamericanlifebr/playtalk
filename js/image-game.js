@@ -19,6 +19,7 @@
     allItems: [],
     items: [],
     pending: [],
+    cycleSize: 0,
     currentItem: null,
     phase: 1,
     level: 1,
@@ -214,7 +215,7 @@
 
   const updateProgress = () => {
     if (!elements.progressBar || !elements.progressLabel) return;
-    const total = state.items.length || 1;
+    const total = state.cycleSize || state.items.length || 1;
     const percent = Math.round((state.cycleCorrect / total) * 100);
     elements.progressBar.style.width = `${percent}%`;
     elements.progressBar.setAttribute('aria-valuenow', String(percent));
@@ -305,32 +306,43 @@
 
   const setPendingFromItems = () => {
     state.pending = shuffle(state.items);
+    state.cycleSize = state.pending.length;
     state.cycleCorrect = 0;
     state.cycleErrors = 0;
     updateCounts();
     updateProgress();
   };
 
+  const advanceOrRepeatCycle = (loader) => {
+    if (!state.pending.length) {
+      if (state.cycleErrors === 0) {
+        handlePhaseComplete();
+        return;
+      }
+      setPendingFromItems();
+    }
+    loader();
+  };
+
   const handlePhase1Answer = (isCorrect, clicked, correctButton) => {
     if (state.blockInput) return;
     state.blockInput = true;
+    state.pending.shift();
     if (isCorrect) {
       playSound(SUCCESS_AUDIO);
       clicked.classList.add('is-correct');
       state.cycleCorrect += 1;
-      state.pending.shift();
     } else {
       playSound(ERROR_AUDIO);
       clicked.classList.add('is-wrong');
       correctButton.classList.add('is-correct');
       state.cycleErrors += 1;
-      state.pending.push(state.pending.shift());
     }
     updateCounts();
     updateProgress();
     setTimeout(() => {
       state.blockInput = false;
-      loadPhase1Step();
+      advanceOrRepeatCycle(loadPhase1Step);
     }, 900);
   };
 
@@ -378,19 +390,18 @@
     if (image) {
       image.style.opacity = '1';
     }
+    state.pending.shift();
     if (isCorrect) {
       playSound(SUCCESS_AUDIO);
       state.cycleCorrect += 1;
-      state.pending.shift();
     } else {
       playSound(ERROR_AUDIO);
       state.cycleErrors += 1;
-      state.pending.push(state.pending.shift());
     }
     updateCounts();
     setTimeout(() => {
       state.blockInput = false;
-      loadPhase2Step();
+      advanceOrRepeatCycle(loadPhase2Step);
     }, 1000);
   };
 
@@ -442,19 +453,18 @@
       const expected = normalizeText(state.currentItem?.en);
       const said = normalizeText(transcript);
       if (!expected) return;
+      state.pending.shift();
       if (expected === said) {
         playSound(SUCCESS_AUDIO);
         state.cycleCorrect += 1;
-        state.pending.shift();
         updateCounts();
         updateProgress();
-        setTimeout(() => loadPhase3Step(), 500);
+        setTimeout(() => advanceOrRepeatCycle(loadPhase3Step), 500);
       } else {
         playSound(ERROR_AUDIO);
         state.cycleErrors += 1;
-        state.pending.push(state.pending.shift());
         updateCounts();
-        setTimeout(() => loadPhase3Step(), 700);
+        setTimeout(() => advanceOrRepeatCycle(loadPhase3Step), 700);
       }
     };
     state.recognizer.onerror = () => {
