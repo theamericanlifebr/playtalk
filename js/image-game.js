@@ -2,6 +2,7 @@
   const SUCCESS_AUDIO = new Audio('gamesounds/success.mp3');
   const ERROR_AUDIO = new Audio('gamesounds/error.mp3');
   const TRANSITION_AUDIO = new Audio('gamesounds/report.wav');
+  const DISSOLVE_DURATION = 500;
   const PHASE_AUDIO = {
     1: new Audio('gamesounds/fase1.mp3'),
     2: new Audio('gamesounds/fase2.mp3'),
@@ -69,6 +70,8 @@
     return array;
   };
 
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const normalizeText = (value) => (value || '')
     .toLowerCase()
     .normalize('NFD')
@@ -126,6 +129,18 @@
         elements.audioProgress.setAttribute('hidden', '');
       }
     }
+  };
+
+  const dissolveStage = async () => {
+    if (!elements.gameContent) return;
+    elements.gameContent.classList.add('is-dissolving');
+    await wait(DISSOLVE_DURATION);
+    elements.gameContent.classList.add('is-dissolved');
+  };
+
+  const restoreStage = () => {
+    if (!elements.gameContent) return;
+    elements.gameContent.classList.remove('is-dissolving', 'is-dissolved');
   };
 
   const playPhaseInstruction = async (phase) => {
@@ -244,7 +259,7 @@
   };
 
   const getRandomOtherWord = (exclude) => {
-    const pool = state.items.filter((item) => item.en !== exclude);
+    const pool = state.allItems.filter((item) => item.en !== exclude);
     if (!pool.length) return exclude;
     return pool[Math.floor(Math.random() * pool.length)].en;
   };
@@ -260,13 +275,26 @@
     return state.allItems.filter((entry) => Number(entry.level) === currentLevel);
   };
 
+  const transitionToPhase = async (nextPhase) => {
+    state.blockInput = true;
+    await dissolveStage();
+    state.blockInput = false;
+    await startPhase(nextPhase);
+  };
+
+  const transitionToLevelEnd = async () => {
+    state.blockInput = true;
+    await dissolveStage();
+    state.blockInput = false;
+    finishLevel();
+  };
+
   const markCycleCompletion = () => {
     if (state.phase < 3) {
-      state.phase += 1;
-      void startPhase(state.phase);
+      void transitionToPhase(state.phase + 1);
       return;
     }
-    finishLevel();
+    void transitionToLevelEnd();
   };
 
   const handlePhaseComplete = () => {
@@ -345,7 +373,11 @@
     if (state.blockInput) return;
     state.blockInput = true;
     button.classList.add('is-engaged');
+    const image = button.querySelector('img');
     button.style.opacity = '1';
+    if (image) {
+      image.style.opacity = '1';
+    }
     if (isCorrect) {
       playSound(SUCCESS_AUDIO);
       state.cycleCorrect += 1;
@@ -489,6 +521,7 @@
       elements.roundLabel.textContent = `Fase ${phase}`;
     }
     await playPhaseInstruction(phase);
+    restoreStage();
     if (phase === 1) {
       setTargetVisibility(true);
       loadPhase1Step();
@@ -502,20 +535,24 @@
   };
 
   const finishLevel = () => {
+    const completedCorrect = state.cycleCorrect;
+    const completedErrors = state.cycleErrors;
+    const nextLevel = state.level + 1;
     if (elements.gameMain) {
       elements.gameMain.setAttribute('hidden', '');
     }
     elements.feedbackTitle && (elements.feedbackTitle.textContent = `Nível ${state.level} concluído!`);
     elements.feedbackDescription && (elements.feedbackDescription.textContent = 'Você finalizou todas as fases deste nível.');
-    elements.feedbackCorrect && (elements.feedbackCorrect.textContent = String(state.cycleCorrect));
-    elements.feedbackErrors && (elements.feedbackErrors.textContent = String(state.cycleErrors));
+    elements.feedbackCorrect && (elements.feedbackCorrect.textContent = String(completedCorrect));
+    elements.feedbackErrors && (elements.feedbackErrors.textContent = String(completedErrors));
+    state.level = nextLevel;
+    state.items = getItemsForLevel(state.level);
+    updateHeaderLevel();
     if (elements.feedbackPrimary) {
-      elements.feedbackPrimary.textContent = `Iniciar nível ${state.level + 1}`;
+      elements.feedbackPrimary.textContent = `Iniciar nível ${state.level}`;
       elements.feedbackPrimary.onclick = () => {
         elements.gameMain?.removeAttribute('hidden');
-        state.level += 1;
-        state.items = getItemsForLevel(state.level);
-        updateHeaderLevel();
+        restoreStage();
         startLevel();
       };
     }
@@ -537,6 +574,7 @@
     }
     elements.feedback?.setAttribute('hidden', '');
     elements.gameMain?.removeAttribute('hidden');
+    restoreStage();
     state.phase = 1;
     setPendingFromItems();
     updateHeaderLevel();
