@@ -13,7 +13,9 @@
   const levelComplete = document.getElementById('level-complete');
   const levelCompleteText = document.getElementById('level-complete-text');
   const nextLevelBtn = document.getElementById('next-level-btn');
+  const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
   const PHASE_DISSOLVE_MS = 500;
+  const GREEN_OVERLAY_DURATION_MS = 6000;
 
   const faseAudios = {
     1: document.getElementById('audio-fase1'),
@@ -456,6 +458,24 @@
     speak(target.en);
   }
 
+  function showPhaseOneCompletionOverlay() {
+    return new Promise(resolve => {
+      if (!progressCompleteOverlay) {
+        setTimeout(resolve, GREEN_OVERLAY_DURATION_MS);
+        return;
+      }
+
+      progressCompleteOverlay.classList.add('active');
+      progressCompleteOverlay.setAttribute('aria-hidden', 'false');
+
+      setTimeout(() => {
+        progressCompleteOverlay.classList.remove('active');
+        progressCompleteOverlay.setAttribute('aria-hidden', 'true');
+        resolve();
+      }, GREEN_OVERLAY_DURATION_MS);
+    });
+  }
+
   function handleProgressCompletion() {
     if (phase === 1) {
       awaiting = true;
@@ -464,10 +484,10 @@
       showText('');
       if (choiceRow) choiceRow.innerHTML = '';
       hidePhaseElements();
-      setTimeout(() => {
+      showPhaseOneCompletionOverlay().then(() => {
         awaiting = false;
         handlePhaseComplete();
-      }, PHASE_DISSOLVE_MS);
+      });
       return;
     }
 
