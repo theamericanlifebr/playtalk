@@ -102,6 +102,13 @@
       flex-wrap: wrap;
     }
 
+    .board__inner--grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      place-items: center;
+    }
+
     .board__image-single {
       max-width: 90%;
       max-height: 90%;
@@ -111,17 +118,22 @@
     .grid-card {
       width: 150px;
       height: 150px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.3);
+      border-radius: 150px;
+      background: rgba(128, 128, 128, 0.3);
+      border: none;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
       position: relative;
       overflow: hidden;
+      cursor: pointer;
     }
 
     .grid-card img { width: 120px; height: 120px; object-fit: contain; }
+
+    .grid-card--correct { background: rgba(46, 204, 113, 0.5); }
+    .grid-card--wrong { background: rgba(231, 76, 60, 0.5); }
 
     .board--hidden { opacity: 0; pointer-events: none; }
 
