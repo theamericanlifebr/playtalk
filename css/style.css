@@ -2294,9 +2294,9 @@ body.page-inplay #menu-modes {
 body.page-image-game {
   --image-game-footer-height: 0px;
   --image-game-footer-offset: env(safe-area-inset-bottom);
-  overflow: hidden;
-  overscroll-behavior: none;
-  touch-action: none;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  touch-action: pan-y;
 }
 
 body.page-image-game #game-main {
@@ -2325,7 +2325,12 @@ body.page-image-game #visor {
   object-fit: contain;
   filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.2));
   transition: opacity 0.2s ease;
-  touch-action: none;
+  touch-action: manipulation;
+  opacity: 0.85;
+}
+
+.image-game-target.is-listening {
+  opacity: 1;
 }
 
 .image-game-target--slide-in {

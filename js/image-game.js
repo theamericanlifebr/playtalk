@@ -179,6 +179,13 @@
     elements.target.classList.remove('image-game-target--slide-in', 'image-game-target--slide-out');
   };
 
+  const setListeningState = (isListening) => {
+    state.listening = isListening;
+    if (elements.target) {
+      elements.target.classList.toggle('is-listening', isListening);
+    }
+  };
+
   const runSlideAnimation = (className) => {
     if (!elements.target) return Promise.resolve();
     clearSlideClasses();
@@ -237,6 +244,43 @@
     if (!elements.status) return;
     elements.status.textContent = message;
     elements.status.dataset.tone = tone;
+  };
+
+  const isEditDistanceWithinOne = (a, b) => {
+    if (a === b) return true;
+    if (!a || !b) return false;
+    const lengthDiff = Math.abs(a.length - b.length);
+    if (lengthDiff > 1) return false;
+
+    let i = 0;
+    let j = 0;
+    let edits = 0;
+
+    while (i < a.length && j < b.length) {
+      if (a[i] === b[j]) {
+        i += 1;
+        j += 1;
+        continue;
+      }
+      edits += 1;
+      if (edits > 1) return false;
+      if (a.length > b.length) {
+        i += 1;
+      } else if (a.length < b.length) {
+        j += 1;
+      } else {
+        i += 1;
+        j += 1;
+      }
+    }
+
+    return edits + (a.length - i) + (b.length - j) <= 1;
+  };
+
+  const isCloseMatch = (expected, spoken) => {
+    if (!expected || !spoken) return false;
+    if (expected === spoken) return true;
+    return isEditDistanceWithinOne(expected, spoken);
   };
 
   const showTranscript = (message) => {
@@ -639,10 +683,63 @@
       return;
     }
 
-    if (said && said.includes(expected)) {
-      showStatus('');
+    if (isCloseMatch(expected, said)) {
+      showStatus('Correto!', 'success');
       registerAnswer(true);
+      stopListening();
+      return;
     }
+
+    showStatus('Fale novamente para comparar com o inglês.', 'info');
+    stopListening();
+  };
+
+  const handleSpeechError = (event) => {
+    const code = event && event.error ? event.error : 'error';
+    if (code === 'not-allowed' || code === 'service-not-allowed') {
+      showStatus('Permita o microfone para jogar.', 'warning');
+      return;
+    }
+    if (code === 'not-supported') {
+      showStatus('Reconhecimento de voz indisponível neste navegador.', 'warning');
+      return;
+    }
+    if (code === 'no-speech') {
+      showStatus('Não escutei sua voz. Tente novamente.', 'warning');
+      return;
+    }
+    showStatus('Não foi possível ouvir agora.', 'warning');
+  };
+
+  const ensureRecognizer = () => {
+    if (state.recognizer) return state.recognizer;
+    if (typeof window.KitSpeechRecognizer !== 'function') return null;
+    state.recognizer = new window.KitSpeechRecognizer({ lang: 'en-US' });
+    state.recognizer.onstart = () => {
+      setListeningState(true);
+      showStatus('Ouvindo...', 'info');
+    };
+    state.recognizer.onresult = handleSpeechResult;
+    state.recognizer.onerror = handleSpeechError;
+    state.recognizer.onend = () => {
+      setListeningState(false);
+    };
+    return state.recognizer;
+  };
+
+  const startListening = () => {
+    if (state.listening) return;
+    const recognizer = ensureRecognizer();
+    if (!recognizer) {
+      showStatus('Reconhecimento de voz não disponível.', 'warning');
+      return;
+    }
+    recognizer.start();
+  };
+
+  const stopListening = () => {
+    if (!state.recognizer || !state.listening) return;
+    state.recognizer.stop();
   };
 
   const speakCurrentWord = () => {
@@ -673,6 +770,7 @@
       gesture.startX = event.clientX;
       gesture.startY = event.clientY;
       gesture.startTime = Date.now();
+      startListening();
     });
 
     elements.target.addEventListener('pointerup', (event) => {
@@ -684,17 +782,19 @@
       const isSwipeDown = deltaY > swipeThreshold && Math.abs(deltaX) < 80;
 
       if (isSwipeLeft) {
+        stopListening();
         registerAnswer(true);
         return;
       }
 
       if (isSwipeDown) {
+        stopListening();
         showPhrase('en');
         return;
       }
 
       if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10 && elapsed < 500) {
-        speakCurrentWord();
+        startListening();
       }
     });
   };
@@ -799,25 +899,6 @@
     syncLevelSlider(initialLevel);
     bindEvents();
     loadItems();
-    document.body?.addEventListener(
-      'touchmove',
-      (event) => {
-        event.preventDefault();
-      },
-      { passive: false }
-    );
-    window.addEventListener(
-      'wheel',
-      (event) => {
-        event.preventDefault();
-      },
-      { passive: false }
-    );
-    window.addEventListener('scroll', () => {
-      if (window.scrollY !== 0) {
-        window.scrollTo(0, 0);
-      }
-    });
   };
 
   if (document.readyState === 'loading') {
