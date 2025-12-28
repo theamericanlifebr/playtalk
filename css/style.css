@@ -2416,33 +2416,106 @@ body.page-image-game .image-game-english:not([hidden]) {
   gap: 12px;
 }
 
-.image-game-folders {
-  display: flex;
-  flex-wrap: wrap;
+.image-game-level-control {
+  width: min(960px, 100%);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px 18px 12px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.25);
+  color: #f8fafc;
+  display: grid;
   gap: 10px;
+}
+
+.image-game-level__label {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.image-game-level__value {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.image-game-level__slider {
+  width: 100%;
+  accent-color: #38bdf8;
+}
+
+.image-game-level__count {
+  font-size: 14px;
+  color: #e0f2fe;
+  font-weight: 700;
+}
+
+.image-game-folders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
   justify-content: center;
-  max-width: 860px;
+  max-width: 1080px;
 }
 
 .image-game-folder {
   border: none;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-weight: 700;
-  font-size: 14px;
-  background: rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  padding: 14px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.08);
   color: #f8fafc;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.25);
+  display: grid;
+  gap: 8px;
 }
 
 .image-game-folder:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.24);
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.35);
 }
 
 .image-game-folder.is-muted {
-  opacity: 0.75;
+  opacity: 0.7;
+}
+
+.image-game-folder__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-game-folder__title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.image-game-folder__count {
+  font-size: 12px;
+  background: rgba(15, 23, 42, 0.22);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.image-game-folder__preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.image-game-folder__preview img {
+  width: 100%;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  padding: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .image-game-start {
