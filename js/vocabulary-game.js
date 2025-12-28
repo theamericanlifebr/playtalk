@@ -15,7 +15,6 @@
   const nextLevelBtn = document.getElementById('next-level-btn');
   const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
   const PHASE_DISSOLVE_MS = 500;
-  const GREEN_OVERLAY_DURATION_MS = 6000;
 
   const faseAudios = {
     1: document.getElementById('audio-fase1'),
@@ -38,6 +37,26 @@
   let awaiting = false;
   let recognition = null;
   let loadPromise = null;
+
+  function playAudioElement(audio) {
+    return new Promise(resolve => {
+      if (!audio) {
+        resolve();
+        return;
+      }
+
+      const finish = () => {
+        audio.removeEventListener('ended', finish);
+        audio.removeEventListener('error', finish);
+        resolve();
+      };
+
+      audio.currentTime = 0;
+      audio.addEventListener('ended', finish);
+      audio.addEventListener('error', finish);
+      audio.play().catch(finish);
+    });
+  }
 
   function loadLevelFromStorage() {
     const stored = Number(localStorage.getItem(STORAGE_KEY));
@@ -142,23 +161,7 @@
   }
 
   function playPhaseIntro(nextPhase) {
-    return new Promise(resolve => {
-      const audio = faseAudios[nextPhase];
-      if (!audio) {
-        resolve();
-        return;
-      }
-      const finish = () => {
-        audio.removeEventListener('ended', finish);
-        audio.removeEventListener('error', finish);
-        resolve();
-      };
-
-      audio.currentTime = 0;
-      audio.addEventListener('ended', finish);
-      audio.addEventListener('error', finish);
-      audio.play().catch(finish);
-    });
+    return playAudioElement(faseAudios[nextPhase]);
   }
 
   function preparePhaseIntro() {
@@ -458,21 +461,20 @@
     speak(target.en);
   }
 
-  function showProgressCompletionOverlay() {
+  function showProgressCompletionOverlay(nextPhase) {
     return new Promise(resolve => {
-      if (!progressCompleteOverlay) {
-        setTimeout(resolve, GREEN_OVERLAY_DURATION_MS);
-        return;
+      if (progressCompleteOverlay) {
+        progressCompleteOverlay.classList.add('active');
+        progressCompleteOverlay.setAttribute('aria-hidden', 'false');
       }
 
-      progressCompleteOverlay.classList.add('active');
-      progressCompleteOverlay.setAttribute('aria-hidden', 'false');
-
-      setTimeout(() => {
-        progressCompleteOverlay.classList.remove('active');
-        progressCompleteOverlay.setAttribute('aria-hidden', 'true');
+      playAudioElement(faseAudios[nextPhase]).then(() => {
+        if (progressCompleteOverlay) {
+          progressCompleteOverlay.classList.remove('active');
+          progressCompleteOverlay.setAttribute('aria-hidden', 'true');
+        }
         resolve();
-      }, GREEN_OVERLAY_DURATION_MS);
+      });
     });
   }
 
@@ -484,9 +486,9 @@
       showText('');
       if (choiceRow) choiceRow.innerHTML = '';
       hidePhaseElements();
-      showProgressCompletionOverlay().then(() => {
+      showProgressCompletionOverlay(phase + 1).then(() => {
         awaiting = false;
-        handlePhaseComplete();
+        handlePhaseComplete({ skipIntroAudio: true });
       });
       return;
     }
@@ -519,20 +521,24 @@
     }, PHASE_DISSOLVE_MS);
   }
 
-  async function startPhase(nextPhase) {
+  async function startPhase(nextPhase, options = {}) {
+    const { skipIntroAudio = false } = options;
     phase = nextPhase;
     updatePhaseLabel();
     filterPool();
     resetProgress();
     preparePhaseIntro();
-    await playPhaseIntro(nextPhase);
+    if (!skipIntroAudio) {
+      await playPhaseIntro(nextPhase);
+    }
     advanceCycle();
     requestAnimationFrame(() => {
       showPhaseElements();
     });
   }
 
-  function handlePhaseComplete() {
+  function handlePhaseComplete(options = {}) {
+    const { skipIntroAudio = false } = options;
     if (phase === 3) {
       level += 1;
       saveLevelToStorage();
@@ -543,7 +549,7 @@
     }
 
     dissolveEnvironment(() => {
-      startPhase(phase + 1);
+      startPhase(phase + 1, { skipIntroAudio });
     });
   }
 
