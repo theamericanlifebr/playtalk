@@ -456,6 +456,15 @@
     callback();
   }
 
+  function startPhase(nextPhase) {
+    phase = nextPhase;
+    filterPool();
+    resetProgress();
+    playPhaseIntro(nextPhase).then(() => {
+      advanceCycle();
+    });
+  }
+
   function handlePhaseComplete() {
     if (phase === 3) {
       level += 1;
@@ -467,20 +476,13 @@
     }
 
     dissolveEnvironment(() => {
-      phase += 1;
-      resetProgress();
-      playPhaseIntro(phase).then(() => advanceCycle());
+      startPhase(phase + 1);
     });
   }
 
   function startGame() {
-    phase = 1;
-    filterPool();
-    resetProgress();
     preGame.classList.add('hidden');
-    playPhaseIntro(1).then(() => {
-      advanceCycle();
-    });
+    startPhase(1);
   }
 
   function init() {
@@ -492,8 +494,6 @@
     });
     nextLevelBtn.addEventListener('click', () => {
       levelComplete.classList.add('hidden');
-      filterPool();
-      resetProgress();
       phase = 1;
       preGame.classList.remove('hidden');
       updateLevelIndicators();
