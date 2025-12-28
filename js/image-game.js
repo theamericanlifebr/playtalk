@@ -18,7 +18,9 @@
     incorrect: 0,
     roundComplete: false,
     round1Passed: false,
-    feedbackHandlers: { primary: null, secondary: null }
+    feedbackHandlers: { primary: null, secondary: null },
+    filteredItems: [],
+    activeFolders: new Set()
   };
 
   const elements = {
@@ -41,7 +43,9 @@
     feedbackErrors: document.getElementById('image-game-feedback-errors'),
     feedbackPrimary: document.getElementById('image-game-feedback-primary'),
     feedbackSecondary: document.getElementById('image-game-feedback-secondary'),
-    headerLevel: document.getElementById('header-level')
+    headerLevel: document.getElementById('header-level'),
+    folderList: document.getElementById('image-game-folders'),
+    startButton: document.getElementById('image-game-start')
   };
 
   const normalizeText = (value) => {
@@ -60,13 +64,15 @@
       const parts = entry.split('#');
       if (parts.length < 3) return null;
       const [pt, en, file] = parts;
-      return { pt: pt || '', en: en || '', file: file || '' };
+      return { pt: pt || '', en: en || '', file: file || '', level: '1', folder: 'objetos' };
     }
     if (typeof entry === 'object') {
       return {
         pt: entry.pt || entry.portuguese || '',
         en: entry.en || entry.english || '',
-        file: entry.file || entry.image || ''
+        file: entry.file || entry.image || '',
+        level: entry.level || '1',
+        folder: entry.folder || 'objetos'
       };
     }
     return null;
@@ -76,6 +82,12 @@
     if (!fileName) return 0;
     const match = fileName.match(/(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
+  };
+
+  const getItemLevel = (item) => {
+    if (!item) return 1;
+    const parsed = parseInt(item.level, 10);
+    return Number.isFinite(parsed) ? parsed : getFileIndex(item.file) || 1;
   };
 
   const shuffle = (list) => {
@@ -88,15 +100,18 @@
   };
 
   const buildLevelBlocks = (items) => {
-    const sorted = [...items].sort((a, b) => getFileIndex(a.file) - getFileIndex(b.file));
+    const sorted = [...items].sort((a, b) => {
+      const levelDiff = getItemLevel(a) - getItemLevel(b);
+      if (levelDiff !== 0) return levelDiff;
+      return getFileIndex(a.file) - getFileIndex(b.file);
+    });
     const blocks = {};
-    let cursor = sorted.length;
+    let cursor = 0;
 
     LEVEL_SIZES.forEach((size, levelIndex) => {
       const levelNumber = levelIndex + 1;
-      const start = Math.max(cursor - size, 0);
-      const slice = sorted.slice(start, cursor);
-      cursor = start;
+      const slice = sorted.slice(cursor, cursor + size);
+      cursor += size;
       blocks[levelNumber] = slice;
     });
 
@@ -205,6 +220,52 @@
     state.feedbackHandlers = { primary: null, secondary: null };
   };
 
+  const formatFolderLabel = (folder) => {
+    if (!folder) return 'Outros';
+    const normalized = folder.replace(/[-_]+/g, ' ').trim();
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
+
+  const buildFolderSummary = (items) => {
+    const summary = {};
+    items.forEach((item) => {
+      const folder = item.folder || 'objetos';
+      summary[folder] = (summary[folder] || 0) + 1;
+    });
+    return summary;
+  };
+
+  const updateFolderButtonState = (button, isActive) => {
+    button.classList.toggle('is-muted', !isActive);
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  };
+
+  const renderFolderButtons = (summary) => {
+    if (!elements.folderList) return;
+    elements.folderList.innerHTML = '';
+    const folders = Object.keys(summary).sort((a, b) => a.localeCompare(b));
+    state.activeFolders = new Set(folders);
+
+    folders.forEach((folder) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'image-game-folder';
+      button.dataset.folder = folder;
+      button.textContent = `${formatFolderLabel(folder)} ${summary[folder]}`;
+      updateFolderButtonState(button, true);
+      button.addEventListener('click', () => {
+        if (state.activeFolders.has(folder)) {
+          state.activeFolders.delete(folder);
+          updateFolderButtonState(button, false);
+        } else {
+          state.activeFolders.add(folder);
+          updateFolderButtonState(button, true);
+        }
+      });
+      elements.folderList.appendChild(button);
+    });
+  };
+
   const showFeedback = ({ title, description, primaryLabel, secondaryLabel, onPrimary, onSecondary }) => {
     if (!elements.feedback || !elements.feedbackTitle || !elements.feedbackDescription) return;
 
@@ -275,7 +336,8 @@
     const block = state.levelBlocks[level] || [];
     if (block.length) return block;
     const fallbackSize = getRoundSize(level);
-    return state.allItems.slice(-fallbackSize);
+    const source = state.filteredItems.length ? state.filteredItems : state.allItems;
+    return source.slice(-fallbackSize);
   };
 
   const getRoundItems = (round) => {
@@ -452,6 +514,36 @@
     startRound(1);
   };
 
+  const startImageGame = () => {
+    if (!state.allItems.length) {
+      showStatus('Nenhuma imagem encontrada.', 'warning');
+      return;
+    }
+
+    const activeFolders = state.activeFolders && state.activeFolders.size
+      ? state.activeFolders
+      : new Set();
+
+    const filtered = state.allItems.filter((item) => activeFolders.has(item.folder || 'objetos'));
+
+    if (!filtered.length) {
+      showStatus('Selecione pelo menos uma pasta para iniciar.', 'warning');
+      return;
+    }
+
+    state.filteredItems = filtered;
+    state.levelBlocks = buildLevelBlocks(filtered);
+    state.items = [];
+    state.index = 0;
+    state.round = 1;
+    state.round1Passed = false;
+    const savedLevel = parseInt(localStorage.getItem('imageGameLevel') || '1', 10);
+    const startingLevel = Number.isFinite(savedLevel)
+      ? Math.min(Math.max(savedLevel, 1), LEVEL_SIZES.length)
+      : 1;
+    startLevel(startingLevel);
+  };
+
   const handleSpeechResult = (event) => {
     if (!event || !event.results || !event.results[0] || !event.results[0][0]) return;
     const transcript = event.results[0][0].transcript || '';
@@ -568,6 +660,11 @@
         }
       });
     }
+    if (elements.startButton) {
+      elements.startButton.addEventListener('click', () => {
+        startImageGame();
+      });
+    }
     window.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowRight') {
         registerAnswer(true);
@@ -587,19 +684,18 @@
         .map(parseItem)
         .filter((entry) => entry && entry.file);
 
-      state.levelBlocks = buildLevelBlocks(state.allItems);
-
       if (!state.allItems.length) {
         showStatus('Nenhuma imagem encontrada.', 'warning');
         return;
       }
 
-      const savedLevel = parseInt(localStorage.getItem('imageGameLevel') || '1', 10);
-      const startingLevel = Number.isFinite(savedLevel)
-        ? Math.min(Math.max(savedLevel, 1), LEVEL_SIZES.length)
-        : 1;
-
-      startLevel(startingLevel);
+      state.filteredItems = [...state.allItems];
+      const summary = buildFolderSummary(state.allItems);
+      renderFolderButtons(summary);
+      if (elements.instruction) {
+        elements.instruction.textContent =
+          'Selecione as pastas desejadas e toque em “Iniciar imagens”.';
+      }
     } catch (error) {
       console.error('Erro ao carregar imagens:', error);
       showStatus('Erro ao carregar as imagens.', 'warning');
