@@ -28,6 +28,8 @@
   let cycle = [];
   let index = 0; // posição atual no ciclo
   let score = 0; // progresso / acertos
+  let currentItem = null;
+  let completionGridShown = false;
 
   let awaiting = false;
   let recognition = null;
@@ -81,6 +83,8 @@
   function resetProgress() {
     index = 0;
     score = 0;
+    currentItem = null;
+    completionGridShown = false;
     cycle = shuffle(pool);
 
     if (!cycle.length) {
@@ -149,6 +153,7 @@
   }
 
   function showPhaseOneCard(item) {
+    currentItem = item;
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
     const img = document.createElement('img');
@@ -220,6 +225,7 @@
   }
 
   function showPhaseTwoCards(item) {
+    currentItem = item;
     clearBoard();
     boardInner.classList.add('board__inner--grid');
     const selection = buildPhaseTwoOptions(item);
@@ -287,6 +293,7 @@
   }
 
   function showPhaseThreeCard(item) {
+    currentItem = item;
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
     const img = document.createElement('img');
@@ -358,7 +365,7 @@
     if (!cycle.length) return;
 
     if (index >= cycle.length) {
-      handlePhaseComplete();
+      handleProgressCompletion();
       return;
     }
 
@@ -378,6 +385,64 @@
       default:
         showPhaseOneCard(item);
     }
+  }
+
+  function buildCompletionGridItems(target) {
+    const basePool = images.length ? images : pool;
+    const fallbackPool = basePool.filter(entry => entry && entry.file && entry.file !== target.file);
+    const randomOptions = shuffle(fallbackPool).slice(0, 3);
+
+    while (randomOptions.length < 3 && fallbackPool.length) {
+      const candidate = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+      randomOptions.push(candidate);
+    }
+
+    while (randomOptions.length < 3) {
+      randomOptions.push(target);
+    }
+
+    const selection = [target, ...randomOptions.slice(0, 3)];
+    return shuffle(selection).slice(0, 4);
+  }
+
+  function showCompletionGrid(target) {
+    if (!target) return;
+
+    clearBoard();
+    boardInner.classList.add('board__inner--grid');
+    const items = buildCompletionGridItems(target);
+
+    items.forEach(entry => {
+      const card = document.createElement('div');
+      card.className = 'grid-card grid-card--enter grid-card--static';
+      const img = document.createElement('img');
+      img.src = `images/${entry.file}`;
+      img.alt = entry.en;
+      card.appendChild(img);
+      boardInner.appendChild(card);
+    });
+
+    speak(target.en);
+  }
+
+  function handleProgressCompletion() {
+    if (completionGridShown) {
+      handlePhaseComplete();
+      return;
+    }
+
+    completionGridShown = true;
+    if (!currentItem) {
+      handlePhaseComplete();
+      return;
+    }
+
+    awaiting = true;
+    showCompletionGrid(currentItem);
+    setTimeout(() => {
+      awaiting = false;
+      handlePhaseComplete();
+    }, 1500);
   }
 
   function dissolveEnvironment(callback) {
