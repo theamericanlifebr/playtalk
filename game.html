@@ -83,58 +83,76 @@
   </header>
   <main id="game-main" class="container-screen container-screen--home">
     <div class="image-game-shell" data-page-transition>
-      <div id="visor" class="image-game-visor">
-        <div class="visor-stack">
-          <div class="image-game-level-header">
-            <h2 class="image-game-level-title">Nível <span id="image-game-level-value">1</span></h2>
-            <button id="image-game-start" class="image-game-start" type="button">Iniciar jogo</button>
-          </div>
-          <div id="image-game-instruction" class="level-instruction" role="status" aria-live="polite">
-            Fale a palavra em inglês para a imagem.
-          </div>
-          <div class="mode-emblem image-game-emblem">
-            <img id="image-game-target" class="image-game-target" alt="Imagem do jogo" />
-          </div>
-          <div class="phrase-stack">
-            <div id="image-game-status" class="image-game-status" aria-live="polite"></div>
-            <div id="image-game-transcript" class="user-transcript" aria-live="polite"></div>
-            <div id="image-game-english" class="image-game-english" hidden></div>
-          </div>
-          <div class="image-game-answers">
-            <div id="phase1-options" class="image-game-choice" hidden></div>
-            <div id="phase2-grid" class="image-game-grid" hidden></div>
-            <div id="phase3-hint" class="image-game-phase3-hint" hidden>Toque na imagem e fale em inglês.</div>
-          </div>
-          <div class="image-game-controls">
-            <div class="image-game-score">
-              <span id="image-game-round-label" class="image-game-round">Rodada 1</span>
-              <span id="image-game-counts" class="image-game-counts">0 acertos · 0 erros</span>
-            </div>
-            <div class="image-game-progress" aria-label="Progresso da rodada">
-              <div class="image-game-progress__track">
-                <div
-                  id="image-game-progress-bar"
-                  class="image-game-progress__fill"
-                  role="progressbar"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow="0"
-                  aria-valuetext="0 de 0"
-                ></div>
+        <div id="visor" class="image-game-visor">
+          <div class="visor-stack">
+            <div id="image-game-content" class="image-game-content">
+              <div class="image-game-level-header">
+                <h2 class="image-game-level-title">Nível <span id="image-game-level-value">1</span></h2>
+                <button id="image-game-start" class="image-game-start" type="button">Iniciar jogo</button>
               </div>
-              <span id="image-game-progress-label" class="image-game-progress__label">0/0</span>
+              <div id="image-game-instruction" class="level-instruction" role="status" aria-live="polite">
+                Fale a palavra em inglês para a imagem.
+              </div>
+              <div class="mode-emblem image-game-emblem">
+                <img id="image-game-target" class="image-game-target" alt="Imagem do jogo" />
+              </div>
+              <div class="phrase-stack">
+                <div id="image-game-status" class="image-game-status" aria-live="polite"></div>
+                <div id="image-game-transcript" class="user-transcript" aria-live="polite"></div>
+                <div id="image-game-english" class="image-game-english" hidden></div>
+              </div>
+              <div class="image-game-answers">
+                <div id="phase1-options" class="image-game-choice" hidden></div>
+                <div id="phase2-grid" class="image-game-grid" hidden></div>
+                <div id="phase3-hint" class="image-game-phase3-hint" hidden>Toque na imagem e fale em inglês.</div>
+              </div>
+              <div class="image-game-controls">
+                <div class="image-game-score">
+                  <span id="image-game-round-label" class="image-game-round">Rodada 1</span>
+                  <span id="image-game-counts" class="image-game-counts">0 acertos · 0 erros</span>
+                </div>
+                <div class="image-game-progress" aria-label="Progresso da rodada">
+                  <div class="image-game-progress__track">
+                    <div
+                      id="image-game-progress-bar"
+                      class="image-game-progress__fill"
+                      role="progressbar"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-valuenow="0"
+                      aria-valuetext="0 de 0"
+                    ></div>
+                  </div>
+                  <span id="image-game-progress-label" class="image-game-progress__label">0/0</span>
+                </div>
+                <div class="image-game-manual">
+                  <button id="image-game-correct" class="image-game-mark image-game-mark--correct" type="button">
+                    Acertei
+                  </button>
+                  <button id="image-game-wrong" class="image-game-mark image-game-mark--wrong" type="button">
+                    Errei
+                  </button>
+                </div>
+              </div>
             </div>
-            <div class="image-game-manual">
-              <button id="image-game-correct" class="image-game-mark image-game-mark--correct" type="button">
-                Acertei
-              </button>
-              <button id="image-game-wrong" class="image-game-mark image-game-mark--wrong" type="button">
-                Errei
-              </button>
+            <div id="image-game-audio-progress" class="image-game-audio-progress" hidden>
+              <div class="image-game-progress" aria-label="Progresso do áudio">
+                <div class="image-game-progress__track">
+                  <div
+                    id="image-game-audio-progress-bar"
+                    class="image-game-progress__fill"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
+                    aria-valuetext="0 de 0"
+                  ></div>
+                </div>
+                <span id="image-game-audio-progress-label" class="image-game-progress__label">0:00/0:00</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
     </div>
   </main>
   <div id="image-game-feedback" class="image-game-feedback" hidden>
