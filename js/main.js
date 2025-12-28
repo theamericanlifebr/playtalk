@@ -2226,6 +2226,10 @@ function updatePreGameScreen(mode) {
     startBtn.setAttribute('data-resume', hasResume ? 'true' : 'false');
     startBtn.setAttribute('data-resume-levelfinder', hasResume && savedRound && savedRound.isLevelFinder ? 'true' : 'false');
   }
+  const levelFinderBtn = document.getElementById('pre-game-level-finder');
+  if (levelFinderBtn) {
+    levelFinderBtn.style.display = mode === 1 ? 'none' : '';
+  }
   overlay.dataset.mode = String(mode);
 }
 
@@ -2867,6 +2871,10 @@ function stopTryAgainAnimation() {
 }
 
 function startGame(modo) {
+  if (modo === 1) {
+    window.location.href = 'game.html';
+    return;
+  }
   const prevMode = selectedMode;
   persistCurrentRoundState();
   if (prevMode !== modo) {
