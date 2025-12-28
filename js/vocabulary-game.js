@@ -453,6 +453,20 @@
   }
 
   function handleProgressCompletion() {
+    if (phase === 1) {
+      awaiting = true;
+      completionGridShown = true;
+      clearBoard();
+      showText('');
+      if (choiceRow) choiceRow.innerHTML = '';
+      hidePhaseElements();
+      setTimeout(() => {
+        awaiting = false;
+        handlePhaseComplete();
+      }, PHASE_DISSOLVE_MS);
+      return;
+    }
+
     if (completionGridShown) {
       handlePhaseComplete();
       return;
