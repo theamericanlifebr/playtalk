@@ -64,8 +64,7 @@
 
   function filterPool() {
     const numericLevel = Number(level) || 1;
-    const filtered = images.filter(item => Number(item.level) > numericLevel);
-    pool = filtered.length ? filtered : images.slice();
+    pool = images.filter(item => Number(item.level) === numericLevel);
   }
 
   function shuffle(list) {
