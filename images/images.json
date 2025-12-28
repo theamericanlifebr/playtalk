@@ -1,5 +1,5 @@
 [
-{
+  {
     "pt": "quadrado",
     "en": "square",
     "file": "image (1).svg",
@@ -426,7 +426,6 @@
     "level": "7",
     "folder": "tecnologia"
   },
-  
   {
     "pt": "vela",
     "en": "candle",
@@ -651,7 +650,6 @@
     "level": "2",
     "folder": "objetos"
   },
-
   {
     "pt": "com frio",
     "en": "cold",
@@ -911,7 +909,6 @@
     "level": "13",
     "folder": "animais"
   },
-
   {
     "pt": "Terra",
     "en": "Earth",
