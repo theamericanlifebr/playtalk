@@ -2408,6 +2408,62 @@ body.page-image-game .image-game-english:not([hidden]) {
   transform: translateY(-60px);
 }
 
+.image-game-folder-panel {
+  margin: 12px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.image-game-folders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 860px;
+}
+
+.image-game-folder {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #f8fafc;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.image-game-folder:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.image-game-folder.is-muted {
+  opacity: 0.75;
+}
+
+.image-game-start {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  color: #0f172a;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.image-game-start:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 38px rgba(15, 23, 42, 0.4);
+}
+
 .image-game-controls {
   margin-top: 32px;
   display: flex;
