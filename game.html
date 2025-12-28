@@ -230,6 +230,20 @@
 
     .game-overlay.hidden { display: none; }
 
+    .full-green-overlay {
+      position: fixed;
+      inset: 0;
+      background: #17a94c;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .full-green-overlay.active {
+      display: flex;
+    }
+
     .overlay-card {
       width: min(520px, 92%);
       background: #fff;
@@ -367,6 +381,8 @@
       </div>
     </div>
   </section>
+
+  <div class="full-green-overlay" id="progress-complete-overlay" aria-hidden="true"></div>
 
   <audio id="audio-fase1" src="gamesounds/fase1.mp3" preload="auto"></audio>
   <audio id="audio-fase2" src="gamesounds/fase2.mp3" preload="auto"></audio>
