@@ -3,8 +3,322 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-  <title>PlayTalk | Game</title>
+  <title>PlayTalk | Vocabulary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
+  <style>
+    :root {
+      --primary: #1b4f9a;
+      --secondary: #4c96dc;
+      --panel: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.25);
+      --text: #0b1f44;
+      --success: #2ecc71;
+      --danger: #e74c3c;
+      --muted: rgba(255, 255, 255, 0.7);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #1b4f9a 0%, #2c6fbf 40%, #3a86d1 70%, #4c96dc 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(6px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .level-indicator {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px 80px;
+      position: relative;
+    }
+
+    .board-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 25px;
+    }
+
+    .board {
+      width: min(450px, 100%);
+      max-width: 450px;
+      height: 450px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: opacity 0.2s ease;
+    }
+
+    @media (max-width: 768px) {
+      .board { width: 360px; height: 360px; }
+    }
+
+    .board__inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .board__image-single {
+      max-width: 90%;
+      max-height: 90%;
+      opacity: 0.85;
+    }
+
+    .grid-card {
+      width: 150px;
+      height: 150px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .grid-card img { width: 120px; height: 120px; object-fit: contain; }
+
+    .board--hidden { opacity: 0; pointer-events: none; }
+
+    .text-container {
+      margin-top: 12px;
+      width: min(480px, 100%);
+      min-height: 48px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .text-container.active { opacity: 1; }
+
+    .choice-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .choice-btn {
+      background: #2c6fbf;
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+      min-width: 150px;
+    }
+
+    .choice-btn:hover { transform: translateY(-1px); }
+    .choice-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    .choice-btn.success { background: var(--success); }
+    .choice-btn.error { background: var(--danger); }
+
+    .progress-footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 25px;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .progress-bar {
+      width: min(520px, 92%);
+      height: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+    }
+
+    .progress-bar__fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #c8e54a, #4c96dc);
+      transition: width 0.25s ease;
+    }
+
+    .game-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(7, 19, 40, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+    }
+
+    .game-overlay.hidden { display: none; }
+
+    .overlay-card {
+      width: min(520px, 92%);
+      background: #fff;
+      color: #0b1f44;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.28);
+    }
+
+    .overlay-card h1 { margin: 0 0 6px; font-size: 24px; }
+    .overlay-card p { margin: 0 0 14px; color: #243b64; }
+
+    .overlay-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pill-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(27, 79, 154, 0.1);
+      color: #1b4f9a;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 700;
+      border: 1px solid rgba(27, 79, 154, 0.15);
+    }
+
+    .btn-primary {
+      background: linear-gradient(120deg, #3a86d1, #4c96dc);
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); }
+
+    .fade-out {
+      animation: fadeOut 0.5s ease forwards;
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
 </head>
 <body>
+  <header>
+    <div class="brand">
+      <span aria-hidden="true">🎯</span>
+      <span>Vocabulary</span>
+    </div>
+    <div class="level-indicator" id="level-indicator">Nível 1</div>
+  </header>
+
+  <main>
+    <div class="board-wrapper">
+      <div class="board" id="board">
+        <div class="board__inner" id="board-inner"></div>
+      </div>
+    </div>
+    <div class="text-container" id="text-container" aria-live="polite"></div>
+    <div class="choice-row" id="choice-row"></div>
+  </main>
+
+  <div class="progress-footer">
+    <div class="progress-bar" aria-label="Progresso do nível">
+      <div class="progress-bar__fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <section class="game-overlay" id="pre-game">
+    <div class="overlay-card">
+      <h1>Modo Vocabulary</h1>
+      <p>Comece pelo nível atual e avance acertando todas as imagens sem errar.</p>
+      <div class="pill-info" id="pre-game-level">Nível 1</div>
+      <div class="overlay-actions">
+        <button class="btn-primary" id="start-btn">Jogar</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="game-overlay hidden" id="level-complete">
+    <div class="overlay-card">
+      <h1>Pronto para o próximo nível?</h1>
+      <p id="level-complete-text"></p>
+      <div class="overlay-actions">
+        <button class="btn-primary" id="next-level-btn">Ir para o próximo</button>
+      </div>
+    </div>
+  </section>
+
+  <audio id="audio-fase1" src="gamesounds/fase1.mp3" preload="auto"></audio>
+  <audio id="audio-fase2" src="gamesounds/fase2.mp3" preload="auto"></audio>
+  <audio id="audio-fase3" src="gamesounds/fase3.mp3" preload="auto"></audio>
+  <audio id="audio-success" src="gamesounds/success.mp3" preload="auto"></audio>
+  <audio id="audio-error" src="gamesounds/error.mp3" preload="auto"></audio>
+
+  <script src="js/vocabulary-game.js"></script>
 </body>
 </html>
