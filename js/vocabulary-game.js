@@ -503,14 +503,20 @@
     phaseTransition.classList.remove('hidden');
     phaseTransition.setAttribute('aria-hidden', 'false');
 
+    phaseTransitionBtn.disabled = true;
+
     const startNextPhase = () => {
       phaseTransitionBtn.removeEventListener('click', startNextPhase);
       phaseTransition.classList.add('hidden');
       phaseTransition.setAttribute('aria-hidden', 'true');
-      startPhase(nextPhase);
+      startPhase(nextPhase, { skipIntroAudio: true });
     };
 
     phaseTransitionBtn.addEventListener('click', startNextPhase);
+
+    playAudioElement(faseAudios[nextPhase]).then(() => {
+      phaseTransitionBtn.disabled = false;
+    });
   }
 
   function handleProgressCompletion() {
