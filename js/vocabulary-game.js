@@ -446,15 +446,7 @@
   }
 
   function dissolveEnvironment(callback) {
-    board.classList.add('fade-out');
-    textContainer.classList.add('fade-out');
-    choiceRow.classList.add('fade-out');
-    setTimeout(() => {
-      board.classList.remove('fade-out');
-      textContainer.classList.remove('fade-out');
-      choiceRow.classList.remove('fade-out');
-      callback();
-    }, 500);
+    callback();
   }
 
   function handlePhaseComplete() {
