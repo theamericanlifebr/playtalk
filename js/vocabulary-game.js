@@ -13,6 +13,10 @@
   const levelComplete = document.getElementById('level-complete');
   const levelCompleteText = document.getElementById('level-complete-text');
   const nextLevelBtn = document.getElementById('next-level-btn');
+  const phaseTransition = document.getElementById('phase-transition');
+  const phaseTransitionTitle = document.getElementById('phase-transition-title');
+  const phaseTransitionInstruction = document.getElementById('phase-transition-instruction');
+  const phaseTransitionBtn = document.getElementById('phase-transition-btn');
   const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
   const PHASE_DISSOLVE_MS = 500;
 
@@ -478,18 +482,46 @@
     });
   }
 
+  function showPhaseTransition(nextPhase) {
+    if (!phaseTransition || !phaseTransitionBtn || !phaseTransitionTitle || !phaseTransitionInstruction) {
+      startPhase(nextPhase);
+      return;
+    }
+
+    const config = {
+      2: { title: 'Fase 2', instruction: 'Clique no que ouviu.', cta: 'Iniciar fase 2' },
+      3: { title: 'Fase 3', instruction: 'Toque na imagem e fale.', cta: 'Iniciar fase 3' }
+    }[nextPhase] || {
+      title: `Fase ${nextPhase}`,
+      instruction: 'Pronto para a próxima fase?',
+      cta: 'Continuar'
+    };
+
+    phaseTransitionTitle.textContent = config.title;
+    phaseTransitionInstruction.textContent = config.instruction;
+    phaseTransitionBtn.textContent = config.cta;
+    phaseTransition.classList.remove('hidden');
+    phaseTransition.setAttribute('aria-hidden', 'false');
+
+    const startNextPhase = () => {
+      phaseTransitionBtn.removeEventListener('click', startNextPhase);
+      phaseTransition.classList.add('hidden');
+      phaseTransition.setAttribute('aria-hidden', 'true');
+      startPhase(nextPhase);
+    };
+
+    phaseTransitionBtn.addEventListener('click', startNextPhase);
+  }
+
   function handleProgressCompletion() {
     if (phase === 1 || phase === 2) {
-      awaiting = true;
+      awaiting = false;
       completionGridShown = true;
       clearBoard();
       showText('');
       if (choiceRow) choiceRow.innerHTML = '';
       hidePhaseElements();
-      showProgressCompletionOverlay(phase + 1).then(() => {
-        awaiting = false;
-        handlePhaseComplete({ skipIntroAudio: true });
-      });
+      showPhaseTransition(phase + 1);
       return;
     }
 
