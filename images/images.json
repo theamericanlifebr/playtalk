@@ -1,730 +1,711 @@
 [
-  {
+{
     "pt": "quadrado",
     "en": "square",
     "file": "image (1).svg",
-    "level": "87",
-    "folder": "objetos"
+    "level": "8",
+    "folder": "formas"
   },
   {
     "pt": "medalha de prata",
     "en": "silver medal",
     "file": "image (2).svg",
-    "level": "87",
-    "folder": "verbos"
+    "level": "25",
+    "folder": "esportes"
   },
   {
     "pt": "medalha de bronze",
     "en": "bronze medal",
     "file": "image (3).svg",
-    "level": "87",
-    "folder": "objetos"
+    "level": "25",
+    "folder": "esportes"
   },
   {
     "pt": "teleférico",
     "en": "cable car",
     "file": "image (4).svg",
-    "level": "56",
+    "level": "50",
     "folder": "transporte"
   },
   {
     "pt": "ambulância",
     "en": "ambulance",
     "file": "image (5).svg",
-    "level": "87",
+    "level": "15",
     "folder": "transporte"
   },
   {
     "pt": "capacete",
     "en": "helmet",
     "file": "image (6).svg",
-    "level": "87",
+    "level": "40",
     "folder": "roupas"
   },
   {
     "pt": "ancora",
     "en": "anchor",
     "file": "image (7).svg",
-    "level": "100",
-    "folder": "objetos"
+    "level": "50",
+    "folder": "World"
   },
   {
     "pt": "nervoso",
     "en": "angry",
     "file": "image (8).svg",
-    "level": "66",
+    "level": "6",
     "folder": "sentimentos"
   },
   {
     "pt": "irritado",
     "en": "mad",
     "file": "image (9).svg",
-    "level": "87",
+    "level": "6",
     "folder": "sentimentos"
   },
   {
-    "pt": "chegada",
+    "pt": "avião",
     "en": "airplaine",
     "file": "image (10).svg",
-    "level": "100",
+    "level": "3",
     "folder": "transporte"
   },
   {
     "pt": "caminhão",
     "en": "truck",
     "file": "image (11).svg",
-    "level": "87",
+    "level": "16",
     "folder": "transporte"
   },
   {
     "pt": "átomo",
     "en": "atom",
     "file": "image (12).svg",
-    "level": "100",
+    "level": "50",
     "folder": "objetos"
   },
   {
     "pt": "abacate",
     "en": "avocado",
     "file": "image (13).svg",
-    "level": "100",
-    "folder": "comidas"
+    "level": "39",
+    "folder": "fruits"
   },
   {
     "pt": "mamadeira",
     "en": "bottle",
     "file": "image (14).svg",
-    "level": "87",
-    "folder": "objetos"
+    "level": "24",
+    "folder": "Babies"
   },
   {
     "pt": "apontando para baixo",
     "en": "pointing down",
     "file": "image (15).svg",
-    "level": "59",
+    "level": "28",
     "folder": "verbos"
   },
   {
     "pt": "apontando para esquerda",
     "en": "pointing left",
     "file": "image (16).svg",
-    "level": "76",
+    "level": "28",
     "folder": "verbos"
   },
   {
     "pt": "apontando para direita",
     "en": "pointing right",
     "file": "image (17).svg",
-    "level": "87",
+    "level": "28",
     "folder": "verbos"
   },
   {
     "pt": "apontando para cima",
     "en": "pointing up",
     "file": "image (18).svg",
-    "level": "54",
+    "level": "28",
     "folder": "verbos"
   },
   {
     "pt": "mochila",
     "en": "bag pack",
     "file": "image (19).svg",
-    "level": "78",
-    "folder": "objetos"
+    "level": "12",
+    "folder": "roupas"
   },
   {
     "pt": "gambá",
-    "en": "shrimp",
+    "en": "opossum",
     "file": "image (20).svg",
-    "level": "87",
+    "level": "50",
     "folder": "animais"
   },
   {
     "pt": "Raquete",
     "en": "Racket",
     "file": "image (21).svg",
-    "level": "100",
+    "level": "30",
     "folder": "esportes"
   },
   {
     "pt": "banana",
     "en": "banana",
     "file": "image (22).svg",
-    "level": "87",
+    "level": "2",
     "folder": "comidas"
   },
   {
     "pt": "band-aid",
     "en": "band aid",
     "file": "image (23).svg",
-    "level": "79",
+    "level": "32",
     "folder": "objetos"
   },
   {
     "pt": "estatisticas",
     "en": "stats",
     "file": "image (24).svg",
-    "level": "100",
+    "level": "20",
     "folder": "objetos"
   },
   {
     "pt": "estatisticas",
     "en": "stats",
     "file": "image (25).svg",
-    "level": "100",
+    "level": "20",
     "folder": "objetos"
   },
   {
     "pt": "cesta",
     "en": "hoop",
     "file": "image (26).svg",
-    "level": "100",
+    "level": "40",
     "folder": "esportes"
   },
   {
     "pt": "bola",
     "en": "ball",
     "file": "image (27).svg",
-    "level": "49",
+    "level": "1",
     "folder": "esportes"
   },
   {
     "pt": "banheira",
     "en": "bath tub",
     "file": "image (28).svg",
-    "level": "93",
+    "level": "45",
     "folder": "objetos"
   },
   {
     "pt": "morcego",
     "en": "bat",
     "file": "image (29).svg",
-    "level": "87",
+    "level": "45",
     "folder": "animais"
   },
   {
     "pt": "cerveja",
     "en": "beer",
     "file": "image (30).svg",
-    "level": "87",
+    "level": "15",
     "folder": "comidas"
   },
   {
     "pt": "besouro",
     "en": "beatle",
     "file": "image (31).svg",
-    "level": "100",
+    "level": "50",
     "folder": "animais"
   },
   {
     "pt": "sino",
     "en": "bell",
     "file": "image (32).svg",
-    "level": "87",
+    "level": "45",
     "folder": "objetos"
   },
   {
     "pt": "suco",
     "en": "juice",
     "file": "image (33).svg",
-    "level": "87",
+    "level": "10",
     "folder": "comidas"
   },
   {
     "pt": "camisa",
     "en": "shirt",
     "file": "image (34).svg",
-    "level": "87",
+    "level": "9",
     "folder": "roupas"
   },
   {
     "pt": "bicicleta",
     "en": "bike",
     "file": "image (35).svg",
-    "level": "87",
+    "level": "2",
     "folder": "transporte"
   },
   {
     "pt": "boné",
     "en": "cap",
     "file": "image (36).svg",
-    "level": "100",
+    "level": "7",
     "folder": "roupas"
   },
   {
     "pt": "bola de bilhar",
     "en": "Billiard ball",
     "file": "image (37).svg",
-    "level": "75",
+    "level": "47",
     "folder": "esportes"
   },
   {
     "pt": "Clip borboleta",
     "en": "Binder clip",
     "file": "image (38).svg",
-    "level": "93",
+    "level": "46",
     "folder": "animais"
   },
   {
     "pt": "pássaro",
     "en": "bird",
     "file": "image (39).svg",
-    "level": "87",
+    "level": "4",
     "folder": "animais"
   },
   {
     "pt": "bolo",
     "en": "cake",
     "file": "image (40).svg",
-    "level": "87",
+    "level": "1",
     "folder": "comidas"
   },
   {
     "pt": "gato",
     "en": "cat",
     "file": "image (41).svg",
-    "level": "27",
+    "level": "1",
     "folder": "animais"
   },
   {
     "pt": "bandeira preta",
     "en": "black flag",
     "file": "image (42).svg",
-    "level": "87",
+    "level": "35",
     "folder": "objetos"
   },
   {
     "pt": "cego",
     "en": "blind",
     "file": "image (43).svg",
-    "level": "87",
+    "level": "46",
     "folder": "objetos"
   },
   {
     "pt": "beijo",
     "en": "kiss",
     "file": "image (44).svg",
-    "level": "87",
+    "level": "7",
     "folder": "objetos"
   },
   {
     "pt": "bomba",
     "en": "bomb",
     "file": "image (45).svg",
-    "level": "100",
+    "level": "35",
     "folder": "objetos"
   },
   {
     "pt": "boomerang",
     "en": "boomerang",
     "file": "image (46).svg",
-    "level": "100",
+    "level": "36",
     "folder": "objetos"
   },
   {
     "pt": "bouquet",
     "en": "bouquet",
     "file": "image (47).svg",
-    "level": "100",
+    "level": "42",
     "folder": "objetos"
   },
   {
     "pt": "cerebro",
     "en": "brain",
     "file": "image (48).svg",
-    "level": "87",
+    "level": "15",
     "folder": "corpo"
   },
   {
     "pt": "bread",
     "en": "bread",
     "file": "image (49).svg",
-    "level": "35",
+    "level": "8",
     "folder": "comidas"
   },
   {
     "pt": "amamentar",
     "en": "Breastfeed",
     "file": "image (50).svg",
-    "level": "100",
+    "level": "45",
     "folder": "verbos"
   },
   {
     "pt": "ponte",
     "en": "bridge",
     "file": "image (51).svg",
-    "level": "87",
+    "level": "6",
     "folder": "lugares"
   },
   {
-    "pt": "vazio",
+    "pt": "cueca",
     "en": "underwear",
     "file": "image (52).svg",
-    "level": "87",
+    "level": "32",
     "folder": "verbos"
   },
   {
     "pt": "coração quebrado",
     "en": "broken hearth",
     "file": "image (53).svg",
-    "level": "93",
+    "level": "44",
     "folder": "corpo"
   },
   {
     "pt": "vassoura",
     "en": "broom",
     "file": "image (54).svg",
-    "level": "100",
+    "level": "15",
     "folder": "objetos"
   },
   {
     "pt": "balde",
     "en": "bucket",
     "file": "image (55).svg",
-    "level": "87",
+    "level": "31",
     "folder": "objetos"
   },
   {
     "pt": "metro",
     "en": "subway",
     "file": "image (56).svg",
-    "level": "87",
+    "level": "31",
     "folder": "transporte"
   },
   {
     "pt": "ônibus",
     "en": "bus",
     "file": "image (57).svg",
-    "level": "87",
+    "level": "6",
     "folder": "transporte"
   },
   {
     "pt": "borboleta",
     "en": "butterfly",
     "file": "image (58).svg",
-    "level": "87",
+    "level": "4",
     "folder": "animais"
   },
   {
     "pt": "cacto",
     "en": "cactus",
     "file": "image (59).svg",
-    "level": "100",
+    "level": "44",
     "folder": "objetos"
   },
   {
     "pt": "camelo",
     "en": "camel",
     "file": "image (60).svg",
-    "level": "100",
+    "level": "35",
     "folder": "animais"
   },
   {
     "pt": "câmera",
     "en": "camera",
     "file": "image (61).svg",
-    "level": "87",
+    "level": "7",
     "folder": "tecnologia"
   },
-  {
-    "pt": "câmera",
-    "en": "camera",
-    "file": "image (62).svg",
-    "level": "87",
-    "folder": "tecnologia"
-  },
-  {
-    "pt": "câmera",
-    "en": "camera",
-    "file": "image (63).svg",
-    "level": "87",
-    "folder": "tecnologia"
-  },
+  
   {
     "pt": "vela",
     "en": "candle",
     "file": "image (64).svg",
-    "level": "87",
+    "level": "17",
     "folder": "objetos"
   },
   {
     "pt": "lata",
     "en": "can",
     "file": "image (65).svg",
-    "level": "22",
+    "level": "12",
     "folder": "objetos"
   },
   {
     "pt": "maracujá",
     "en": "passion fruit",
     "file": "image (66).svg",
-    "level": "93",
+    "level": "20",
     "folder": "objetos"
   },
   {
     "pt": "pastas",
     "en": "folders",
     "file": "image (67).svg",
-    "level": "100",
+    "level": "18",
     "folder": "objetos"
   },
   {
     "pt": "navio",
     "en": "ship",
     "file": "image (68).svg",
-    "level": "87",
+    "level": "13",
     "folder": "transporte"
   },
   {
     "pt": "carrossel",
     "en": "carousel",
     "file": "image (69).svg",
-    "level": "100",
+    "level": "21",
     "folder": "objetos"
   },
   {
     "pt": "cenoura",
     "en": "carrot",
     "file": "image (70).svg",
-    "level": "100",
+    "level": "22",
     "folder": "comidas"
   },
   {
     "pt": "castelo",
     "en": "castle",
     "file": "image (71).svg",
-    "level": "87",
+    "level": "5",
     "folder": "lugares"
   },
   {
     "pt": "cadeira",
     "en": "chair",
     "file": "image (72).svg",
-    "level": "100",
+    "level": "6",
     "folder": "verbos"
   },
   {
     "pt": "queijo",
     "en": "cheese",
     "file": "image (73).svg",
-    "level": "87",
+    "level": "2",
     "folder": "comidas"
   },
   {
     "pt": "bandeira de corrida",
     "en": "race flag",
     "file": "image (74).svg",
-    "level": "87",
+    "level": "28",
     "folder": "objetos"
   },
   {
     "pt": "cereja",
     "en": "cherry",
     "file": "image (75).svg",
-    "level": "79",
+    "level": "28",
     "folder": "objetos"
   },
   {
     "pt": "peão",
     "en": "pawn",
     "file": "image (76).svg",
-    "level": "100",
+    "level": "33",
     "folder": "objetos"
   },
   {
     "pt": "coxa de frango",
     "en": "chicken leg",
     "file": "image (77).svg",
-    "level": "93",
+    "level": "34",
     "folder": "animais"
   },
   {
     "pt": "esquilo",
     "en": "chipmunk",
     "file": "image (78).svg",
-    "level": "100",
+    "level": "34",
     "folder": "animais"
   },
   {
     "pt": "chocolate",
     "en": "chocolate",
     "file": "image (79).svg",
-    "level": "87",
+    "level": "13",
     "folder": "comidas"
   },
   {
     "pt": "rashi",
     "en": "chopsticks",
     "file": "image (80).svg",
-    "level": "100",
+    "level": "22",
     "folder": "objetos"
   },
   {
     "pt": "árvore de natal",
     "en": "Christmas tree",
     "file": "image (81).svg",
-    "level": "87",
+    "level": "23",
     "folder": "natureza"
   },
   {
     "pt": "igreja",
     "en": "church",
     "file": "image (82).svg",
-    "level": "87",
+    "level": "12",
     "folder": "lugares"
   },
   {
     "pt": "cigarro",
     "en": "cigarette",
     "file": "image (83).svg",
-    "level": "87",
+    "level": "37",
     "folder": "objetos"
   },
   {
     "pt": "circo",
     "en": "circus",
     "file": "image (84).svg",
-    "level": "100",
+    "level": "21",
     "folder": "objetos"
   },
   {
     "pt": "cidade",
     "en": "city",
     "file": "image (85).svg",
-    "level": "66",
+    "level": "3",
     "folder": "lugares"
   },
   {
     "pt": "palmas",
     "en": "clapping",
     "file": "image (86).svg",
-    "level": "100",
+    "level": "15",
     "folder": "verbos"
   },
   {
     "pt": "escalada",
     "en": "climbing",
     "file": "image (87).svg",
-    "level": "87",
+    "level": "31",
     "folder": "verbos"
   },
   {
     "pt": "lua e nuvens",
     "en": "moon and clouds",
     "file": "image (88).svg",
-    "level": "87",
+    "level": "48",
     "folder": "natureza"
   },
   {
     "pt": "tempestade",
     "en": "storm",
     "file": "image (89).svg",
-    "level": "87",
+    "level": "12",
     "folder": "objetos"
   },
   {
     "pt": "casaco",
     "en": "coat",
     "file": "image (90).svg",
-    "level": "87",
+    "level": "9",
     "folder": "roupas"
   },
   {
     "pt": "barata",
     "en": "cockroach",
     "file": "image (91).svg",
-    "level": "100",
+    "level": "41",
     "folder": "objetos"
   },
   {
     "pt": "coquetel",
     "en": "cocktail",
     "file": "image (92).svg",
-    "level": "87",
+    "level": "44",
     "folder": "objetos"
   },
   {
     "pt": "coco",
     "en": "coconut",
     "file": "image (93).svg",
-    "level": "87",
+    "level": "18",
     "folder": "objetos"
   },
   {
     "pt": "caixão",
     "en": "coffin",
     "file": "image (94).svg",
-    "level": "87",
+    "level": "47",
     "folder": "objetos"
   },
   {
     "pt": "moeda",
     "en": "coin",
     "file": "image (95).svg",
-    "level": "87",
+    "level": "2",
     "folder": "objetos"
   },
-  {
-    "pt": "moeda",
-    "en": "coin",
-    "file": "image (96).svg",
-    "level": "87",
-    "folder": "objetos"
-  },
+
   {
     "pt": "com frio",
     "en": "cold",
     "file": "image (97).svg",
-    "level": "49",
+    "level": "9",
     "folder": "objetos"
   },
   {
     "pt": "maleta",
     "en": "briefcase",
     "file": "image (98).svg",
-    "level": "100",
-    "folder": "objetos"
+    "level": "42",
+    "folder": "roupas"
   },
   {
     "pt": "bússola",
     "en": "compass",
     "file": "image (99).svg",
-    "level": "87",
+    "level": "40",
     "folder": "objetos"
   },
   {
     "pt": "mouse",
     "en": "mouse",
     "file": "image (100).svg",
-    "level": "87",
+    "level": "8",
     "folder": "animais"
   },
   {
     "pt": "loja de conveniência",
     "en": "convenience store",
     "file": "image (101).svg",
-    "level": "87",
+    "level": "15",
     "folder": "lugares"
   },
   {
     "pt": "biscoito",
     "en": "cookie",
     "file": "image (102).svg",
-    "level": "87",
+    "level": "7",
     "folder": "comidas"
   },
   {
     "pt": "frigideira",
     "en": "frying pan",
     "file": "image (103).svg",
-    "level": "100",
+    "level": "12",
     "folder": "verbos"
   },
   {
     "pt": "sofá",
     "en": "couch",
     "file": "image (104).svg",
-    "level": "87",
+    "level": "4",
     "folder": "objetos"
   },
   {
@@ -738,147 +719,147 @@
     "pt": "caranguejo",
     "en": "crab",
     "file": "image (106).svg",
-    "level": "87",
+    "level": "50",
     "folder": "objetos"
   },
   {
     "pt": "giz de cera",
     "en": "crayon",
     "file": "image (107).svg",
-    "level": "100",
+    "level": "45",
     "folder": "objetos"
   },
   {
     "pt": "cartão de crédito",
     "en": "credit card",
     "file": "image (108).svg",
-    "level": "87",
+    "level": "6",
     "folder": "objetos"
   },
   {
     "pt": "lua crescente",
     "en": "crescent moon",
     "file": "image (109).svg",
-    "level": "100",
+    "level": "44",
     "folder": "natureza"
   },
   {
     "pt": "crocodilo",
     "en": "crocodile",
     "file": "image (110).svg",
-    "level": "100",
+    "level": "15",
     "folder": "animais"
   },
   {
     "pt": "chorando",
     "en": "crying",
     "file": "image (111).svg",
-    "level": "87",
+    "level": "7",
     "folder": "sentimentos"
   },
   {
     "pt": "vaca",
     "en": "cow",
     "file": "image (112).svg",
-    "level": "87",
+    "level": "4",
     "folder": "animais"
   },
   {
     "pt": "alvo",
     "en": "dartboard",
     "file": "image (113).svg",
-    "level": "100",
+    "level": "6",
     "folder": "objetos"
   },
   {
     "pt": "árvore",
     "en": "tree",
     "file": "image (114).svg",
-    "level": "87",
+    "level": "4",
     "folder": "natureza"
   },
   {
     "pt": "cervo",
     "en": "deer",
     "file": "image (115).svg",
-    "level": "87",
+    "level": "49",
     "folder": "verbos"
   },
   {
     "pt": "edifício",
     "en": "building",
     "file": "image (116).svg",
-    "level": "87",
+    "level": "8",
     "folder": "lugares"
   },
   {
     "pt": "avião",
     "en": "airplane",
     "file": "image (117).svg",
-    "level": "87",
+    "level": "7",
     "folder": "transporte"
   },
   {
     "pt": "detetive",
     "en": "detective",
     "file": "image (118).svg",
-    "level": "87",
+    "level": "35",
     "folder": "objetos"
   },
   {
     "pt": "dinossauro",
     "en": "dinosaur",
     "file": "image (119).svg",
-    "level": "100",
+    "level": "9",
     "folder": "objetos"
   },
   {
     "pt": "disfarçado",
     "en": "disguised",
     "file": "image (120).svg",
-    "level": "100",
+    "level": "44",
     "folder": "objetos"
   },
   {
     "pt": "divisão",
     "en": "division",
     "file": "image (121).svg",
-    "level": "87",
+    "level": "31",
     "folder": "objetos"
   },
   {
     "pt": "estrela cadente",
     "en": "shooting star",
     "file": "image (122).svg",
-    "level": "93",
+    "level": "47",
     "folder": "natureza"
   },
   {
     "pt": "DNA",
     "en": "DNA",
     "file": "image (123).svg",
-    "level": "87",
+    "level": "32",
     "folder": "objetos"
   },
   {
     "pt": "dinheiro",
     "en": "money",
     "file": "image (124).svg",
-    "level": "87",
+    "level": "1",
     "folder": "objetos"
   },
   {
     "pt": "golfinho",
     "en": "dolphin",
     "file": "image (125).svg",
-    "level": "100",
+    "level": "4",
     "folder": "animais"
   },
   {
-    "pt": "rosca",
+    "pt": "rosquinha",
     "en": "donut",
     "file": "image (126).svg",
-    "level": "100",
+    "level": "47",
     "folder": "objetos"
   },
   {
@@ -892,259 +873,253 @@
     "pt": "pomba",
     "en": "dove",
     "file": "image (128).svg",
-    "level": "100",
+    "level": "31",
     "folder": "objetos"
   },
   {
     "pt": "dragão",
     "en": "dragon",
     "file": "image (129).svg",
-    "level": "87",
+    "level": "8",
     "folder": "objetos"
   },
   {
     "pt": "vestido",
     "en": "dress",
     "file": "image (130).svg",
-    "level": "87",
+    "level": "7",
     "folder": "roupas"
   },
   {
     "pt": "chave de fenda",
     "en": "screwdriver",
     "file": "image (131).svg",
-    "level": "100",
+    "level": "35",
     "folder": "verbos"
   },
   {
     "pt": "tambor",
     "en": "drum",
     "file": "image (132).svg",
-    "level": "87",
+    "level": "45",
     "folder": "objetos"
   },
   {
     "pt": "águia",
     "en": "eagle",
     "file": "image (133).svg",
-    "level": "87",
+    "level": "13",
     "folder": "animais"
   },
-  {
-    "pt": "águia",
-    "en": "eagle",
-    "file": "image (134).svg",
-    "level": "87",
-    "folder": "animais"
-  },
+
   {
     "pt": "Terra",
     "en": "Earth",
     "file": "image (135).svg",
-    "level": "87",
+    "level": "2",
     "folder": "natureza"
   },
   {
     "pt": "berinjela",
     "en": "eggplant",
     "file": "image (136).svg",
-    "level": "100",
+    "level": "44",
     "folder": "objetos"
   },
   {
     "pt": "olho",
     "en": "eye",
     "file": "image (137).svg",
-    "level": "87",
+    "level": "5",
     "folder": "corpo"
   },
   {
     "pt": "fábrica",
     "en": "factory",
     "file": "image (138).svg",
-    "level": "87",
+    "level": "44",
     "folder": "objetos"
   },
   {
     "pt": "fazendeiro",
     "en": "farmer",
     "file": "image (139).svg",
-    "level": "87",
+    "level": "43",
     "folder": "verbos"
   },
   {
     "pt": "pena",
     "en": "feather",
     "file": "image (140).svg",
-    "level": "100",
+    "level": "17",
     "folder": "verbos"
   },
   {
     "pt": "cerca",
     "en": "fence",
     "file": "image (141).svg",
-    "level": "87",
+    "level": "28",
     "folder": "objetos"
   },
   {
     "pt": "hóquei em campo",
     "en": "field hockey",
     "file": "image (142).svg",
-    "level": "87",
+    "level": "41",
     "folder": "objetos"
   },
   {
     "pt": "arquivo",
     "en": "filing cabinet",
     "file": "image (143).svg",
-    "level": "87",
+    "level": "47",
     "folder": "verbos"
   },
   {
     "pt": "caminhão de bombeiro",
     "en": "fire truck",
     "file": "image (144).svg",
-    "level": "87",
+    "level": "18",
     "folder": "transporte"
   },
   {
     "pt": "extintor de incêndio",
     "en": "fire extinguisher",
     "file": "image (145).svg",
-    "level": "93",
+    "level": "17",
     "folder": "natureza"
   },
   {
     "pt": "bombeiro",
     "en": "firefighter",
     "file": "image (146).svg",
-    "level": "100",
+    "level": "15",
     "folder": "verbos"
   },
   {
     "pt": "peixe",
     "en": "fish",
     "file": "image (147).svg",
-    "level": "87",
+    "level": "1",
     "folder": "animais"
   },
   {
     "pt": "Inglaterra",
     "en": "England",
     "file": "image (148).svg",
-    "level": "100",
+    "level": "8",
     "folder": "paises"
   },
   {
     "pt": "Albânia",
     "en": "Albania",
     "file": "image (149).svg",
-    "level": "100",
+    "level": "47",
     "folder": "objetos"
   },
   {
     "pt": "Argélia",
     "en": "Algeria",
     "file": "image (150).svg",
-    "level": "100",
+    "level": "40",
     "folder": "objetos"
   },
   {
     "pt": "Andorra",
     "en": "Andorra",
     "file": "image (151).svg",
-    "level": "100",
+    "level": "60",
     "folder": "objetos"
   },
   {
     "pt": "Angola",
     "en": "Angola",
     "file": "image (152).svg",
-    "level": "100",
+    "level": "61",
     "folder": "objetos"
   },
   {
     "pt": "Argentina",
     "en": "Argentina",
     "file": "image (153).svg",
-    "level": "87",
+    "level": "12",
     "folder": "paises"
   },
   {
     "pt": "Austrália",
     "en": "Australia",
     "file": "image (154).svg",
-    "level": "87",
+    "level": "13",
     "folder": "paises"
   },
   {
     "pt": "Áustria",
     "en": "Austria",
     "file": "image (155).svg",
-    "level": "87",
+    "level": "18",
     "folder": "paises"
   },
   {
     "pt": "Bélgica",
     "en": "Belgium",
     "file": "image (156).svg",
-    "level": "100",
+    "level": "20",
     "folder": "paises"
   },
   {
     "pt": "Bolívia",
     "en": "Bolivia",
     "file": "image (157).svg",
-    "level": "100",
+    "level": "19",
     "folder": "paises"
   },
   {
     "pt": "Brasil",
     "en": "Brazil",
     "file": "image (158).svg",
-    "level": "87",
+    "level": "5",
     "folder": "paises"
   },
   {
     "pt": "Burkina Faso",
     "en": "Burkina Faso",
     "file": "image (159).svg",
-    "level": "100",
+    "level": "55",
     "folder": "objetos"
   },
   {
     "pt": "Camarões",
     "en": "Cameroon",
     "file": "image (160).svg",
-    "level": "100",
+    "level": "60",
     "folder": "objetos"
   },
   {
     "pt": "Canadá",
     "en": "Canada",
     "file": "image (161).svg",
-    "level": "87",
+    "level": "44",
     "folder": "paises"
   },
   {
     "pt": "Espanha",
     "en": "Spain",
     "file": "image (162).svg",
-    "level": "87",
+    "level": "20",
     "folder": "paises"
   },
   {
     "pt": "Chile",
     "en": "Chile",
     "file": "image (163).svg",
-    "level": "87",
+    "level": "21",
     "folder": "paises"
   },
   {
     "pt": "China",
     "en": "China",
     "file": "image (164).svg",
-    "level": "87",
+    "level": "7",
     "folder": "paises"
   },
   {
@@ -1158,28 +1133,28 @@
     "pt": "Dinamarca",
     "en": "Denmark",
     "file": "image (166).svg",
-    "level": "87",
+    "level": "18",
     "folder": "paises"
   },
   {
     "pt": "Egito",
     "en": "Egypt",
     "file": "image (167).svg",
-    "level": "87",
+    "level": "44",
     "folder": "paises"
   },
   {
     "pt": "Alemanha",
     "en": "Germany",
     "file": "image (168).svg",
-    "level": "87",
+    "level": "13",
     "folder": "paises"
   },
   {
     "pt": "Grécia",
     "en": "Greece",
     "file": "image (169).svg",
-    "level": "87",
+    "level": "15",
     "folder": "paises"
   },
   {
@@ -1249,7 +1224,7 @@
     "pt": "Estados Unidos",
     "en": "United States",
     "file": "image (179).svg",
-    "level": "83",
+    "level": "5",
     "folder": "paises"
   },
   {
