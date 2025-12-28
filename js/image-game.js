@@ -37,6 +37,8 @@
     wrongButton: document.getElementById('image-game-wrong'),
     roundLabel: document.getElementById('image-game-round-label'),
     counts: document.getElementById('image-game-counts'),
+    progressBar: document.getElementById('image-game-progress-bar'),
+    progressLabel: document.getElementById('image-game-progress-label'),
     feedback: document.getElementById('image-game-feedback'),
     feedbackTitle: document.getElementById('image-game-feedback-title'),
     feedbackDescription: document.getElementById('image-game-feedback-description'),
@@ -147,6 +149,18 @@
     elements.counts.textContent = `${state.correct} acertos · ${state.incorrect} erros`;
   };
 
+  const updateProgress = () => {
+    if (!elements.progressBar || !elements.progressLabel) return;
+    const total = state.items.length;
+    const current = total ? Math.min(state.index + 1, total) : 0;
+    const percent = total ? Math.min(Math.max(Math.round((current / total) * 100), 0), 100) : 0;
+
+    elements.progressBar.style.width = `${percent}%`;
+    elements.progressBar.setAttribute('aria-valuenow', String(percent));
+    elements.progressBar.setAttribute('aria-valuetext', `${current} de ${total}`);
+    elements.progressLabel.textContent = `${current}/${total || 0}`;
+  };
+
   const getSelectedLevel = () => {
     if (!elements.levelSlider) return state.currentLevel || 1;
     const value = parseInt(elements.levelSlider.value, 10);
@@ -236,6 +250,7 @@
     }
     hidePhrase();
     preloadUpcomingImages();
+    updateProgress();
   };
 
   const playTransitionSound = () => {
@@ -299,6 +314,7 @@
     state.incorrect = 0;
     state.roundComplete = false;
     updateCounts();
+    updateProgress();
   };
 
   const hideFeedback = () => {
@@ -608,6 +624,7 @@
     state.preloaded.clear();
     resetRoundStats();
     updateRoundLabel();
+    updateProgress();
 
     if (!state.items.length) {
       showStatus('Nenhuma imagem encontrada para esta rodada.', 'warning');
@@ -777,11 +794,13 @@
       gesture.startX = event.clientX;
       gesture.startY = event.clientY;
       gesture.startTime = Date.now();
+      elements.target.classList.add('is-engaged');
       startListening();
     });
 
     elements.target.addEventListener('pointerup', (event) => {
       if (gesture.pointerId !== event.pointerId) return;
+      elements.target.classList.remove('is-engaged');
       const deltaX = event.clientX - gesture.startX;
       const deltaY = event.clientY - gesture.startY;
       const elapsed = Date.now() - gesture.startTime;
@@ -803,6 +822,14 @@
       if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10 && elapsed < 500) {
         startListening();
       }
+    });
+
+    elements.target.addEventListener('pointercancel', () => {
+      elements.target.classList.remove('is-engaged');
+    });
+
+    elements.target.addEventListener('pointerleave', () => {
+      elements.target.classList.remove('is-engaged');
     });
   };
 
