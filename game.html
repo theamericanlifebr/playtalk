@@ -89,22 +89,14 @@
             Fale a palavra em inglês para a imagem.
           </div>
           <div class="image-game-folder-panel" aria-label="Pastas de imagens">
-            <div id="image-game-folders" class="image-game-folders" role="group" aria-label="Pastas disponíveis"></div>
-            <div class="image-game-level-control">
-              <label class="image-game-level__label" for="image-game-level">Nível do jogo</label>
-              <div class="image-game-level__value">Nível <span id="image-game-level-value">1</span></div>
-              <input
-                id="image-game-level"
-                type="range"
-                min="1"
-                max="100"
-                value="1"
-                class="image-game-level__slider"
-                aria-label="Selecionar nível do jogo"
-              />
-              <div class="image-game-level__count">Palavras ativas: <strong id="image-game-active-count">0</strong></div>
+            <div class="image-game-level-brief">
+              <div class="image-game-level-chip">Nível <span id="image-game-level-value">1</span></div>
+              <div class="image-game-phase-chip">Fase <span id="image-game-phase-value">1</span>/3</div>
             </div>
-            <button id="image-game-start" class="image-game-start" type="button">Iniciar imagens</button>
+            <p id="image-game-phase-description" class="image-game-phase-description">
+              Toque em iniciar para começar as fases deste nível.
+            </p>
+            <button id="image-game-start" class="image-game-start" type="button">Iniciar nível</button>
           </div>
           <div class="mode-emblem image-game-emblem">
             <img id="image-game-target" class="image-game-target" alt="Imagem do jogo" />
@@ -113,6 +105,11 @@
             <div id="image-game-status" class="image-game-status" aria-live="polite"></div>
             <div id="image-game-transcript" class="user-transcript" aria-live="polite"></div>
             <div id="image-game-english" class="image-game-english" hidden></div>
+          </div>
+          <div class="image-game-answers">
+            <div id="phase1-options" class="image-game-choice" hidden></div>
+            <div id="phase2-grid" class="image-game-grid" hidden></div>
+            <div id="phase3-hint" class="image-game-phase3-hint" hidden>Toque na imagem e fale em inglês.</div>
           </div>
           <div class="image-game-controls">
             <div class="image-game-score">
