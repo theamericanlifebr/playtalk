@@ -59,7 +59,11 @@
     gameContent: document.getElementById('image-game-content'),
     audioProgress: document.getElementById('image-game-audio-progress'),
     audioProgressBar: document.getElementById('image-game-audio-progress-bar'),
-    audioProgressLabel: document.getElementById('image-game-audio-progress-label')
+    audioProgressLabel: document.getElementById('image-game-audio-progress-label'),
+    manualControls: document.querySelector('.image-game-manual'),
+    levelHeader: document.querySelector('.image-game-level-header'),
+    phraseStack: document.querySelector('.phrase-stack'),
+    controls: document.querySelector('.image-game-controls')
   };
 
   const shuffle = (list) => {
@@ -256,6 +260,52 @@
       elements.target.removeAttribute('hidden');
     } else {
       elements.target.setAttribute('hidden', '');
+    }
+  };
+
+  const setManualVisibility = (visible) => {
+    if (!elements.manualControls) return;
+    if (visible) {
+      elements.manualControls.removeAttribute('hidden');
+    } else {
+      elements.manualControls.setAttribute('hidden', '');
+    }
+  };
+
+  const setPhaseLayout = (phase) => {
+    const hideNonGrid = phase === 2;
+    const showManual = phase === 1;
+    const showTarget = phase !== 2;
+
+    setTargetVisibility(showTarget);
+    setManualVisibility(showManual);
+
+    const sectionsToToggle = [elements.levelHeader, elements.instruction, elements.phraseStack, elements.controls];
+    sectionsToToggle.forEach((section) => {
+      if (!section) return;
+      if (hideNonGrid) {
+        section.setAttribute('hidden', '');
+      } else {
+        section.removeAttribute('hidden');
+      }
+    });
+
+    if (elements.phase1Options && phase !== 1) {
+      elements.phase1Options.setAttribute('hidden', '');
+    }
+    if (elements.phase2Grid) {
+      if (phase === 2) {
+        elements.phase2Grid.removeAttribute('hidden');
+      } else {
+        elements.phase2Grid.setAttribute('hidden', '');
+      }
+    }
+    if (elements.phase3Hint) {
+      if (phase === 3) {
+        elements.phase3Hint.removeAttribute('hidden');
+      } else {
+        elements.phase3Hint.setAttribute('hidden', '');
+      }
     }
   };
 
@@ -522,6 +572,7 @@
   const startPhase = async (phase) => {
     state.phase = phase;
     resetVisualState();
+    setPhaseLayout(phase);
     setPendingFromItems();
     updatePhaseDisplay();
     if (elements.instruction) {
