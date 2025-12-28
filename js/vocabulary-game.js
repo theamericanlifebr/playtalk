@@ -133,6 +133,7 @@
 
   function showPhaseOneCard(item) {
     clearBoard();
+    boardInner.classList.remove('board__inner--grid');
     const img = document.createElement('img');
     img.src = `images/${item.file}`;
     img.alt = item.en;
@@ -177,45 +178,69 @@
     }, 1000);
   }
 
+  function buildPhaseTwoOptions(item) {
+    const wrongPool = pool.filter(entry => entry.file !== item.file);
+    const wrongChoices = shuffle(wrongPool).slice(0, 3);
+
+    while (wrongChoices.length < 3 && wrongPool.length) {
+      const filler = wrongPool[Math.floor(Math.random() * wrongPool.length)];
+      wrongChoices.push(filler);
+    }
+
+    while (wrongChoices.length < 3) {
+      wrongChoices.push(item);
+    }
+
+    const options = [
+      { ...item, correct: true },
+      ...wrongChoices.slice(0, 3).map(choice => ({ ...choice, correct: false }))
+    ];
+
+    return shuffle(options).slice(0, 4);
+  }
+
   function showPhaseTwoCards(item) {
     clearBoard();
-    boardInner.style.flexDirection = 'row';
-    const wrongChoices = shuffle(pool.filter(entry => entry.file !== item.file)).slice(0, 3);
-    const selection = shuffle([item, ...wrongChoices]).slice(0, 4);
+    boardInner.classList.add('board__inner--grid');
+    const selection = buildPhaseTwoOptions(item);
 
     selection.forEach(entry => {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'grid-card';
-      card.dataset.correct = String(entry.file === item.file);
+      card.dataset.correct = String(entry.correct === true);
       const img = document.createElement('img');
       img.src = `images/${entry.file}`;
       img.alt = entry.en;
       card.appendChild(img);
-      card.addEventListener('click', () => handlePhaseTwoChoice(card, item.file));
+      card.addEventListener('click', () => handlePhaseTwoChoice(card));
       boardInner.appendChild(card);
     });
 
     speak(item.en);
   }
 
-  function handlePhaseTwoChoice(card, correctFile) {
+  function highlightCorrectCard() {
+    boardInner.querySelectorAll('.grid-card').forEach(btn => {
+      if (btn.dataset.correct === 'true') {
+        btn.classList.add('grid-card--correct');
+      }
+    });
+  }
+
+  function handlePhaseTwoChoice(card) {
     if (awaiting) return;
     awaiting = true;
     const isCorrect = card.dataset.correct === 'true';
     const audio = isCorrect ? successAudio : errorAudio;
+    highlightCorrectCard();
     if (isCorrect) {
       progress += 1;
-      card.style.background = 'rgba(46, 204, 113, 0.5)';
+      card.classList.add('grid-card--correct');
     } else {
       progress = 0;
       cycle = shuffle(pool);
-      card.style.background = 'rgba(231, 76, 60, 0.5)';
-      boardInner.querySelectorAll('.grid-card').forEach(btn => {
-        if (btn.dataset.correct === 'true') {
-          btn.style.background = 'rgba(46, 204, 113, 0.5)';
-        }
-      });
+      card.classList.add('grid-card--wrong');
     }
     audio && audio.play().catch(() => {});
     updateProgressBar();
@@ -236,6 +261,7 @@
 
   function showPhaseThreeCard(item) {
     clearBoard();
+    boardInner.classList.remove('board__inner--grid');
     const img = document.createElement('img');
     img.src = `images/${item.file}`;
     img.alt = item.en;
