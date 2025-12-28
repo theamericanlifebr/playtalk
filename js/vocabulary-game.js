@@ -458,7 +458,7 @@
     speak(target.en);
   }
 
-  function showPhaseOneCompletionOverlay() {
+  function showProgressCompletionOverlay() {
     return new Promise(resolve => {
       if (!progressCompleteOverlay) {
         setTimeout(resolve, GREEN_OVERLAY_DURATION_MS);
@@ -477,14 +477,14 @@
   }
 
   function handleProgressCompletion() {
-    if (phase === 1) {
+    if (phase === 1 || phase === 2) {
       awaiting = true;
       completionGridShown = true;
       clearBoard();
       showText('');
       if (choiceRow) choiceRow.innerHTML = '';
       hidePhaseElements();
-      showPhaseOneCompletionOverlay().then(() => {
+      showProgressCompletionOverlay().then(() => {
         awaiting = false;
         handlePhaseComplete();
       });
