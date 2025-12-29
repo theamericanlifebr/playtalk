@@ -14,7 +14,6 @@
   const nextLevelBtn = document.getElementById('next-level-btn');
   const phaseTransition = document.getElementById('phase-transition');
   const phaseTransitionTitle = document.getElementById('phase-transition-title');
-  const phaseTransitionInstruction = document.getElementById('phase-transition-instruction');
   const phaseTransitionBtn = document.getElementById('phase-transition-btn');
   const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
   const PHASE_DISSOLVE_MS = 500;
@@ -616,23 +615,22 @@
   }
 
   function showPhaseTransition(nextPhase) {
-    if (!phaseTransition || !phaseTransitionBtn || !phaseTransitionTitle || !phaseTransitionInstruction) {
+    if (!phaseTransition || !phaseTransitionBtn || !phaseTransitionTitle) {
       startPhase(nextPhase);
       return;
     }
 
     const config = {
-      2: { title: 'Fase 2', instruction: 'Clique no que ouviu.', cta: 'Iniciar fase 2' },
-      3: { title: 'Fase 3', instruction: 'Toque na imagem e fale.', cta: 'Iniciar fase 3' },
-      4: { title: 'Fase 4', instruction: 'Toque e repita em inglês.', cta: 'Iniciar fase 4' }
+      1: { title: 'Fase 1', cta: 'Iniciar fase 1' },
+      2: { title: 'Fase 2', cta: 'Iniciar fase 2' },
+      3: { title: 'Fase 3', cta: 'Iniciar fase 3' },
+      4: { title: 'Fase 4', cta: 'Iniciar fase 4' }
     }[nextPhase] || {
       title: `Fase ${nextPhase}`,
-      instruction: 'Pronto para a próxima fase?',
       cta: 'Continuar'
     };
 
     phaseTransitionTitle.textContent = config.title;
-    phaseTransitionInstruction.textContent = config.instruction;
     phaseTransitionBtn.textContent = config.cta;
     phaseTransition.classList.remove('hidden');
     phaseTransition.setAttribute('aria-hidden', 'false');
@@ -734,31 +732,22 @@
     });
   }
 
-  function startGame(options = {}) {
-    const { skipIntroAudio = false } = options;
-    if (rotationTimer) {
-      clearInterval(rotationTimer);
-      rotationTimer = null;
-    }
-    if (startScreen) {
-      startScreen.classList.add('hidden');
-    }
-    startPhase(1, { skipIntroAudio });
-  }
-
   function handleStartInteraction() {
     if (gameStarted) return;
     gameStarted = true;
 
     if (startScreen) {
       startScreen.classList.add('start-screen--blank');
+      startScreen.classList.add('hidden');
     }
 
-    const imagesPromise = loadImages();
-    const audioPromise = playPhaseIntro(1);
+    if (rotationTimer) {
+      clearInterval(rotationTimer);
+      rotationTimer = null;
+    }
 
-    Promise.all([imagesPromise, audioPromise]).then(([, playedIntro]) => {
-      startGame({ skipIntroAudio: playedIntro === true });
+    loadImages().then(() => {
+      showPhaseTransition(1);
     });
   }
 
@@ -779,7 +768,7 @@
       levelComplete.classList.add('hidden');
       phase = 1;
       updatePhaseLabel();
-      startPhase(1);
+      showPhaseTransition(1);
     });
   }
 

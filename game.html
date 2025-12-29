@@ -313,17 +313,15 @@
       background: #fff;
       color: #0b1f44;
       border-radius: 20px;
-      padding: 20px;
+      padding: 32px 28px;
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.28);
+      text-align: center;
     }
 
-    .overlay-card h1 { margin: 0 0 6px; font-size: 24px; }
-    .overlay-card p { margin: 0 0 14px; color: #243b64; }
-
-    .overlay-subtitle {
-      font-weight: 700;
-      color: #1b4f9a;
-      margin-bottom: 8px;
+    .overlay-card h1 {
+      margin: 0 0 24px;
+      font-size: 26px;
+      font-weight: 800;
     }
 
     .phase-list {
@@ -345,22 +343,10 @@
 
     .overlay-actions {
       display: flex;
-      justify-content: flex-end;
+      justify-content: center;
       gap: 10px;
       margin-top: 12px;
       flex-wrap: wrap;
-    }
-
-    .pill-info {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(27, 79, 154, 0.1);
-      color: #1b4f9a;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-weight: 700;
-      border: 1px solid rgba(27, 79, 154, 0.15);
     }
 
     .btn-primary {
@@ -380,11 +366,13 @@
       background: linear-gradient(120deg, #ffb347, #ff7a18);
       color: #fff;
       border: none;
-      padding: 12px 18px;
+      padding: 16px 18px;
       border-radius: 12px;
       font-weight: 800;
+      font-size: 18px;
       cursor: pointer;
       transition: transform 0.15s ease, opacity 0.2s ease;
+      width: 100%;
     }
 
     .btn-orange:hover { transform: translateY(-1px); }
@@ -445,9 +433,7 @@
 
   <section class="game-overlay hidden" id="phase-transition">
     <div class="overlay-card">
-      <div class="pill-info">Próxima etapa</div>
       <h1 id="phase-transition-title">Fase 2</h1>
-      <p class="overlay-subtitle" id="phase-transition-instruction">Clique no que ouviu.</p>
       <div class="overlay-actions">
         <button class="btn-orange" id="phase-transition-btn">Iniciar fase 2</button>
       </div>
