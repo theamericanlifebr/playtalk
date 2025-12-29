@@ -636,6 +636,26 @@
     phaseTransition.setAttribute('aria-hidden', 'false');
 
     phaseTransitionBtn.disabled = true;
+    let audioUnlocked = false;
+    let attemptInProgress = false;
+
+    const detachAudioListeners = () => {
+      phaseTransition.removeEventListener('click', attemptUnlock);
+      phaseTransition.removeEventListener('touchstart', attemptUnlock);
+      phaseTransition.removeEventListener('pointerdown', attemptUnlock);
+    };
+
+    function attemptUnlock() {
+      if (audioUnlocked || attemptInProgress) return;
+      attemptInProgress = true;
+      playAudioElement(faseAudios[nextPhase]).then((played) => {
+        attemptInProgress = false;
+        if (!played) return;
+        audioUnlocked = true;
+        phaseTransitionBtn.disabled = false;
+        detachAudioListeners();
+      });
+    }
 
     const startNextPhase = () => {
       phaseTransitionBtn.removeEventListener('click', startNextPhase);
@@ -645,10 +665,11 @@
     };
 
     phaseTransitionBtn.addEventListener('click', startNextPhase);
+    phaseTransition.addEventListener('click', attemptUnlock);
+    phaseTransition.addEventListener('touchstart', attemptUnlock, { passive: true });
+    phaseTransition.addEventListener('pointerdown', attemptUnlock);
 
-    playAudioElement(faseAudios[nextPhase]).then(() => {
-      phaseTransitionBtn.disabled = false;
-    });
+    attemptUnlock();
   }
 
   function handleProgressCompletion() {
