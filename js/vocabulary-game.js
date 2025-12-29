@@ -19,7 +19,7 @@
   const PHASE_DISSOLVE_MS = 500;
 
   const faseAudios = {
-    1: document.getElementById('audio-fase1'),
+    1: document.getElementById('audio-abertura'),
     2: document.getElementById('audio-fase2'),
     3: document.getElementById('audio-fase3'),
     4: document.getElementById('audio-fase4')
