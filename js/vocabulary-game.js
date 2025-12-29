@@ -43,6 +43,7 @@
   let rotationTimer = null;
   let rotationIndex = 0;
   let gameStarted = false;
+  const ROTATION_FADE_MS = 400;
 
   function playAudioElement(audio) {
     return new Promise(resolve => {
@@ -151,9 +152,19 @@
   function startRotatingText() {
     if (!rotatingText) return;
     const phrases = ['Fluência Fácil', 'Inglês em 200 dias', 'Toque para começar'];
+    rotatingText.classList.remove('is-fading');
+
+    const fadeAndSwap = () => {
+      rotatingText.classList.add('is-fading');
+      window.setTimeout(() => {
+        rotationIndex = (rotationIndex + 1) % phrases.length;
+        rotatingText.textContent = phrases[rotationIndex];
+        rotatingText.classList.remove('is-fading');
+      }, ROTATION_FADE_MS);
+    };
+
     rotationTimer = window.setInterval(() => {
-      rotationIndex = (rotationIndex + 1) % phrases.length;
-      rotatingText.textContent = phrases[rotationIndex];
+      fadeAndSwap();
     }, 1500);
   }
 
@@ -601,7 +612,8 @@
     });
   }
 
-  function startGame() {
+  function startGame(options = {}) {
+    const { skipIntroAudio = false } = options;
     if (rotationTimer) {
       clearInterval(rotationTimer);
       rotationTimer = null;
@@ -609,13 +621,23 @@
     if (startScreen) {
       startScreen.classList.add('hidden');
     }
-    startPhase(1);
+    startPhase(1, { skipIntroAudio });
   }
 
   function handleStartInteraction() {
     if (gameStarted) return;
     gameStarted = true;
-    loadImages().then(startGame);
+
+    if (startScreen) {
+      startScreen.classList.add('start-screen--blank');
+    }
+
+    const imagesPromise = loadImages();
+    const audioPromise = playPhaseIntro(1);
+
+    Promise.all([imagesPromise, audioPromise]).then(() => {
+      startGame({ skipIntroAudio: true });
+    });
   }
 
   function init() {
