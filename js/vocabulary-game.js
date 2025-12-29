@@ -22,10 +22,12 @@
   const faseAudios = {
     1: document.getElementById('audio-fase1'),
     2: document.getElementById('audio-fase2'),
-    3: document.getElementById('audio-fase3')
+    3: document.getElementById('audio-fase3'),
+    4: document.getElementById('audio-fase4')
   };
   const successAudio = document.getElementById('audio-success');
   const errorAudio = document.getElementById('audio-error');
+  const conclusionAudio = document.getElementById('audio-conclusao');
 
   let images = [];
   let level = 1;
@@ -226,6 +228,8 @@
       btn.addEventListener('click', () => handlePhaseOneChoice(btn, opt.correct));
       choiceRow.appendChild(btn);
     });
+
+    speak(item.en);
   }
 
   function handlePhaseOneChoice(btn, correct) {
@@ -357,13 +361,25 @@
     img.src = `images/${item.file}`;
     img.alt = item.en;
     img.className = 'board__image-single';
-    img.style.opacity = '0.8';
+    img.style.opacity = '0.6';
     boardInner.appendChild(img);
+
     const promptText = 'Toque na imagem e fale em inglês.';
     showText(promptText);
+
+    choiceRow.innerHTML = '';
+    const wordBtn = document.createElement('button');
+    wordBtn.type = 'button';
+    wordBtn.className = 'phase-word-btn';
+    wordBtn.textContent = item.en;
+    wordBtn.addEventListener('click', () => speak(item.en));
+    choiceRow.appendChild(wordBtn);
+
+    speak(item.en);
+
     const handler = () => {
       img.style.opacity = '1';
-      handlePhaseThreeSpeak(item.en, handler);
+      handleSpeechChallenge(item.en, handler);
     };
     img.addEventListener('click', handler);
   }
@@ -372,16 +388,61 @@
     return (text || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
   }
 
-  function handlePhaseThreeSpeak(expected, handler) {
+  function levenshteinDistance(a, b) {
+    if (a === b) return 0;
+    const aLen = a.length;
+    const bLen = b.length;
+
+    if (aLen === 0) return bLen;
+    if (bLen === 0) return aLen;
+
+    const matrix = Array.from({ length: aLen + 1 }, () => new Array(bLen + 1).fill(0));
+
+    for (let i = 0; i <= aLen; i += 1) matrix[i][0] = i;
+    for (let j = 0; j <= bLen; j += 1) matrix[0][j] = j;
+
+    for (let i = 1; i <= aLen; i += 1) {
+      for (let j = 1; j <= bLen; j += 1) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + cost
+        );
+      }
+    }
+
+    return matrix[aLen][bLen];
+  }
+
+  function isSpokenCorrect(expected, spoken) {
+    const cleanExpected = normalizeText(expected);
+    const cleanSpoken = normalizeText(spoken);
+
+    if (!cleanSpoken) return false;
+    if (cleanSpoken.includes(cleanExpected) || cleanExpected.includes(cleanSpoken)) return true;
+
+    const prefix = cleanExpected.slice(0, 2);
+    if (prefix && cleanSpoken.startsWith(prefix)) return true;
+
+    for (let i = 0; i <= cleanExpected.length - 3; i += 1) {
+      const segment = cleanExpected.slice(i, i + 3);
+      if (cleanSpoken.includes(segment)) return true;
+    }
+
+    if (levenshteinDistance(cleanExpected, cleanSpoken) <= 2) return true;
+
+    return false;
+  }
+
+  function handleSpeechChallenge(expected, handler) {
     if (awaiting) return;
     awaiting = true;
     let resolved = false;
     const onResult = (spoken) => {
       if (resolved) return;
       resolved = true;
-      const cleanExpected = normalizeText(expected);
-      const cleanSpoken = normalizeText(spoken);
-      const success = cleanSpoken.includes(cleanExpected);
+      const success = isSpokenCorrect(expected, spoken);
 
       if (success) {
         score += 1;
@@ -422,6 +483,38 @@
     }
   }
 
+  function showPhaseFourCard(item) {
+    currentItem = item;
+    clearBoard();
+    boardInner.classList.remove('board__inner--grid');
+    if (recognition && typeof recognition.stop === 'function') {
+      try {
+        recognition.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
+
+    const img = document.createElement('img');
+    img.src = `images/${item.file}`;
+    img.alt = item.en;
+    img.className = 'board__image-single';
+    img.style.opacity = '0.6';
+    boardInner.appendChild(img);
+
+    showText('Toque na imagem e repita em inglês.');
+    choiceRow.innerHTML = '';
+
+    speak(item.en);
+
+    const handler = () => {
+      img.style.opacity = '1';
+      handleSpeechChallenge(item.en, handler);
+    };
+
+    img.addEventListener('click', handler);
+  }
+
   function advanceCycle() {
     if (!cycle.length) return;
 
@@ -442,6 +535,9 @@
         break;
       case 3:
         showPhaseThreeCard(item);
+        break;
+      case 4:
+        showPhaseFourCard(item);
         break;
       default:
         showPhaseOneCard(item);
@@ -511,7 +607,8 @@
 
     const config = {
       2: { title: 'Fase 2', instruction: 'Clique no que ouviu.', cta: 'Iniciar fase 2' },
-      3: { title: 'Fase 3', instruction: 'Toque na imagem e fale.', cta: 'Iniciar fase 3' }
+      3: { title: 'Fase 3', instruction: 'Toque na imagem e fale.', cta: 'Iniciar fase 3' },
+      4: { title: 'Fase 4', instruction: 'Toque e repita em inglês.', cta: 'Iniciar fase 4' }
     }[nextPhase] || {
       title: `Fase ${nextPhase}`,
       instruction: 'Pronto para a próxima fase?',
@@ -541,7 +638,7 @@
   }
 
   function handleProgressCompletion() {
-    if (phase === 1 || phase === 2) {
+    if (phase === 1 || phase === 2 || phase === 3) {
       awaiting = false;
       completionGridShown = true;
       clearBoard();
@@ -598,12 +695,21 @@
 
   function handlePhaseComplete(options = {}) {
     const { skipIntroAudio = false } = options;
-    if (phase === 3) {
+    if (phase === 4) {
+      const completedLevel = level;
       level += 1;
       saveLevelToStorage();
       updateLevelIndicators();
-      levelCompleteText.textContent = `Você concluiu o nível ${level - 1}. Vamos para o nível ${level}?`;
+      levelCompleteText.textContent = `Você concluiu o nível ${completedLevel}. Vamos para o nível ${level}?`;
       levelComplete.classList.remove('hidden');
+      nextLevelBtn.disabled = true;
+
+      const shouldPlayConclusion = completedLevel === 1 && conclusionAudio;
+      const playPromise = shouldPlayConclusion ? playAudioElement(conclusionAudio) : Promise.resolve();
+
+      playPromise.then(() => {
+        nextLevelBtn.disabled = false;
+      });
       return;
     }
 
