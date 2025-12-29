@@ -10,14 +10,14 @@
   <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
   <style>
     :root {
-      --primary: #1b4f9a;
+      --primary: #0b1f44;
       --secondary: #4c96dc;
-      --panel: rgba(255, 255, 255, 0.12);
-      --border: rgba(255, 255, 255, 0.25);
+      --panel: rgba(11, 31, 68, 0.06);
+      --border: rgba(11, 31, 68, 0.12);
       --text: #0b1f44;
       --success: #2ecc71;
       --danger: #e74c3c;
-      --muted: rgba(255, 255, 255, 0.7);
+      --muted: rgba(11, 31, 68, 0.7);
     }
 
     * { box-sizing: border-box; }
@@ -26,11 +26,42 @@
       margin: 0;
       padding: 0;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: linear-gradient(135deg, #1b4f9a 0%, #2c6fbf 40%, #3a86d1 70%, #4c96dc 100%);
-      color: #fff;
+      background: #fff;
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+    }
+
+    .start-screen {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 30;
+      user-select: none;
+    }
+
+    .start-screen.hidden {
+      display: none;
+    }
+
+    .start-screen__logo {
+      width: min(240px, 70vw);
+      max-width: 280px;
+      height: auto;
+    }
+
+    .start-screen__text {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
     }
 
     header {
@@ -77,7 +108,7 @@
       width: min(450px, 100%);
       max-width: 450px;
       height: 450px;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(11, 31, 68, 0.04);
       border: 1px solid var(--border);
       border-radius: 16px;
       display: flex;
@@ -119,7 +150,7 @@
       width: 150px;
       height: 150px;
       border-radius: 20px;
-      background-color: rgba(128, 128, 128, 0.3);
+      background-color: rgba(11, 31, 68, 0.08);
       border: none;
       display: flex;
       align-items: center;
@@ -204,16 +235,16 @@
     .progress-bar {
       width: min(520px, 92%);
       height: 12px;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(11, 31, 68, 0.08);
       border-radius: 999px;
       overflow: hidden;
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+      box-shadow: 0 0 0 1px rgba(11, 31, 68, 0.12);
     }
 
     .progress-bar__fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #c8e54a, #4c96dc);
+      background: linear-gradient(90deg, #3a86d1, #4c96dc);
       transition: width 0.25s ease;
     }
 
@@ -374,22 +405,9 @@
     </div>
   </div>
 
-  <section class="game-overlay" id="pre-game">
-    <div class="overlay-card">
-      <h1>Modo Vocabulary</h1>
-      <p>Comece pelo nível atual e avance acertando todas as imagens sem errar.</p>
-      <div class="pill-info" id="pre-game-level">Nível 1</div>
-      <p class="overlay-subtitle">Elementos do modo</p>
-      <ul class="phase-list">
-        <li>Quadro fixo (360px no mobile, 450px no desktop) para exibir as imagens.</li>
-        <li>Contêiner de textos sempre presente logo abaixo do quadro.</li>
-        <li>Barra de progresso 25px acima do rodapé reinicia se houver erro.</li>
-        <li>Apresentações de fase com áudio antes de cada etapa.</li>
-      </ul>
-      <div class="overlay-actions">
-        <button class="btn-primary" id="start-btn">Jogar</button>
-      </div>
-    </div>
+  <section class="start-screen" id="start-screen">
+    <img src="SVG/logo.png" alt="PlayTalk" class="start-screen__logo">
+    <div class="start-screen__text" id="rotating-text">Fluência Fácil</div>
   </section>
 
   <section class="game-overlay hidden" id="phase-transition">

@@ -7,9 +7,8 @@
   const progressFill = document.getElementById('progress-fill');
   const phaseLabel = document.getElementById('phase-label');
   const levelBadge = document.getElementById('level-indicator');
-  const preGame = document.getElementById('pre-game');
-  const preGameLevel = document.getElementById('pre-game-level');
-  const startBtn = document.getElementById('start-btn');
+  const startScreen = document.getElementById('start-screen');
+  const rotatingText = document.getElementById('rotating-text');
   const levelComplete = document.getElementById('level-complete');
   const levelCompleteText = document.getElementById('level-complete-text');
   const nextLevelBtn = document.getElementById('next-level-btn');
@@ -41,6 +40,9 @@
   let awaiting = false;
   let recognition = null;
   let loadPromise = null;
+  let rotationTimer = null;
+  let rotationIndex = 0;
+  let gameStarted = false;
 
   function playAudioElement(audio) {
     return new Promise(resolve => {
@@ -74,7 +76,6 @@
 
   function updateLevelIndicators() {
     if (levelBadge) levelBadge.textContent = `Nível ${level}`;
-    if (preGameLevel) preGameLevel.textContent = `Nível ${level}`;
   }
 
   function updatePhaseLabel() {
@@ -145,6 +146,15 @@
     if (!textContainer) return;
     textContainer.textContent = message || '';
     textContainer.classList.toggle('active', Boolean(message));
+  }
+
+  function startRotatingText() {
+    if (!rotatingText) return;
+    const phrases = ['Fluência Fácil', 'Inglês em 200 dias', 'Toque para começar'];
+    rotationTimer = window.setInterval(() => {
+      rotationIndex = (rotationIndex + 1) % phrases.length;
+      rotatingText.textContent = phrases[rotationIndex];
+    }, 1500);
   }
 
   function clearBoard() {
@@ -592,8 +602,20 @@
   }
 
   function startGame() {
-    preGame.classList.add('hidden');
+    if (rotationTimer) {
+      clearInterval(rotationTimer);
+      rotationTimer = null;
+    }
+    if (startScreen) {
+      startScreen.classList.add('hidden');
+    }
     startPhase(1);
+  }
+
+  function handleStartInteraction() {
+    if (gameStarted) return;
+    gameStarted = true;
+    loadImages().then(startGame);
   }
 
   function init() {
@@ -601,15 +623,19 @@
     updatePhaseLabel();
     setupSpeechRecognition();
     loadImages();
-    startBtn.addEventListener('click', () => {
-      loadImages().then(startGame);
-    });
+    startRotatingText();
+
+    if (startScreen) {
+      startScreen.addEventListener('click', handleStartInteraction);
+      startScreen.addEventListener('touchstart', handleStartInteraction, { passive: true });
+      startScreen.addEventListener('pointerdown', handleStartInteraction);
+    }
+
     nextLevelBtn.addEventListener('click', () => {
       levelComplete.classList.add('hidden');
       phase = 1;
       updatePhaseLabel();
-      preGame.classList.remove('hidden');
-      updateLevelIndicators();
+      startPhase(1);
     });
   }
 
