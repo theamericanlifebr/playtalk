@@ -237,6 +237,24 @@
     .choice-btn.success { background: var(--success); }
     .choice-btn.error { background: var(--danger); }
 
+    .phase-word-btn {
+      background: linear-gradient(120deg, #3a86d1, #4c96dc);
+      color: #fff;
+      border: none;
+      padding: 14px 22px;
+      border-radius: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+      min-width: 220px;
+      font-size: 20px;
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      text-transform: capitalize;
+      box-shadow: 0 8px 24px rgba(76, 150, 220, 0.3);
+    }
+
+    .phase-word-btn:hover { transform: translateY(-1px); }
+
     .progress-footer {
       position: fixed;
       left: 0;
@@ -451,8 +469,10 @@
   <audio id="audio-fase1" src="gamesounds/fase1.mp3" preload="auto"></audio>
   <audio id="audio-fase2" src="gamesounds/fase2.mp3" preload="auto"></audio>
   <audio id="audio-fase3" src="gamesounds/fase3.mp3" preload="auto"></audio>
+  <audio id="audio-fase4" src="gamesounds/fase4.mp3" preload="auto"></audio>
   <audio id="audio-success" src="gamesounds/success.mp3" preload="auto"></audio>
   <audio id="audio-error" src="gamesounds/error.mp3" preload="auto"></audio>
+  <audio id="audio-conclusao" src="gamesounds/conclusao.mp3" preload="auto"></audio>
 
   <script src="js/vocabulary-game.js"></script>
 </body>
