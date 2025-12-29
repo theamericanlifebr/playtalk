@@ -50,20 +50,36 @@
   function playAudioElement(audio) {
     return new Promise(resolve => {
       if (!audio) {
-        resolve();
+        resolve(false);
         return;
       }
 
+      let hasPlayed = false;
+
+      const markPlayed = () => {
+        hasPlayed = true;
+      };
+
       const finish = () => {
+        audio.removeEventListener('playing', markPlayed);
         audio.removeEventListener('ended', finish);
         audio.removeEventListener('error', finish);
-        resolve();
+        resolve(hasPlayed);
       };
 
       audio.currentTime = 0;
+      audio.addEventListener('playing', markPlayed);
       audio.addEventListener('ended', finish);
       audio.addEventListener('error', finish);
-      audio.play().catch(finish);
+
+      const playResult = audio.play();
+      if (playResult && typeof playResult.then === 'function') {
+        playResult
+          .then(() => { hasPlayed = true; })
+          .catch(finish);
+      } else {
+        hasPlayed = true;
+      }
     });
   }
 
@@ -741,8 +757,8 @@
     const imagesPromise = loadImages();
     const audioPromise = playPhaseIntro(1);
 
-    Promise.all([imagesPromise, audioPromise]).then(() => {
-      startGame({ skipIntroAudio: true });
+    Promise.all([imagesPromise, audioPromise]).then(([, playedIntro]) => {
+      startGame({ skipIntroAudio: playedIntro === true });
     });
   }
 
