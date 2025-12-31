@@ -520,8 +520,6 @@
     showText('Toque na imagem e repita em inglês.');
     choiceRow.innerHTML = '';
 
-    speak(item.en);
-
     const handler = () => {
       img.style.opacity = '1';
       handleSpeechChallenge(item.en, handler);
