@@ -117,8 +117,13 @@
   }
 
   function filterPool() {
-    const numericLevel = Number(level) || 1;
-    pool = images.filter(item => Number(item.level) === numericLevel);
+    const numericLevel = Math.max(1, Number(level) || 1);
+    const minLevel = (numericLevel - 1) * 5 + 1;
+    const maxLevel = minLevel + 4;
+    pool = images.filter(item => {
+      const itemLevel = Number(item.level) || 0;
+      return itemLevel >= minLevel && itemLevel <= maxLevel;
+    });
   }
 
   function shuffle(list) {
@@ -243,8 +248,6 @@
       btn.addEventListener('click', () => handlePhaseOneChoice(btn, opt.correct));
       choiceRow.appendChild(btn);
     });
-
-    speak(item.en);
   }
 
   function handlePhaseOneChoice(btn, correct) {
@@ -265,6 +268,7 @@
     }
 
     updateProgressBar();
+    speak(currentItem.en);
     audio && audio.play().catch(() => {});
     setTimeout(() => {
       awaiting = false;
@@ -272,32 +276,32 @@
     }, 1000);
   }
 
-  function buildPhaseTwoOptions(item) {
+  function buildPhaseOptions(item, totalOptions = 4) {
     const wrongPool = pool.filter(entry => entry.file !== item.file);
-    const wrongChoices = shuffle(wrongPool).slice(0, 3);
+    const wrongChoices = shuffle(wrongPool).slice(0, totalOptions - 1);
 
-    while (wrongChoices.length < 3 && wrongPool.length) {
+    while (wrongChoices.length < totalOptions - 1 && wrongPool.length) {
       const filler = wrongPool[Math.floor(Math.random() * wrongPool.length)];
       wrongChoices.push(filler);
     }
 
-    while (wrongChoices.length < 3) {
+    while (wrongChoices.length < totalOptions - 1) {
       wrongChoices.push(item);
     }
 
     const options = [
       { ...item, correct: true },
-      ...wrongChoices.slice(0, 3).map(choice => ({ ...choice, correct: false }))
+      ...wrongChoices.slice(0, totalOptions - 1).map(choice => ({ ...choice, correct: false }))
     ];
 
-    return shuffle(options).slice(0, 4);
+    return shuffle(options).slice(0, totalOptions);
   }
 
   function showPhaseTwoCards(item) {
     currentItem = item;
     clearBoard();
     boardInner.classList.add('board__inner--grid');
-    const selection = buildPhaseTwoOptions(item);
+    const selection = buildPhaseOptions(item, 4);
 
     selection.forEach(entry => {
       const card = document.createElement('button');
@@ -365,6 +369,7 @@
     currentItem = item;
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
+    boardInner.classList.add('board__inner--grid');
     if (recognition && typeof recognition.stop === 'function') {
       try {
         recognition.stop();
@@ -372,31 +377,24 @@
         // ignore
       }
     }
-    const img = document.createElement('img');
-    img.src = `images/${item.file}`;
-    img.alt = item.en;
-    img.className = 'board__image-single';
-    img.style.opacity = '0.6';
-    boardInner.appendChild(img);
 
-    const promptText = 'Toque na imagem e fale em inglês.';
-    showText(promptText);
+    const selection = buildPhaseOptions(item, 6);
 
-    choiceRow.innerHTML = '';
-    const wordBtn = document.createElement('button');
-    wordBtn.type = 'button';
-    wordBtn.className = 'phase-word-btn';
-    wordBtn.textContent = item.en;
-    wordBtn.addEventListener('click', () => speak(item.en));
-    choiceRow.appendChild(wordBtn);
+    selection.forEach(entry => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'grid-card grid-card--enter';
+      card.dataset.correct = String(entry.correct === true);
+      const img = document.createElement('img');
+      img.src = `images/${entry.file}`;
+      img.alt = entry.en;
+      card.appendChild(img);
+      card.addEventListener('click', () => handlePhaseTwoChoice(card));
+      boardInner.appendChild(card);
+    });
 
+    showText('');
     speak(item.en);
-
-    const handler = () => {
-      img.style.opacity = '1';
-      handleSpeechChallenge(item.en, handler);
-    };
-    img.addEventListener('click', handler);
   }
 
   function normalizeText(text) {
@@ -501,7 +499,7 @@
   function showPhaseFourCard(item) {
     currentItem = item;
     clearBoard();
-    boardInner.classList.remove('board__inner--grid');
+    boardInner.classList.add('board__inner--grid');
     if (recognition && typeof recognition.stop === 'function') {
       try {
         recognition.stop();
@@ -510,22 +508,74 @@
       }
     }
 
-    const img = document.createElement('img');
-    img.src = `images/${item.file}`;
-    img.alt = item.en;
-    img.className = 'board__image-single';
-    img.style.opacity = '0.6';
-    boardInner.appendChild(img);
+    const primaryTargets = buildPhaseOptions(item, 3).map(entry => ({ ...entry, correct: true })).slice(0, 3);
+    const orderedTargets = primaryTargets.filter((entry, idx, arr) => arr.findIndex(el => el.file === entry.file) === idx);
+    while (orderedTargets.length < 3) {
+      orderedTargets.push(item);
+    }
 
-    showText('Toque na imagem e repita em inglês.');
+    const existingFiles = new Set(orderedTargets.map(entry => entry.file));
+    const fillerPool = shuffle(pool.filter(entry => !existingFiles.has(entry.file)));
+    const fillers = fillerPool.slice(0, Math.max(0, 6 - orderedTargets.length));
+    const selection = shuffle([...orderedTargets, ...fillers]).slice(0, 6);
+    let sequenceIndex = 0;
+
+    boardInner.innerHTML = '';
+    selection.forEach(entry => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'grid-card grid-card--enter';
+      card.dataset.file = entry.file;
+      const img = document.createElement('img');
+      img.src = `images/${entry.file}`;
+      img.alt = entry.en;
+      card.appendChild(img);
+      card.addEventListener('click', () => {
+        if (awaiting) return;
+        const expected = orderedTargets[sequenceIndex];
+        const isCorrect = expected && card.dataset.file === expected.file;
+        if (isCorrect) {
+          card.classList.add('grid-card--correct');
+          card.disabled = true;
+          sequenceIndex += 1;
+          if (sequenceIndex >= orderedTargets.length) {
+            awaiting = true;
+            score += 1;
+            index += 1;
+            successAudio && successAudio.play().catch(() => {});
+            updateProgressBar();
+            setTimeout(() => {
+              awaiting = false;
+              advanceCycle();
+            }, 800);
+          }
+        } else {
+          awaiting = true;
+          card.classList.add('grid-card--wrong');
+          boardInner.querySelectorAll('.grid-card.grid-card--correct').forEach(btn => {
+            btn.classList.remove('grid-card--correct');
+            btn.disabled = false;
+          });
+          sequenceIndex = 0;
+          score = 0;
+          index = 0;
+          cycle = shuffle(pool);
+          errorAudio && errorAudio.play().catch(() => {});
+          updateProgressBar();
+          setTimeout(() => {
+            awaiting = false;
+            advanceCycle();
+          }, 1000);
+        }
+      });
+      boardInner.appendChild(card);
+    });
+
     choiceRow.innerHTML = '';
-
-    const handler = () => {
-      img.style.opacity = '1';
-      handleSpeechChallenge(item.en, handler);
-    };
-
-    img.addEventListener('click', handler);
+    showText('');
+    orderedTargets.forEach((entry, idx) => {
+      setTimeout(() => speak(entry.en), idx * 900);
+    });
   }
 
   function advanceCycle() {

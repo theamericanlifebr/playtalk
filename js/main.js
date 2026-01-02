@@ -760,6 +760,8 @@ function ehQuaseCorretoPalavras(resp, esp) {
 let reconhecimento;
 let reconhecimentoAtivo = false;
 let reconhecimentoRodando = false;
+let microphoneSpeechPaused = false;
+let medalMicrophoneActive = true;
 let listeningForCommand = false;
 let microphonePaused = false;
 let speechPauseToken = 0;
@@ -1126,22 +1128,51 @@ function bindSpeechWaveformEvents(recognizer) {
   nativeRecognizer.addEventListener('speechend', primeWaveformSilenceBaseline);
 }
 
+function isMedalMicGatedMode(mode = selectedMode) {
+  const value = Number(mode);
+  return value >= 2 && value <= 6;
+}
+
+function applyModeIconOpacity() {
+  const icon = document.getElementById('mode-icon');
+  if (!icon) return;
+  if (isMedalMicGatedMode(selectedMode) && isInplayActive()) {
+    icon.style.opacity = medalMicrophoneActive ? '1' : '0.75';
+  } else {
+    icon.style.opacity = '1';
+  }
+}
+
+function applyMicrophoneState() {
+  const shouldPause = microphoneSpeechPaused || !medalMicrophoneActive;
+  microphonePaused = shouldPause;
+  if (reconhecimento) {
+    if (shouldPause && reconhecimentoRodando) {
+      try { reconhecimento.stop(); } catch (e) {}
+    } else if (!shouldPause && reconhecimentoAtivo && !reconhecimentoRodando) {
+      try { reconhecimento.start(); } catch (e) {}
+    }
+  }
+  applyModeIconOpacity();
+}
+
+function setMedalMicrophoneActive(active) {
+  medalMicrophoneActive = Boolean(active);
+  applyMicrophoneState();
+}
+
 function setMicrophoneSpeechState(active, token = null) {
   if (active) {
     speechPauseToken = token || Date.now();
-    microphonePaused = true;
-    if (reconhecimento && reconhecimentoRodando) {
-      try { reconhecimento.stop(); } catch (e) {}
-    }
+    microphoneSpeechPaused = true;
+    applyMicrophoneState();
     return;
   }
   if (token !== null && token !== speechPauseToken) {
     return;
   }
-  microphonePaused = false;
-  if (reconhecimento && reconhecimentoAtivo && !reconhecimentoRodando) {
-    try { reconhecimento.start(); } catch (e) {}
-  }
+  microphoneSpeechPaused = false;
+  applyMicrophoneState();
 }
 
 function getCurrentThreshold() {
@@ -2591,7 +2622,7 @@ function resumeGame() {
   ensureMobileAudioKeepalive();
   if (reconhecimento) {
     reconhecimentoAtivo = true;
-    reconhecimento.start();
+    applyMicrophoneState();
   }
   continuar();
 }
@@ -2640,6 +2671,10 @@ function setupModeIconInteractions() {
   icon.addEventListener('click', () => {
     if (paused) {
       resumeGame();
+      return;
+    }
+    if (isInplayActive() && isMedalMicGatedMode(selectedMode) && !medalMicrophoneActive) {
+      setMedalMicrophoneActive(true);
     }
   });
 
@@ -3024,7 +3059,9 @@ function beginGame() {
     const restored = restoreRoundState(savedState, targetLevel);
     if (reconhecimento) {
       reconhecimentoAtivo = true;
-      reconhecimento.start();
+      medalMicrophoneActive = !isMedalMicGatedMode(playMode);
+      microphoneSpeechPaused = false;
+      applyMicrophoneState();
     }
     if (isLevelFinderActive()) {
       if (!restored) {
@@ -3335,7 +3372,7 @@ function updateModeMedalIcon(ratio) {
     runPendingMedalSwap(false);
   }
   icon.style.display = 'block';
-  icon.style.opacity = 1;
+  applyModeIconOpacity();
 }
 
 function runPendingMedalSwap(force = false) {
@@ -3429,6 +3466,9 @@ function mostrarFrase() {
   }
   if (!isInplayActive()) {
     return;
+  }
+  if (isMedalMicGatedMode(selectedMode)) {
+    setMedalMicrophoneActive(false);
   }
   clearUserTranscript();
   if (fraseIndex >= frasesArr.length) {
