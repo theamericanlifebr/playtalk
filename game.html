@@ -134,8 +134,15 @@
       transition: opacity 0.5s ease;
     }
 
+    .board.board--expanded {
+      width: min(550px, 100%);
+      max-width: 550px;
+      height: 550px;
+    }
+
     @media (max-width: 768px) {
       .board { width: 360px; height: 360px; }
+      .board.board--expanded { width: min(420px, 100%); height: 460px; }
     }
 
     .board__inner {

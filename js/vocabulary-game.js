@@ -100,6 +100,12 @@
     if (phaseLabel) phaseLabel.textContent = `Fase ${phase}`;
   }
 
+  function applyBoardSizing(targetPhase) {
+    if (!board) return;
+    const shouldExpand = targetPhase === 3 || targetPhase === 4;
+    board.classList.toggle('board--expanded', shouldExpand);
+  }
+
   async function loadImages() {
     if (loadPromise) return loadPromise;
     loadPromise = fetch('images/images.json')
@@ -764,6 +770,7 @@
     const { skipIntroAudio = false } = options;
     phase = nextPhase;
     updatePhaseLabel();
+    applyBoardSizing(nextPhase);
     filterPool();
     resetProgress();
     preparePhaseIntro();
