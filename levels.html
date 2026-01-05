@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlayTalk | Níveis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c1222;
+      --card: #121a2e;
+      --accent: #3f8cff;
+      --accent-soft: #2a3a5c;
+      --text: #e7ecf5;
+      --muted: #9eafc7;
+      --border: #1f2a44;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(63, 140, 255, 0.16), transparent 30%),
+                  radial-gradient(circle at 80% 0%, rgba(119, 77, 255, 0.12), transparent 30%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .controls {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    label {
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    select {
+      background: #0f1526;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 15px;
+      min-width: 120px;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    main {
+      margin-top: 24px;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .image-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .image-card img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25));
+    }
+
+    .label-btn {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--accent-soft);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: capitalize;
+      cursor: default;
+    }
+
+    .label-btn--pt {
+      background: linear-gradient(90deg, rgba(63, 140, 255, 0.4), rgba(63, 140, 255, 0.2));
+    }
+
+    .label-btn--en {
+      background: #0f1526;
+      color: var(--muted);
+    }
+
+    .empty-state {
+      margin-top: 24px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: none;
+    }
+
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+      animation: pulse 1.1s ease-in-out infinite;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.15s; }
+    .dot:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes pulse {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Níveis disponíveis</h1>
+        <p>Escolha um nível para ver todas as imagens.</p>
+      </div>
+      <div class="loading" id="loading-indicator">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span>Carregando</span>
+      </div>
+    </header>
+
+    <div class="controls">
+      <label for="level-select">Selecionar nível</label>
+      <select id="level-select" disabled></select>
+    </div>
+
+    <main>
+      <div id="image-grid" class="image-grid"></div>
+      <div id="empty-state" class="empty-state">Nenhuma imagem encontrada para este nível.</div>
+    </main>
+  </div>
+
+  <script>
+    const levelSelect = document.getElementById('level-select');
+    const grid = document.getElementById('image-grid');
+    const emptyState = document.getElementById('empty-state');
+    const loadingIndicator = document.getElementById('loading-indicator');
+
+    let images = [];
+    let levelMap = new Map();
+
+    function toggleLoading(show) {
+      loadingIndicator.style.display = show ? 'inline-flex' : 'none';
+    }
+
+    function normalizeLevel(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : null;
+    }
+
+    function getAvailableLevels() {
+      return Array.from(new Set(Array.from(levelMap.values()).filter(Number.isFinite)))
+        .sort((a, b) => a - b);
+    }
+
+    function renderOptions() {
+      const levels = getAvailableLevels();
+      levelSelect.innerHTML = '';
+
+      levels.forEach(level => {
+        const option = document.createElement('option');
+        option.value = level;
+        option.textContent = `Nível ${level}`;
+        levelSelect.appendChild(option);
+      });
+
+      levelSelect.disabled = levels.length === 0;
+    }
+
+    function buildCard(item) {
+      const card = document.createElement('div');
+      card.className = 'image-card';
+
+      const img = document.createElement('img');
+      img.src = `images/${item.file}`;
+      img.alt = item.pt || item.en || 'Imagem';
+      img.loading = 'lazy';
+
+      const ptButton = document.createElement('button');
+      ptButton.type = 'button';
+      ptButton.className = 'label-btn label-btn--pt';
+      ptButton.textContent = item.pt || 'Português';
+
+      const enButton = document.createElement('button');
+      enButton.type = 'button';
+      enButton.className = 'label-btn label-btn--en';
+      enButton.textContent = item.en || 'English';
+
+      card.appendChild(img);
+      card.appendChild(ptButton);
+      card.appendChild(enButton);
+      return card;
+    }
+
+    function renderGrid(level) {
+      grid.innerHTML = '';
+      const selectedLevel = normalizeLevel(level);
+
+      const items = images.filter(item => normalizeLevel(levelMap.get(item.file)) === selectedLevel);
+
+      if (!items.length) {
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      const fragment = document.createDocumentFragment();
+      items.forEach(item => fragment.appendChild(buildCard(item)));
+      grid.appendChild(fragment);
+    }
+
+    async function loadData() {
+      try {
+        toggleLoading(true);
+        const [imageResponse, levelsResponse] = await Promise.all([
+          fetch('images/images.json'),
+          fetch('/api/image-levels')
+        ]);
+
+        if (!imageResponse.ok || !levelsResponse.ok) {
+          throw new Error('Não foi possível carregar os dados de imagem.');
+        }
+
+        const imageData = await imageResponse.json();
+        const levelData = await levelsResponse.json();
+
+        images = Array.isArray(imageData) ? imageData : [];
+        levelMap = new Map(
+          Object.entries((levelData && levelData.levels) || {})
+            .map(([file, level]) => [file, normalizeLevel(level)])
+        );
+
+        renderOptions();
+        const firstLevel = levelSelect.options[0]?.value;
+        if (firstLevel) {
+          levelSelect.value = firstLevel;
+          renderGrid(firstLevel);
+        }
+      } catch (error) {
+        emptyState.textContent = 'Não foi possível carregar as imagens no momento.';
+        emptyState.style.display = 'block';
+        console.error('Erro ao carregar dados de imagens:', error);
+      } finally {
+        toggleLoading(false);
+      }
+    }
+
+    levelSelect.addEventListener('change', event => {
+      renderGrid(event.target.value);
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
