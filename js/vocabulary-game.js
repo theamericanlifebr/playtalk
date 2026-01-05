@@ -122,6 +122,13 @@
     return loadPromise;
   }
 
+  function buildImageSrc(entry) {
+    const fileName = entry?.file;
+    if (!fileName) return '';
+    const levelFolder = entry?.level ? String(entry.level) : '';
+    return levelFolder ? `images/${levelFolder}/${fileName}` : `images/${fileName}`;
+  }
+
   function filterPool() {
     const numericLevel = Math.max(1, Number(level) || 1);
     const minLevel = (numericLevel - 1) * 5 + 1;
@@ -235,7 +242,7 @@
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
     const img = document.createElement('img');
-    img.src = `images/${item.file}`;
+    img.src = buildImageSrc(item);
     img.alt = item.en;
     img.className = 'board__image-single';
     boardInner.appendChild(img);
@@ -315,7 +322,7 @@
       card.className = 'grid-card grid-card--enter';
       card.dataset.correct = String(entry.correct === true);
       const img = document.createElement('img');
-      img.src = `images/${entry.file}`;
+      img.src = buildImageSrc(entry);
       img.alt = entry.en;
       card.appendChild(img);
       card.addEventListener('click', () => handlePhaseTwoChoice(card));
@@ -392,7 +399,7 @@
       card.className = 'grid-card grid-card--enter';
       card.dataset.correct = String(entry.correct === true);
       const img = document.createElement('img');
-      img.src = `images/${entry.file}`;
+      img.src = buildImageSrc(entry);
       img.alt = entry.en;
       card.appendChild(img);
       card.addEventListener('click', () => handlePhaseTwoChoice(card));
@@ -533,7 +540,7 @@
       card.className = 'grid-card grid-card--enter';
       card.dataset.file = entry.file;
       const img = document.createElement('img');
-      img.src = `images/${entry.file}`;
+      img.src = buildImageSrc(entry);
       img.alt = entry.en;
       card.appendChild(img);
       card.addEventListener('click', () => {
@@ -642,7 +649,7 @@
       const card = document.createElement('div');
       card.className = 'grid-card grid-card--enter grid-card--static';
       const img = document.createElement('img');
-      img.src = `images/${entry.file}`;
+      img.src = buildImageSrc(entry);
       img.alt = entry.en;
       card.appendChild(img);
       boardInner.appendChild(card);
