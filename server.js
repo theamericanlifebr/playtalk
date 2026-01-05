@@ -113,6 +113,61 @@ const staticDir = (() => {
   return __dirname;
 })();
 
+const IMAGES_ROOT = path.join(__dirname, 'images');
+let svgIndex = null;
+
+async function collectSvgFiles(directory) {
+  const entries = await fs.promises.readdir(directory, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      files.push(...await collectSvgFiles(fullPath));
+    } else if (entry.isFile() && path.extname(entry.name).toLowerCase() === '.svg') {
+      files.push({ name: entry.name, relativePath: path.relative(IMAGES_ROOT, fullPath) });
+    }
+  }
+
+  return files;
+}
+
+async function refreshSvgIndex() {
+  try {
+    const files = await collectSvgFiles(IMAGES_ROOT);
+    svgIndex = new Map(files.map(file => [file.name, file.relativePath]));
+  } catch (error) {
+    console.error('Erro ao mapear arquivos SVG:', error);
+    svgIndex = new Map();
+  }
+}
+
+async function resolveSvgPath(fileName) {
+  if (!fileName) return null;
+
+  if (!svgIndex) {
+    await refreshSvgIndex();
+  }
+
+  let relativePath = svgIndex.get(fileName);
+
+  if (relativePath) {
+    const candidatePath = path.join(IMAGES_ROOT, relativePath);
+    try {
+      await fs.promises.access(candidatePath);
+      return candidatePath;
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+
+  await refreshSvgIndex();
+  relativePath = svgIndex.get(fileName);
+
+  return relativePath ? path.join(IMAGES_ROOT, relativePath) : null;
+}
+
 function ensureDataDirectory() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -674,6 +729,29 @@ async function ensureDefaultUser() {
 ensureDefaultUser();
 
 app.use(express.json({ limit: '20mb' }));
+app.get('/images/:filePath(*)', async (req, res, next) => {
+  const ext = path.extname(req.params.filePath || '').toLowerCase();
+  if (ext !== '.svg') {
+    next();
+    return;
+  }
+
+  try {
+    const requestedName = decodeURIComponent(path.basename(req.params.filePath));
+    const svgPath = await resolveSvgPath(requestedName);
+
+    if (!svgPath) {
+      res.status(404).send('Imagem não encontrada.');
+      return;
+    }
+
+    res.sendFile(svgPath, error => {
+      if (error) next(error);
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 app.use(express.static(staticDir));
 
 app.get(['/game', '/game/'], (req, res) => {
