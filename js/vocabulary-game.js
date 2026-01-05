@@ -41,6 +41,7 @@
   let awaiting = false;
   let recognition = null;
   let loadPromise = null;
+  let fileLevels = new Map();
   let rotationTimer = null;
   let rotationIndex = 0;
   let gameStarted = false;
@@ -108,16 +109,32 @@
 
   async function loadImages() {
     if (loadPromise) return loadPromise;
-    loadPromise = fetch('images/images.json')
-      .then(response => response.json())
-      .then(data => {
+    const imagesPromise = fetch('images/images.json').then(response => (
+      response.ok ? response.json() : []
+    ));
+    const levelsPromise = fetch('/api/image-levels').then(response => (
+      response.ok ? response.json() : {}
+    ));
+
+    loadPromise = Promise.all([imagesPromise, levelsPromise])
+      .then(([data, levelResponse]) => {
         images = Array.isArray(data) ? data : [];
+
+        const levelEntries = levelResponse && typeof levelResponse === 'object'
+          ? levelResponse.levels || {}
+          : {};
+
+        fileLevels = new Map(
+          Object.entries(levelEntries).map(([fileName, value]) => [fileName, Number(value)])
+        );
+
         filterPool();
         resetProgress();
       })
       .catch(() => {
         images = [];
         pool = [];
+        fileLevels = new Map();
       });
     return loadPromise;
   }
@@ -125,8 +142,12 @@
   function buildImageSrc(entry) {
     const fileName = entry?.file;
     if (!fileName) return '';
-    const levelFolder = entry?.level ? String(entry.level) : '';
-    return levelFolder ? `images/${levelFolder}/${fileName}` : `images/${fileName}`;
+    return `images/${fileName}`;
+  }
+
+  function getItemLevel(entry) {
+    const levelValue = fileLevels.get(entry?.file);
+    return Number.isFinite(levelValue) ? levelValue : 0;
   }
 
   function filterPool() {
@@ -134,7 +155,7 @@
     const minLevel = (numericLevel - 1) * 5 + 1;
     const maxLevel = minLevel + 4;
     pool = images.filter(item => {
-      const itemLevel = Number(item.level) || 0;
+      const itemLevel = getItemLevel(item);
       return itemLevel >= minLevel && itemLevel <= maxLevel;
     });
   }

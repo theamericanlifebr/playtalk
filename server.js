@@ -115,6 +115,14 @@ const staticDir = (() => {
 
 const IMAGES_ROOT = path.join(__dirname, 'images');
 let svgIndex = null;
+let svgLevelIndex = null;
+
+function extractLevelFromRelativePath(relativePath) {
+  if (!relativePath) return null;
+  const [firstSegment] = relativePath.split(path.sep);
+  const parsed = Number.parseInt(firstSegment, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 async function collectSvgFiles(directory) {
   const entries = await fs.promises.readdir(directory, { withFileTypes: true });
@@ -137,9 +145,13 @@ async function refreshSvgIndex() {
   try {
     const files = await collectSvgFiles(IMAGES_ROOT);
     svgIndex = new Map(files.map(file => [file.name, file.relativePath]));
+    svgLevelIndex = new Map(
+      files.map(file => [file.name, extractLevelFromRelativePath(file.relativePath)])
+    );
   } catch (error) {
     console.error('Erro ao mapear arquivos SVG:', error);
     svgIndex = new Map();
+    svgLevelIndex = new Map();
   }
 }
 
@@ -729,6 +741,26 @@ async function ensureDefaultUser() {
 ensureDefaultUser();
 
 app.use(express.json({ limit: '20mb' }));
+app.get('/api/image-levels', async (req, res) => {
+  try {
+    if (!svgLevelIndex) {
+      await refreshSvgIndex();
+    }
+
+    const levels = {};
+    for (const [fileName, level] of svgLevelIndex.entries()) {
+      if (Number.isFinite(level)) {
+        levels[fileName] = level;
+      }
+    }
+
+    res.json({ success: true, levels });
+  } catch (error) {
+    console.error('Erro ao carregar níveis das imagens:', error);
+    res.status(500).json({ success: false, message: 'Erro ao carregar níveis das imagens.' });
+  }
+});
+
 app.get('/images/:filePath(*)', async (req, res, next) => {
   const ext = path.extname(req.params.filePath || '').toLowerCase();
   if (ext !== '.svg') {
@@ -760,6 +792,10 @@ app.get(['/game', '/game/'], (req, res) => {
 
 app.get(['/vocabulary', '/vocabulary/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'vocabulary.html'));
+});
+
+app.get(['/levels', '/levels/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'levels.html'));
 });
 
 app.use((req, res, next) => {
