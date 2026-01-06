@@ -182,12 +182,7 @@
 
   function filterPool() {
     const numericLevel = Math.max(1, Number(level) || 1);
-    const minLevel = (numericLevel - 1) * 5 + 1;
-    const maxLevel = minLevel + 4;
-    pool = images.filter(item => {
-      const itemLevel = getItemLevel(item);
-      return itemLevel >= minLevel && itemLevel <= maxLevel;
-    });
+    pool = images.filter(item => getItemLevel(item) === numericLevel);
   }
 
   function shuffle(list) {
