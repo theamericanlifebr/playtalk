@@ -113,9 +113,17 @@ const staticDir = (() => {
   return __dirname;
 })();
 
-const IMAGES_ROOT = path.join(__dirname, 'images');
-let svgIndex = null;
-let svgLevelIndex = null;
+const IMAGES_ROOT = (() => {
+  const candidateDirs = ['imagens', 'images'];
+  for (const dir of candidateDirs) {
+    const fullPath = path.join(__dirname, dir);
+    if (fs.existsSync(fullPath)) return fullPath;
+  }
+  return path.join(__dirname, 'images');
+})();
+const SUPPORTED_IMAGE_EXTENSIONS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.bmp']);
+let imageIndex = null;
+let imageLevelIndex = null;
 
 function extractLevelFromRelativePath(relativePath) {
   if (!relativePath) return null;
@@ -124,7 +132,7 @@ function extractLevelFromRelativePath(relativePath) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-async function collectSvgFiles(directory) {
+async function collectImageFiles(directory) {
   const entries = await fs.promises.readdir(directory, { withFileTypes: true });
   const files = [];
 
@@ -132,8 +140,8 @@ async function collectSvgFiles(directory) {
     const fullPath = path.join(directory, entry.name);
 
     if (entry.isDirectory()) {
-      files.push(...await collectSvgFiles(fullPath));
-    } else if (entry.isFile() && path.extname(entry.name).toLowerCase() === '.svg') {
+      files.push(...await collectImageFiles(fullPath));
+    } else if (entry.isFile() && SUPPORTED_IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
       files.push({ name: entry.name, relativePath: path.relative(IMAGES_ROOT, fullPath) });
     }
   }
@@ -141,28 +149,28 @@ async function collectSvgFiles(directory) {
   return files;
 }
 
-async function refreshSvgIndex() {
+async function refreshImageIndex() {
   try {
-    const files = await collectSvgFiles(IMAGES_ROOT);
-    svgIndex = new Map(files.map(file => [file.name, file.relativePath]));
-    svgLevelIndex = new Map(
+    const files = await collectImageFiles(IMAGES_ROOT);
+    imageIndex = new Map(files.map(file => [file.name, file.relativePath]));
+    imageLevelIndex = new Map(
       files.map(file => [file.name, extractLevelFromRelativePath(file.relativePath)])
     );
   } catch (error) {
-    console.error('Erro ao mapear arquivos SVG:', error);
-    svgIndex = new Map();
-    svgLevelIndex = new Map();
+    console.error('Erro ao mapear arquivos de imagem:', error);
+    imageIndex = new Map();
+    imageLevelIndex = new Map();
   }
 }
 
-async function resolveSvgPath(fileName) {
+async function resolveImagePath(fileName) {
   if (!fileName) return null;
 
-  if (!svgIndex) {
-    await refreshSvgIndex();
+  if (!imageIndex) {
+    await refreshImageIndex();
   }
 
-  let relativePath = svgIndex.get(fileName);
+  let relativePath = imageIndex.get(fileName);
 
   if (relativePath) {
     const candidatePath = path.join(IMAGES_ROOT, relativePath);
@@ -174,8 +182,8 @@ async function resolveSvgPath(fileName) {
     }
   }
 
-  await refreshSvgIndex();
-  relativePath = svgIndex.get(fileName);
+  await refreshImageIndex();
+  relativePath = imageIndex.get(fileName);
 
   return relativePath ? path.join(IMAGES_ROOT, relativePath) : null;
 }
@@ -743,12 +751,12 @@ ensureDefaultUser();
 app.use(express.json({ limit: '20mb' }));
 app.get('/api/image-levels', async (req, res) => {
   try {
-    if (!svgLevelIndex) {
-      await refreshSvgIndex();
+    if (!imageLevelIndex) {
+      await refreshImageIndex();
     }
 
     const levels = {};
-    for (const [fileName, level] of svgLevelIndex.entries()) {
+    for (const [fileName, level] of imageLevelIndex.entries()) {
       if (Number.isFinite(level)) {
         levels[fileName] = level;
       }
@@ -762,22 +770,23 @@ app.get('/api/image-levels', async (req, res) => {
 });
 
 app.get('/images/:filePath(*)', async (req, res, next) => {
-  const ext = path.extname(req.params.filePath || '').toLowerCase();
-  if (ext !== '.svg') {
-    next();
-    return;
-  }
-
   try {
     const requestedName = decodeURIComponent(path.basename(req.params.filePath));
-    const svgPath = await resolveSvgPath(requestedName);
+    const ext = path.extname(requestedName || '').toLowerCase();
 
-    if (!svgPath) {
+    if (!SUPPORTED_IMAGE_EXTENSIONS.has(ext)) {
+      next();
+      return;
+    }
+
+    const imagePath = await resolveImagePath(requestedName);
+
+    if (!imagePath) {
       res.status(404).send('Imagem não encontrada.');
       return;
     }
 
-    res.sendFile(svgPath, error => {
+    res.sendFile(imagePath, error => {
       if (error) next(error);
     });
   } catch (error) {
