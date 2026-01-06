@@ -151,6 +151,53 @@
       overflow: hidden;
     }
 
+    .image-visual {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      display: grid;
+      place-items: center;
+    }
+
+    .image-visual--audio {
+      --audio-progress: 0deg;
+      --audio-start: #f78c1f;
+      --audio-end: #2dc98a;
+      padding: 10px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--audio-end) 0deg,
+        var(--audio-end) var(--audio-progress),
+        var(--audio-start) var(--audio-progress),
+        var(--audio-start) 360deg
+      );
+      transition: background 0.18s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .image-visual--audio .audio-backdrop {
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      background: rgba(15, 21, 38, 0.85);
+      z-index: 0;
+    }
+
+    .image-visual--audio img,
+    .image-visual--audio .image-placeholder {
+      position: relative;
+      z-index: 1;
+      border: none;
+    }
+
+    .image-visual--audio:hover {
+      box-shadow: 0 0 0 2px rgba(247, 140, 31, 0.35);
+    }
+
+    .image-visual--audio.is-playing {
+      box-shadow: 0 0 0 2px rgba(45, 201, 138, 0.35);
+    }
+
     .image-placeholder {
       display: grid;
       place-items: center;
@@ -254,11 +301,12 @@
       <button id="upload-btn">Upload de imagens</button>
       <button id="export-json-btn">Exportar JSON</button>
       <button id="export-images-btn">Exportar imagens</button>
+      <button id="export-audio-btn">Exportar áudios</button>
       <div class="controls__level-filter">
         <label for="level-filter">Nível</label>
         <select id="level-filter"></select>
       </div>
-      <span class="hint">Dê dois toques nos botões para editar textos ou imagens.</span>
+      <span class="hint">Dê dois toques para editar textos/imagens. Clique para ouvir ou adicionar um áudio.</span>
     </div>
 
     <main>
@@ -290,6 +338,7 @@
   </div>
 
   <input id="upload-input" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml" multiple style="display:none" />
+  <input id="audio-upload-input" type="file" accept="audio/mpeg,audio/mp3,audio/ogg,audio/opus,audio/webm,audio/wav" style="display:none" />
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script>
@@ -300,10 +349,12 @@
     const loadingIndicator = document.getElementById('loading-indicator');
     const uploadInput = document.getElementById('upload-input');
     const changeImageInput = document.getElementById('change-image-input');
+    const audioUploadInput = document.getElementById('audio-upload-input');
     const newGridBtn = document.getElementById('new-grid-btn');
     const uploadBtn = document.getElementById('upload-btn');
     const exportJsonBtn = document.getElementById('export-json-btn');
     const exportImagesBtn = document.getElementById('export-images-btn');
+    const exportAudioBtn = document.getElementById('export-audio-btn');
     const imageModal = document.getElementById('image-modal');
     const moveSelect = document.getElementById('move-select');
     const moveBtn = document.getElementById('copy-image-btn');
@@ -313,10 +364,15 @@
 
     let levels = [];
     let imageCache = new Map();
+    let audioDataCache = new Map();
     let activeLevelIndex = null;
     let selectedLevelFilter = 'all';
+    let pendingAudioIndex = null;
+    let activeAudioPlayback = null;
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'image/svg+xml'];
+    const allowedAudioTypes = ['audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/opus', 'audio/webm', 'audio/wav'];
+    const allowedAudioExtensions = ['mp3', 'wav', 'ogg', 'opus', 'webm'];
 
     const resolveLevelNumber = (level, index) => {
       const value = Number(level.folderIndex);
@@ -357,7 +413,10 @@
       folderIndex: 1,
       file: '',
       dataUrl: '',
-      format: ''
+      format: '',
+      audioFile: '',
+      audioDataUrl: '',
+      audioFormat: ''
     });
 
     const saveState = () => {
@@ -408,6 +467,7 @@
         const orderedImages = Array.isArray(imageData) ? imageData.slice(0, MAX_LEVELS) : [];
         const base = orderedImages.map((item, idx) => {
           const fileName = item.file || item.imagem || '';
+          const audioFileName = typeof item.audio === 'string' ? item.audio : '';
           const levelNumber = normalizeLevelNumber(levelMap.get(fileName));
           const targetIndex = Number.isInteger(levelNumber) && levelNumber >= 1 ? levelNumber - 1 : idx;
 
@@ -420,7 +480,10 @@
             folderIndex: targetIndex + 1,
             file: fileName,
             dataUrl: '',
-            format: (fileName || '').split('.').pop() || 'webp'
+            format: (fileName || '').split('.').pop() || 'webp',
+            audioFile: audioFileName,
+            audioDataUrl: '',
+            audioFormat: (audioFileName.split('.').pop() || '').toLowerCase()
           };
         });
 
@@ -462,7 +525,90 @@
       return null;
     };
 
+    const stopActiveAudio = () => {
+      if (!activeAudioPlayback) return;
+
+      if (activeAudioPlayback.raf) {
+        cancelAnimationFrame(activeAudioPlayback.raf);
+      }
+
+      const { audio, wrapper } = activeAudioPlayback;
+      if (audio) {
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+        } catch (error) {
+          // ignore
+        }
+      }
+
+      if (wrapper?.isConnected) {
+        wrapper.classList.remove('is-playing');
+        wrapper.style.setProperty('--audio-progress', '0deg');
+      }
+
+      activeAudioPlayback = null;
+    };
+
+    const playLevelAudio = (level, wrapper) => {
+      const source = getLevelAudioSource(level);
+      if (!source) return;
+
+      stopActiveAudio();
+      const audio = new Audio(source);
+      activeAudioPlayback = { audio, wrapper, raf: null };
+
+      if (wrapper) {
+        wrapper.classList.add('is-playing');
+        wrapper.style.setProperty('--audio-progress', '0deg');
+      }
+
+      const tick = () => {
+        if (!activeAudioPlayback || activeAudioPlayback.audio !== audio) return;
+        if (wrapper?.isConnected && audio.duration) {
+          const progress = Math.min(1, audio.currentTime / Math.max(audio.duration, 0.01));
+          wrapper.style.setProperty('--audio-progress', `${Math.round(progress * 360)}deg`);
+        }
+
+        if (!audio.paused && !audio.ended) {
+          activeAudioPlayback.raf = requestAnimationFrame(tick);
+        }
+      };
+
+      const cleanup = () => {
+        if (activeAudioPlayback?.raf) {
+          cancelAnimationFrame(activeAudioPlayback.raf);
+        }
+
+        if (wrapper?.isConnected) {
+          wrapper.classList.remove('is-playing');
+          wrapper.style.setProperty('--audio-progress', '0deg');
+        }
+
+        if (activeAudioPlayback?.audio === audio) {
+          activeAudioPlayback = null;
+        }
+      };
+
+      audio.addEventListener('ended', () => {
+        if (wrapper?.isConnected) {
+          wrapper.style.setProperty('--audio-progress', '360deg');
+          setTimeout(cleanup, 140);
+        } else {
+          cleanup();
+        }
+      });
+      audio.addEventListener('error', cleanup);
+
+      audio.play()
+        .then(() => {
+          tick();
+        })
+        .catch(cleanup);
+    };
+
     const renderGrid = () => {
+      stopActiveAudio();
       grid.innerHTML = '';
       const fragment = document.createDocumentFragment();
       let renderedCount = 0;
@@ -479,6 +625,17 @@
         badge.textContent = `Nível ${levelNumber}`;
         card.appendChild(badge);
 
+        const visualWrapper = document.createElement('div');
+        visualWrapper.className = 'image-visual';
+        if (hasAudioForLevel(level)) {
+          visualWrapper.classList.add('image-visual--audio');
+          visualWrapper.style.setProperty('--audio-progress', '0deg');
+          const backdrop = document.createElement('div');
+          backdrop.className = 'audio-backdrop';
+          visualWrapper.appendChild(backdrop);
+          visualWrapper.title = 'Clique para tocar. Shift+clique para trocar o áudio.';
+        }
+
         const src = getImageSource(level);
         if (src) {
           const img = document.createElement('img');
@@ -486,14 +643,28 @@
           img.alt = level.pt || level.en || `Nível ${levelNumber}`;
           img.loading = 'lazy';
           img.addEventListener('dblclick', () => openImageModal(index));
-          card.appendChild(img);
+          visualWrapper.appendChild(img);
         } else {
           const placeholder = document.createElement('div');
           placeholder.className = 'image-placeholder';
           placeholder.textContent = 'Duplo clique para adicionar imagem';
           placeholder.addEventListener('dblclick', () => openImageModal(index));
-          card.appendChild(placeholder);
+          visualWrapper.appendChild(placeholder);
         }
+
+        visualWrapper.addEventListener('click', (event) => {
+          if (event.detail > 1) return;
+          const currentLevel = levels[index] || level;
+          if (hasAudioForLevel(currentLevel) && !event.shiftKey) {
+            playLevelAudio(currentLevel, visualWrapper);
+            return;
+          }
+          stopActiveAudio();
+          pendingAudioIndex = index;
+          audioUploadInput.click();
+        });
+
+        card.appendChild(visualWrapper);
 
         renderButtons(level, index, card);
         fragment.appendChild(card);
@@ -510,6 +681,24 @@
       return `${base || 'imagem'}-${suffix}.${extension}`;
     };
 
+    const resolveAudioExtension = (file) => {
+      const fromName = (file.name.split('.').pop() || '').toLowerCase();
+      if (allowedAudioExtensions.includes(fromName)) return fromName;
+
+      const mimeMap = {
+        'audio/mpeg': 'mp3',
+        'audio/mp3': 'mp3',
+        'audio/ogg': 'ogg',
+        'audio/opus': 'opus',
+        'audio/webm': 'webm',
+        'audio/wav': 'wav'
+      };
+
+      return mimeMap[file.type] || fromName || 'mp3';
+    };
+
+    const sanitizeAudioFileName = (name, extension) => sanitizeFileName(name, extension || 'mp3');
+
     const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -523,6 +712,28 @@
       reader.onerror = reject;
       reader.readAsText(file);
     });
+
+    const buildVoicePath = (fileName = '') => {
+      if (!fileName) return '';
+      const lower = fileName.toLowerCase();
+      if (!allowedAudioExtensions.some(ext => lower.endsWith(ext))) return '';
+
+      const sanitized = fileName.replace(/^[/\\]+/, '');
+      const hasPrefix = sanitized.toLowerCase().startsWith('voices/');
+      const encoded = sanitized.split('/')
+        .map(piece => encodeURIComponent(piece))
+        .join('/');
+
+      return hasPrefix ? encoded : `voices/${encoded}`;
+    };
+
+    const getLevelAudioSource = (level = {}) => {
+      if (level.audioDataUrl) return level.audioDataUrl;
+      if (level.audioFile) return buildVoicePath(level.audioFile);
+      return '';
+    };
+
+    const hasAudioForLevel = (level = {}) => Boolean(getLevelAudioSource(level));
 
     const resizeImage = (img, type = 'image/webp') => {
       const canvas = document.createElement('canvas');
@@ -601,6 +812,9 @@
           levels[targetIndex].en = '';
           levels[targetIndex].folder = '';
           levels[targetIndex].folderIndex = 1;
+          levels[targetIndex].audioFile = '';
+          levels[targetIndex].audioDataUrl = '';
+          levels[targetIndex].audioFormat = '';
           targetIndex += 1;
         } catch (error) {
           console.error('Erro ao processar arquivo', error);
@@ -609,6 +823,35 @@
 
       saveState();
       buildLevelFilter();
+      renderGrid();
+    };
+
+    const isAllowedAudioFile = (file) => {
+      if (!file) return false;
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      return allowedAudioTypes.includes(file.type) || allowedAudioExtensions.includes(ext);
+    };
+
+    const handleAudioFileForLevel = async (file, levelIndex) => {
+      if (!file || levelIndex === null || levelIndex === undefined) return;
+      if (!isAllowedAudioFile(file)) {
+        alert('Formato de áudio não suportado. Use mp3, opus, wav, ogg ou webm.');
+        return;
+      }
+
+      const extension = resolveAudioExtension(file);
+      const fileName = sanitizeAudioFileName(file.name, extension);
+      const dataUrl = await readFileAsDataUrl(file);
+      const existingLevel = levels[levelIndex] || defaultLevel();
+
+      levels[levelIndex] = {
+        ...existingLevel,
+        audioFile: fileName,
+        audioDataUrl: dataUrl,
+        audioFormat: extension,
+      };
+
+      saveState();
       renderGrid();
     };
 
@@ -671,6 +914,24 @@
       }
     });
 
+    audioUploadInput.addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      if (!file || pendingAudioIndex === null) {
+        pendingAudioIndex = null;
+        audioUploadInput.value = '';
+        return;
+      }
+
+      try {
+        await handleAudioFileForLevel(file, pendingAudioIndex);
+      } catch (error) {
+        console.error('Erro ao processar áudio', error);
+      } finally {
+        pendingAudioIndex = null;
+        audioUploadInput.value = '';
+      }
+    });
+
     uploadBtn.addEventListener('click', () => uploadInput.click());
     uploadInput.addEventListener('change', (event) => {
       const { files } = event.target;
@@ -711,7 +972,8 @@
           imagem: level.file,
           nomePortugues: level.pt,
           nomeIngles: level.en,
-          categoria: level.folder
+          categoria: level.folder,
+          audio: level.audioFile || ''
         }));
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       downloadBlob(blob, 'levels-personalizado.json');
@@ -723,6 +985,15 @@
       const blob = await response.blob();
       const dataUrl = await readFileAsDataUrl(blob);
       imageCache.set(path, dataUrl);
+      return dataUrl;
+    };
+
+    const fetchRemoteAudio = async (path) => {
+      if (audioDataCache.has(path)) return audioDataCache.get(path);
+      const response = await fetch(path);
+      const blob = await response.blob();
+      const dataUrl = await readFileAsDataUrl(blob);
+      audioDataCache.set(path, dataUrl);
       return dataUrl;
     };
 
@@ -750,6 +1021,43 @@
 
       const blob = await zip.generateAsync({ type: 'blob' });
       downloadBlob(blob, 'levels-imagens.zip');
+    });
+
+    exportAudioBtn.addEventListener('click', async () => {
+      const zip = new JSZip();
+      let addedFiles = 0;
+
+      for (let i = 0; i < levels.length; i++) {
+        const level = levels[i];
+        const folderName = `${resolveLevelNumber(level, i)}`;
+        const folder = zip.folder(`${folderName}/`);
+        const audioSource = getLevelAudioSource(level);
+
+        if (!audioSource || !level.audioFile) continue;
+
+        try {
+          let dataUrl = level.audioDataUrl;
+          if (!dataUrl && audioSource.startsWith('voices/')) {
+            dataUrl = await fetchRemoteAudio(audioSource);
+          }
+
+          if (!dataUrl) continue;
+          const base64 = dataUrl.split(',')[1];
+          const audioName = (level.audioFile.split(/[/\\]/).pop() || `audio-${i + 1}.${level.audioFormat || 'mp3'}`);
+          folder.file(audioName, base64, { base64: true });
+          addedFiles += 1;
+        } catch (error) {
+          console.error('Erro ao adicionar áudio ao zip', error);
+        }
+      }
+
+      if (!addedFiles) {
+        alert('Nenhum áudio vinculado para exportar.');
+        return;
+      }
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      downloadBlob(blob, 'levels-audios.zip');
     });
 
     const init = async () => {
