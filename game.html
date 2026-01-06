@@ -140,9 +140,19 @@
       height: 550px;
     }
 
+    .board.board--compact {
+      width: min(360px, 100%);
+      max-width: 360px;
+      height: 360px;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
     @media (max-width: 768px) {
       .board { width: 360px; height: 360px; }
       .board.board--expanded { width: min(420px, 100%); height: 460px; }
+      .board.board--compact { width: min(300px, 100%); height: 300px; }
     }
 
     .board__inner {
@@ -153,6 +163,10 @@
       justify-content: center;
       gap: 12px;
       flex-wrap: wrap;
+    }
+
+    .board.board--compact .board__inner {
+      gap: 6px;
     }
 
     .board__inner--grid {
@@ -172,6 +186,10 @@
       opacity: 0.6;
       cursor: pointer;
       transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .board__image-speech--static {
+      cursor: default;
     }
 
     .board__image-speech--listening {
@@ -232,6 +250,12 @@
 
     .text-container.active { opacity: 1; }
 
+    .text-container--compact {
+      width: auto;
+      margin-top: 6px;
+      min-height: 32px;
+    }
+
     .choice-row {
       display: flex;
       flex-direction: column;
@@ -241,6 +265,11 @@
       margin-top: 12px;
       transition: opacity 0.5s ease;
       width: min(450px, 100%);
+    }
+
+    .choice-row--compact {
+      width: auto;
+      margin-top: 6px;
     }
 
     .choice-btn {
@@ -283,6 +312,23 @@
     }
 
     .phase-word-btn:hover { transform: translateY(-1px); }
+
+    .phase-word-btn--listening {
+      box-shadow: 0 0 0 4px rgba(76, 150, 220, 0.25);
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    .phase-word-btn--icon-only {
+      width: 86px;
+      height: 86px;
+      min-width: auto;
+      font-size: 32px;
+      border-radius: 50%;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
 
     .progress-footer {
       position: fixed;
@@ -485,6 +531,7 @@
   <audio id="audio-fase2" src="gamesounds/fase2.mp3" preload="auto"></audio>
   <audio id="audio-fase3" src="gamesounds/fase3.mp3" preload="auto"></audio>
   <audio id="audio-fase4" src="gamesounds/fase4.mp3" preload="auto"></audio>
+  <audio id="audio-fase5" src="gamesounds/fase3.mp3" preload="auto"></audio>
   <audio id="audio-success" src="gamesounds/success.mp3" preload="auto"></audio>
   <audio id="audio-error" src="gamesounds/error.mp3" preload="auto"></audio>
   <audio id="audio-conclusao" src="gamesounds/conclusao.mp3" preload="auto"></audio>
