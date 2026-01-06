@@ -47,6 +47,34 @@
   let gameStarted = false;
   const ROTATION_FADE_MS = 400;
 
+  function normalizeImageEntry(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+
+    const file = entry.file || entry.imagem;
+    const en = entry.en || entry.nomeIngles;
+    const pt = entry.pt || entry.nomePortugues;
+
+    if (!file || !en) return null;
+
+    return {
+      ...entry,
+      file,
+      en,
+      pt: pt || entry.pt || '',
+    };
+  }
+
+  function isWebpFile(fileName) {
+    return typeof fileName === 'string' && fileName.trim().toLowerCase().endsWith('.webp');
+  }
+
+  function applyImageStyling(img, fileName) {
+    if (!img) return;
+    if (isWebpFile(fileName)) {
+      img.classList.add('image--webp');
+    }
+  }
+
   function playAudioElement(audio) {
     return new Promise(resolve => {
       if (!audio) {
@@ -118,7 +146,9 @@
 
     loadPromise = Promise.all([imagesPromise, levelsPromise])
       .then(([data, levelResponse]) => {
-        images = Array.isArray(data) ? data : [];
+        images = Array.isArray(data)
+          ? data.map(normalizeImageEntry).filter(Boolean)
+          : [];
 
         const levelEntries = levelResponse && typeof levelResponse === 'object'
           ? levelResponse.levels || {}
@@ -142,7 +172,7 @@
   function buildImageSrc(entry) {
     const fileName = entry?.file;
     if (!fileName) return '';
-    return `images/${fileName}`;
+    return `images/${encodeURIComponent(fileName)}`;
   }
 
   function getItemLevel(entry) {
@@ -266,6 +296,7 @@
     img.src = buildImageSrc(item);
     img.alt = item.en;
     img.className = 'board__image-single';
+    applyImageStyling(img, item.file);
     boardInner.appendChild(img);
 
     const wrongItem = getRandomWrongItem(item.file) || item;
@@ -345,6 +376,7 @@
       const img = document.createElement('img');
       img.src = buildImageSrc(entry);
       img.alt = entry.en;
+      applyImageStyling(img, entry.file);
       card.appendChild(img);
       card.addEventListener('click', () => handlePhaseTwoChoice(card));
       boardInner.appendChild(card);
@@ -422,6 +454,7 @@
       const img = document.createElement('img');
       img.src = buildImageSrc(entry);
       img.alt = entry.en;
+      applyImageStyling(img, entry.file);
       card.appendChild(img);
       card.addEventListener('click', () => handlePhaseTwoChoice(card));
       boardInner.appendChild(card);
@@ -563,6 +596,7 @@
       const img = document.createElement('img');
       img.src = buildImageSrc(entry);
       img.alt = entry.en;
+      applyImageStyling(img, entry.file);
       card.appendChild(img);
       card.addEventListener('click', () => {
         if (awaiting) return;
@@ -672,6 +706,7 @@
       const img = document.createElement('img');
       img.src = buildImageSrc(entry);
       img.alt = entry.en;
+      applyImageStyling(img, entry.file);
       card.appendChild(img);
       boardInner.appendChild(card);
     });

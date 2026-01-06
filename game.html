@@ -190,6 +190,13 @@
     }
 
     .grid-card img { width: 120px; height: 120px; object-fit: contain; }
+    .grid-card img.image--webp { object-fit: cover; border-radius: 50%; }
+
+    .board__image-single.image--webp {
+      border-radius: 50%;
+      object-fit: cover;
+      aspect-ratio: 1 / 1;
+    }
 
     .grid-card--correct { background-color: rgba(46, 204, 113, 0.5); }
     .grid-card--wrong { background-color: rgba(231, 76, 60, 0.5); }
