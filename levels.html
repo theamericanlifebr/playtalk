@@ -412,19 +412,20 @@
 
         const orderedImages = Array.isArray(imageData) ? imageData.slice(0, MAX_LEVELS) : [];
         const base = orderedImages.map((item, idx) => {
-          const levelNumber = normalizeLevelNumber(levelMap.get(item.file));
+          const fileName = item.file || item.imagem || '';
+          const levelNumber = normalizeLevelNumber(levelMap.get(fileName));
           const targetIndex = Number.isInteger(levelNumber) && levelNumber >= 1 ? levelNumber - 1 : idx;
 
           return {
             ...defaultLevel(),
             order: targetIndex + 1,
-            pt: item.pt || '',
-            en: item.en || '',
-            folder: '',
+            pt: item.pt || item.nomePortugues || '',
+            en: item.en || item.nomeIngles || '',
+            folder: item.folder || item.categoria || '',
             folderIndex: targetIndex + 1,
-            file: item.file || '',
+            file: fileName,
             dataUrl: '',
-            format: (item.file || '').split('.').pop() || 'webp'
+            format: (fileName || '').split('.').pop() || 'webp'
           };
         });
 
