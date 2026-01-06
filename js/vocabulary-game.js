@@ -22,7 +22,8 @@
     1: document.getElementById('audio-abertura'),
     2: document.getElementById('audio-fase2'),
     3: document.getElementById('audio-fase3'),
-    4: document.getElementById('audio-fase4')
+    4: document.getElementById('audio-fase4'),
+    5: document.getElementById('audio-fase5') || document.getElementById('audio-fase3')
   };
   const successAudio = document.getElementById('audio-success');
   const errorAudio = document.getElementById('audio-error');
@@ -45,6 +46,7 @@
   let rotationTimer = null;
   let rotationIndex = 0;
   let gameStarted = false;
+  let errorStreak = 0;
   const ROTATION_FADE_MS = 400;
 
   function normalizeImageEntry(entry) {
@@ -130,9 +132,13 @@
   }
 
   function applyBoardSizing(targetPhase) {
-    if (!board) return;
-    const shouldExpand = targetPhase === 3 || targetPhase === 4;
+    if (!board || !textContainer || !choiceRow) return;
+    const shouldExpand = targetPhase === 4;
+    const isCompact = targetPhase === 1 || targetPhase === 3 || targetPhase === 5;
     board.classList.toggle('board--expanded', shouldExpand);
+    board.classList.toggle('board--compact', isCompact);
+    textContainer.classList.toggle('text-container--compact', isCompact);
+    choiceRow.classList.toggle('choice-row--compact', isCompact);
   }
 
   async function loadImages() {
@@ -197,6 +203,7 @@
   function resetProgress() {
     index = 0;
     score = 0;
+    errorStreak = 0;
     currentItem = null;
     completionGridShown = false;
     cycle = shuffle(pool);
@@ -215,13 +222,33 @@
     progressFill.style.width = `${percent}%`;
   }
 
+  function resetProgressOnStreak() {
+    errorStreak = 0;
+    score = 0;
+    index = 0;
+    cycle = shuffle(pool);
+  }
+
+  function registerErrorAndCheckReset() {
+    errorStreak += 1;
+    const shouldReset = errorStreak >= 3;
+    if (shouldReset) {
+      resetProgressOnStreak();
+    }
+    return shouldReset;
+  }
+
   function speak(text) {
-    if (!('speechSynthesis' in window)) return;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    utter.rate = 0.95;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utter);
+    if (!('speechSynthesis' in window)) return Promise.resolve();
+    return new Promise(resolve => {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      utter.rate = 0.95;
+      utter.onend = resolve;
+      utter.onerror = resolve;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    });
   }
 
   function showText(message) {
@@ -317,14 +344,16 @@
     const audio = correct ? successAudio : errorAudio;
 
     if (correct) {
+      errorStreak = 0;
       btn.classList.add('success');
       score += 1;
       index += 1;
     } else {
       btn.classList.add('error');
-      score = 0;
-      index = 0;
-      cycle = shuffle(pool);
+      const reset = registerErrorAndCheckReset();
+      if (reset) {
+        btn.classList.remove('error');
+      }
     }
 
     updateProgressBar();
@@ -401,12 +430,11 @@
     boardInner.querySelectorAll('.grid-card').forEach(btn => { btn.disabled = true; });
 
     if (isCorrect) {
+      errorStreak = 0;
       score += 1;
       index += 1;
     } else {
-      score = 0;
-      index = 0;
-      cycle = shuffle(pool);
+      registerErrorAndCheckReset();
     }
 
     audio && audio.play().catch(() => {});
@@ -441,32 +469,71 @@
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
-    img.className = 'board__image-single board__image-speech';
-    img.setAttribute('role', 'button');
-    img.setAttribute('aria-label', `Toque e fale: ${item.en}`);
-    img.tabIndex = 0;
+    img.className = 'board__image-single board__image-speech board__image-speech--static';
+    img.setAttribute('aria-hidden', 'true');
     applyImageStyling(img, item.file);
+
+    const speechBtn = document.createElement('button');
+    speechBtn.type = 'button';
+    speechBtn.className = 'phase-word-btn';
+    speechBtn.textContent = item.en;
+    speechBtn.setAttribute('aria-label', `Toque e repita: ${item.en}`);
 
     const startListening = () => {
       if (awaiting) return;
-      showText('Ouvindo... diga a frase em inglês.');
       handleSpeechChallenge(item.en, startListening, {
-        onListeningStart: () => img.classList.add('board__image-speech--listening'),
-        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+        onListeningStart: () => speechBtn.classList.add('phase-word-btn--listening'),
+        onListeningEnd: () => speechBtn.classList.remove('phase-word-btn--listening'),
       });
     };
 
-    img.addEventListener('click', startListening);
-    img.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        startListening();
-      }
-    });
+    speechBtn.addEventListener('click', startListening);
 
     boardInner.appendChild(img);
     choiceRow.innerHTML = '';
-    showText(`Toque na imagem e fale: "${item.en}"`);
+    choiceRow.appendChild(speechBtn);
+    showText('');
+  }
+
+  function showPhaseFiveCard(item) {
+    currentItem = item;
+    clearBoard();
+    boardInner.classList.remove('board__inner--grid');
+    if (recognition && typeof recognition.stop === 'function') {
+      try {
+        recognition.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
+
+    const img = document.createElement('img');
+    img.src = buildImageSrc(item);
+    img.alt = item.en;
+    img.className = 'board__image-single board__image-speech board__image-speech--static';
+    img.setAttribute('aria-hidden', 'true');
+    applyImageStyling(img, item.file);
+
+    const speechBtn = document.createElement('button');
+    speechBtn.type = 'button';
+    speechBtn.className = 'phase-word-btn phase-word-btn--icon-only';
+    speechBtn.innerHTML = '<span aria-hidden="true">🎤</span>';
+    speechBtn.setAttribute('aria-label', `Ativar microfone e repetir: ${item.en}`);
+
+    const startListening = () => {
+      if (awaiting) return;
+      handleSpeechChallenge(item.en, startListening, {
+        onListeningStart: () => speechBtn.classList.add('phase-word-btn--listening'),
+        onListeningEnd: () => speechBtn.classList.remove('phase-word-btn--listening'),
+      });
+    };
+
+    speechBtn.addEventListener('click', startListening);
+
+    boardInner.appendChild(img);
+    choiceRow.innerHTML = '';
+    choiceRow.appendChild(speechBtn);
+    showText('');
   }
 
   function normalizeText(text) {
@@ -574,13 +641,12 @@
       }
 
       if (success) {
+        errorStreak = 0;
         score += 1;
         index += 1;
         successAudio && successAudio.play().catch(() => {});
       } else {
-        score = 0;
-        index = 0;
-        cycle = shuffle(pool);
+        registerErrorAndCheckReset();
         errorAudio && errorAudio.play().catch(() => {});
       }
 
@@ -652,6 +718,7 @@
         const expected = orderedTargets[sequenceIndex];
         const isCorrect = expected && card.dataset.file === expected.file;
         if (isCorrect) {
+          errorStreak = 0;
           card.classList.add('grid-card--correct');
           card.disabled = true;
           sequenceIndex += 1;
@@ -674,9 +741,7 @@
             btn.disabled = false;
           });
           sequenceIndex = 0;
-          score = 0;
-          index = 0;
-          cycle = shuffle(pool);
+          registerErrorAndCheckReset();
           errorAudio && errorAudio.play().catch(() => {});
           updateProgressBar();
           setTimeout(() => {
@@ -690,9 +755,10 @@
 
     choiceRow.innerHTML = '';
     showText('');
-    orderedTargets.forEach((entry, idx) => {
-      setTimeout(() => speak(entry.en), idx * 900);
-    });
+    orderedTargets.reduce(
+      (prev, entry) => prev.then(() => speak(entry.en)),
+      Promise.resolve()
+    );
   }
 
   function advanceCycle() {
@@ -718,6 +784,9 @@
         break;
       case 4:
         showPhaseFourCard(item);
+        break;
+      case 5:
+        showPhaseFiveCard(item);
         break;
       default:
         showPhaseOneCard(item);
@@ -790,7 +859,8 @@
       1: { title: 'Fase 1', cta: 'Iniciar fase 1' },
       2: { title: 'Fase 2', cta: 'Iniciar fase 2' },
       3: { title: 'Fase 3', cta: 'Iniciar fase 3' },
-      4: { title: 'Fase 4', cta: 'Iniciar fase 4' }
+      4: { title: 'Fase 4', cta: 'Iniciar fase 4' },
+      5: { title: 'Fase 5', cta: 'Iniciar fase 5' }
     }[nextPhase] || {
       title: `Fase ${nextPhase}`,
       cta: 'Continuar'
@@ -839,7 +909,7 @@
   }
 
   function handleProgressCompletion() {
-    if (phase === 1 || phase === 2 || phase === 3) {
+    if (phase === 1 || phase === 2 || phase === 3 || phase === 4) {
       awaiting = false;
       completionGridShown = true;
       clearBoard();
@@ -897,7 +967,7 @@
 
   function handlePhaseComplete(options = {}) {
     const { skipIntroAudio = false } = options;
-    if (phase === 4) {
+    if (phase === 5) {
       const completedLevel = level;
       level += 1;
       saveLevelToStorage();
