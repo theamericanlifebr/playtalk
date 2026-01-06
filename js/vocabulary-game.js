@@ -49,6 +49,8 @@
   let gameStarted = false;
   let errorStreak = 0;
   const ROTATION_FADE_MS = 400;
+  const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
+  const audioElementCache = new Map();
 
   function normalizeImageEntry(entry) {
     if (!entry || typeof entry !== 'object') return null;
@@ -56,6 +58,7 @@
     const file = entry.file || entry.imagem;
     const en = entry.en || entry.nomeIngles;
     const pt = entry.pt || entry.nomePortugues;
+    const audio = typeof entry.audio === 'string' ? entry.audio : '';
 
     if (!file || !en) return null;
 
@@ -64,7 +67,27 @@
       file,
       en,
       pt: pt || entry.pt || '',
+      audio
     };
+  }
+
+  function hasSupportedAudioExtension(fileName = '') {
+    const lower = fileName.toLowerCase();
+    return SUPPORTED_ENTRY_AUDIO_EXTENSIONS.some(ext => lower.endsWith(ext));
+  }
+
+  function buildAudioSrc(entry) {
+    const audioName = typeof entry?.audio === 'string' ? entry.audio.trim() : '';
+    if (!audioName || !hasSupportedAudioExtension(audioName)) return '';
+
+    const sanitized = audioName.replace(/^[/\\]+/, '');
+    const hasVoicesPrefix = sanitized.toLowerCase().startsWith('voices/');
+    const encodedPath = sanitized
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
+
+    return hasVoicesPrefix ? encodedPath : `voices/${encodedPath}`;
   }
 
   function isWebpFile(fileName) {
@@ -252,6 +275,51 @@
     });
   }
 
+  function playAudioSource(src) {
+    if (!src) return Promise.reject(new Error('No audio source available'));
+
+    return new Promise((resolve, reject) => {
+      const cachedAudio = audioElementCache.get(src) || new Audio(src);
+      audioElementCache.set(src, cachedAudio);
+      cachedAudio.pause();
+      cachedAudio.currentTime = 0;
+
+      const cleanup = () => {
+        cachedAudio.removeEventListener('ended', handleEnded);
+        cachedAudio.removeEventListener('error', handleError);
+      };
+
+      const handleEnded = () => {
+        cleanup();
+        resolve(true);
+      };
+
+      const handleError = () => {
+        cleanup();
+        reject(new Error('Audio playback failed'));
+      };
+
+      cachedAudio.addEventListener('ended', handleEnded);
+      cachedAudio.addEventListener('error', handleError);
+
+      const playResult = cachedAudio.play();
+      if (playResult && typeof playResult.then === 'function') {
+        playResult.catch(handleError);
+      }
+    });
+  }
+
+  function playPronunciation(entry) {
+    const audioSrc = buildAudioSrc(entry);
+    const text = typeof entry === 'string' ? entry : entry?.en || '';
+
+    if (audioSrc) {
+      return playAudioSource(audioSrc).catch(() => speak(text));
+    }
+
+    return speak(text);
+  }
+
   function showText(message) {
     if (!textContainer) return;
     textContainer.textContent = message || '';
@@ -374,7 +442,7 @@
     }
 
     updateProgressBar();
-    speak(currentItem.en);
+    playPronunciation(currentItem);
     audio && audio.play().catch(() => {});
     setTimeout(() => {
       awaiting = false;
@@ -423,7 +491,7 @@
       boardInner.appendChild(card);
     });
 
-    speak(item.en);
+    playPronunciation(item);
   }
 
   function highlightCorrectCard() {
@@ -506,7 +574,7 @@
 
     img.addEventListener('click', startListening);
     img.addEventListener('touchstart', startListening, { passive: true });
-    speechBtn.addEventListener('click', () => speak(item.en));
+    speechBtn.addEventListener('click', () => playPronunciation(item));
 
     boardInner.appendChild(img);
     choiceRow.innerHTML = '';
@@ -765,7 +833,7 @@
     choiceRow.innerHTML = '';
     showText('');
     orderedTargets.reduce(
-      (prev, entry) => prev.then(() => speak(entry.en)),
+      (prev, entry) => prev.then(() => playPronunciation(entry)),
       Promise.resolve()
     );
   }
@@ -840,7 +908,7 @@
       boardInner.appendChild(card);
     });
 
-    speak(target.en);
+    playPronunciation(target);
   }
 
   function showProgressCompletionOverlay(nextPhase) {

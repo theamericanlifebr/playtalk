@@ -121,9 +121,20 @@ const IMAGES_ROOT = (() => {
   }
   return path.join(__dirname, 'images');
 })();
+
+const VOICES_ROOT = (() => {
+  const candidateDirs = ['voices'];
+  for (const dir of candidateDirs) {
+    const fullPath = path.join(__dirname, dir);
+    if (fs.existsSync(fullPath)) return fullPath;
+  }
+  return path.join(__dirname, 'voices');
+})();
 const SUPPORTED_IMAGE_EXTENSIONS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.bmp']);
+const SUPPORTED_AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.opus', '.ogg', '.oga', '.webm']);
 let imageIndex = null;
 let imageLevelIndex = null;
+let voiceIndex = null;
 
 function extractLevelFromRelativePath(relativePath) {
   if (!relativePath) return null;
@@ -186,6 +197,89 @@ async function resolveImagePath(fileName) {
   relativePath = imageIndex.get(fileName);
 
   return relativePath ? path.join(IMAGES_ROOT, relativePath) : null;
+}
+
+async function collectVoiceFiles(directory) {
+  const entries = await fs.promises.readdir(directory, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      files.push(...await collectVoiceFiles(fullPath));
+    } else if (entry.isFile() && SUPPORTED_AUDIO_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+      files.push({ name: entry.name, relativePath: path.relative(VOICES_ROOT, fullPath) });
+    }
+  }
+
+  return files;
+}
+
+async function refreshVoiceIndex() {
+  try {
+    const files = await collectVoiceFiles(VOICES_ROOT);
+    voiceIndex = new Map(files.map(file => [file.name, file.relativePath]));
+  } catch (error) {
+    console.error('Erro ao mapear arquivos de áudio:', error);
+    voiceIndex = new Map();
+  }
+}
+
+async function resolveVoicePath(filePathOrName) {
+  if (!filePathOrName) return null;
+
+  const normalized = filePathOrName.replace(/\\/g, '/');
+  const ext = path.extname(normalized).toLowerCase();
+  if (ext && !SUPPORTED_AUDIO_EXTENSIONS.has(ext)) return null;
+
+  if (normalized.includes('/')) {
+    const safePath = path.normalize(normalized).replace(/^([.]{2}[\\/])+/g, '');
+    const candidate = path.resolve(VOICES_ROOT, safePath);
+    if (candidate.startsWith(VOICES_ROOT)) {
+      try {
+        await fs.promises.access(candidate);
+        return candidate;
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+    }
+  }
+
+  if (!voiceIndex) {
+    await refreshVoiceIndex();
+  }
+
+  const baseName = path.basename(normalized);
+  let relativePath = voiceIndex.get(baseName);
+
+  if (relativePath) {
+    const candidatePath = path.join(VOICES_ROOT, relativePath);
+    try {
+      await fs.promises.access(candidatePath);
+      return candidatePath;
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+
+  await refreshVoiceIndex();
+  relativePath = voiceIndex.get(baseName);
+
+  return relativePath ? path.join(VOICES_ROOT, relativePath) : null;
+}
+
+function ensureVoiceDirectories() {
+  if (!fs.existsSync(VOICES_ROOT)) {
+    fs.mkdirSync(VOICES_ROOT, { recursive: true });
+  }
+
+  for (let folder = 1; folder <= 50; folder += 1) {
+    const dirPath = path.join(VOICES_ROOT, String(folder));
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+  }
 }
 
 function ensureDataDirectory() {
@@ -722,6 +816,7 @@ function computeRankings(users = {}) {
 }
 
 ensureDataDirectory();
+ensureVoiceDirectories();
 
 async function ensureDefaultUser() {
   try {
@@ -787,6 +882,31 @@ app.get('/images/:filePath(*)', async (req, res, next) => {
     }
 
     res.sendFile(imagePath, error => {
+      if (error) next(error);
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/voices/:filePath(*)', async (req, res, next) => {
+  try {
+    const requestedPath = decodeURIComponent(req.params.filePath || '');
+    const ext = path.extname(requestedPath || '').toLowerCase();
+
+    if (ext && !SUPPORTED_AUDIO_EXTENSIONS.has(ext)) {
+      next();
+      return;
+    }
+
+    const voicePath = await resolveVoicePath(requestedPath);
+
+    if (!voicePath) {
+      res.status(404).send('Áudio não encontrado.');
+      return;
+    }
+
+    res.sendFile(voicePath, error => {
       if (error) next(error);
     });
   } catch (error) {
