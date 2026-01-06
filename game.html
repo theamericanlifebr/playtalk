@@ -163,6 +163,7 @@
       justify-content: center;
       gap: 12px;
       flex-wrap: wrap;
+      transition: opacity 0.5s ease;
     }
 
     .board.board--compact .board__inner {
@@ -185,7 +186,7 @@
     .board__image-speech {
       opacity: 0.6;
       cursor: pointer;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      transition: opacity 0.5s ease, transform 0.2s ease;
     }
 
     .board__image-speech--static {
@@ -193,7 +194,7 @@
     }
 
     .board__image-speech--listening {
-      opacity: 0.9;
+      opacity: 1;
       transform: scale(1.02);
     }
 

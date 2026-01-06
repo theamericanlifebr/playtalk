@@ -17,6 +17,7 @@
   const phaseTransitionBtn = document.getElementById('phase-transition-btn');
   const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
   const PHASE_DISSOLVE_MS = 500;
+  const IMAGE_DISSOLVE_MS = 500;
 
   const faseAudios = {
     1: document.getElementById('audio-abertura'),
@@ -257,6 +258,22 @@
     textContainer.classList.toggle('active', Boolean(message));
   }
 
+  function renderWithDissolve(renderer) {
+    if (typeof renderer !== 'function') return;
+    if (!boardInner) {
+      renderer();
+      return;
+    }
+
+    boardInner.style.opacity = '0';
+    window.setTimeout(() => {
+      renderer();
+      requestAnimationFrame(() => {
+        boardInner.style.opacity = '1';
+      });
+    }, IMAGE_DISSOLVE_MS);
+  }
+
   function startRotatingText() {
     if (!rotatingText) return;
     const phrases = ['Fluência Fácil', 'Inglês em 200 dias', 'Toque para começar'];
@@ -469,7 +486,7 @@
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
-    img.className = 'board__image-single board__image-speech board__image-speech--static';
+    img.className = 'board__image-single board__image-speech';
     img.setAttribute('aria-hidden', 'true');
     applyImageStyling(img, item.file);
 
@@ -482,12 +499,14 @@
     const startListening = () => {
       if (awaiting) return;
       handleSpeechChallenge(item.en, startListening, {
-        onListeningStart: () => speechBtn.classList.add('phase-word-btn--listening'),
-        onListeningEnd: () => speechBtn.classList.remove('phase-word-btn--listening'),
+        onListeningStart: () => img.classList.add('board__image-speech--listening'),
+        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
       });
     };
 
-    speechBtn.addEventListener('click', startListening);
+    img.addEventListener('click', startListening);
+    img.addEventListener('touchstart', startListening, { passive: true });
+    speechBtn.addEventListener('click', () => speak(item.en));
 
     boardInner.appendChild(img);
     choiceRow.innerHTML = '';
@@ -510,29 +529,23 @@
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
-    img.className = 'board__image-single board__image-speech board__image-speech--static';
+    img.className = 'board__image-single board__image-speech';
     img.setAttribute('aria-hidden', 'true');
     applyImageStyling(img, item.file);
-
-    const speechBtn = document.createElement('button');
-    speechBtn.type = 'button';
-    speechBtn.className = 'phase-word-btn phase-word-btn--icon-only';
-    speechBtn.innerHTML = '<span aria-hidden="true">🎤</span>';
-    speechBtn.setAttribute('aria-label', `Ativar microfone e repetir: ${item.en}`);
 
     const startListening = () => {
       if (awaiting) return;
       handleSpeechChallenge(item.en, startListening, {
-        onListeningStart: () => speechBtn.classList.add('phase-word-btn--listening'),
-        onListeningEnd: () => speechBtn.classList.remove('phase-word-btn--listening'),
+        onListeningStart: () => img.classList.add('board__image-speech--listening'),
+        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
       });
     };
 
-    speechBtn.addEventListener('click', startListening);
+    img.addEventListener('click', startListening);
+    img.addEventListener('touchstart', startListening, { passive: true });
 
     boardInner.appendChild(img);
     choiceRow.innerHTML = '';
-    choiceRow.appendChild(speechBtn);
     showText('');
   }
 
@@ -672,10 +685,6 @@
       onResult(typed);
     }
 
-    if (handler) {
-      const img = boardInner.querySelector('img');
-      if (img) img.removeEventListener('click', handler);
-    }
   }
 
   function showPhaseFourCard(item) {
@@ -770,27 +779,29 @@
     }
 
     const item = cycle[index];
-    showText('');
+    renderWithDissolve(() => {
+      showText('');
 
-    switch (phase) {
-      case 1:
-        showPhaseOneCard(item);
-        break;
-      case 2:
-        showPhaseTwoCards(item);
-        break;
-      case 3:
-        showPhaseThreeCard(item);
-        break;
-      case 4:
-        showPhaseFourCard(item);
-        break;
-      case 5:
-        showPhaseFiveCard(item);
-        break;
-      default:
-        showPhaseOneCard(item);
-    }
+      switch (phase) {
+        case 1:
+          showPhaseOneCard(item);
+          break;
+        case 2:
+          showPhaseTwoCards(item);
+          break;
+        case 3:
+          showPhaseThreeCard(item);
+          break;
+        case 4:
+          showPhaseFourCard(item);
+          break;
+        case 5:
+          showPhaseFiveCard(item);
+          break;
+        default:
+          showPhaseOneCard(item);
+      }
+    });
   }
 
   function buildCompletionGridItems(target) {
