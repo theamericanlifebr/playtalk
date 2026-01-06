@@ -139,15 +139,16 @@
     }
 
     .image-card img, .image-placeholder {
-      width: 120px;
-      height: 120px;
-      object-fit: contain;
+      width: 140px;
+      height: 140px;
+      object-fit: cover;
       display: block;
       filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25));
-      border-radius: 12px;
+      border-radius: 50%;
       background: #0f1526;
       border: 1px dashed var(--border);
       cursor: pointer;
+      overflow: hidden;
     }
 
     .image-placeholder {
@@ -214,6 +215,24 @@
     .modal .actions { display: flex; gap: 8px; justify-content: flex-end; }
     .modal button { border: 1px solid var(--border); background: var(--accent-soft); color: var(--text); padding: 10px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 
+    .controls__level-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .controls__level-filter label { color: var(--muted); font-size: 14px; }
+
+    .controls__level-filter select {
+      background: #0f1526;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-weight: 600;
+    }
+
     .empty-state { margin-top: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 12px; padding: 18px; display: none; }
   </style>
 </head>
@@ -235,6 +254,10 @@
       <button id="upload-btn">Upload de imagens</button>
       <button id="export-json-btn">Exportar JSON</button>
       <button id="export-images-btn">Exportar imagens</button>
+      <div class="controls__level-filter">
+        <label for="level-filter">Nível</label>
+        <select id="level-filter"></select>
+      </div>
       <span class="hint">Dê dois toques nos botões para editar textos ou imagens.</span>
     </div>
 
@@ -246,11 +269,11 @@
 
   <div class="modal-backdrop" id="image-modal">
     <div class="modal">
-      <h3>Trocar imagem</h3>
-      <p>Envie um arquivo novo ou copie a imagem de outro nível.</p>
+      <h3>Gerenciar imagem</h3>
+      <p>Envie um arquivo novo ou mova a imagem para outro nível.</p>
       <div class="field">
-        <label for="copy-select">Copiar do nível</label>
-        <select id="copy-select"></select>
+        <label for="move-select">Mover para o nível</label>
+        <select id="move-select"></select>
       </div>
       <div class="actions" style="justify-content: space-between;">
         <div>
@@ -258,7 +281,8 @@
           <input id="change-image-input" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml" style="display:none" />
         </div>
         <div class="actions">
-          <button id="copy-image-btn">Copiar</button>
+          <button id="remove-image-btn">Remover foto</button>
+          <button id="copy-image-btn">Mover</button>
           <button id="close-modal-btn">Fechar</button>
         </div>
       </div>
@@ -281,25 +305,45 @@
     const exportJsonBtn = document.getElementById('export-json-btn');
     const exportImagesBtn = document.getElementById('export-images-btn');
     const imageModal = document.getElementById('image-modal');
-    const copySelect = document.getElementById('copy-select');
-    const copyBtn = document.getElementById('copy-image-btn');
+    const moveSelect = document.getElementById('move-select');
+    const moveBtn = document.getElementById('copy-image-btn');
+    const removeBtn = document.getElementById('remove-image-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
+    const levelFilter = document.getElementById('level-filter');
 
     let levels = [];
     let imageCache = new Map();
     let activeLevelIndex = null;
+    let selectedLevelFilter = 'all';
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'image/svg+xml'];
+
+    const buildLevelFilter = () => {
+      levelFilter.innerHTML = '';
+      const allOption = document.createElement('option');
+      allOption.value = 'all';
+      allOption.textContent = 'Todos';
+      levelFilter.appendChild(allOption);
+
+      for (let i = 0; i < MAX_LEVELS; i++) {
+        const option = document.createElement('option');
+        option.value = String(i);
+        option.textContent = `Nível ${i + 1}`;
+        levelFilter.appendChild(option);
+      }
+
+      levelFilter.value = selectedLevelFilter;
+    };
 
     const toggleLoading = (show) => {
       loadingIndicator.style.display = show ? 'inline-flex' : 'none';
     };
 
-    const defaultLevel = () => ({
+    const defaultLevel = (folderIndex = 1) => ({
       pt: '',
       en: '',
       folder: '',
-      folderIndex: 1,
+      folderIndex,
       file: '',
       dataUrl: '',
       format: ''
@@ -319,7 +363,7 @@
         if (!stored) return null;
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed?.levels)) {
-          return parsed.levels.map((level, idx) => ({ ...defaultLevel(), ...level, order: idx + 1 })).slice(0, MAX_LEVELS);
+          return parsed.levels.map((level, idx) => ({ ...defaultLevel(idx + 1), ...level, order: idx + 1 })).slice(0, MAX_LEVELS);
         }
       } catch (err) {
         console.warn('Estado local inválido', err);
@@ -350,7 +394,7 @@
             .map(([file, level]) => [file, normalizeLevelNumber(level)])
         );
 
-        const base = Array.from({ length: MAX_LEVELS }, () => defaultLevel());
+        const base = Array.from({ length: MAX_LEVELS }, (_, idx) => defaultLevel(idx + 1));
         const orderedImages = Array.isArray(imageData) ? imageData : [];
 
         orderedImages.forEach(item => {
@@ -362,7 +406,7 @@
             pt: item.pt || '',
             en: item.en || '',
             folder: '',
-            folderIndex: 1,
+            folderIndex: levelNumber,
             file: item.file || '',
             dataUrl: '',
             format: (item.file || '').split('.').pop() || 'webp'
@@ -372,7 +416,7 @@
         return base;
       } catch (error) {
         console.error('Erro ao carregar dados padrão:', error);
-        return Array.from({ length: MAX_LEVELS }, () => defaultLevel());
+        return Array.from({ length: MAX_LEVELS }, (_, idx) => defaultLevel(idx + 1));
       }
     };
 
@@ -410,7 +454,10 @@
       grid.innerHTML = '';
       const fragment = document.createDocumentFragment();
 
-      levels.forEach((level, index) => {
+      const indices = selectedLevelFilter === 'all' ? levels.map((_, idx) => idx) : [Number(selectedLevelFilter)];
+
+      indices.forEach((index) => {
+        const level = levels[index];
         const card = document.createElement('div');
         card.className = 'image-card';
 
@@ -470,9 +517,9 @@
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, 600, 600);
 
-      const ratio = Math.min(600 / img.width, 600 / img.height, 1);
-      const width = img.width * ratio;
-      const height = img.height * ratio;
+      const scale = Math.max(600 / img.width, 600 / img.height);
+      const width = img.width * scale;
+      const height = img.height * scale;
       const offsetX = (600 - width) / 2;
       const offsetY = (600 - height) / 2;
       ctx.drawImage(img, offsetX, offsetY, width, height);
@@ -525,22 +572,15 @@
 
     const handleUpload = async (fileList) => {
       const files = Array.from(fileList).slice(0, MAX_LEVELS);
-      const targets = levels.map((lvl, idx) => ({ idx, hasImage: Boolean(lvl.file || lvl.dataUrl) }))
-        .filter(item => !item.hasImage)
-        .map(item => item.idx);
-
-      let pointer = 0;
+      const targetIndex = 0;
       for (const file of files) {
-        if (pointer >= targets.length) break;
         try {
           const processed = await handleFileProcessing(file);
-          const idx = targets[pointer];
-          assignImageToLevel(idx, processed);
-          levels[idx].pt = '';
-          levels[idx].en = '';
-          levels[idx].folder = '';
-          levels[idx].folderIndex = 1;
-          pointer += 1;
+          assignImageToLevel(targetIndex, processed);
+          levels[targetIndex].pt = '';
+          levels[targetIndex].en = '';
+          levels[targetIndex].folder = '';
+          levels[targetIndex].folderIndex = 1;
         } catch (error) {
           console.error('Erro ao processar arquivo', error);
         }
@@ -552,15 +592,14 @@
 
     const openImageModal = (index) => {
       activeLevelIndex = index;
-      copySelect.innerHTML = '';
-      levels.forEach((level, idx) => {
-        if (!level.file && !level.dataUrl) return;
+      moveSelect.innerHTML = '';
+      for (let i = 0; i < MAX_LEVELS; i++) {
         const option = document.createElement('option');
-        option.value = idx;
-        option.textContent = `Nível ${idx + 1}`;
-        if (idx === index) option.disabled = true;
-        copySelect.appendChild(option);
-      });
+        option.value = i;
+        option.textContent = `Nível ${i + 1}`;
+        if (i === index) option.disabled = true;
+        moveSelect.appendChild(option);
+      }
       imageModal.style.display = 'flex';
     };
 
@@ -570,13 +609,21 @@
       changeImageInput.value = '';
     };
 
-    copyBtn.addEventListener('click', () => {
+    moveBtn.addEventListener('click', () => {
       if (activeLevelIndex === null) return;
-      const from = Number(copySelect.value);
-      if (!Number.isInteger(from) || from < 0 || from >= levels.length) return;
-      const source = levels[from];
-      if (!source.file && !source.dataUrl) return;
-      levels[activeLevelIndex] = { ...levels[activeLevelIndex], file: source.file, dataUrl: source.dataUrl, format: source.format };
+      const to = Number(moveSelect.value);
+      if (!Number.isInteger(to) || to < 0 || to >= levels.length) return;
+      const source = levels[activeLevelIndex];
+      levels[to] = { ...source, folderIndex: to + 1 };
+      levels[activeLevelIndex] = defaultLevel(activeLevelIndex + 1);
+      saveState();
+      renderGrid();
+      closeModal();
+    });
+
+    removeBtn.addEventListener('click', () => {
+      if (activeLevelIndex === null) return;
+      levels[activeLevelIndex] = defaultLevel(activeLevelIndex + 1);
       saveState();
       renderGrid();
       closeModal();
@@ -608,9 +655,16 @@
       uploadInput.value = '';
     });
 
+    levelFilter.addEventListener('change', (event) => {
+      selectedLevelFilter = event.target.value;
+      renderGrid();
+    });
+
     newGridBtn.addEventListener('click', () => {
       if (!confirm('Criar uma nova grade limpa com 100 níveis vazios? Isso substitui sua edição local.')) return;
-      levels = Array.from({ length: MAX_LEVELS }, () => defaultLevel());
+      levels = Array.from({ length: MAX_LEVELS }, (_, idx) => defaultLevel(idx + 1));
+      selectedLevelFilter = 'all';
+      buildLevelFilter();
       saveState();
       renderGrid();
     });
@@ -627,12 +681,14 @@
     };
 
     exportJsonBtn.addEventListener('click', () => {
-      const payload = levels.map(level => ({
-        pt: level.pt || '',
-        en: level.en || '',
-        file: level.file || '',
-        folder: level.folder || ''
-      }));
+      const payload = levels
+        .filter(level => level.file && level.pt && level.en && level.folder)
+        .map(level => ({
+          imagem: level.file,
+          nomePortugues: level.pt,
+          nomeIngles: level.en,
+          categoria: level.folder
+        }));
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       downloadBlob(blob, 'levels-personalizado.json');
     });
@@ -650,9 +706,8 @@
       const zip = new JSZip();
       for (let i = 0; i < MAX_LEVELS; i++) {
         const level = levels[i];
-        const folderLabel = level.folder ? `-${level.folder.replace(/\s+/g, '-').toLowerCase()}` : '';
-        const folderName = `nivel-${String(i + 1).padStart(3, '0')}${folderLabel}`;
-        const folder = zip.folder(folderName) || zip;
+        const folderName = `${i + 1}`;
+        const folder = zip.folder(`${folderName}/`);
 
         if (!level.file && !level.dataUrl) continue;
         try {
@@ -678,12 +733,14 @@
       const local = loadState();
       if (local) {
         levels = local;
+        buildLevelFilter();
         renderGrid();
         toggleLoading(false);
         return;
       }
 
       levels = await fetchDefaults();
+      buildLevelFilter();
       renderGrid();
       toggleLoading(false);
     };
