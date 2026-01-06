@@ -1,4 +1,86 @@
 [
+
+
+  {
+    "imagem": "sequ-ncia-01-00_00_02_14-quadro006-1767666813003.webp",
+    "nomePortugues": "A garota está bebendo café",
+    "nomeIngles": "The girl is drinking coffee.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_00_05_18-quadro001-1767666813070.webp",
+    "nomePortugues": "O menino está andando",
+    "nomeIngles": "The boy is walking.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_00_40_14-quadro007-1767666813136.webp",
+    "nomePortugues": "O homem está usando o notebook",
+    "nomeIngles": "The man is using the laptop.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_00_42_20-quadro002-1767666813181.webp",
+    "nomePortugues": "A menina está lendo um livro",
+    "nomeIngles": "The girl is reading a book.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_01_25_01-quadro015-1767666813217.webp",
+    "nomePortugues": "O cachorro está olhando pra frente",
+    "nomeIngles": "The dog is looking ahead.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_01_32_11-quadro003-1767666813264.webp",
+    "nomePortugues": "O gato está dormindo",
+    "nomeIngles": "The cat is sleeping.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_02_05_00-quadro014-1767666813295.webp",
+    "nomePortugues": "O avião está voando",
+    "nomeIngles": "The plane is flying.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_02_08_11-quadro004-1767666813323.webp",
+    "nomePortugues": "A maçã está sobre a mesa",
+    "nomeIngles": "The apple is on the table",
+    "categoria": "Positions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_02_40_11-quadro005-1767666813352.webp",
+    "nomePortugues": "O sol está brilhando",
+    "nomeIngles": "The sun is shining.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_03_00_10-quadro013-1767666813386.webp",
+    "nomePortugues": "A salada está boa",
+    "nomeIngles": "The salad is good.",
+    "categoria": "States"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_04_46_02-quadro011-1767666813420.webp",
+    "nomePortugues": "A menina está ouvindo música",
+    "nomeIngles": "The girl is listening to music.",
+    "categoria": "Actions"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_05_27_08-quadro010-1767666813450.webp",
+    "nomePortugues": "A luz está ligada",
+    "nomeIngles": "The light is on.",
+    "categoria": "States"
+  },
+  {
+    "imagem": "sequ-ncia-01-00_06_34_08-quadro009-1767666813484.webp",
+    "nomePortugues": "A água está fervendo na panela",
+    "nomeIngles": "The water is boiling in the pot.",
+    "categoria": "States"
+  },
+
+  
   {
     "pt": "quadrado",
     "en": "square",
