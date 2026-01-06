@@ -16,6 +16,9 @@
   const phaseTransitionTitle = document.getElementById('phase-transition-title');
   const phaseTransitionBtn = document.getElementById('phase-transition-btn');
   const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
+  const finalOverlay = document.getElementById('final-overlay');
+  const finalProgressBar = document.getElementById('final-progress-bar');
+  const finalProgressFill = document.getElementById('final-progress-fill');
   const PHASE_DISSOLVE_MS = 500;
   const IMAGE_DISSOLVE_MS = 500;
 
@@ -24,13 +27,17 @@
     2: document.getElementById('audio-fase2'),
     3: document.getElementById('audio-fase3'),
     4: document.getElementById('audio-fase4'),
-    5: document.getElementById('audio-fase5') || document.getElementById('audio-fase3')
+    5: document.getElementById('audio-fase5') || document.getElementById('audio-fase3'),
+    6: document.getElementById('audio-fase6') || document.getElementById('audio-fase3'),
+    7: document.getElementById('audio-fase7') || document.getElementById('audio-fase3')
   };
   const successAudio = document.getElementById('audio-success');
   const errorAudio = document.getElementById('audio-error');
   const conclusionAudio = document.getElementById('audio-conclusao');
+  const finalAudio = document.getElementById('audio-final');
 
   let images = [];
+  let buildingImages = [];
   let level = 1;
   let phase = 1;
   let pool = [];
@@ -43,6 +50,7 @@
   let awaiting = false;
   let recognition = null;
   let loadPromise = null;
+  let buildingLoadPromise = null;
   let fileLevels = new Map();
   let rotationTimer = null;
   let rotationIndex = 0;
@@ -158,14 +166,14 @@
   function applyBoardSizing(targetPhase) {
     if (!board || !textContainer || !choiceRow) return;
     const shouldExpand = targetPhase === 4;
-    const isCompact = targetPhase === 1 || targetPhase === 3 || targetPhase === 5;
+    const isCompact = targetPhase === 1 || targetPhase === 3 || targetPhase === 5 || targetPhase === 6 || targetPhase === 7;
     board.classList.toggle('board--expanded', shouldExpand);
     board.classList.toggle('board--compact', isCompact);
     textContainer.classList.toggle('text-container--compact', isCompact);
     choiceRow.classList.toggle('choice-row--compact', isCompact);
   }
 
-  async function loadImages() {
+  async function loadStandardImages() {
     if (loadPromise) return loadPromise;
     const imagesPromise = fetch('images/images.json').then(response => (
       response.ok ? response.json() : []
@@ -199,6 +207,26 @@
     return loadPromise;
   }
 
+  async function loadBuildingImages() {
+    if (buildingLoadPromise) return buildingLoadPromise;
+    buildingLoadPromise = fetch('images/building.json')
+      .then(response => (response.ok ? response.json() : []))
+      .then(data => {
+        buildingImages = Array.isArray(data)
+          ? data.map(normalizeImageEntry).filter(Boolean)
+          : [];
+      })
+      .catch(() => {
+        buildingImages = [];
+      });
+
+    return buildingLoadPromise;
+  }
+
+  function loadAllImages() {
+    return Promise.all([loadStandardImages(), loadBuildingImages()]);
+  }
+
   function buildImageSrc(entry) {
     const fileName = entry?.file;
     if (!fileName) return '';
@@ -211,6 +239,11 @@
   }
 
   function filterPool() {
+    if (phase === 7) {
+      pool = buildingImages.slice();
+      return;
+    }
+
     const numericLevel = Math.max(1, Number(level) || 1);
     pool = images.filter(item => getItemLevel(item) === numericLevel);
   }
@@ -539,6 +572,12 @@
     }
   }
 
+  function updateRecognitionLanguage(targetPhase) {
+    if (!recognition) return;
+    const lang = targetPhase === 5 || targetPhase === 6 ? 'pt-BR' : 'en-US';
+    recognition.lang = lang;
+  }
+
   function showPhaseThreeCard(item) {
     currentItem = item;
     clearBoard();
@@ -594,6 +633,7 @@
       }
     }
 
+    const expectedText = item.pt || item.en;
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
@@ -603,7 +643,51 @@
 
     const startListening = () => {
       if (awaiting) return;
-      handleSpeechChallenge(item.en, startListening, {
+      handleSpeechChallenge(expectedText, startListening, {
+        onListeningStart: () => img.classList.add('board__image-speech--listening'),
+        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+      });
+    };
+
+    img.addEventListener('click', startListening);
+    img.addEventListener('touchstart', startListening, { passive: true });
+
+    const speechBtn = document.createElement('button');
+    speechBtn.type = 'button';
+    speechBtn.className = 'phase-word-btn';
+    speechBtn.textContent = expectedText;
+    speechBtn.setAttribute('aria-label', `Toque e repita: ${expectedText}`);
+    speechBtn.addEventListener('click', startListening);
+
+    boardInner.appendChild(img);
+    choiceRow.innerHTML = '';
+    choiceRow.appendChild(speechBtn);
+    showText('');
+  }
+
+  function showPhaseSixCard(item) {
+    currentItem = item;
+    clearBoard();
+    boardInner.classList.remove('board__inner--grid');
+    if (recognition && typeof recognition.stop === 'function') {
+      try {
+        recognition.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
+
+    const expectedText = item.pt || item.en;
+    const img = document.createElement('img');
+    img.src = buildImageSrc(item);
+    img.alt = item.en;
+    img.className = 'board__image-single board__image-speech';
+    img.setAttribute('aria-hidden', 'true');
+    applyImageStyling(img, item.file);
+
+    const startListening = () => {
+      if (awaiting) return;
+      handleSpeechChallenge(expectedText, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
       });
@@ -614,6 +698,51 @@
 
     boardInner.appendChild(img);
     choiceRow.innerHTML = '';
+    showText('');
+  }
+
+  function showPhaseSevenCard(item) {
+    currentItem = item;
+    clearBoard();
+    boardInner.classList.remove('board__inner--grid');
+    if (recognition && typeof recognition.stop === 'function') {
+      try {
+        recognition.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
+
+    const promptText = item.pt || item.en;
+    const expected = item.en;
+    const img = document.createElement('img');
+    img.src = buildImageSrc(item);
+    img.alt = item.en;
+    img.className = 'board__image-single board__image-speech';
+    img.setAttribute('aria-hidden', 'true');
+    applyImageStyling(img, item.file);
+
+    const startListening = () => {
+      if (awaiting) return;
+      handleSpeechChallenge(expected, startListening, {
+        onListeningStart: () => img.classList.add('board__image-speech--listening'),
+        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+      });
+    };
+
+    img.addEventListener('click', startListening);
+    img.addEventListener('touchstart', startListening, { passive: true });
+
+    const speechBtn = document.createElement('button');
+    speechBtn.type = 'button';
+    speechBtn.className = 'phase-word-btn';
+    speechBtn.textContent = promptText;
+    speechBtn.setAttribute('aria-label', `Toque e repita em inglês: ${promptText}`);
+    speechBtn.addEventListener('click', startListening);
+
+    boardInner.appendChild(img);
+    choiceRow.innerHTML = '';
+    choiceRow.appendChild(speechBtn);
     showText('');
   }
 
@@ -866,6 +995,12 @@
         case 5:
           showPhaseFiveCard(item);
           break;
+        case 6:
+          showPhaseSixCard(item);
+          break;
+        case 7:
+          showPhaseSevenCard(item);
+          break;
         default:
           showPhaseOneCard(item);
       }
@@ -939,7 +1074,9 @@
       2: { title: 'Fase 2', cta: 'Iniciar fase 2' },
       3: { title: 'Fase 3', cta: 'Iniciar fase 3' },
       4: { title: 'Fase 4', cta: 'Iniciar fase 4' },
-      5: { title: 'Fase 5', cta: 'Iniciar fase 5' }
+      5: { title: 'Fase 5', cta: 'Iniciar fase 5' },
+      6: { title: 'Fase 6', cta: 'Iniciar fase 6' },
+      7: { title: 'Fase 7', cta: 'Iniciar fase 7' }
     }[nextPhase] || {
       title: `Fase ${nextPhase}`,
       cta: 'Continuar'
@@ -999,6 +1136,12 @@
       return;
     }
 
+    if (phase === 7) {
+      awaiting = false;
+      handlePhaseComplete();
+      return;
+    }
+
     if (completionGridShown) {
       handlePhaseComplete();
       return;
@@ -1031,6 +1174,7 @@
     const { skipIntroAudio = false } = options;
     phase = nextPhase;
     updatePhaseLabel();
+    updateRecognitionLanguage(nextPhase);
     applyBoardSizing(nextPhase);
     filterPool();
     resetProgress();
@@ -1044,29 +1188,85 @@
     });
   }
 
+  function showLevelCompleteOverlay(completedLevel) {
+    const previousLevel = Number.isFinite(completedLevel) ? completedLevel : level;
+    const nextLevel = level;
+    saveLevelToStorage();
+    updateLevelIndicators();
+    levelCompleteText.textContent = `Você concluiu o nível ${previousLevel}. Vamos para o nível ${nextLevel}?`;
+    levelComplete.classList.remove('hidden');
+    nextLevelBtn.disabled = true;
+
+    const shouldPlayConclusion = previousLevel === 1 && conclusionAudio;
+    const playPromise = shouldPlayConclusion ? playAudioElement(conclusionAudio) : Promise.resolve();
+
+    playPromise.then(() => {
+      nextLevelBtn.disabled = false;
+    });
+  }
+
   function handlePhaseComplete(options = {}) {
     const { skipIntroAudio = false } = options;
-    if (phase === 5) {
+    if (phase === 7) {
       const completedLevel = level;
       level += 1;
-      saveLevelToStorage();
-      updateLevelIndicators();
-      levelCompleteText.textContent = `Você concluiu o nível ${completedLevel}. Vamos para o nível ${level}?`;
-      levelComplete.classList.remove('hidden');
-      nextLevelBtn.disabled = true;
-
-      const shouldPlayConclusion = completedLevel === 1 && conclusionAudio;
-      const playPromise = shouldPlayConclusion ? playAudioElement(conclusionAudio) : Promise.resolve();
-
-      playPromise.then(() => {
-        nextLevelBtn.disabled = false;
-      });
+      showFinalSequence(completedLevel);
       return;
     }
 
     dissolveEnvironment(() => {
       startPhase(phase + 1, { skipIntroAudio });
     });
+  }
+
+  function showFinalSequence(completedLevel) {
+    if (finalOverlay) {
+      finalOverlay.classList.add('active');
+      finalOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    const durationMs = finalAudio && finalAudio.duration ? finalAudio.duration * 1000 : 5000;
+    const updateProgress = (percent) => {
+      if (finalProgressFill) {
+        finalProgressFill.style.width = `${percent}%`;
+      }
+      if (finalProgressBar) {
+        finalProgressBar.setAttribute('aria-valuenow', String(Math.round(percent)));
+      }
+    };
+
+    updateProgress(0);
+
+    let progressTimer = null;
+    if (finalProgressFill) {
+      const start = Date.now();
+      progressTimer = window.setInterval(() => {
+        const elapsed = Date.now() - start;
+        const percent = Math.min(100, (elapsed / durationMs) * 100);
+        updateProgress(percent);
+        if (percent >= 100) {
+          clearInterval(progressTimer);
+        }
+      }, 100);
+    }
+
+    const finalize = () => {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+      }
+      if (finalOverlay) {
+        finalOverlay.classList.remove('active');
+        finalOverlay.setAttribute('aria-hidden', 'true');
+      }
+      updateProgress(100);
+      showLevelCompleteOverlay(completedLevel);
+    };
+
+    if (finalAudio) {
+      playAudioElement(finalAudio).then(finalize);
+    } else {
+      window.setTimeout(finalize, durationMs);
+    }
   }
 
   function handleStartInteraction() {
@@ -1083,7 +1283,7 @@
       rotationTimer = null;
     }
 
-    loadImages().then(() => {
+    loadAllImages().then(() => {
       showPhaseTransition(1);
     });
   }
@@ -1092,7 +1292,7 @@
     loadLevelFromStorage();
     updatePhaseLabel();
     setupSpeechRecognition();
-    loadImages();
+    loadAllImages();
     startRotatingText();
 
     if (startScreen) {
