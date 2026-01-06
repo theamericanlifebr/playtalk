@@ -318,12 +318,19 @@
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'image/svg+xml'];
 
+    const resolveLevelNumber = (level, index) => {
+      const value = Number(level.folderIndex);
+      if (Number.isInteger(value) && value > 0) return value;
+      return index + 1;
+    };
+
     const buildLevelFilter = () => {
-      const totalLevels = levels.length;
+      const levelNumbers = levels.map(resolveLevelNumber);
+      const uniqueLevels = Array.from(new Set(levelNumbers.filter(Number.isFinite))).sort((a, b) => a - b);
 
       if (selectedLevelFilter !== 'all') {
         const numericValue = Number(selectedLevelFilter);
-        if (!Number.isInteger(numericValue) || numericValue < 0 || numericValue >= totalLevels) {
+        if (!uniqueLevels.includes(numericValue)) {
           selectedLevelFilter = 'all';
         }
       }
@@ -334,12 +341,12 @@
       allOption.textContent = 'Todos';
       levelFilter.appendChild(allOption);
 
-      for (let i = 0; i < totalLevels; i++) {
+      uniqueLevels.forEach((levelNumber) => {
         const option = document.createElement('option');
-        option.value = String(i);
-        option.textContent = `Nível ${i + 1}`;
+        option.value = String(levelNumber);
+        option.textContent = `Nível ${levelNumber}`;
         levelFilter.appendChild(option);
-      }
+      });
 
       levelFilter.value = selectedLevelFilter;
     };
@@ -414,7 +421,7 @@
             pt: item.pt || '',
             en: item.en || '',
             folder: '',
-            folderIndex: 1,
+            folderIndex: targetIndex + 1,
             file: item.file || '',
             dataUrl: '',
             format: (item.file || '').split('.').pop() || 'webp'
@@ -429,6 +436,7 @@
     };
 
     const renderButtons = (level, index, card) => {
+      const levelNumber = resolveLevelNumber(level, index);
       const fields = [
         { key: 'pt', label: 'Português', className: 'label-btn--pt' },
         { key: 'en', label: 'English', className: 'label-btn--en' },
@@ -442,7 +450,7 @@
         button.textContent = level[field.key] || '';
         button.title = 'Dê dois cliques para editar';
         button.addEventListener('dblclick', () => {
-          const value = prompt(`Digite o ${field.label} do nível ${index + 1}`, level[field.key] || '');
+          const value = prompt(`Digite o ${field.label} do nível ${levelNumber}`, level[field.key] || '');
           if (value === null) return;
           levels[index][field.key] = value.trim();
           saveState();
@@ -461,29 +469,25 @@
     const renderGrid = () => {
       grid.innerHTML = '';
       const fragment = document.createDocumentFragment();
+      let renderedCount = 0;
 
-      const indices = selectedLevelFilter === 'all' ? levels.map((_, idx) => idx) : [Number(selectedLevelFilter)];
+      levels.forEach((level, index) => {
+        const levelNumber = resolveLevelNumber(level, index);
+        if (selectedLevelFilter !== 'all' && Number(selectedLevelFilter) !== levelNumber) return;
 
-      if (!indices.length) {
-        emptyState.style.display = 'block';
-        return;
-      }
-
-      indices.forEach((index) => {
-        const level = levels[index];
         const card = document.createElement('div');
         card.className = 'image-card';
 
         const badge = document.createElement('div');
         badge.className = 'level-badge';
-        badge.textContent = `Nível ${index + 1}`;
+        badge.textContent = `Nível ${levelNumber}`;
         card.appendChild(badge);
 
         const src = getImageSource(level);
         if (src) {
           const img = document.createElement('img');
           img.src = src;
-          img.alt = level.pt || level.en || `Nível ${index + 1}`;
+          img.alt = level.pt || level.en || `Nível ${levelNumber}`;
           img.loading = 'lazy';
           img.addEventListener('dblclick', () => openImageModal(index));
           card.appendChild(img);
@@ -497,10 +501,11 @@
 
         renderButtons(level, index, card);
         fragment.appendChild(card);
+        renderedCount += 1;
       });
 
       grid.appendChild(fragment);
-      emptyState.style.display = levels.length ? 'none' : 'block';
+      emptyState.style.display = renderedCount > 0 ? 'none' : 'block';
     };
 
     const sanitizeFileName = (name, extension) => {
@@ -574,15 +579,14 @@
     };
 
     const assignImageToLevel = (index, processed) => {
-      if (!levels[index]) {
-        levels[index] = defaultLevel();
-      }
+      const existingLevel = levels[index] || defaultLevel();
+      const targetLevel = Number(existingLevel.folderIndex) || 1;
       levels[index] = {
-        ...levels[index],
+        ...existingLevel,
         file: processed.fileName,
         dataUrl: processed.dataUrl,
         format: processed.format,
-        folderIndex: 1,
+        folderIndex: targetLevel,
       };
     };
 
@@ -615,13 +619,14 @@
     const openImageModal = (index) => {
       activeLevelIndex = index;
       moveSelect.innerHTML = '';
-      for (let i = 0; i < levels.length; i++) {
+      const currentLevel = resolveLevelNumber(levels[index] || {}, index);
+      for (let i = 1; i <= MAX_LEVELS; i++) {
         const option = document.createElement('option');
         option.value = i;
-        option.textContent = `Nível ${i + 1}`;
-        if (i === index) option.disabled = true;
+        option.textContent = `Nível ${i}`;
         moveSelect.appendChild(option);
       }
+      moveSelect.value = currentLevel;
       imageModal.style.display = 'flex';
     };
 
@@ -634,10 +639,11 @@
     moveBtn.addEventListener('click', () => {
       if (activeLevelIndex === null) return;
       const to = Number(moveSelect.value);
-      if (!Number.isInteger(to) || to < 0 || to >= levels.length) return;
-      const source = levels[activeLevelIndex];
-      levels[to] = { ...source, folderIndex: to + 1 };
-      levels[activeLevelIndex] = defaultLevel(activeLevelIndex + 1);
+      if (!Number.isInteger(to) || to <= 0 || to > MAX_LEVELS) return;
+      levels[activeLevelIndex] = {
+        ...levels[activeLevelIndex],
+        folderIndex: to
+      };
       saveState();
       renderGrid();
       closeModal();
@@ -728,7 +734,7 @@
       const zip = new JSZip();
       for (let i = 0; i < levels.length; i++) {
         const level = levels[i];
-        const folderName = `${i + 1}`;
+        const folderName = `${resolveLevelNumber(level, i)}`;
         const folder = zip.folder(`${folderName}/`);
 
         if (!level.file && !level.dataUrl) continue;
