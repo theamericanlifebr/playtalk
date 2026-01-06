@@ -325,14 +325,9 @@
     };
 
     const buildLevelFilter = () => {
-      const levelNumbers = levels.map(resolveLevelNumber);
-      const uniqueLevels = Array.from(new Set(levelNumbers.filter(Number.isFinite))).sort((a, b) => a - b);
-
-      if (selectedLevelFilter !== 'all') {
-        const numericValue = Number(selectedLevelFilter);
-        if (!uniqueLevels.includes(numericValue)) {
-          selectedLevelFilter = 'all';
-        }
+      const numericSelected = Number(selectedLevelFilter);
+      if (selectedLevelFilter !== 'all' && (!Number.isInteger(numericSelected) || numericSelected < 1 || numericSelected > MAX_LEVELS)) {
+        selectedLevelFilter = 'all';
       }
 
       levelFilter.innerHTML = '';
@@ -341,12 +336,12 @@
       allOption.textContent = 'Todos';
       levelFilter.appendChild(allOption);
 
-      uniqueLevels.forEach((levelNumber) => {
+      for (let levelNumber = 1; levelNumber <= MAX_LEVELS; levelNumber += 1) {
         const option = document.createElement('option');
         option.value = String(levelNumber);
         option.textContent = `Nível ${levelNumber}`;
         levelFilter.appendChild(option);
-      });
+      }
 
       levelFilter.value = selectedLevelFilter;
     };

@@ -430,7 +430,6 @@
     currentItem = item;
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
-    boardInner.classList.add('board__inner--grid');
     if (recognition && typeof recognition.stop === 'function') {
       try {
         recognition.stop();
@@ -439,28 +438,71 @@
       }
     }
 
-    const selection = buildPhaseOptions(item, 6);
+    const img = document.createElement('img');
+    img.src = buildImageSrc(item);
+    img.alt = item.en;
+    img.className = 'board__image-single board__image-speech';
+    img.setAttribute('role', 'button');
+    img.setAttribute('aria-label', `Toque e fale: ${item.en}`);
+    img.tabIndex = 0;
+    applyImageStyling(img, item.file);
 
-    selection.forEach(entry => {
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'grid-card grid-card--enter';
-      card.dataset.correct = String(entry.correct === true);
-      const img = document.createElement('img');
-      img.src = buildImageSrc(entry);
-      img.alt = entry.en;
-      applyImageStyling(img, entry.file);
-      card.appendChild(img);
-      card.addEventListener('click', () => handlePhaseTwoChoice(card));
-      boardInner.appendChild(card);
+    const startListening = () => {
+      if (awaiting) return;
+      showText('Ouvindo... diga a frase em inglês.');
+      handleSpeechChallenge(item.en, startListening, {
+        onListeningStart: () => img.classList.add('board__image-speech--listening'),
+        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+      });
+    };
+
+    img.addEventListener('click', startListening);
+    img.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        startListening();
+      }
     });
 
-    showText('');
-    speak(item.en);
+    boardInner.appendChild(img);
+    choiceRow.innerHTML = '';
+    showText(`Toque na imagem e fale: "${item.en}"`);
   }
 
   function normalizeText(text) {
     return (text || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  }
+
+  function splitWords(text) {
+    return normalizeText(text).split(/[^\p{L}']+/gu).filter(Boolean);
+  }
+
+  function hasSequentialTriplet(expected, spoken) {
+    for (let i = 0; i <= expected.length - 3; i += 1) {
+      const segment = expected.slice(i, i + 3);
+      if (spoken.includes(segment)) return true;
+    }
+    return false;
+  }
+
+  function isWordAccepted(expectedWord, spokenWord) {
+    const expected = normalizeText(expectedWord);
+    const spoken = normalizeText(spokenWord);
+
+    if (!spoken) return false;
+    if (expected === spoken) return true;
+
+    const firstTwo = expected.slice(0, 2);
+    const lastTwo = expected.slice(-2);
+    const lengthDiff = expected.length - spoken.length;
+
+    if (firstTwo && spoken.startsWith(firstTwo)) return true;
+    if (lastTwo && spoken.endsWith(lastTwo)) return true;
+    if (lengthDiff >= 1 && lengthDiff <= 2 && expected.startsWith(spoken)) return true;
+    if (hasSequentialTriplet(expected, spoken)) return true;
+    if (levenshteinDistance(expected, spoken) <= 2) return true;
+
+    return false;
   }
 
   function levenshteinDistance(a, b) {
@@ -491,33 +533,45 @@
   }
 
   function isSpokenCorrect(expected, spoken) {
-    const cleanExpected = normalizeText(expected);
-    const cleanSpoken = normalizeText(spoken);
+    const expectedWords = splitWords(expected);
+    const spokenWords = splitWords(spoken);
 
-    if (!cleanSpoken) return false;
-    if (cleanSpoken.includes(cleanExpected) || cleanExpected.includes(cleanSpoken)) return true;
+    if (!expectedWords.length || !spokenWords.length) return false;
 
-    const prefix = cleanExpected.slice(0, 2);
-    if (prefix && cleanSpoken.startsWith(prefix)) return true;
+    const requiredMatches = expectedWords.length <= 2
+      ? expectedWords.length
+      : Math.max(1, expectedWords.length - 1);
 
-    for (let i = 0; i <= cleanExpected.length - 3; i += 1) {
-      const segment = cleanExpected.slice(i, i + 3);
-      if (cleanSpoken.includes(segment)) return true;
-    }
+    let matches = 0;
+    const usedIndexes = new Set();
 
-    if (levenshteinDistance(cleanExpected, cleanSpoken) <= 2) return true;
+    expectedWords.forEach((word) => {
+      const matchIndex = spokenWords.findIndex((spokenWord, idx) => !usedIndexes.has(idx) && isWordAccepted(word, spokenWord));
+      if (matchIndex !== -1) {
+        usedIndexes.add(matchIndex);
+        matches += 1;
+      }
+    });
 
-    return false;
+    return matches >= requiredMatches;
   }
 
-  function handleSpeechChallenge(expected, handler) {
+  function handleSpeechChallenge(expected, handler, options = {}) {
     if (awaiting) return;
     awaiting = true;
+    const { onListeningStart, onListeningEnd } = options;
+    if (typeof onListeningStart === 'function') {
+      onListeningStart();
+    }
     let resolved = false;
     const onResult = (spoken) => {
       if (resolved) return;
       resolved = true;
       const success = isSpokenCorrect(expected, spoken);
+
+      if (typeof onListeningEnd === 'function') {
+        onListeningEnd();
+      }
 
       if (success) {
         score += 1;
