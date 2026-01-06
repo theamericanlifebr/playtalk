@@ -319,13 +319,22 @@
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'image/svg+xml'];
 
     const buildLevelFilter = () => {
+      const totalLevels = levels.length;
+
+      if (selectedLevelFilter !== 'all') {
+        const numericValue = Number(selectedLevelFilter);
+        if (!Number.isInteger(numericValue) || numericValue < 0 || numericValue >= totalLevels) {
+          selectedLevelFilter = 'all';
+        }
+      }
+
       levelFilter.innerHTML = '';
       const allOption = document.createElement('option');
       allOption.value = 'all';
       allOption.textContent = 'Todos';
       levelFilter.appendChild(allOption);
 
-      for (let i = 0; i < MAX_LEVELS; i++) {
+      for (let i = 0; i < totalLevels; i++) {
         const option = document.createElement('option');
         option.value = String(i);
         option.textContent = `Nível ${i + 1}`;
@@ -339,11 +348,11 @@
       loadingIndicator.style.display = show ? 'inline-flex' : 'none';
     };
 
-    const defaultLevel = (folderIndex = 1) => ({
+    const defaultLevel = () => ({
       pt: '',
       en: '',
       folder: '',
-      folderIndex,
+      folderIndex: 1,
       file: '',
       dataUrl: '',
       format: ''
@@ -363,7 +372,7 @@
         if (!stored) return null;
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed?.levels)) {
-          return parsed.levels.map((level, idx) => ({ ...defaultLevel(idx + 1), ...level, order: idx + 1 })).slice(0, MAX_LEVELS);
+          return parsed.levels.map((level, idx) => ({ ...defaultLevel(), ...level, order: idx + 1 })).slice(0, MAX_LEVELS);
         }
       } catch (err) {
         console.warn('Estado local inválido', err);
@@ -394,19 +403,18 @@
             .map(([file, level]) => [file, normalizeLevelNumber(level)])
         );
 
-        const base = Array.from({ length: MAX_LEVELS }, (_, idx) => defaultLevel(idx + 1));
-        const orderedImages = Array.isArray(imageData) ? imageData : [];
-
-        orderedImages.forEach(item => {
+        const orderedImages = Array.isArray(imageData) ? imageData.slice(0, MAX_LEVELS) : [];
+        const base = orderedImages.map((item, idx) => {
           const levelNumber = normalizeLevelNumber(levelMap.get(item.file));
-          if (!levelNumber || levelNumber < 1 || levelNumber > MAX_LEVELS) return;
-          const idx = levelNumber - 1;
-          base[idx] = {
-            ...base[idx],
+          const targetIndex = Number.isInteger(levelNumber) && levelNumber >= 1 ? levelNumber - 1 : idx;
+
+          return {
+            ...defaultLevel(),
+            order: targetIndex + 1,
             pt: item.pt || '',
             en: item.en || '',
             folder: '',
-            folderIndex: levelNumber,
+            folderIndex: 1,
             file: item.file || '',
             dataUrl: '',
             format: (item.file || '').split('.').pop() || 'webp'
@@ -416,7 +424,7 @@
         return base;
       } catch (error) {
         console.error('Erro ao carregar dados padrão:', error);
-        return Array.from({ length: MAX_LEVELS }, (_, idx) => defaultLevel(idx + 1));
+        return [];
       }
     };
 
@@ -455,6 +463,11 @@
       const fragment = document.createDocumentFragment();
 
       const indices = selectedLevelFilter === 'all' ? levels.map((_, idx) => idx) : [Number(selectedLevelFilter)];
+
+      if (!indices.length) {
+        emptyState.style.display = 'block';
+        return;
+      }
 
       indices.forEach((index) => {
         const level = levels[index];
@@ -561,18 +574,25 @@
     };
 
     const assignImageToLevel = (index, processed) => {
+      if (!levels[index]) {
+        levels[index] = defaultLevel();
+      }
       levels[index] = {
         ...levels[index],
         file: processed.fileName,
         dataUrl: processed.dataUrl,
         format: processed.format,
-        folderIndex: levels[index].folderIndex || 1,
+        folderIndex: 1,
       };
     };
 
     const handleUpload = async (fileList) => {
-      const files = Array.from(fileList).slice(0, MAX_LEVELS);
-      const targetIndex = 0;
+      const availableSlots = MAX_LEVELS - levels.length;
+      if (availableSlots <= 0) return;
+
+      const files = Array.from(fileList).slice(0, availableSlots);
+      let targetIndex = levels.length;
+
       for (const file of files) {
         try {
           const processed = await handleFileProcessing(file);
@@ -581,19 +601,21 @@
           levels[targetIndex].en = '';
           levels[targetIndex].folder = '';
           levels[targetIndex].folderIndex = 1;
+          targetIndex += 1;
         } catch (error) {
           console.error('Erro ao processar arquivo', error);
         }
       }
 
       saveState();
+      buildLevelFilter();
       renderGrid();
     };
 
     const openImageModal = (index) => {
       activeLevelIndex = index;
       moveSelect.innerHTML = '';
-      for (let i = 0; i < MAX_LEVELS; i++) {
+      for (let i = 0; i < levels.length; i++) {
         const option = document.createElement('option');
         option.value = i;
         option.textContent = `Nível ${i + 1}`;
@@ -661,8 +683,8 @@
     });
 
     newGridBtn.addEventListener('click', () => {
-      if (!confirm('Criar uma nova grade limpa com 100 níveis vazios? Isso substitui sua edição local.')) return;
-      levels = Array.from({ length: MAX_LEVELS }, (_, idx) => defaultLevel(idx + 1));
+      if (!confirm('Criar uma nova grade vazia? Isso substitui sua edição local.')) return;
+      levels = [];
       selectedLevelFilter = 'all';
       buildLevelFilter();
       saveState();
@@ -704,7 +726,7 @@
 
     exportImagesBtn.addEventListener('click', async () => {
       const zip = new JSZip();
-      for (let i = 0; i < MAX_LEVELS; i++) {
+      for (let i = 0; i < levels.length; i++) {
         const level = levels[i];
         const folderName = `${i + 1}`;
         const folder = zip.folder(`${folderName}/`);
