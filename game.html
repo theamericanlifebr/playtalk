@@ -216,11 +216,13 @@
 
     .choice-row {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 10px;
       justify-content: center;
+      align-items: center;
       margin-top: 12px;
       transition: opacity 0.5s ease;
+      width: min(450px, 100%);
     }
 
     .choice-btn {
@@ -233,6 +235,7 @@
       cursor: pointer;
       transition: transform 0.15s ease, background 0.2s ease;
       min-width: 150px;
+      width: 100%;
       font-size: 20px;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       text-transform: capitalize;
