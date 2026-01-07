@@ -9,6 +9,7 @@
   const levelBadge = document.getElementById('level-indicator');
   const startScreen = document.getElementById('start-screen');
   const rotatingText = document.getElementById('rotating-text');
+  const startButton = document.getElementById('start-button');
   const levelComplete = document.getElementById('level-complete');
   const levelCompleteText = document.getElementById('level-complete-text');
   const nextLevelBtn = document.getElementById('next-level-btn');
@@ -62,6 +63,7 @@
   const ROTATION_FADE_MS = 400;
   const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
   const audioElementCache = new Map();
+  let openingAudioState = 'idle';
 
   function normalizeImageEntry(entry) {
     if (!entry || typeof entry !== 'object') return null;
@@ -145,6 +147,40 @@
       } else {
         hasPlayed = true;
       }
+    });
+  }
+
+  function enableStartButton() {
+    if (startButton) {
+      startButton.disabled = false;
+    }
+  }
+
+  function attemptOpeningAudio() {
+    const openingAudio = faseAudios[1];
+    if (!openingAudio || openingAudioState === 'playing' || openingAudioState === 'done') {
+      if (!openingAudio) {
+        enableStartButton();
+      }
+      return;
+    }
+
+    openingAudioState = 'playing';
+
+    playAudioElement(openingAudio).then((played) => {
+      if (played) {
+        openingAudioState = 'done';
+        enableStartButton();
+        return;
+      }
+
+      if (openingAudio.error) {
+        openingAudioState = 'done';
+        enableStartButton();
+        return;
+      }
+
+      openingAudioState = 'blocked';
     });
   }
 
@@ -1406,6 +1442,12 @@
     if (gameStarted) return;
     gameStarted = true;
 
+    if (faseAudios[1] && openingAudioState !== 'done') {
+      gameStarted = false;
+      attemptOpeningAudio();
+      return;
+    }
+
     if (startScreen) {
       startScreen.classList.add('start-screen--blank');
       startScreen.classList.add('hidden');
@@ -1433,6 +1475,13 @@
       startScreen.addEventListener('touchstart', handleStartInteraction, { passive: true });
       startScreen.addEventListener('pointerdown', handleStartInteraction);
     }
+
+    if (startButton) {
+      startButton.disabled = true;
+      startButton.addEventListener('click', handleStartInteraction);
+    }
+
+    attemptOpeningAudio();
 
     nextLevelBtn.addEventListener('click', () => {
       levelComplete.classList.add('hidden');
