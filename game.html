@@ -26,7 +26,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #fff;
+      background: url('backgrounds/background6.jpg') center/cover no-repeat fixed;
       color: var(--text);
       min-height: 100vh;
       display: flex;
@@ -36,7 +36,7 @@
     .start-screen {
       position: fixed;
       inset: 0;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.92);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -67,6 +67,10 @@
 
     .start-screen__text.is-fading {
       opacity: 0;
+    }
+
+    .start-screen__button {
+      min-width: 180px;
     }
 
     .start-screen--blank > * {
@@ -515,6 +519,11 @@
 
     .btn-primary:hover { transform: translateY(-1px); }
 
+    .btn-primary:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
     .btn-orange {
       background: linear-gradient(120deg, #ffb347, #ff7a18);
       color: #fff;
@@ -582,6 +591,7 @@
   <section class="start-screen" id="start-screen">
     <img src="SVG/logo.png" alt="PlayTalk" class="start-screen__logo">
     <div class="start-screen__text" id="rotating-text">Fluência Fácil</div>
+    <button class="btn-primary start-screen__button" id="start-button" disabled>Iniciar jogo</button>
   </section>
 
   <section class="game-overlay hidden" id="phase-transition">
