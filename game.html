@@ -77,6 +77,29 @@
       opacity: 0;
     }
 
+    .start-screen__difficulty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: min(300px, 80vw);
+    }
+
+    .start-screen__difficulty.hidden {
+      display: none;
+    }
+
+    .start-screen__difficulty-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .start-screen__difficulty-btn {
+      width: 100%;
+    }
+
     @media (min-width: 1024px) {
       .start-screen__text {
         font-size: 29px;
@@ -618,6 +641,13 @@
   <section class="start-screen" id="start-screen">
     <img src="SVG/logo.png" alt="PlayTalk" class="start-screen__logo">
     <div class="start-screen__text" id="rotating-text">Fluência Fácil</div>
+    <div class="start-screen__difficulty hidden" id="difficulty-options">
+      <div class="start-screen__difficulty-buttons">
+        <button type="button" class="btn-primary start-screen__difficulty-btn" data-difficulty="easy">Fácil</button>
+        <button type="button" class="btn-primary start-screen__difficulty-btn" data-difficulty="medium">Médio</button>
+        <button type="button" class="btn-primary start-screen__difficulty-btn" data-difficulty="hard">Difícil</button>
+      </div>
+    </div>
   </section>
 
   <section class="game-overlay hidden" id="phase-transition">
