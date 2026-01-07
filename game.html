@@ -198,6 +198,50 @@
       transform: scale(1.02);
     }
 
+    .board__mic-prompt {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .board__mic-button {
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .board__mic-button:disabled {
+      cursor: default;
+      opacity: 0.8;
+    }
+
+    .board__mic-image {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      object-fit: cover;
+      opacity: 0.6;
+    }
+
+    .board__mic-text {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.3;
+      color: var(--muted);
+      letter-spacing: 0.3px;
+      text-transform: lowercase;
+    }
+
+    @media (max-width: 768px) {
+      .board__mic-image {
+        width: 180px;
+        height: 180px;
+      }
+    }
+
     .grid-card {
       width: 150px;
       height: 150px;
@@ -577,6 +621,7 @@
   <audio id="audio-error" src="gamesounds/error.mp3" preload="auto"></audio>
   <audio id="audio-conclusao" src="gamesounds/conclusao.mp3" preload="auto"></audio>
   <audio id="audio-final" src="gamesounds/final_1.mp3" preload="auto"></audio>
+  <audio id="audio-mic" src="gamesounds/mic.mp3" preload="auto"></audio>
 
   <script src="js/vocabulary-game.js"></script>
 </body>
