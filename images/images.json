@@ -1,4 +1,126 @@
 [
+
+  {
+    "imagem": "01-1767824952267.webp",
+    "nomePortugues": "Eu estou feliz",
+    "nomeIngles": "I am happy",
+    "categoria": "Presente simples",
+    "audio": "01-1767826971689.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
+    "nomePortugues": "Eu estou cansado",
+    "nomeIngles": "I am tired",
+    "categoria": "Presente simples",
+    "audio": "02-1767826975361.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
+    "nomePortugues": "Eu preciso de ajuda",
+    "nomeIngles": "I need help",
+    "categoria": "Presente simples",
+    "audio": "03-1767826977951.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
+    "nomePortugues": "Eu previso de um taxi",
+    "nomeIngles": "I need a taxi",
+    "categoria": "Presente simples",
+    "audio": "04-1767826980789.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
+    "nomePortugues": "Eu bebo água",
+    "nomeIngles": "I drink water",
+    "categoria": "Presente simples",
+    "audio": "05-1767826982612.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
+    "nomePortugues": "Eu preciso de dinheiro",
+    "nomeIngles": "I need money",
+    "categoria": "Presente simples",
+    "audio": "06-1767826984850.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
+    "nomePortugues": "Eu bebo café",
+    "nomeIngles": "I drink coffee",
+    "categoria": "Presente simples",
+    "audio": "07-1767826986432.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
+    "nomePortugues": "Eu acho que sim",
+    "nomeIngles": "I think so",
+    "categoria": "Presente simples",
+    "audio": "13-1767827286544.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
+    "nomePortugues": "Eu quero comida",
+    "nomeIngles": "I want food",
+    "categoria": "Presente simples",
+    "audio": "10-1767827236670.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
+    "nomePortugues": "Eu pratico esportes",
+    "nomeIngles": "I do sports",
+    "categoria": "Presente simples",
+    "audio": "15-1767827346628.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
+    "nomePortugues": "Eu faço meu melhor",
+    "nomeIngles": "I do my best",
+    "categoria": "Presente simples",
+    "audio": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
+    "nomePortugues": "Eu trabalho",
+    "nomeIngles": "I work",
+    "categoria": "Presente simples",
+    "audio": "work-1767827549832.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
+    "nomePortugues": "Eu leio",
+    "nomeIngles": "I read",
+    "categoria": "Presente simples",
+    "audio": "iread-1767827444028.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
+    "nomePortugues": "Eu gosto de suco",
+    "nomeIngles": "I like juice",
+    "categoria": "Presente simples",
+    "audio": "11-1767827247485.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
+    "nomePortugues": "Eu descanso",
+    "nomeIngles": "I rest",
+    "categoria": "Presente simples",
+    "audio": "irest-1767827491938.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
+    "nomePortugues": "Eu gosto de cachrros",
+    "nomeIngles": "I like dogs",
+    "categoria": "Presente simples",
+    "audio": "ilikedogs-1767827489560.mp3"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
+    "nomePortugues": "Eu dirijo",
+    "nomeIngles": "I drive",
+    "categoria": "Presente simples",
+    "audio": "idrive-1767827497206.mp3"
+  },
+
+  
   {
     "imagem": "sequ-ncia-02-00_03_11_14-quadro030-1767685182978.webp",
     "nomePortugues": "Isto são livros",
