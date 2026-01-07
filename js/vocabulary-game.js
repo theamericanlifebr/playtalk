@@ -35,6 +35,8 @@
   const errorAudio = document.getElementById('audio-error');
   const conclusionAudio = document.getElementById('audio-conclusao');
   const finalAudio = document.getElementById('audio-final');
+  const micAudio = document.getElementById('audio-mic');
+  const MIC_PROMPT_STORAGE_KEY = 'vocabulary-mic-prompted';
 
   let images = [];
   let buildingImages = [];
@@ -56,6 +58,7 @@
   let rotationIndex = 0;
   let gameStarted = false;
   let errorStreak = 0;
+  let micPromptTimer = null;
   const ROTATION_FADE_MS = 400;
   const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
   const audioElementCache = new Map();
@@ -353,6 +356,132 @@
     return speak(text);
   }
 
+  function shouldShowMicPrompt() {
+    return !localStorage.getItem(MIC_PROMPT_STORAGE_KEY);
+  }
+
+  function stopMicPromptLoop() {
+    if (micPromptTimer) {
+      clearInterval(micPromptTimer);
+      micPromptTimer = null;
+    }
+  }
+
+  function startMicPromptLoop() {
+    if (!micAudio) return;
+    stopMicPromptLoop();
+    playAudioElement(micAudio).catch(() => {});
+    micPromptTimer = window.setInterval(() => {
+      playAudioElement(micAudio).catch(() => {});
+    }, 15000);
+  }
+
+  function getRandomPromptItem() {
+    const source = pool.length ? pool : images;
+    if (!source.length) return null;
+    return source[Math.floor(Math.random() * source.length)];
+  }
+
+  function requestMicrophoneAccess() {
+    return new Promise(resolve => {
+      if (!recognition) {
+        resolve(false);
+        return;
+      }
+      let finished = false;
+
+      const finalize = () => {
+        if (finished) return;
+        finished = true;
+        recognition.onresult = null;
+        recognition.onerror = null;
+        recognition.onend = null;
+        resolve(true);
+      };
+
+      const timeoutId = window.setTimeout(() => {
+        try {
+          recognition.stop();
+        } catch (error) {
+          // ignore
+        }
+        finalize();
+      }, 4000);
+
+      const finalizeAndClear = () => {
+        window.clearTimeout(timeoutId);
+        finalize();
+      };
+
+      recognition.onresult = finalizeAndClear;
+      recognition.onerror = finalizeAndClear;
+      recognition.onend = finalizeAndClear;
+
+      try {
+        recognition.start();
+      } catch (error) {
+        window.clearTimeout(timeoutId);
+        finalize();
+      }
+    });
+  }
+
+  function showMicActivationPrompt() {
+    return new Promise(resolve => {
+      const promptItem = getRandomPromptItem();
+      if (!promptItem || !boardInner) {
+        resolve();
+        return;
+      }
+
+      awaiting = true;
+      clearBoard();
+      boardInner.classList.remove('board__inner--grid');
+
+      const container = document.createElement('div');
+      container.className = 'board__mic-prompt';
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'board__mic-button';
+      button.setAttribute('aria-label', 'Toque na imagem para ligar o microfone');
+
+      const img = document.createElement('img');
+      img.src = buildImageSrc(promptItem);
+      img.alt = promptItem.en || 'Microfone';
+      img.className = 'board__image-single board__mic-image';
+      applyImageStyling(img, promptItem.file);
+
+      button.appendChild(img);
+
+      const text = document.createElement('p');
+      text.className = 'board__mic-text';
+      text.innerHTML = 'toque na imagem<br>para ligar o microfone';
+
+      container.appendChild(button);
+      container.appendChild(text);
+      boardInner.appendChild(container);
+
+      if (choiceRow) choiceRow.innerHTML = '';
+      showText('');
+      startMicPromptLoop();
+
+      const handleActivate = () => {
+        if (button.disabled) return;
+        button.disabled = true;
+        stopMicPromptLoop();
+        localStorage.setItem(MIC_PROMPT_STORAGE_KEY, 'true');
+        requestMicrophoneAccess().finally(() => {
+          awaiting = false;
+          resolve();
+        });
+      };
+
+      button.addEventListener('click', handleActivate);
+      button.addEventListener('touchstart', handleActivate, { passive: true });
+    });
+  }
+
   function showText(message) {
     if (!textContainer) return;
     textContainer.textContent = message || '';
@@ -574,8 +703,7 @@
 
   function updateRecognitionLanguage(targetPhase) {
     if (!recognition) return;
-    const lang = targetPhase === 5 || targetPhase === 6 ? 'pt-BR' : 'en-US';
-    recognition.lang = lang;
+    recognition.lang = 'en-US';
   }
 
   function showPhaseThreeCard(item) {
@@ -633,7 +761,7 @@
       }
     }
 
-    const expectedText = item.pt || item.en;
+    const expectedText = item.en;
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
@@ -677,7 +805,7 @@
       }
     }
 
-    const expectedText = item.pt || item.en;
+    const expectedText = item.en;
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
@@ -1176,11 +1304,16 @@
     updatePhaseLabel();
     updateRecognitionLanguage(nextPhase);
     applyBoardSizing(nextPhase);
+    stopMicPromptLoop();
     filterPool();
     resetProgress();
     preparePhaseIntro();
     if (!skipIntroAudio) {
       await playPhaseIntro(nextPhase);
+    }
+    if (nextPhase === 3 && shouldShowMicPrompt()) {
+      showPhaseElements();
+      await showMicActivationPrompt();
     }
     advanceCycle();
     requestAnimationFrame(() => {
