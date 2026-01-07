@@ -569,7 +569,7 @@
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
-    img.className = 'board__image-single';
+    img.className = 'board__image-single board__image-single--phase-one';
     applyImageStyling(img, item.file);
     boardInner.appendChild(img);
 
@@ -708,7 +708,7 @@
 
   function updateRecognitionLanguage(targetPhase) {
     if (!recognition) return;
-    recognition.lang = 'en-US';
+    recognition.lang = targetPhase === 5 ? 'pt-BR' : 'en-US';
   }
 
   function showPhaseThreeCard(item) {
@@ -766,7 +766,7 @@
       }
     }
 
-    const expectedText = item.en;
+    const expectedText = item.pt || item.en;
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
@@ -1315,10 +1315,6 @@
     preparePhaseIntro();
     if (!skipIntroAudio) {
       await playPhaseIntro(nextPhase);
-    }
-    if (nextPhase === 3 && shouldShowMicPrompt()) {
-      showPhaseElements();
-      await showMicActivationPrompt();
     }
     advanceCycle();
     requestAnimationFrame(() => {
