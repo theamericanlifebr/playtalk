@@ -15,6 +15,7 @@
   const phaseTransition = document.getElementById('phase-transition');
   const phaseTransitionTitle = document.getElementById('phase-transition-title');
   const phaseTransitionBtn = document.getElementById('phase-transition-btn');
+  const difficultyOptions = document.getElementById('difficulty-options');
   const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
   const finalOverlay = document.getElementById('final-overlay');
   const finalProgressBar = document.getElementById('final-progress-bar');
@@ -62,7 +63,11 @@
   let rotationTimer = null;
   let rotationIndex = 0;
   let gameStarted = false;
+  let difficulty = 'medium';
+  let difficultySelected = false;
+  let difficultyPrompted = false;
   let errorStreak = 0;
+  let attemptCount = 0;
   let micPromptTimer = null;
   let levelUnlockTimer = null;
   const ROTATION_FADE_MS = 400;
@@ -357,6 +362,7 @@
     index = 0;
     score = 0;
     errorStreak = 0;
+    attemptCount = 0;
     currentItem = null;
     completionGridShown = false;
     cycle = shuffle(pool);
@@ -379,16 +385,29 @@
     errorStreak = 0;
     score = 0;
     index = 0;
+    attemptCount = 0;
     cycle = shuffle(pool);
   }
 
   function registerErrorAndCheckReset() {
     errorStreak += 1;
-    const shouldReset = errorStreak >= 3;
+    const shouldReset = difficulty === 'hard' ? true : errorStreak >= 3;
     if (shouldReset) {
       resetProgressOnStreak();
     }
     return shouldReset;
+  }
+
+  function registerAttemptAndCheckAutoCorrect() {
+    attemptCount += 1;
+    return difficulty === 'easy' && attemptCount >= 3;
+  }
+
+  function applyCorrectOutcome() {
+    errorStreak = 0;
+    attemptCount = 0;
+    score += 1;
+    index += 1;
   }
 
   function speak(text) {
@@ -681,18 +700,24 @@
     if (awaiting) return;
     awaiting = true;
     choiceRow.querySelectorAll('button').forEach(b => { b.disabled = true; });
-    const audio = correct ? successAudio : errorAudio;
+    let audio = correct ? successAudio : errorAudio;
 
     if (correct) {
-      errorStreak = 0;
       btn.classList.add('success');
-      score += 1;
-      index += 1;
+      applyCorrectOutcome();
     } else {
-      btn.classList.add('error');
-      const reset = registerErrorAndCheckReset();
-      if (reset) {
-        btn.classList.remove('error');
+      const autoCorrect = registerAttemptAndCheckAutoCorrect();
+      if (autoCorrect) {
+        btn.classList.add('success');
+        applyCorrectOutcome();
+        audio = successAudio;
+      } else {
+        btn.classList.add('error');
+        const reset = registerErrorAndCheckReset();
+        if (reset) {
+          btn.classList.remove('error');
+        }
+        audio = errorAudio;
       }
     }
 
@@ -761,7 +786,7 @@
     if (awaiting) return;
     awaiting = true;
     const isCorrect = card.dataset.correct === 'true';
-    const audio = isCorrect ? successAudio : errorAudio;
+    let audio = isCorrect ? successAudio : errorAudio;
     highlightCorrectCard();
     if (!isCorrect) {
       card.classList.add('grid-card--wrong');
@@ -770,11 +795,18 @@
     boardInner.querySelectorAll('.grid-card').forEach(btn => { btn.disabled = true; });
 
     if (isCorrect) {
-      errorStreak = 0;
-      score += 1;
-      index += 1;
+      applyCorrectOutcome();
     } else {
-      registerErrorAndCheckReset();
+      const autoCorrect = registerAttemptAndCheckAutoCorrect();
+      if (autoCorrect) {
+        applyCorrectOutcome();
+        audio = successAudio;
+        card.classList.remove('grid-card--wrong');
+        card.classList.add('grid-card--correct');
+      } else {
+        registerErrorAndCheckReset();
+        audio = errorAudio;
+      }
     }
 
     audio && audio.play().catch(() => {});
@@ -1080,13 +1112,17 @@
       }
 
       if (success) {
-        errorStreak = 0;
-        score += 1;
-        index += 1;
+        applyCorrectOutcome();
         successAudio && successAudio.play().catch(() => {});
       } else {
-        registerErrorAndCheckReset();
-        errorAudio && errorAudio.play().catch(() => {});
+        const autoCorrect = registerAttemptAndCheckAutoCorrect();
+        if (autoCorrect) {
+          applyCorrectOutcome();
+          successAudio && successAudio.play().catch(() => {});
+        } else {
+          registerErrorAndCheckReset();
+          errorAudio && errorAudio.play().catch(() => {});
+        }
       }
 
       updateProgressBar();
@@ -1159,8 +1195,7 @@
           sequenceIndex += 1;
           if (sequenceIndex >= orderedTargets.length) {
             awaiting = true;
-            score += 1;
-            index += 1;
+            applyCorrectOutcome();
             successAudio && successAudio.play().catch(() => {});
             updateProgressBar();
             setTimeout(() => {
@@ -1169,20 +1204,32 @@
             }, getAdvanceDelay(800));
           }
         } else {
-          awaiting = true;
-          card.classList.add('grid-card--wrong');
-          boardInner.querySelectorAll('.grid-card.grid-card--correct').forEach(btn => {
-            btn.classList.remove('grid-card--correct');
-            btn.disabled = false;
-          });
-          sequenceIndex = 0;
-          registerErrorAndCheckReset();
-          errorAudio && errorAudio.play().catch(() => {});
-          updateProgressBar();
-          setTimeout(() => {
-            awaiting = false;
-            advanceCycle();
-          }, getAdvanceDelay(1000));
+          const autoCorrect = registerAttemptAndCheckAutoCorrect();
+          if (autoCorrect) {
+            awaiting = true;
+            applyCorrectOutcome();
+            successAudio && successAudio.play().catch(() => {});
+            updateProgressBar();
+            setTimeout(() => {
+              awaiting = false;
+              advanceCycle();
+            }, getAdvanceDelay(800));
+          } else {
+            awaiting = true;
+            card.classList.add('grid-card--wrong');
+            boardInner.querySelectorAll('.grid-card.grid-card--correct').forEach(btn => {
+              btn.classList.remove('grid-card--correct');
+              btn.disabled = false;
+            });
+            sequenceIndex = 0;
+            registerErrorAndCheckReset();
+            errorAudio && errorAudio.play().catch(() => {});
+            updateProgressBar();
+            setTimeout(() => {
+              awaiting = false;
+              advanceCycle();
+            }, getAdvanceDelay(1000));
+          }
         }
       });
       boardInner.appendChild(card);
@@ -1524,6 +1571,23 @@
 
   function handleStartInteraction() {
     if (gameStarted) return;
+    if (!difficultySelected) {
+      if (difficultyPrompted) return;
+      difficultyPrompted = true;
+      if (rotationTimer) {
+        clearInterval(rotationTimer);
+        rotationTimer = null;
+      }
+      if (rotatingText) {
+        rotatingText.textContent = 'Escolha a dificuldade';
+        rotatingText.classList.remove('is-fading');
+      }
+      if (difficultyOptions) {
+        difficultyOptions.classList.remove('hidden');
+      }
+      return;
+    }
+
     gameStarted = true;
 
     if (startScreen) {
@@ -1552,6 +1616,18 @@
       startScreen.addEventListener('click', handleStartInteraction);
       startScreen.addEventListener('touchstart', handleStartInteraction, { passive: true });
       startScreen.addEventListener('pointerdown', handleStartInteraction);
+    }
+
+    if (difficultyOptions) {
+      difficultyOptions.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const selected = button.dataset.difficulty || 'medium';
+          difficulty = selected;
+          difficultySelected = true;
+          handleStartInteraction();
+        });
+      });
     }
 
     nextLevelBtn.addEventListener('click', () => {
