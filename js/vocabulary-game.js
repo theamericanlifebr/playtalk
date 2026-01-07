@@ -19,6 +19,8 @@
   const finalOverlay = document.getElementById('final-overlay');
   const finalProgressBar = document.getElementById('final-progress-bar');
   const finalProgressFill = document.getElementById('final-progress-fill');
+  const phaseAudioProgress = document.getElementById('phase-audio-progress');
+  const phaseAudioProgressFill = document.getElementById('phase-audio-progress-fill');
   const PHASE_DISSOLVE_MS = 500;
   const IMAGE_DISSOLVE_MS = 500;
 
@@ -37,6 +39,9 @@
   const finalAudio = document.getElementById('audio-final');
   const micAudio = document.getElementById('audio-mic');
   const MIC_PROMPT_STORAGE_KEY = 'vocabulary-mic-prompted';
+  const PHASE_THREE_HINT_STORAGE_KEY = 'vocabulary-phase3-mic-hint';
+  const LEVEL_TWO_UNLOCK_STORAGE_KEY = 'vocabulary-level2-unlock-at';
+  const LEVEL_TWO_UNLOCK_HOUR = 6;
 
   let images = [];
   let buildingImages = [];
@@ -59,6 +64,7 @@
   let gameStarted = false;
   let errorStreak = 0;
   let micPromptTimer = null;
+  let levelUnlockTimer = null;
   const ROTATION_FADE_MS = 400;
   const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
   const audioElementCache = new Map();
@@ -153,9 +159,91 @@
     return index >= cycle.length ? FINAL_ADVANCE_DELAY_MS : defaultDelayMs;
   }
 
+  function getLevelTwoUnlockAt() {
+    const stored = Number(localStorage.getItem(LEVEL_TWO_UNLOCK_STORAGE_KEY));
+    return Number.isFinite(stored) && stored > 0 ? stored : null;
+  }
+
+  function setNextLevelTwoUnlockAt() {
+    const unlockDate = new Date();
+    unlockDate.setDate(unlockDate.getDate() + 1);
+    unlockDate.setHours(LEVEL_TWO_UNLOCK_HOUR, 0, 0, 0);
+    const timestamp = unlockDate.getTime();
+    localStorage.setItem(LEVEL_TWO_UNLOCK_STORAGE_KEY, String(timestamp));
+    return timestamp;
+  }
+
+  function isLevelTwoLocked() {
+    const unlockAt = getLevelTwoUnlockAt();
+    return unlockAt ? Date.now() < unlockAt : false;
+  }
+
+  function clearLevelUnlockTimer() {
+    if (levelUnlockTimer) {
+      clearInterval(levelUnlockTimer);
+      levelUnlockTimer = null;
+    }
+  }
+
+  function formatCountdownTime(remainingMs) {
+    const totalMinutes = Math.max(0, Math.ceil(remainingMs / 60000));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return { hours, minutes };
+  }
+
+  function resetPhaseAudioProgress() {
+    if (!phaseAudioProgress || !phaseAudioProgressFill) return;
+    phaseAudioProgressFill.style.width = '0%';
+    phaseAudioProgress.setAttribute('aria-valuenow', '0');
+  }
+
+  function trackPhaseAudioProgress(audio) {
+    if (!phaseAudioProgress || !phaseAudioProgressFill || !audio) {
+      return () => {};
+    }
+
+    const updateProgress = () => {
+      const duration = audio.duration;
+      const percent = duration ? Math.min(100, (audio.currentTime / duration) * 100) : 0;
+      phaseAudioProgressFill.style.width = `${percent}%`;
+      phaseAudioProgress.setAttribute('aria-valuenow', String(Math.round(percent)));
+    };
+
+    const finalizeProgress = () => {
+      updateProgress();
+      if (!audio.duration || Number.isNaN(audio.duration)) {
+        phaseAudioProgressFill.style.width = '100%';
+        phaseAudioProgress.setAttribute('aria-valuenow', '100');
+      }
+    };
+
+    resetPhaseAudioProgress();
+    updateProgress();
+
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('loadedmetadata', updateProgress);
+    audio.addEventListener('ended', finalizeProgress);
+    audio.addEventListener('error', finalizeProgress);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateProgress);
+      audio.removeEventListener('loadedmetadata', updateProgress);
+      audio.removeEventListener('ended', finalizeProgress);
+      audio.removeEventListener('error', finalizeProgress);
+    };
+  }
+
   function loadLevelFromStorage() {
     const stored = Number(localStorage.getItem(STORAGE_KEY));
-    level = Number.isFinite(stored) && stored > 0 ? stored : 1;
+    if (Number.isFinite(stored) && stored > 0) {
+      level = stored;
+    } else {
+      level = 1;
+    }
+    if (level >= 2 && isLevelTwoLocked()) {
+      level = 1;
+    }
     updateLevelIndicators();
   }
 
@@ -751,6 +839,13 @@
     boardInner.appendChild(img);
     choiceRow.innerHTML = '';
     choiceRow.appendChild(speechBtn);
+    if (!localStorage.getItem(PHASE_THREE_HINT_STORAGE_KEY)) {
+      const hint = document.createElement('p');
+      hint.className = 'phase-mic-hint';
+      hint.textContent = 'toque no circulo para ativar o microfone';
+      choiceRow.appendChild(hint);
+      localStorage.setItem(PHASE_THREE_HINT_STORAGE_KEY, 'true');
+    }
     showText('');
   }
 
@@ -767,6 +862,7 @@
     }
 
     const expectedText = item.pt || item.en;
+    const buttonText = item.en || expectedText;
     const img = document.createElement('img');
     img.src = buildImageSrc(item);
     img.alt = item.en;
@@ -788,7 +884,7 @@
     const speechBtn = document.createElement('button');
     speechBtn.type = 'button';
     speechBtn.className = 'phase-word-btn';
-    speechBtn.textContent = expectedText;
+    speechBtn.textContent = buttonText;
     speechBtn.setAttribute('aria-label', `Toque e repita: ${expectedText}`);
     speechBtn.addEventListener('click', startListening);
 
@@ -1233,7 +1329,10 @@
     function attemptUnlock() {
       if (audioUnlocked || attemptInProgress) return;
       attemptInProgress = true;
-      playAudioElement(faseAudios[nextPhase]).then((played) => {
+      const audio = faseAudios[nextPhase];
+      const cleanupProgress = trackPhaseAudioProgress(audio);
+      playAudioElement(audio).then((played) => {
+        cleanupProgress();
         attemptInProgress = false;
         if (!played) return;
         audioUnlocked = true;
@@ -1330,12 +1429,32 @@
     levelCompleteText.textContent = `Você concluiu o nível ${previousLevel}. Vamos para o nível ${nextLevel}?`;
     levelComplete.classList.remove('hidden');
     nextLevelBtn.disabled = true;
+    nextLevelBtn.textContent = 'Ir para o próximo';
+    clearLevelUnlockTimer();
 
     const shouldPlayConclusion = previousLevel === 1 && conclusionAudio;
     const playPromise = shouldPlayConclusion ? playAudioElement(conclusionAudio) : Promise.resolve();
 
     playPromise.then(() => {
-      nextLevelBtn.disabled = false;
+      if (previousLevel === 1) {
+        const unlockAt = getLevelTwoUnlockAt() || setNextLevelTwoUnlockAt();
+        const updateUnlockState = () => {
+          const remainingMs = unlockAt - Date.now();
+          if (remainingMs <= 0) {
+            clearLevelUnlockTimer();
+            nextLevelBtn.disabled = false;
+            nextLevelBtn.textContent = `Iniciar nivel ${nextLevel}`;
+            return;
+          }
+          const { hours, minutes } = formatCountdownTime(remainingMs);
+          nextLevelBtn.disabled = true;
+          nextLevelBtn.textContent = `O nível ${nextLevel} será liberado em ${hours} horas e ${minutes} minutos`;
+        };
+        updateUnlockState();
+        levelUnlockTimer = window.setInterval(updateUnlockState, 60000);
+      } else {
+        nextLevelBtn.disabled = false;
+      }
     });
   }
 
@@ -1436,6 +1555,10 @@
     }
 
     nextLevelBtn.addEventListener('click', () => {
+      if (level === 2 && isLevelTwoLocked()) {
+        return;
+      }
+      clearLevelUnlockTimer();
       levelComplete.classList.add('hidden');
       phase = 1;
       updatePhaseLabel();

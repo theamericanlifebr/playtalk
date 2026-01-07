@@ -243,6 +243,13 @@
       text-transform: lowercase;
     }
 
+    .phase-mic-hint {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
     @media (max-width: 768px) {
       .board__mic-image {
         width: 180px;
@@ -469,6 +476,22 @@
       transition: width 0.15s linear;
     }
 
+    .phase-audio-progress {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(11, 31, 68, 0.12);
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .phase-audio-progress__fill {
+      width: 0%;
+      height: 100%;
+      background: var(--secondary);
+      transition: width 0.2s ease;
+    }
+
     .overlay-card {
       width: min(520px, 92%);
       background: #fff;
@@ -602,6 +625,9 @@
       <h1 id="phase-transition-title">Fase 2</h1>
       <div class="overlay-actions">
         <button class="btn-orange" id="phase-transition-btn">Iniciar fase 2</button>
+      </div>
+      <div class="phase-audio-progress" id="phase-audio-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="phase-audio-progress__fill" id="phase-audio-progress-fill"></div>
       </div>
     </div>
   </section>
