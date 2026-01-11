@@ -1,0 +1,49 @@
+{
+  "lessons": [
+    {
+      "id": "aula-1",
+      "title": "Aula 1",
+      "frames": [
+        {
+          "type": "image",
+          "src": "images/1/01-1767824952267.webp",
+          "durationMs": 5000
+        },
+        {
+          "type": "audio",
+          "src": "gamesounds/fase3.mp3"
+        },
+        {
+          "type": "imageGrid",
+          "images": [
+            "images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
+            "images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
+            "images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
+            "images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp"
+          ],
+          "durationMs": 5000
+        },
+        {
+          "type": "video",
+          "src": "videos/video1.mp4"
+        },
+        {
+          "type": "quiz",
+          "image": "images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_05-quadro008-1767827199028.webp",
+          "options": [
+            "opção 1",
+            "opção 2",
+            "opção 3",
+            "opção 4"
+          ],
+          "correctIndex": 2
+        },
+        {
+          "type": "text",
+          "text": "Não estude apenas gramática! Insira o idioma no seu dia a dia: mude o celular para a língua que está aprendendo e assista a séries com áudio e legendas originais. A constância vence a perfeição!",
+          "durationMs": 7000
+        }
+      ]
+    }
+  ]
+}

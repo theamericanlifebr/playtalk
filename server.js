@@ -915,6 +915,10 @@ app.get('/voices/:filePath(*)', async (req, res, next) => {
 });
 app.use(express.static(staticDir));
 
+app.get(['/class', '/class/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'class.html'));
+});
+
 app.get(['/game', '/game/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'game.html'));
 });
