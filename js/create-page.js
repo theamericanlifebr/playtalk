@@ -10,9 +10,6 @@
   const progressSeek = document.getElementById('progress-seek');
   const visualProgress = document.getElementById('visual-progress');
   const lessonTitleInput = document.getElementById('lesson-title');
-  const overviewBtn = document.getElementById('overview-btn');
-  const overviewSection = document.getElementById('lesson-overview');
-  const closeOverviewBtn = document.getElementById('close-overview');
   const overviewList = document.getElementById('overview-list');
   const lessonTotal = document.getElementById('lesson-total');
   const playLessonBtn = document.getElementById('play-lesson');
@@ -53,7 +50,9 @@
       timeMs: 0,
       isPlaying: false,
       rafId: null,
-      mediaEls: []
+      mediaEls: [],
+      activeVisualId: null,
+      activeVisualStart: 0
     },
     lessonPlay: false,
     lessonIndex: 0
@@ -236,7 +235,9 @@
     const percent = state.preview.durationMs ? (state.preview.timeMs / state.preview.durationMs) * 100 : 0;
     progressFill.style.width = `${percent}%`;
     progressSeek.value = `${percent}`;
-    previewTime.textContent = formatSeconds(state.preview.timeMs || 0);
+    if (previewTime) {
+      previewTime.value = `${Math.round(state.preview.timeMs || 0)}`;
+    }
   }
 
   function stopPreview() {
@@ -247,6 +248,10 @@
       state.preview.rafId = null;
     }
     state.preview.mediaEls.forEach(media => media.pause());
+    const activeVideo = previewFrame.querySelector('[data-visual-container] video');
+    if (activeVideo) {
+      activeVideo.pause();
+    }
   }
 
   function startPreview() {
@@ -301,11 +306,12 @@
     if (!frame || frame.type !== 'audio') return;
     const container = previewFrame.querySelector('[data-visual-container]');
     if (!container) return;
-    container.innerHTML = '';
     if (!frame.visuals.length) {
+      container.innerHTML = '';
       if (!frame.audioUrl) {
         container.textContent = 'Imagem não encontrada';
       }
+      state.preview.activeVisualId = null;
       return;
     }
     let cursor = 0;
@@ -322,35 +328,65 @@
       return false;
     });
     const visual = activeVisual;
-    if (!visual) return;
-    if (visual.type === 'image') {
-      const img = document.createElement('img');
-      img.className = 'class-image';
-      img.src = visual.url || '';
-      img.alt = 'Imagem do quadro';
-      img.addEventListener('error', () => {
-        container.textContent = 'Imagem não encontrada';
-      });
-      container.append(img);
+    if (!visual) {
+      container.innerHTML = '';
+      state.preview.activeVisualId = null;
+      return;
     }
-    if (visual.type === 'text') {
-      const text = document.createElement('p');
-      text.className = 'class-text';
-      text.textContent = visual.text || 'Texto';
-      text.style.fontFamily = visual.fontFamily || 'Open Sans';
-      text.style.fontSize = `${visual.fontSize || 32}px`;
-      text.style.color = `rgb(${visual.color || '255,255,255'})`;
-      container.append(text);
+    state.preview.activeVisualStart = visualStart;
+    if (state.preview.activeVisualId !== visual.id) {
+      container.innerHTML = '';
+      state.preview.activeVisualId = visual.id;
+      if (visual.type === 'image') {
+        const img = document.createElement('img');
+        img.className = 'class-image';
+        img.src = visual.url || '';
+        img.alt = 'Imagem do quadro';
+        img.addEventListener('error', () => {
+          container.textContent = 'Imagem não encontrada';
+        });
+        container.append(img);
+      }
+      if (visual.type === 'text') {
+        const text = document.createElement('p');
+        text.className = 'class-text';
+        text.textContent = visual.text || 'Texto';
+        text.style.fontFamily = visual.fontFamily || 'Open Sans';
+        text.style.fontSize = `${visual.fontSize || 32}px`;
+        text.style.color = `rgb(${visual.color || '255,255,255'})`;
+        container.append(text);
+      }
+      if (visual.type === 'video') {
+        const video = document.createElement('video');
+        video.className = 'class-media class-video';
+        video.src = visual.url || '';
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        container.append(video);
+      }
     }
     if (visual.type === 'video') {
-      const video = document.createElement('video');
-      video.className = 'class-media class-video';
-      video.src = visual.url || '';
-      video.muted = true;
-      video.playsInline = true;
-      video.currentTime = (state.preview.timeMs - visualStart) / 1000;
-      container.append(video);
+      const video = container.querySelector('video');
+      if (video) {
+        const offset = Math.max(0, (state.preview.timeMs - visualStart) / 1000);
+        if (Math.abs(video.currentTime - offset) > 0.25) {
+          video.currentTime = offset;
+        }
+        if (state.preview.isPlaying) {
+          video.play().catch(() => undefined);
+        } else {
+          video.pause();
+        }
+      }
     }
+  }
+
+  function getVisualLabel(visual) {
+    if (visual.type === 'image') return 'Imagem';
+    if (visual.type === 'text') return 'Texto';
+    if (visual.type === 'video') return 'Vídeo';
+    return 'Visual';
   }
 
   function buildField(label, inputEl) {
@@ -474,23 +510,57 @@
           fontFamily: FONT_OPTIONS[0],
           fontSize: 32,
           color: '255,255,255',
-          durationMs: 3000
+          durationMs: 3000,
+          isCollapsed: true
         });
         renderFrameForm();
         renderPreview();
       });
       frameForm.append(addVisual);
 
+      let visualCursor = 0;
       frame.visuals.forEach((visual, index) => {
+        const visualStart = visualCursor;
+        visualCursor += visual.durationMs || 0;
         const visualCard = document.createElement('div');
         visualCard.className = 'create-visual';
+        if (typeof visual.isCollapsed === 'undefined') {
+          visual.isCollapsed = true;
+        }
+        if (visual.isCollapsed) {
+          visualCard.classList.add('create-visual--collapsed');
+        }
+
+        const header = document.createElement('button');
+        header.type = 'button';
+        header.className = 'create-visual__header';
+        const headerLabel = document.createElement('span');
+        headerLabel.textContent = `Visual ${index + 1} - ${getVisualLabel(visual)}`;
+        const headerTime = document.createElement('span');
+        headerTime.textContent = `${Math.round(visualStart)} ms`;
+        header.append(headerLabel, headerTime);
+        header.addEventListener('click', () => {
+          const shouldExpand = visual.isCollapsed;
+          frame.visuals.forEach(item => {
+            item.isCollapsed = true;
+          });
+          visual.isCollapsed = !shouldExpand ? true : false;
+          setPreviewTime(visualStart);
+          syncMediaToTime();
+          updateVisualOverlay();
+          renderFrameForm();
+        });
+        visualCard.append(header);
+
+        const visualContent = document.createElement('div');
+        visualContent.className = 'create-visual__content';
 
         const typeSelect = buildSelect(['image', 'text', 'video'], visual.type, value => {
           visual.type = value;
           renderFrameForm();
           renderPreview();
         });
-        visualCard.append(buildField(`Visual ${index + 1} - tipo`, typeSelect));
+        visualContent.append(buildField(`Visual ${index + 1} - tipo`, typeSelect));
 
         if (visual.type === 'image' || visual.type === 'video') {
           const fileInput = buildFileInput(visual.type === 'image' ? 'image/*' : 'video/*', file => {
@@ -499,29 +569,29 @@
             visual.url = file ? createObjectUrl(file) : '';
             renderPreview();
           });
-          visualCard.append(buildField('Arquivo', fileInput));
+          visualContent.append(buildField('Arquivo', fileInput));
         }
 
         if (visual.type === 'text') {
-          visualCard.append(buildField('Texto', buildTextarea(visual.text, value => {
+          visualContent.append(buildField('Texto', buildTextarea(visual.text, value => {
             visual.text = value;
             renderPreview();
           })));
-          visualCard.append(buildField('Fonte', buildSelect(FONT_OPTIONS, visual.fontFamily, value => {
+          visualContent.append(buildField('Fonte', buildSelect(FONT_OPTIONS, visual.fontFamily, value => {
             visual.fontFamily = value;
             renderPreview();
           })));
-          visualCard.append(buildField('Tamanho', buildNumberInput(visual.fontSize, value => {
+          visualContent.append(buildField('Tamanho', buildNumberInput(visual.fontSize, value => {
             visual.fontSize = Number(value) || 32;
             renderPreview();
           })));
-          visualCard.append(buildField('Cor (RGB)', buildTextInput(visual.color, value => {
+          visualContent.append(buildField('Cor (RGB)', buildTextInput(visual.color, value => {
             visual.color = value;
             renderPreview();
           })));
         }
 
-        visualCard.append(buildField('Tempo (segundos)', buildNumberInput(visual.durationMs / 1000, value => {
+        visualContent.append(buildField('Tempo (segundos)', buildNumberInput(visual.durationMs / 1000, value => {
           visual.durationMs = Number(value) * 1000;
           updatePreviewDuration(frame);
           renderPreview();
@@ -539,7 +609,8 @@
           renderPreview();
           renderOverview();
         });
-        visualCard.append(removeBtn);
+        visualContent.append(removeBtn);
+        visualCard.append(visualContent);
         frameForm.append(visualCard);
       });
     }
@@ -690,6 +761,7 @@
       const visualContainer = document.createElement('div');
       visualContainer.dataset.visualContainer = 'true';
       previewFrame.append(visualContainer);
+      state.preview.activeVisualId = null;
       if (frame.audioUrl) {
         const audio = document.createElement('audio');
         audio.src = frame.audioUrl;
@@ -831,7 +903,6 @@
       playBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="8,5 19,12 8,19"></polygon></svg>';
       playBtn.addEventListener('click', () => {
         selectFrame(index);
-        showEditor();
         startPreview();
       });
 
@@ -853,7 +924,6 @@
 
       card.addEventListener('click', () => {
         selectFrame(index);
-        showEditor();
       });
 
       actions.append(playBtn, deleteBtn);
@@ -881,15 +951,6 @@
       return 0;
     }
     return frame.durationMs || fallbackDuration();
-  }
-
-  function showOverview() {
-    overviewSection.classList.remove('hidden');
-    renderOverview();
-  }
-
-  function showEditor() {
-    overviewSection.classList.add('hidden');
   }
 
   function playLesson() {
@@ -1023,21 +1084,21 @@
     });
   }
 
+  if (previewTime) {
+    previewTime.addEventListener('change', event => {
+      const value = Number(event.target.value) || 0;
+      setPreviewTime(value);
+      syncMediaToTime();
+      updateVisualOverlay();
+    });
+  }
+
   if (lessonTitleInput) {
     lessonTitleInput.addEventListener('input', event => updateLessonTitle(event.target.value));
   }
 
-  if (overviewBtn) {
-    overviewBtn.addEventListener('click', showOverview);
-  }
-
-  if (closeOverviewBtn) {
-    closeOverviewBtn.addEventListener('click', showEditor);
-  }
-
   if (playLessonBtn) {
     playLessonBtn.addEventListener('click', () => {
-      showEditor();
       playLesson();
     });
   }
@@ -1046,5 +1107,6 @@
     exportLessonBtn.addEventListener('click', exportLesson);
   }
 
+  renderOverview();
   renderFrameForm();
 })();
