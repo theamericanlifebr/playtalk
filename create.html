@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>Criar aula | PlayTalk</title>
+  <meta
+    name="description"
+    content="Crie aulas com quadros de imagem, áudio, vídeo, texto e alternativas."
+  >
+  <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/settings.js"></script>
+  <script src="js/lens.js"></script>
+  <script src="js/auth.js"></script>
+</head>
+<body class="page-create" data-lens-context="menus">
+  <header class="site-header" id="global-header">
+    <div class="site-header__profile">
+      <div class="site-header__avatar-container" id="header-avatar-container">
+        <div class="site-header__avatar-ring">
+          <img
+            src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E"
+            alt="Foto do usuário"
+            class="site-header__avatar"
+            id="header-avatar"
+          >
+        </div>
+      </div>
+      <div class="site-header__text">
+        <span class="site-header__name" id="header-username">Jogador</span>
+        <span class="site-header__level" id="header-level">Nível 1</span>
+      </div>
+    </div>
+    <div class="site-header__actions">
+      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
+    </div>
+  </header>
+  <main id="create-container" class="container-screen container-screen--create" data-page-transition>
+    <section class="create-panel">
+      <div class="create-panel__header">
+        <div>
+          <h1 class="create-title">Criador de aulas</h1>
+          <p class="create-subtitle">Monte quadros um de cada vez, com visualização imediata.</p>
+        </div>
+        <div class="create-actions">
+          <button id="create-frame-btn" class="btn-primary" type="button">Criar aula</button>
+          <button id="overview-btn" class="btn-secondary" type="button">Visão da aula</button>
+        </div>
+      </div>
+      <div class="create-lesson-info">
+        <label class="create-field">
+          <span>Título da aula</span>
+          <input id="lesson-title" type="text" placeholder="Ex: Present simple" autocomplete="off">
+        </label>
+      </div>
+      <div id="frame-menu" class="create-menu hidden" role="dialog" aria-modal="true">
+        <div class="create-menu__content">
+          <h2>Escolha o tipo de quadro</h2>
+          <div class="create-menu__grid">
+            <button class="create-menu__card" data-frame-type="image" type="button">Quadro 1: imagem única</button>
+            <button class="create-menu__card" data-frame-type="audio" type="button">Quadro 2: áudio com visuais</button>
+            <button class="create-menu__card" data-frame-type="imageGrid" type="button">Quadro 3: grade 2x2</button>
+            <button class="create-menu__card" data-frame-type="video" type="button">Quadro 4: vídeo</button>
+            <button class="create-menu__card" data-frame-type="quiz" type="button">Quadro 5: alternativas</button>
+            <button class="create-menu__card" data-frame-type="text" type="button">Quadro 6: texto</button>
+          </div>
+          <button id="close-menu-btn" class="btn-secondary create-menu__close" type="button">Fechar</button>
+        </div>
+      </div>
+      <div class="create-workspace">
+        <section class="create-editor">
+          <h2 class="create-section-title">Editor do quadro</h2>
+          <div id="frame-form" class="create-form"></div>
+        </section>
+        <section class="create-preview">
+          <div class="create-preview__header">
+            <h2 class="create-section-title">Prévia do quadro</h2>
+            <div class="create-preview__controls">
+              <button id="preview-play" class="btn-secondary" type="button">▶️ Reproduzir</button>
+              <span id="preview-time" class="create-preview__time">0.0s</span>
+            </div>
+          </div>
+          <div id="frame-preview" class="class-frame create-frame"></div>
+          <div class="create-progress">
+            <div class="create-progress__track">
+              <div id="visual-progress" class="create-progress__visual"></div>
+              <div id="progress-fill" class="create-progress__fill"></div>
+            </div>
+            <input id="progress-seek" class="create-progress__seek" type="range" min="0" max="100" value="0">
+          </div>
+        </section>
+      </div>
+    </section>
+    <section id="lesson-overview" class="create-overview hidden" aria-live="polite">
+      <div class="create-overview__header">
+        <div>
+          <h2 class="create-section-title">Visão da aula</h2>
+          <p id="lesson-total" class="create-overview__total">Tempo total: 0s</p>
+        </div>
+        <div class="create-overview__actions">
+          <button id="play-lesson" class="btn-primary" type="button">Assistir aula</button>
+          <button id="export-lesson" class="btn-secondary" type="button">Exportar</button>
+          <button id="close-overview" class="btn-secondary" type="button">Voltar</button>
+        </div>
+      </div>
+      <div id="overview-list" class="create-overview__list"></div>
+    </section>
+  </main>
+  <script src="js/create-page.js"></script>
+</body>
+</html>
