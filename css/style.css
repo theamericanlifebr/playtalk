@@ -7469,6 +7469,18 @@ body.dark-mode .post-game-metric__caption {
   background: #111111;
 }
 
+.create-menu__card--visual-image {
+  background: linear-gradient(135deg, #1b4dcc, #4a86ff);
+}
+
+.create-menu__card--visual-text {
+  background: linear-gradient(135deg, #0f0f0f, #2c2c2c);
+}
+
+.create-menu__card--visual-video {
+  background: linear-gradient(135deg, #b32028, #ff4b3a);
+}
+
 .create-menu__close {
   align-self: flex-end;
 }
@@ -7513,6 +7525,8 @@ body.dark-mode .post-game-metric__caption {
   flex-direction: column;
   gap: 12px;
   background: rgba(255, 255, 255, 0.04);
+  --visual-strong: rgba(255, 255, 255, 0.12);
+  --visual-soft: rgba(255, 255, 255, 0.08);
 }
 
 .create-visual--collapsed .create-visual__content {
@@ -7521,7 +7535,7 @@ body.dark-mode .post-game-metric__caption {
 
 .create-visual__header {
   border: none;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--visual-strong);
   color: #ffffff;
   border-radius: 12px;
   padding: 10px 12px;
@@ -7531,6 +7545,28 @@ body.dark-mode .post-game-metric__caption {
   gap: 12px;
   cursor: pointer;
   font-weight: 700;
+}
+
+.create-visual:not(.create-visual--collapsed) .create-visual__header {
+  background: var(--visual-soft);
+}
+
+.create-visual--image {
+  border-color: rgba(74, 134, 255, 0.5);
+  --visual-strong: linear-gradient(135deg, rgba(27, 77, 204, 0.9), rgba(74, 134, 255, 0.95));
+  --visual-soft: linear-gradient(135deg, rgba(27, 77, 204, 0.4), rgba(74, 134, 255, 0.5));
+}
+
+.create-visual--text {
+  border-color: rgba(20, 20, 20, 0.65);
+  --visual-strong: linear-gradient(135deg, rgba(12, 12, 12, 0.95), rgba(44, 44, 44, 0.9));
+  --visual-soft: linear-gradient(135deg, rgba(12, 12, 12, 0.5), rgba(44, 44, 44, 0.6));
+}
+
+.create-visual--video {
+  border-color: rgba(255, 75, 58, 0.5);
+  --visual-strong: linear-gradient(135deg, rgba(179, 32, 40, 0.92), rgba(255, 75, 58, 0.95));
+  --visual-soft: linear-gradient(135deg, rgba(179, 32, 40, 0.45), rgba(255, 75, 58, 0.55));
 }
 
 .create-visual__header span:last-child {
@@ -7691,6 +7727,60 @@ body.dark-mode .post-game-metric__caption {
   width: 20px;
   height: 20px;
   fill: currentColor;
+}
+
+.lesson-player {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #202020 0%, #0a0a0a 60%, #050505 100%);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 20;
+}
+
+.lesson-player.is-active {
+  display: flex;
+}
+
+.lesson-player__container {
+  width: min(1100px, 94vw);
+  height: min(680px, 90vh);
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(45, 45, 45, 0.9));
+  border-radius: 28px;
+  position: relative;
+  padding: 24px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+  display: flex;
+}
+
+.lesson-player__frame {
+  flex: 1;
+  border-radius: 22px;
+  background: rgba(5, 5, 5, 0.55);
+}
+
+.lesson-player__close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.lesson-player__close:hover {
+  opacity: 1;
 }
 
 @media (max-width: 600px) {

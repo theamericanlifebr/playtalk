@@ -4,6 +4,8 @@
   const closeMenuBtn = document.getElementById('close-menu-btn');
   const frameForm = document.getElementById('frame-form');
   const previewFrame = document.getElementById('frame-preview');
+  const visualMenu = document.getElementById('visual-menu');
+  const closeVisualMenuBtn = document.getElementById('close-visual-menu-btn');
   const previewPlayBtn = document.getElementById('preview-play');
   const previewTime = document.getElementById('preview-time');
   const progressFill = document.getElementById('progress-fill');
@@ -14,6 +16,9 @@
   const lessonTotal = document.getElementById('lesson-total');
   const playLessonBtn = document.getElementById('play-lesson');
   const exportLessonBtn = document.getElementById('export-lesson');
+  const lessonPlayer = document.getElementById('lesson-player');
+  const lessonPlayerFrame = document.getElementById('lesson-player-frame');
+  const lessonPlayerClose = document.getElementById('lesson-player-close');
 
   const FONT_OPTIONS = [
     'Aver',
@@ -52,10 +57,12 @@
       rafId: null,
       mediaEls: [],
       activeVisualId: null,
-      activeVisualStart: 0
+      activeVisualStart: 0,
+      targetEl: previewFrame
     },
     lessonPlay: false,
-    lessonIndex: 0
+    lessonIndex: 0,
+    pendingVisualFrame: null
   };
 
   const FRAME_LABELS = {
@@ -115,12 +122,43 @@
     frameMenu.classList.add('hidden');
   }
 
-  function selectFrame(index) {
+  function showVisualMenu(frame) {
+    state.pendingVisualFrame = frame || getCurrentFrame();
+    if (visualMenu) {
+      visualMenu.classList.remove('hidden');
+    }
+  }
+
+  function hideVisualMenu() {
+    state.pendingVisualFrame = null;
+    if (visualMenu) {
+      visualMenu.classList.add('hidden');
+    }
+  }
+
+  function selectFrame(index, options = {}) {
+    const { target = previewFrame } = options;
     state.currentIndex = index;
     state.lessonPlay = false;
     setPreviewTime(0);
     renderFrameForm();
-    renderPreview();
+    renderPreview({ preserveTime: false, target });
+  }
+
+  function createVisual(type) {
+    return {
+      id: Date.now() + Math.random(),
+      type,
+      file: null,
+      name: '',
+      url: '',
+      text: '',
+      fontFamily: FONT_OPTIONS[0],
+      fontSize: 32,
+      color: '255,255,255',
+      durationMs: 3000,
+      isCollapsed: true
+    };
   }
 
   function addFrame(type) {
@@ -199,7 +237,7 @@
   function updateFrameDuration(frame, durationMs) {
     frame.durationMs = Math.max(0, Number(durationMs) || 0);
     renderOverview();
-    renderPreview();
+    renderPreview({ preserveTime: true, target: previewFrame });
   }
 
   function updatePreviewDuration(frame) {
@@ -248,7 +286,7 @@
       state.preview.rafId = null;
     }
     state.preview.mediaEls.forEach(media => media.pause());
-    const activeVideo = previewFrame.querySelector('[data-visual-container] video');
+    const activeVideo = state.preview.targetEl?.querySelector('[data-visual-container] video');
     if (activeVideo) {
       activeVideo.pause();
     }
@@ -304,7 +342,7 @@
   function updateVisualOverlay() {
     const frame = getCurrentFrame();
     if (!frame || frame.type !== 'audio') return;
-    const container = previewFrame.querySelector('[data-visual-container]');
+    const container = state.preview.targetEl?.querySelector('[data-visual-container]');
     if (!container) return;
     if (!frame.visuals.length) {
       container.innerHTML = '';
@@ -462,7 +500,7 @@
         frame.image = file;
         frame.imageName = file ? file.name : '';
         frame.imageUrl = file ? createObjectUrl(file) : '';
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
       });
       frameForm.append(buildField('Imagem', imageInput));
 
@@ -477,7 +515,7 @@
         frame.audioUrl = file ? createObjectUrl(file) : '';
         frame.audioDurationMs = await loadMediaDuration(file, false);
         updatePreviewDuration(frame);
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
         renderOverview();
       });
       frameForm.append(buildField('Áudio opcional', audioInput));
@@ -490,7 +528,7 @@
         frame.audioUrl = file ? createObjectUrl(file) : '';
         frame.audioDurationMs = await loadMediaDuration(file, false);
         updatePreviewDuration(frame);
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
         renderOverview();
       });
       frameForm.append(buildField('Áudio', audioInput));
@@ -498,23 +536,9 @@
       const addVisual = document.createElement('button');
       addVisual.type = 'button';
       addVisual.className = 'btn-secondary';
-      addVisual.textContent = 'Adicionar visual (imagem, texto ou vídeo)';
+      addVisual.textContent = 'Adicionar visual';
       addVisual.addEventListener('click', () => {
-        frame.visuals.push({
-          id: Date.now() + Math.random(),
-          type: 'image',
-          file: null,
-          name: '',
-          url: '',
-          text: '',
-          fontFamily: FONT_OPTIONS[0],
-          fontSize: 32,
-          color: '255,255,255',
-          durationMs: 3000,
-          isCollapsed: true
-        });
-        renderFrameForm();
-        renderPreview();
+        showVisualMenu(frame);
       });
       frameForm.append(addVisual);
 
@@ -523,7 +547,7 @@
         const visualStart = visualCursor;
         visualCursor += visual.durationMs || 0;
         const visualCard = document.createElement('div');
-        visualCard.className = 'create-visual';
+        visualCard.className = `create-visual create-visual--${visual.type}`;
         if (typeof visual.isCollapsed === 'undefined') {
           visual.isCollapsed = true;
         }
@@ -555,19 +579,12 @@
         const visualContent = document.createElement('div');
         visualContent.className = 'create-visual__content';
 
-        const typeSelect = buildSelect(['image', 'text', 'video'], visual.type, value => {
-          visual.type = value;
-          renderFrameForm();
-          renderPreview();
-        });
-        visualContent.append(buildField(`Visual ${index + 1} - tipo`, typeSelect));
-
         if (visual.type === 'image' || visual.type === 'video') {
           const fileInput = buildFileInput(visual.type === 'image' ? 'image/*' : 'video/*', file => {
             visual.file = file;
             visual.name = file ? file.name : '';
             visual.url = file ? createObjectUrl(file) : '';
-            renderPreview();
+            renderPreview({ preserveTime: true, target: previewFrame });
           });
           visualContent.append(buildField('Arquivo', fileInput));
         }
@@ -575,28 +592,58 @@
         if (visual.type === 'text') {
           visualContent.append(buildField('Texto', buildTextarea(visual.text, value => {
             visual.text = value;
-            renderPreview();
+            renderPreview({ preserveTime: true, target: previewFrame });
           })));
           visualContent.append(buildField('Fonte', buildSelect(FONT_OPTIONS, visual.fontFamily, value => {
             visual.fontFamily = value;
-            renderPreview();
+            renderPreview({ preserveTime: true, target: previewFrame });
           })));
           visualContent.append(buildField('Tamanho', buildNumberInput(visual.fontSize, value => {
             visual.fontSize = Number(value) || 32;
-            renderPreview();
+            renderPreview({ preserveTime: true, target: previewFrame });
           })));
           visualContent.append(buildField('Cor (RGB)', buildTextInput(visual.color, value => {
             visual.color = value;
-            renderPreview();
+            renderPreview({ preserveTime: true, target: previewFrame });
           })));
         }
 
         visualContent.append(buildField('Tempo (segundos)', buildNumberInput(visual.durationMs / 1000, value => {
           visual.durationMs = Number(value) * 1000;
           updatePreviewDuration(frame);
-          renderPreview();
+          renderPreview({ preserveTime: true, target: previewFrame });
           renderOverview();
         })));
+
+        const actions = document.createElement('div');
+        actions.className = 'create-actions';
+
+        const moveUpBtn = document.createElement('button');
+        moveUpBtn.type = 'button';
+        moveUpBtn.className = 'btn-secondary';
+        moveUpBtn.textContent = 'Mover para cima';
+        moveUpBtn.disabled = index === 0;
+        moveUpBtn.addEventListener('click', () => {
+          if (index === 0) return;
+          const current = frame.visuals[index];
+          frame.visuals[index] = frame.visuals[index - 1];
+          frame.visuals[index - 1] = current;
+          renderFrameForm();
+          renderPreview({ preserveTime: true, target: previewFrame });
+        });
+
+        const duplicateBtn = document.createElement('button');
+        duplicateBtn.type = 'button';
+        duplicateBtn.className = 'btn-secondary';
+        duplicateBtn.textContent = 'Duplicar quadro';
+        duplicateBtn.addEventListener('click', () => {
+          const duplicated = { ...visual, id: Date.now() + Math.random(), isCollapsed: true };
+          frame.visuals.splice(index + 1, 0, duplicated);
+          updatePreviewDuration(frame);
+          renderFrameForm();
+          renderPreview({ preserveTime: true, target: previewFrame });
+          renderOverview();
+        });
 
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -606,10 +653,11 @@
           frame.visuals.splice(index, 1);
           updatePreviewDuration(frame);
           renderFrameForm();
-          renderPreview();
+          renderPreview({ preserveTime: true, target: previewFrame });
           renderOverview();
         });
-        visualContent.append(removeBtn);
+        actions.append(moveUpBtn, duplicateBtn, removeBtn);
+        visualContent.append(actions);
         visualCard.append(visualContent);
         frameForm.append(visualCard);
       });
@@ -621,7 +669,7 @@
           image.file = file;
           image.name = file ? file.name : '';
           image.url = file ? createObjectUrl(file) : '';
-          renderPreview();
+          renderPreview({ preserveTime: true, target: previewFrame });
         });
         frameForm.append(buildField(`Imagem ${index + 1}`, fileInput));
       });
@@ -637,7 +685,7 @@
         frame.videoUrl = file ? createObjectUrl(file) : '';
         frame.videoDurationMs = await loadMediaDuration(file, true);
         updatePreviewDuration(frame);
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
         renderOverview();
       });
       frameForm.append(buildField('Vídeo', videoInput));
@@ -648,7 +696,7 @@
         frame.audioUrl = file ? createObjectUrl(file) : '';
         frame.audioDurationMs = await loadMediaDuration(file, false);
         updatePreviewDuration(frame);
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
         renderOverview();
       });
       frameForm.append(buildField('Áudio opcional (vídeo mudo)', audioInput));
@@ -658,7 +706,7 @@
       const modeSelect = buildSelect(['image', 'text'], frame.mode, value => {
         frame.mode = value;
         renderFrameForm();
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
       });
       frameForm.append(buildField('Tipo do enunciado', modeSelect));
 
@@ -667,20 +715,20 @@
           frame.image = file;
           frame.imageName = file ? file.name : '';
           frame.imageUrl = file ? createObjectUrl(file) : '';
-          renderPreview();
+          renderPreview({ preserveTime: true, target: previewFrame });
         });
         frameForm.append(buildField('Imagem', imageInput));
       } else {
         frameForm.append(buildField('Texto', buildTextarea(frame.prompt, value => {
           frame.prompt = value;
-          renderPreview();
+          renderPreview({ preserveTime: true, target: previewFrame });
         })));
       }
 
       frame.options.forEach((option, index) => {
         const optionInput = buildTextInput(option, value => {
           frame.options[index] = value;
-          renderPreview();
+          renderPreview({ preserveTime: true, target: previewFrame });
         });
         frameForm.append(buildField(`Alternativa ${index + 1}`, optionInput));
       });
@@ -688,26 +736,26 @@
       frameForm.append(buildField('Índice da correta (1-4)', buildNumberInput(frame.correctIndex + 1, value => {
         const idx = Math.min(3, Math.max(0, Number(value) - 1));
         frame.correctIndex = idx;
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
       })));
     }
 
     if (frame.type === 'text') {
       frameForm.append(buildField('Texto', buildTextarea(frame.text, value => {
         frame.text = value;
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
       })));
       frameForm.append(buildField('Fonte', buildSelect(FONT_OPTIONS, frame.fontFamily, value => {
         frame.fontFamily = value;
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
       })));
       frameForm.append(buildField('Tamanho', buildNumberInput(frame.fontSize, value => {
         frame.fontSize = Number(value) || 32;
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
       })));
       frameForm.append(buildField('Cor (RGB)', buildTextInput(frame.color, value => {
         frame.color = value;
-        renderPreview();
+        renderPreview({ preserveTime: true, target: previewFrame });
       })));
       frameForm.append(buildField('Tempo (segundos)', buildNumberInput(frame.durationMs / 1000, value => {
         updateFrameDuration(frame, Number(value) * 1000);
@@ -720,16 +768,19 @@
     state.preview.mediaEls = [];
   }
 
-  function renderPreview() {
+  function renderPreview(options = {}) {
+    const { preserveTime = false, target = previewFrame } = options;
+    const previousTime = preserveTime ? state.preview.timeMs : 0;
+    state.preview.targetEl = target;
     stopPreview();
     clearPreviewMedia();
-    previewFrame.innerHTML = '';
+    target.innerHTML = '';
     const frame = getCurrentFrame();
     updatePreviewDuration(frame);
-    setPreviewTime(0);
+    setPreviewTime(preserveTime ? Math.min(previousTime, state.preview.durationMs || 0) : 0);
 
     if (!frame) {
-      previewFrame.innerHTML = '<p class="class-text">Nenhum quadro selecionado.</p>';
+      target.innerHTML = '<p class="class-text">Nenhum quadro selecionado.</p>';
       return;
     }
 
@@ -740,39 +791,39 @@
         img.src = frame.imageUrl;
         img.alt = 'Imagem do quadro';
         img.addEventListener('error', () => {
-          previewFrame.textContent = 'Imagem não encontrada';
+          target.textContent = 'Imagem não encontrada';
         });
-        previewFrame.append(img);
+        target.append(img);
       } else {
-        previewFrame.textContent = 'Imagem não encontrada';
+        target.textContent = 'Imagem não encontrada';
       }
       if (frame.audioUrl) {
         const audio = document.createElement('audio');
         audio.src = frame.audioUrl;
         audio.preload = 'metadata';
         audio.className = 'create-hidden-media';
-        previewFrame.append(audio);
+        target.append(audio);
         state.preview.mediaEls.push(audio);
       }
     }
 
     if (frame.type === 'audio') {
-      previewFrame.classList.add('create-frame--audio');
+      target.classList.add('create-frame--audio');
       const visualContainer = document.createElement('div');
       visualContainer.dataset.visualContainer = 'true';
-      previewFrame.append(visualContainer);
+      target.append(visualContainer);
       state.preview.activeVisualId = null;
       if (frame.audioUrl) {
         const audio = document.createElement('audio');
         audio.src = frame.audioUrl;
         audio.preload = 'metadata';
         audio.className = 'create-hidden-media';
-        previewFrame.append(audio);
+        target.append(audio);
         state.preview.mediaEls.push(audio);
       }
       updateVisualOverlay();
     } else {
-      previewFrame.classList.remove('create-frame--audio');
+      target.classList.remove('create-frame--audio');
     }
 
     if (frame.type === 'imageGrid') {
@@ -788,7 +839,7 @@
         });
         grid.append(img);
       });
-      previewFrame.append(grid);
+      target.append(grid);
     }
 
     if (frame.type === 'video') {
@@ -799,19 +850,19 @@
         video.muted = true;
         video.playsInline = true;
         video.addEventListener('error', () => {
-          previewFrame.textContent = 'Imagem não encontrada';
+          target.textContent = 'Imagem não encontrada';
         });
-        previewFrame.append(video);
+        target.append(video);
         state.preview.mediaEls.push(video);
       } else {
-        previewFrame.textContent = 'Imagem não encontrada';
+        target.textContent = 'Imagem não encontrada';
       }
       if (frame.audioUrl) {
         const audio = document.createElement('audio');
         audio.src = frame.audioUrl;
         audio.preload = 'metadata';
         audio.className = 'create-hidden-media';
-        previewFrame.append(audio);
+        target.append(audio);
         state.preview.mediaEls.push(audio);
       }
     }
@@ -850,7 +901,7 @@
         options.append(btn);
       });
       wrapper.append(options);
-      previewFrame.append(wrapper);
+      target.append(wrapper);
     }
 
     if (frame.type === 'text') {
@@ -860,7 +911,7 @@
       text.style.fontFamily = frame.fontFamily;
       text.style.fontSize = `${frame.fontSize}px`;
       text.style.color = `rgb(${frame.color})`;
-      previewFrame.append(text);
+      target.append(text);
     }
 
     renderVisualProgress();
@@ -919,7 +970,7 @@
         }
         renderOverview();
         renderFrameForm();
-        renderPreview();
+        renderPreview({ preserveTime: false, target: previewFrame });
       });
 
       card.addEventListener('click', () => {
@@ -953,11 +1004,28 @@
     return frame.durationMs || fallbackDuration();
   }
 
+  function openLessonPlayer() {
+    if (lessonPlayer) {
+      lessonPlayer.classList.add('is-active');
+    }
+  }
+
+  function closeLessonPlayer() {
+    state.lessonPlay = false;
+    stopPreview();
+    if (lessonPlayer) {
+      lessonPlayer.classList.remove('is-active');
+    }
+    state.preview.targetEl = previewFrame;
+    renderPreview({ preserveTime: false, target: previewFrame });
+  }
+
   function playLesson() {
     if (!state.frames.length) return;
     state.lessonPlay = true;
     state.lessonIndex = 0;
-    selectFrame(0);
+    openLessonPlayer();
+    selectFrame(0, { target: lessonPlayerFrame });
     startPreview();
   }
 
@@ -965,11 +1033,10 @@
     if (!state.lessonPlay) return;
     state.lessonIndex += 1;
     if (state.lessonIndex >= state.frames.length) {
-      state.lessonPlay = false;
-      stopPreview();
+      closeLessonPlayer();
       return;
     }
-    selectFrame(state.lessonIndex);
+    selectFrame(state.lessonIndex, { target: lessonPlayerFrame });
     startPreview();
   }
 
@@ -1062,11 +1129,29 @@
     closeMenuBtn.addEventListener('click', hideMenu);
   }
 
+  if (closeVisualMenuBtn) {
+    closeVisualMenuBtn.addEventListener('click', hideVisualMenu);
+  }
+
   if (frameMenu) {
     frameMenu.addEventListener('click', event => {
       const card = event.target.closest('[data-frame-type]');
       if (!card) return;
       addFrame(card.dataset.frameType);
+    });
+  }
+
+  if (visualMenu) {
+    visualMenu.addEventListener('click', event => {
+      const card = event.target.closest('[data-visual-type]');
+      if (!card) return;
+      const frame = state.pendingVisualFrame || getCurrentFrame();
+      if (!frame || frame.type !== 'audio') return;
+      frame.visuals.push(createVisual(card.dataset.visualType));
+      hideVisualMenu();
+      renderFrameForm();
+      renderPreview({ preserveTime: true, target: previewFrame });
+      renderOverview();
     });
   }
 
@@ -1100,6 +1185,12 @@
   if (playLessonBtn) {
     playLessonBtn.addEventListener('click', () => {
       playLesson();
+    });
+  }
+
+  if (lessonPlayerClose) {
+    lessonPlayerClose.addEventListener('click', () => {
+      closeLessonPlayer();
     });
   }
 
