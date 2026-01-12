@@ -132,9 +132,32 @@ const VOICES_ROOT = (() => {
 })();
 const SUPPORTED_IMAGE_EXTENSIONS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.bmp']);
 const SUPPORTED_AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.opus', '.ogg', '.oga', '.webm']);
+const SUPPORTED_VIDEO_EXTENSIONS = new Set(['.mp4', '.webm', '.ogv', '.mov', '.m4v']);
+const SUPPORTED_MEDIA_EXTENSIONS = new Set([
+  ...SUPPORTED_IMAGE_EXTENSIONS,
+  ...SUPPORTED_AUDIO_EXTENSIONS,
+  ...SUPPORTED_VIDEO_EXTENSIONS
+]);
 let imageIndex = null;
 let imageLevelIndex = null;
 let voiceIndex = null;
+let mediaIndex = null;
+
+const MEDIA_DIR_CANDIDATES = [
+  'videos',
+  'video',
+  'voices',
+  'gamesounds',
+  'audio',
+  'images',
+  'imagens',
+  'backgrounds',
+  'Avatar',
+  'SVG',
+  'Fontes',
+  'medalhas',
+  'data'
+];
 
 function extractLevelFromRelativePath(relativePath) {
   if (!relativePath) return null;
@@ -197,6 +220,76 @@ async function resolveImagePath(fileName) {
   relativePath = imageIndex.get(fileName);
 
   return relativePath ? path.join(IMAGES_ROOT, relativePath) : null;
+}
+
+async function collectMediaFiles(directory, rootDir) {
+  const entries = await fs.promises.readdir(directory, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      if (entry.name === 'node_modules' || entry.name === '.git') {
+        continue;
+      }
+      files.push(...await collectMediaFiles(fullPath, rootDir));
+    } else if (entry.isFile() && SUPPORTED_MEDIA_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+      files.push({ name: entry.name, relativePath: path.relative(rootDir, fullPath) });
+    }
+  }
+
+  return files;
+}
+
+async function refreshMediaIndex() {
+  const roots = MEDIA_DIR_CANDIDATES
+    .map(dir => path.join(staticDir, dir))
+    .filter(dir => fs.existsSync(dir));
+  const files = [];
+
+  for (const root of roots) {
+    files.push(...await collectMediaFiles(root, staticDir));
+  }
+
+  mediaIndex = new Map(files.map(file => [file.name, file.relativePath]));
+}
+
+async function resolveMediaUrl(fileName) {
+  if (!fileName) return null;
+
+  const normalized = fileName.replace(/\\/g, '/');
+  const baseName = path.basename(normalized);
+  const ext = path.extname(baseName).toLowerCase();
+
+  if (ext && !SUPPORTED_MEDIA_EXTENSIONS.has(ext)) {
+    return null;
+  }
+
+  const directPath = path.join(staticDir, baseName);
+  try {
+    await fs.promises.access(directPath);
+    return `/${baseName}`;
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+
+  if (!mediaIndex) {
+    await refreshMediaIndex();
+  }
+
+  let relativePath = mediaIndex.get(baseName);
+
+  if (relativePath) {
+    return `/${relativePath.replace(/\\/g, '/')}`;
+  }
+
+  await refreshMediaIndex();
+  relativePath = mediaIndex.get(baseName);
+
+  return relativePath ? `/${relativePath.replace(/\\/g, '/')}` : null;
 }
 
 async function collectVoiceFiles(directory) {
@@ -861,6 +954,28 @@ app.get('/api/image-levels', async (req, res) => {
   } catch (error) {
     console.error('Erro ao carregar níveis das imagens:', error);
     res.status(500).json({ success: false, message: 'Erro ao carregar níveis das imagens.' });
+  }
+});
+
+app.get('/api/media/resolve', async (req, res) => {
+  try {
+    const name = typeof req.query.name === 'string' ? req.query.name : '';
+    if (!name) {
+      res.status(400).json({ success: false, message: 'Informe o nome do arquivo.' });
+      return;
+    }
+
+    const url = await resolveMediaUrl(name);
+
+    if (!url) {
+      res.status(404).json({ success: false, message: 'Arquivo não encontrado.' });
+      return;
+    }
+
+    res.json({ success: true, url });
+  } catch (error) {
+    console.error('Erro ao resolver arquivo de mídia:', error);
+    res.status(500).json({ success: false, message: 'Erro ao resolver arquivo de mídia.' });
   }
 });
 
