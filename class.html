@@ -39,7 +39,13 @@
   </header>
   <main id="class-container" class="container-screen container-screen--class" data-page-transition>
     <section id="class-library" class="class-library" aria-live="polite">
-      <h1 class="class-title">Aulas disponíveis</h1>
+      <div class="class-library__header">
+        <h1 class="class-title">Aulas disponíveis</h1>
+        <div class="class-library__actions">
+          <button id="import-class-btn" class="btn-secondary" type="button">Importar aula</button>
+          <input id="import-class-input" type="file" accept="application/json" hidden>
+        </div>
+      </div>
       <div id="class-list" class="class-list"></div>
     </section>
     <section id="class-player" class="class-player hidden" aria-live="polite">
