@@ -15,10 +15,59 @@
     currentLesson: null,
     currentIndex: 0,
     timerIds: [],
-    activeMedia: []
+    activeMedia: [],
+    mediaCache: new Map()
   };
 
   const TEXT_FALLBACK = 'Não foi possível carregar as aulas agora.';
+
+  function shouldResolveMedia(src) {
+    if (!src || typeof src !== 'string') return false;
+    if (src.startsWith('http://') || src.startsWith('https://')) return false;
+    if (src.startsWith('data:') || src.startsWith('blob:')) return false;
+    return !src.includes('/');
+  }
+
+  async function resolveMediaSource(src) {
+    if (!shouldResolveMedia(src)) return src;
+
+    if (state.mediaCache.has(src)) {
+      return state.mediaCache.get(src);
+    }
+
+    let resolved = src;
+
+    try {
+      const response = await fetch(`/api/media/resolve?name=${encodeURIComponent(src)}`, { cache: 'no-store' });
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload && payload.url) {
+          resolved = payload.url;
+        }
+      }
+    } catch (error) {
+      resolved = src;
+    }
+
+    state.mediaCache.set(src, resolved);
+    return resolved;
+  }
+
+  function setMediaSource(element, src) {
+    if (!element || !src) return;
+    if (!shouldResolveMedia(src)) {
+      element.src = src;
+      return;
+    }
+
+    resolveMediaSource(src).then(resolved => {
+      if (!resolved) return;
+      element.src = resolved;
+      if (typeof element.load === 'function') {
+        element.load();
+      }
+    });
+  }
 
   function clearTimers() {
     state.timerIds.forEach(timerId => clearTimeout(timerId));
@@ -95,13 +144,13 @@
   function renderImage(src, audioSrc, durationMs) {
     const img = document.createElement('img');
     img.className = 'class-image';
-    img.src = src;
+    setMediaSource(img, src);
     img.alt = 'Imagem da aula';
     frameEl.append(img);
     if (audioSrc) {
       const audio = document.createElement('audio');
       audio.className = 'class-hidden-media';
-      audio.src = audioSrc;
+      setMediaSource(audio, audioSrc);
       audio.autoplay = true;
       audio.addEventListener('ended', nextFrame);
       frameEl.append(audio);
@@ -117,7 +166,7 @@
     grid.className = 'class-grid';
     images.forEach(src => {
       const img = document.createElement('img');
-      img.src = src;
+      setMediaSource(img, src);
       img.alt = 'Imagem da aula';
       img.className = 'class-grid__image';
       grid.append(img);
@@ -131,7 +180,7 @@
     if (visual.type === 'image') {
       const img = document.createElement('img');
       img.className = 'class-image';
-      img.src = visual.src;
+      setMediaSource(img, visual.src);
       img.alt = 'Imagem da aula';
       container.append(img);
       return;
@@ -139,7 +188,7 @@
     if (visual.type === 'video') {
       const video = document.createElement('video');
       video.className = 'class-media class-video';
-      video.src = visual.src;
+      setMediaSource(video, visual.src);
       video.autoplay = true;
       video.muted = true;
       video.loop = true;
@@ -181,7 +230,7 @@
 
     const audio = document.createElement('audio');
     audio.className = 'class-media';
-    audio.src = frame.src;
+    setMediaSource(audio, frame.src);
     audio.controls = true;
     audio.autoplay = true;
     audio.addEventListener('ended', () => {
@@ -200,7 +249,7 @@
   function renderVideo(src, audioSrc, durationMs) {
     const video = document.createElement('video');
     video.className = 'class-media class-video';
-    video.src = src;
+    setMediaSource(video, src);
     video.controls = true;
     video.autoplay = true;
     video.playsInline = true;
@@ -210,7 +259,7 @@
     if (audioSrc) {
       const audio = document.createElement('audio');
       audio.className = 'class-hidden-media';
-      audio.src = audioSrc;
+      setMediaSource(audio, audioSrc);
       audio.autoplay = true;
       audio.addEventListener('ended', nextFrame);
       frameEl.append(audio);
@@ -235,7 +284,7 @@
     } else if (frame.image) {
       const img = document.createElement('img');
       img.className = 'class-image class-quiz__image';
-      img.src = frame.image;
+      setMediaSource(img, frame.image);
       img.alt = 'Imagem da pergunta';
       wrapper.append(img);
     }
