@@ -6,35 +6,43 @@
   const titleEl = document.getElementById('class-lesson-title');
   const progressEl = document.getElementById('class-progress');
   const backBtn = document.getElementById('class-back-btn');
+  const importBtn = document.getElementById('import-class-btn');
+  const importInput = document.getElementById('import-class-input');
+  const containerEl = document.getElementById('class-container');
 
   const state = {
     lessons: [],
     currentLesson: null,
     currentIndex: 0,
-    timerId: null,
-    activeMedia: null
+    timerIds: [],
+    activeMedia: []
   };
 
   const TEXT_FALLBACK = 'Não foi possível carregar as aulas agora.';
 
-  function clearTimer() {
-    if (state.timerId) {
-      clearTimeout(state.timerId);
-      state.timerId = null;
-    }
+  function clearTimers() {
+    state.timerIds.forEach(timerId => clearTimeout(timerId));
+    state.timerIds = [];
+  }
+
+  function scheduleTimer(callback, delay) {
+    const timerId = setTimeout(callback, delay);
+    state.timerIds.push(timerId);
+    return timerId;
   }
 
   function stopActiveMedia() {
-    if (state.activeMedia) {
-      state.activeMedia.pause();
-      state.activeMedia.removeAttribute('src');
-      state.activeMedia.load();
-      state.activeMedia = null;
-    }
+    state.activeMedia.forEach(media => {
+      if (!media) return;
+      media.pause();
+      media.removeAttribute('src');
+      media.load();
+    });
+    state.activeMedia = [];
   }
 
   function resetFrame() {
-    clearTimer();
+    clearTimers();
     stopActiveMedia();
     frameEl.innerHTML = '';
   }
@@ -43,6 +51,9 @@
     resetFrame();
     state.currentLesson = null;
     state.currentIndex = 0;
+    if (containerEl) {
+      containerEl.classList.remove('is-playing');
+    }
     libraryEl.classList.remove('hidden');
     playerEl.classList.add('hidden');
   }
@@ -81,12 +92,24 @@
     frameEl.append(container);
   }
 
-  function renderImage(src) {
+  function renderImage(src, audioSrc, durationMs) {
     const img = document.createElement('img');
     img.className = 'class-image';
     img.src = src;
     img.alt = 'Imagem da aula';
     frameEl.append(img);
+    if (audioSrc) {
+      const audio = document.createElement('audio');
+      audio.className = 'class-hidden-media';
+      audio.src = audioSrc;
+      audio.autoplay = true;
+      audio.addEventListener('ended', nextFrame);
+      frameEl.append(audio);
+      state.activeMedia.push(audio);
+    }
+    if (durationMs) {
+      scheduleTimer(nextFrame, durationMs);
+    }
   }
 
   function renderGrid(images) {
@@ -102,18 +125,79 @@
     frameEl.append(grid);
   }
 
-  function renderAudio(src) {
-    const audio = document.createElement('audio');
-    audio.className = 'class-media';
-    audio.src = src;
-    audio.controls = true;
-    audio.autoplay = true;
-    audio.addEventListener('ended', nextFrame);
-    frameEl.append(audio);
-    state.activeMedia = audio;
+  function renderVisual(container, visual) {
+    container.innerHTML = '';
+    if (!visual) return;
+    if (visual.type === 'image') {
+      const img = document.createElement('img');
+      img.className = 'class-image';
+      img.src = visual.src;
+      img.alt = 'Imagem da aula';
+      container.append(img);
+      return;
+    }
+    if (visual.type === 'video') {
+      const video = document.createElement('video');
+      video.className = 'class-media class-video';
+      video.src = visual.src;
+      video.autoplay = true;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      container.append(video);
+      state.activeMedia.push(video);
+      return;
+    }
+    if (visual.type === 'text') {
+      const text = document.createElement('p');
+      text.className = 'class-text';
+      text.textContent = visual.text || '';
+      if (visual.fontFamily) text.style.fontFamily = visual.fontFamily;
+      if (visual.fontSize) text.style.fontSize = `${visual.fontSize}px`;
+      if (visual.color) text.style.color = `rgb(${visual.color})`;
+      container.append(text);
+    }
   }
 
-  function renderVideo(src) {
+  function renderAudio(frame) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'class-audio';
+    const visualContainer = document.createElement('div');
+    visualContainer.className = 'class-audio__visual';
+    wrapper.append(visualContainer);
+
+    const visuals = Array.isArray(frame.visuals) ? frame.visuals : [];
+    let visualStart = 0;
+    visuals.forEach((visual, index) => {
+      scheduleTimer(() => {
+        renderVisual(visualContainer, visual);
+      }, visualStart);
+      const duration = Number(visual.durationMs) || 0;
+      visualStart += duration;
+      if (index === visuals.length - 1 && duration === 0) {
+        renderVisual(visualContainer, visual);
+      }
+    });
+
+    const audio = document.createElement('audio');
+    audio.className = 'class-media';
+    audio.src = frame.src;
+    audio.controls = true;
+    audio.autoplay = true;
+    audio.addEventListener('ended', () => {
+      clearTimers();
+      nextFrame();
+    });
+    wrapper.append(audio);
+    frameEl.append(wrapper);
+    state.activeMedia.push(audio);
+
+    if (frame.durationMs) {
+      scheduleTimer(nextFrame, frame.durationMs);
+    }
+  }
+
+  function renderVideo(src, audioSrc, durationMs) {
     const video = document.createElement('video');
     video.className = 'class-media class-video';
     video.src = src;
@@ -122,14 +206,33 @@
     video.playsInline = true;
     video.addEventListener('ended', nextFrame);
     frameEl.append(video);
-    state.activeMedia = video;
+    state.activeMedia.push(video);
+    if (audioSrc) {
+      const audio = document.createElement('audio');
+      audio.className = 'class-hidden-media';
+      audio.src = audioSrc;
+      audio.autoplay = true;
+      audio.addEventListener('ended', nextFrame);
+      frameEl.append(audio);
+      state.activeMedia.push(audio);
+      video.muted = true;
+      video.loop = true;
+    }
+    if (durationMs) {
+      scheduleTimer(nextFrame, durationMs);
+    }
   }
 
   function renderQuiz(frame) {
     const wrapper = document.createElement('div');
     wrapper.className = 'class-quiz';
 
-    if (frame.image) {
+    if (frame.mode === 'text') {
+      const prompt = document.createElement('p');
+      prompt.className = 'class-text';
+      prompt.textContent = frame.prompt || 'Pergunta';
+      wrapper.append(prompt);
+    } else if (frame.image) {
       const img = document.createElement('img');
       img.className = 'class-image class-quiz__image';
       img.src = frame.image;
@@ -140,7 +243,8 @@
     const options = document.createElement('div');
     options.className = 'class-options';
 
-    frame.options.forEach((label, index) => {
+    const optionList = Array.isArray(frame.options) ? frame.options : [];
+    optionList.forEach((label, index) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'class-option';
@@ -158,7 +262,7 @@
         if (index !== frame.correctIndex) {
           btn.classList.add('is-wrong');
         }
-        state.timerId = setTimeout(nextFrame, 400);
+        scheduleTimer(nextFrame, 400);
       });
       options.append(btn);
     });
@@ -167,11 +271,17 @@
     frameEl.append(wrapper);
   }
 
-  function renderText(text) {
+  function renderText(text, fontFamily, fontSize, color, durationMs) {
     const paragraph = document.createElement('p');
     paragraph.className = 'class-text';
     paragraph.textContent = text;
     frameEl.append(paragraph);
+    if (fontFamily) paragraph.style.fontFamily = fontFamily;
+    if (fontSize) paragraph.style.fontSize = `${fontSize}px`;
+    if (color) paragraph.style.color = `rgb(${color})`;
+    if (durationMs) {
+      scheduleTimer(nextFrame, durationMs);
+    }
   }
 
   function renderFrame() {
@@ -197,31 +307,25 @@
 
     switch (frame.type) {
       case 'image':
-        renderImage(frame.src);
-        if (frame.durationMs) {
-          state.timerId = setTimeout(nextFrame, frame.durationMs);
-        }
+        renderImage(frame.src, frame.audioSrc, frame.durationMs);
         break;
       case 'audio':
-        renderAudio(frame.src);
+        renderAudio(frame);
         break;
       case 'imageGrid':
         renderGrid(frame.images || []);
         if (frame.durationMs) {
-          state.timerId = setTimeout(nextFrame, frame.durationMs);
+          scheduleTimer(nextFrame, frame.durationMs);
         }
         break;
       case 'video':
-        renderVideo(frame.src);
+        renderVideo(frame.src, frame.audioSrc, frame.durationMs);
         break;
       case 'quiz':
         renderQuiz(frame);
         break;
       case 'text':
-        renderText(frame.text);
-        if (frame.durationMs) {
-          state.timerId = setTimeout(nextFrame, frame.durationMs);
-        }
+        renderText(frame.text, frame.fontFamily, frame.fontSize, frame.color, frame.durationMs);
         break;
       default: {
         const fallback = document.createElement('p');
@@ -237,6 +341,9 @@
     state.currentLesson = lesson;
     state.currentIndex = 0;
     titleEl.textContent = lesson.title || 'Aula';
+    if (containerEl) {
+      containerEl.classList.add('is-playing');
+    }
     libraryEl.classList.add('hidden');
     playerEl.classList.remove('hidden');
     renderFrame();
@@ -262,6 +369,51 @@
     });
   }
 
+  function normalizeLessons(data) {
+    if (!data) return [];
+    if (Array.isArray(data.lessons)) {
+      return data.lessons.filter(lesson => Array.isArray(lesson.frames));
+    }
+    if (Array.isArray(data.frames)) {
+      return [
+        {
+          title: data.title || 'Aula importada',
+          frames: data.frames
+        }
+      ];
+    }
+    return [];
+  }
+
+  function addLessons(lessons) {
+    if (!lessons.length) return;
+    state.lessons = [...state.lessons, ...lessons];
+    renderLessonList();
+  }
+
+  function handleImport(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = event => {
+      try {
+        const payload = JSON.parse(event.target.result);
+        const lessons = normalizeLessons(payload);
+        if (!lessons.length) {
+          throw new Error('JSON inválido');
+        }
+        addLessons(lessons);
+        startLesson(lessons[0]);
+      } catch (error) {
+        listEl.innerHTML = '';
+        const message = document.createElement('p');
+        message.className = 'class-text';
+        message.textContent = 'Não foi possível importar este arquivo.';
+        listEl.append(message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
   async function loadLessons() {
     try {
       const response = await fetch('data/classes.json', { cache: 'no-store' });
@@ -280,6 +432,15 @@
 
   if (backBtn) {
     backBtn.addEventListener('click', showLibrary);
+  }
+
+  if (importBtn && importInput) {
+    importBtn.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', event => {
+      const file = event.target.files[0];
+      handleImport(file);
+      event.target.value = '';
+    });
   }
 
   loadLessons();
