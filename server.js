@@ -13,8 +13,16 @@ const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
   ? path.resolve(process.env.PLAYTALK_USERS_DB)
   : path.join(DATA_ROOT, 'users.json');
 const DATA_DIR = path.dirname(USERS_DB_PATH);
-const dbUrl = process.env.PLAYTALK_DATABASE_URL || process.env.DATABASE_URL || '';
-const DATABASE_ENABLED = Boolean(dbUrl);
+const PLAYTALK_DATABASE_URL = process.env.PLAYTALK_DATABASE_URL || '';
+const DATABASE_URL = process.env.DATABASE_URL || '';
+const RENDER_DATABASE_URL = process.env.RENDER_EXTERNAL_DATABASE_URL || '';
+const dbUrl = PLAYTALK_DATABASE_URL || DATABASE_URL || RENDER_DATABASE_URL || '';
+const PGHOST = process.env.PLAYTALK_PGHOST || process.env.PGHOST || '';
+const PGUSER = process.env.PLAYTALK_PGUSER || process.env.PGUSER || '';
+const PGPASSWORD = process.env.PLAYTALK_PGPASSWORD || process.env.PGPASSWORD || '';
+const PGDATABASE = process.env.PLAYTALK_PGDATABASE || process.env.PGDATABASE || '';
+const PGPORT = process.env.PLAYTALK_PGPORT || process.env.PGPORT || '';
+const DATABASE_ENABLED = Boolean(dbUrl || (PGHOST && PGUSER && PGDATABASE));
 const PG_POOL_MAX = Number.parseInt(process.env.PLAYTALK_PG_POOL_MAX || '10', 10);
 const PG_SSL_SETTING = process.env.PLAYTALK_PG_SSL;
 const PG_SSL = PG_SSL_SETTING === 'false'
@@ -178,11 +186,21 @@ function extractLevelFromRelativePath(relativePath) {
 
 function getPool() {
   if (!pgPool) {
-    pgPool = new Pool({
-      connectionString: dbUrl,
+    const baseConfig = {
       max: Number.isFinite(PG_POOL_MAX) && PG_POOL_MAX > 0 ? PG_POOL_MAX : 10,
       ssl: PG_SSL
-    });
+    };
+    const parsedPort = PGPORT ? Number.parseInt(PGPORT, 10) : NaN;
+    const connectionConfig = dbUrl
+      ? { connectionString: dbUrl }
+      : {
+          host: PGHOST,
+          user: PGUSER,
+          password: PGPASSWORD,
+          database: PGDATABASE,
+          port: Number.isFinite(parsedPort) ? parsedPort : undefined
+        };
+    pgPool = new Pool({ ...baseConfig, ...connectionConfig });
   }
   return pgPool;
 }
