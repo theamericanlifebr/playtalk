@@ -22,7 +22,9 @@
   const finalProgressBar = document.getElementById('final-progress-bar');
   const finalProgressFill = document.getElementById('final-progress-fill');
   const finalMedalImage = document.getElementById('final-medal-image');
+  const finalMedalLabel = document.getElementById('final-medal-label');
   const gameMedalIcon = document.getElementById('game-medal-icon');
+  const gameMedalLabel = document.getElementById('game-medal-label');
   const heartNodes = Array.from(document.querySelectorAll('.game-heart'));
   const phaseAudioProgress = document.getElementById('phase-audio-progress');
   const phaseAudioProgressFill = document.getElementById('phase-audio-progress-fill');
@@ -78,7 +80,6 @@
   let completedLevelSnapshot = null;
   let micPromptTimer = null;
   let levelUnlockTimer = null;
-  let authReady = false;
   const ROTATION_FADE_MS = 400;
   const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
   const audioElementCache = new Map();
@@ -339,13 +340,17 @@
   }
 
   function updateMedalHud(medalKey) {
+    const label = medalKey ? medalKey.charAt(0).toUpperCase() + medalKey.slice(1) : '';
     if (gameMedalIcon) gameMedalIcon.src = getMedalImage(medalKey);
     if (gameMedalIcon) gameMedalIcon.alt = `Medalha ${medalKey}`;
+    if (gameMedalLabel) gameMedalLabel.textContent = label;
   }
 
   function updateFinalMedal(medalKey) {
+    const label = medalKey ? medalKey.charAt(0).toUpperCase() + medalKey.slice(1) : '';
     if (finalMedalImage) finalMedalImage.src = getMedalImage(medalKey);
     if (finalMedalImage) finalMedalImage.alt = `Medalha ${medalKey}`;
+    if (finalMedalLabel) finalMedalLabel.textContent = label;
   }
 
   function getHeartsRemaining(errorCount) {
@@ -814,10 +819,6 @@
 
   function startRotatingText() {
     if (!rotatingText) return;
-    if (rotationTimer) {
-      clearInterval(rotationTimer);
-      rotationTimer = null;
-    }
     const phrases = ['Fluência Fácil', 'Inglês em 200 dias', 'Toque para começar'];
     rotatingText.classList.remove('is-fading');
 
@@ -833,93 +834,6 @@
     rotationTimer = window.setInterval(() => {
       fadeAndSwap();
     }, 1500);
-  }
-
-  function stopRotatingText() {
-    if (rotationTimer) {
-      clearInterval(rotationTimer);
-      rotationTimer = null;
-    }
-    if (rotatingText) {
-      rotatingText.classList.remove('is-fading');
-    }
-  }
-
-  function getStoredCurrentUser() {
-    try {
-      return JSON.parse(localStorage.getItem('currentUser'));
-    } catch (error) {
-      return null;
-    }
-  }
-
-  function getCurrentUser() {
-    if (window.playtalkAuth && typeof window.playtalkAuth.getCurrentUser === 'function') {
-      return window.playtalkAuth.getCurrentUser();
-    }
-    return getStoredCurrentUser();
-  }
-
-  function isUserLoggedIn() {
-    return Boolean(getCurrentUser());
-  }
-
-  function promptLogin() {
-    if (window.playtalkAuth && typeof window.playtalkAuth.openLoginFlow === 'function') {
-      window.playtalkAuth.openLoginFlow();
-      return;
-    }
-    window.location.href = 'login.html';
-  }
-
-  function showLoginPrompt() {
-    if (!startScreen) return;
-    startScreen.classList.remove('hidden');
-    startScreen.classList.remove('start-screen--blank');
-    if (rotatingText) {
-      rotatingText.textContent = 'Faça login para iniciar';
-      rotatingText.classList.remove('is-fading');
-    }
-  }
-
-  function startIfAuthenticated() {
-    if (authReady || !isUserLoggedIn()) {
-      return;
-    }
-    authReady = true;
-    const storedProgress = readProgressStorage();
-    const completionState = readCompletionStorage();
-
-    loadAllImages().then(() => {
-      if (storedProgress && restoreProgressState()) {
-        gameStarted = true;
-        if (startScreen) {
-          startScreen.classList.add('start-screen--blank');
-          startScreen.classList.add('hidden');
-        }
-        if (rotationTimer) {
-          clearInterval(rotationTimer);
-          rotationTimer = null;
-        }
-        showPhaseElements();
-        advanceCycle();
-        return;
-      }
-
-      if (completionState && completionState.completedLevel) {
-        gameStarted = true;
-        completedLevelSnapshot = completionState.completedLevel;
-        if (startScreen) {
-          startScreen.classList.add('start-screen--blank');
-          startScreen.classList.add('hidden');
-        }
-        showLevelCompleteOverlay(completionState.completedLevel);
-      }
-    });
-
-    if (!storedProgress && !(completionState && completionState.completedLevel)) {
-      startRotatingText();
-    }
   }
 
   function clearBoard() {
@@ -1888,12 +1802,6 @@
   }
 
   function handleStartInteraction() {
-    if (!isUserLoggedIn()) {
-      stopRotatingText();
-      showLoginPrompt();
-      promptLogin();
-      return;
-    }
     if (gameStarted) return;
     gameStarted = true;
     clearCompletionStorage();
@@ -1916,17 +1824,42 @@
 
   function init() {
     const storedProgress = readProgressStorage();
+    const completionState = readCompletionStorage();
     if (!storedProgress || !storedProgress.level) {
       loadLevelFromStorage();
     }
     updatePhaseLabel();
     setupSpeechRecognition();
     resetLevelState();
-    startIfAuthenticated();
+    loadAllImages().then(() => {
+      if (storedProgress && restoreProgressState()) {
+        gameStarted = true;
+        if (startScreen) {
+          startScreen.classList.add('start-screen--blank');
+          startScreen.classList.add('hidden');
+        }
+        if (rotationTimer) {
+          clearInterval(rotationTimer);
+          rotationTimer = null;
+        }
+        showPhaseElements();
+        advanceCycle();
+        return;
+      }
 
-    if (!isUserLoggedIn()) {
-      stopRotatingText();
-      showLoginPrompt();
+      if (completionState && completionState.completedLevel) {
+        gameStarted = true;
+        completedLevelSnapshot = completionState.completedLevel;
+        if (startScreen) {
+          startScreen.classList.add('start-screen--blank');
+          startScreen.classList.add('hidden');
+        }
+        showLevelCompleteOverlay(completionState.completedLevel);
+      }
+    });
+
+    if (!storedProgress && !(completionState && completionState.completedLevel)) {
+      startRotatingText();
     }
 
     if (startScreen) {
@@ -1962,28 +1895,6 @@
         showPhaseTransition(1);
       });
     }
-
-    document.addEventListener('playtalk:user-change', () => {
-      if (isUserLoggedIn()) {
-        startIfAuthenticated();
-      } else {
-        authReady = false;
-        stopRotatingText();
-        showLoginPrompt();
-      }
-    });
-
-    window.addEventListener('storage', (event) => {
-      if (event && event.key === 'currentUser') {
-        if (isUserLoggedIn()) {
-          startIfAuthenticated();
-        } else {
-          authReady = false;
-          stopRotatingText();
-          showLoginPrompt();
-        }
-      }
-    });
   }
 
   document.addEventListener('DOMContentLoaded', init);
