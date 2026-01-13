@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlayTalk | Medalhas</title>
+  <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
+  <style>
+    :root {
+      --primary: #0b1f44;
+      --muted: rgba(11, 31, 68, 0.6);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #f7f9fc;
+      color: var(--primary);
+    }
+
+    header {
+      padding: 20px 16px 10px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .medal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 16px;
+      padding: 16px 16px 40px;
+    }
+
+    .medal-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(11, 31, 68, 0.08);
+      border: 1px solid rgba(11, 31, 68, 0.08);
+    }
+
+    .medal-card img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      opacity: 0.3;
+      transition: opacity 0.3s ease;
+    }
+
+    .medal-card--earned img {
+      opacity: 1;
+    }
+
+    .medal-card span {
+      display: block;
+      margin-top: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .medal-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Medalhas</h1>
+    <p>Acompanhe as medalhas conquistadas em cada nível.</p>
+  </header>
+
+  <main class="medal-grid" id="medal-grid"></main>
+
+  <script src="js/medalhas.js"></script>
+</body>
+</html>

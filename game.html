@@ -106,28 +106,63 @@
       }
     }
 
-    header {
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      backdrop-filter: blur(6px);
-    }
-
-    .brand {
+    .game-hud {
+      position: fixed;
+      top: 16px;
+      right: 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      font-size: 18px;
+      gap: 14px;
+      z-index: 8;
     }
 
-    .level-indicator {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      padding: 8px 14px;
-      border-radius: 12px;
+    .game-hearts {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .game-heart {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease;
+    }
+
+    .game-heart svg {
+      width: 100%;
+      height: 100%;
+      fill: #e74c3c;
+    }
+
+    .game-heart--lost {
+      opacity: 0;
+    }
+
+    .game-medal {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(11, 31, 68, 0.12);
+      box-shadow: 0 6px 16px rgba(11, 31, 68, 0.18);
+    }
+
+    .game-medal img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+    }
+
+    .game-medal span {
       font-weight: 700;
+      text-transform: capitalize;
+      font-size: 13px;
+      color: var(--text);
     }
 
     main {
@@ -499,6 +534,26 @@
       transition: width 0.15s linear;
     }
 
+    .final-overlay__medal {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .final-overlay__medal img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+    }
+
+    .final-overlay__medal span {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      text-transform: capitalize;
+    }
+
     .phase-audio-progress {
       width: 100%;
       height: 8px;
@@ -614,13 +669,29 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <span aria-hidden="true">🎯</span>
-      <span id="phase-label">Fase 1</span>
+  <div class="game-hud" aria-label="Status do jogo">
+    <div class="game-hearts" aria-label="Vidas restantes">
+      <span class="game-heart" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+        </svg>
+      </span>
+      <span class="game-heart" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+        </svg>
+      </span>
+      <span class="game-heart" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+        </svg>
+      </span>
     </div>
-    <div class="level-indicator" id="level-indicator">Nível 1</div>
-  </header>
+    <div class="game-medal" aria-live="polite">
+      <img id="game-medal-icon" src="medalhas/diamante.png" alt="Medalha diamante">
+      <span id="game-medal-label">Diamante</span>
+    </div>
+  </div>
 
   <main>
     <div class="board-wrapper">
@@ -641,13 +712,6 @@
   <section class="start-screen" id="start-screen">
     <img src="SVG/logo.png" alt="PlayTalk" class="start-screen__logo">
     <div class="start-screen__text" id="rotating-text">Fluência Fácil</div>
-    <div class="start-screen__difficulty hidden" id="difficulty-options">
-      <div class="start-screen__difficulty-buttons">
-        <button type="button" class="btn-primary start-screen__difficulty-btn" data-difficulty="easy">Fácil</button>
-        <button type="button" class="btn-primary start-screen__difficulty-btn" data-difficulty="medium">Médio</button>
-        <button type="button" class="btn-primary start-screen__difficulty-btn" data-difficulty="hard">Difícil</button>
-      </div>
-    </div>
   </section>
 
   <section class="game-overlay hidden" id="phase-transition">
@@ -668,6 +732,7 @@
       <p id="level-complete-text"></p>
       <div class="overlay-actions">
         <button class="btn-primary" id="next-level-btn">Ir para o próximo</button>
+        <button class="btn-primary" id="replay-level-btn">Jogar novamente</button>
       </div>
     </div>
   </section>
@@ -676,6 +741,10 @@
   <div class="final-overlay" id="final-overlay" aria-hidden="true">
     <div class="final-overlay__bar" id="final-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
       <div class="final-overlay__fill" id="final-progress-fill"></div>
+    </div>
+    <div class="final-overlay__medal">
+      <img id="final-medal-image" src="medalhas/diamante.png" alt="Medalha diamante">
+      <span id="final-medal-label">Diamante</span>
     </div>
   </div>
 

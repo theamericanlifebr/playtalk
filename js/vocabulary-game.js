@@ -12,18 +12,25 @@
   const levelComplete = document.getElementById('level-complete');
   const levelCompleteText = document.getElementById('level-complete-text');
   const nextLevelBtn = document.getElementById('next-level-btn');
+  const replayLevelBtn = document.getElementById('replay-level-btn');
   const phaseTransition = document.getElementById('phase-transition');
   const phaseTransitionTitle = document.getElementById('phase-transition-title');
   const phaseTransitionBtn = document.getElementById('phase-transition-btn');
-  const difficultyOptions = document.getElementById('difficulty-options');
   const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
   const finalOverlay = document.getElementById('final-overlay');
   const finalProgressBar = document.getElementById('final-progress-bar');
   const finalProgressFill = document.getElementById('final-progress-fill');
+  const finalMedalImage = document.getElementById('final-medal-image');
+  const finalMedalLabel = document.getElementById('final-medal-label');
+  const gameMedalIcon = document.getElementById('game-medal-icon');
+  const gameMedalLabel = document.getElementById('game-medal-label');
+  const heartNodes = Array.from(document.querySelectorAll('.game-heart'));
   const phaseAudioProgress = document.getElementById('phase-audio-progress');
   const phaseAudioProgressFill = document.getElementById('phase-audio-progress-fill');
   const PHASE_DISSOLVE_MS = 500;
   const IMAGE_DISSOLVE_MS = 500;
+  const MEDAL_STORAGE_KEY = 'vocabulary-medals';
+  const MEDAL_RANKING = { prata: 1, ouro: 2, diamante: 3 };
 
   const faseAudios = {
     1: document.getElementById('audio-abertura'),
@@ -63,11 +70,11 @@
   let rotationTimer = null;
   let rotationIndex = 0;
   let gameStarted = false;
-  let difficulty = 'medium';
-  let difficultySelected = false;
-  let difficultyPrompted = false;
   let errorStreak = 0;
   let attemptCount = 0;
+  let totalErrors = 0;
+  let currentMedalKey = 'diamante';
+  let completedLevelSnapshot = null;
   let micPromptTimer = null;
   let levelUnlockTimer = null;
   const ROTATION_FADE_MS = 400;
@@ -264,6 +271,80 @@
     if (phaseLabel) phaseLabel.textContent = `Fase ${phase}`;
   }
 
+  function readMedalStorage() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(MEDAL_STORAGE_KEY) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveMedalStorage(data) {
+    localStorage.setItem(MEDAL_STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function getMedalForErrors(errorCount) {
+    if (errorCount >= 7) return 'prata';
+    if (errorCount >= 4) return 'ouro';
+    return 'diamante';
+  }
+
+  function getMedalImage(medalKey) {
+    switch (medalKey) {
+      case 'ouro':
+        return 'medalhas/ouro.png';
+      case 'prata':
+        return 'medalhas/prata.png';
+      case 'diamante':
+      default:
+        return 'medalhas/diamante.png';
+    }
+  }
+
+  function updateMedalHud(medalKey) {
+    const label = medalKey ? medalKey.charAt(0).toUpperCase() + medalKey.slice(1) : '';
+    if (gameMedalIcon) gameMedalIcon.src = getMedalImage(medalKey);
+    if (gameMedalIcon) gameMedalIcon.alt = `Medalha ${medalKey}`;
+    if (gameMedalLabel) gameMedalLabel.textContent = label;
+  }
+
+  function updateFinalMedal(medalKey) {
+    const label = medalKey ? medalKey.charAt(0).toUpperCase() + medalKey.slice(1) : '';
+    if (finalMedalImage) finalMedalImage.src = getMedalImage(medalKey);
+    if (finalMedalImage) finalMedalImage.alt = `Medalha ${medalKey}`;
+    if (finalMedalLabel) finalMedalLabel.textContent = label;
+  }
+
+  function getHeartsRemaining(errorCount) {
+    if (errorCount <= 3) {
+      return Math.max(0, 3 - errorCount);
+    }
+    if (errorCount <= 6) {
+      return Math.max(0, 7 - errorCount);
+    }
+    return 0;
+  }
+
+  function updateHeartsDisplay() {
+    const remaining = getHeartsRemaining(totalErrors);
+    heartNodes.forEach((node, idx) => {
+      node.classList.toggle('game-heart--lost', idx >= remaining);
+    });
+  }
+
+  function registerMedalResult(levelNumber, medalKey) {
+    const levelKey = String(levelNumber);
+    const storage = readMedalStorage();
+    const existing = storage[levelKey];
+    const nextRank = MEDAL_RANKING[medalKey] || 0;
+    const currentRank = MEDAL_RANKING[existing] || 0;
+    if (!existing || nextRank > currentRank) {
+      storage[levelKey] = medalKey;
+      saveMedalStorage(storage);
+    }
+  }
+
   function applyBoardSizing(targetPhase) {
     if (!board || !textContainer || !choiceRow) return;
     const shouldExpand = targetPhase === 4;
@@ -374,6 +455,14 @@
     updateProgressBar();
   }
 
+  function resetLevelState() {
+    totalErrors = 0;
+    currentMedalKey = 'diamante';
+    updateHeartsDisplay();
+    updateMedalHud(currentMedalKey);
+    updateFinalMedal(currentMedalKey);
+  }
+
   function updateProgressBar() {
     if (!progressFill) return;
     const total = Math.max(cycle.length, 1);
@@ -391,7 +480,15 @@
 
   function registerErrorAndCheckReset() {
     errorStreak += 1;
-    const shouldReset = difficulty === 'hard' ? true : errorStreak >= 3;
+    totalErrors += 1;
+    const nextMedal = getMedalForErrors(totalErrors);
+    if (nextMedal !== currentMedalKey) {
+      currentMedalKey = nextMedal;
+      updateMedalHud(currentMedalKey);
+      updateFinalMedal(currentMedalKey);
+    }
+    updateHeartsDisplay();
+    const shouldReset = errorStreak >= 3;
     if (shouldReset) {
       resetProgressOnStreak();
     }
@@ -400,7 +497,7 @@
 
   function registerAttemptAndCheckAutoCorrect() {
     attemptCount += 1;
-    return difficulty === 'easy' && attemptCount >= 3;
+    return false;
   }
 
   function applyCorrectOutcome() {
@@ -1456,6 +1553,9 @@
     updateRecognitionLanguage(nextPhase);
     applyBoardSizing(nextPhase);
     stopMicPromptLoop();
+    if (nextPhase === 1) {
+      resetLevelState();
+    }
     filterPool();
     resetProgress();
     preparePhaseIntro();
@@ -1477,6 +1577,9 @@
     levelComplete.classList.remove('hidden');
     nextLevelBtn.disabled = true;
     nextLevelBtn.textContent = 'Ir para o próximo';
+    if (replayLevelBtn) {
+      replayLevelBtn.disabled = false;
+    }
     clearLevelUnlockTimer();
 
     const shouldPlayConclusion = previousLevel === 1 && conclusionAudio;
@@ -1509,7 +1612,12 @@
     const { skipIntroAudio = false } = options;
     if (phase === 7) {
       const completedLevel = level;
+      const medalKey = getMedalForErrors(totalErrors);
+      registerMedalResult(completedLevel, medalKey);
+      updateFinalMedal(medalKey);
+      currentMedalKey = medalKey;
       level += 1;
+      completedLevelSnapshot = completedLevel;
       showFinalSequence(completedLevel);
       return;
     }
@@ -1571,23 +1679,6 @@
 
   function handleStartInteraction() {
     if (gameStarted) return;
-    if (!difficultySelected) {
-      if (difficultyPrompted) return;
-      difficultyPrompted = true;
-      if (rotationTimer) {
-        clearInterval(rotationTimer);
-        rotationTimer = null;
-      }
-      if (rotatingText) {
-        rotatingText.textContent = 'Escolha a dificuldade';
-        rotatingText.classList.remove('is-fading');
-      }
-      if (difficultyOptions) {
-        difficultyOptions.classList.remove('hidden');
-      }
-      return;
-    }
-
     gameStarted = true;
 
     if (startScreen) {
@@ -1611,23 +1702,12 @@
     setupSpeechRecognition();
     loadAllImages();
     startRotatingText();
+    resetLevelState();
 
     if (startScreen) {
       startScreen.addEventListener('click', handleStartInteraction);
       startScreen.addEventListener('touchstart', handleStartInteraction, { passive: true });
       startScreen.addEventListener('pointerdown', handleStartInteraction);
-    }
-
-    if (difficultyOptions) {
-      difficultyOptions.querySelectorAll('button').forEach(button => {
-        button.addEventListener('click', (event) => {
-          event.stopPropagation();
-          const selected = button.dataset.difficulty || 'medium';
-          difficulty = selected;
-          difficultySelected = true;
-          handleStartInteraction();
-        });
-      });
     }
 
     nextLevelBtn.addEventListener('click', () => {
@@ -1640,6 +1720,19 @@
       updatePhaseLabel();
       showPhaseTransition(1);
     });
+
+    if (replayLevelBtn) {
+      replayLevelBtn.addEventListener('click', () => {
+        clearLevelUnlockTimer();
+        levelComplete.classList.add('hidden');
+        if (Number.isFinite(completedLevelSnapshot)) {
+          level = completedLevelSnapshot;
+        }
+        phase = 1;
+        updatePhaseLabel();
+        showPhaseTransition(1);
+      });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', init);
