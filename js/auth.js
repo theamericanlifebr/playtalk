@@ -579,7 +579,7 @@
   }
 
   async function handleLogout(options = {}) {
-    const { stayOnPage = false, redirectToLogin = false } = options;
+    const { stayOnPage = false } = options;
     const current = readStoredCurrentUser();
     if (current) {
       await updateUserSnapshot();
@@ -593,17 +593,6 @@
     if (onProfilePage && !stayOnPage) {
       window.location.href = 'index.html';
       return;
-    }
-    if (redirectToLogin) {
-      window.location.href = 'login.html';
-      return;
-    }
-    if (typeof openLoginFlowHandler === 'function') {
-      openLoginFlowHandler();
-      return;
-    }
-    if (!stayOnPage) {
-      window.location.href = 'login.html';
     }
   }
 
@@ -746,8 +735,7 @@
         }
         event.preventDefault();
         const stayOnPage = button.dataset.switchAccount === 'true';
-        const redirectToLogin = button.dataset.switchAccount === 'true';
-        handleLogout({ stayOnPage, redirectToLogin });
+        handleLogout({ stayOnPage });
       };
       document.addEventListener('click', setupLoginFlow.logoutHandler);
     }
@@ -755,11 +743,6 @@
     if (!flow || !form || !usernameInput || !passwordInput) {
       openLoginFlowHandler = null;
       closeLoginFlowHandler = null;
-      if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-          window.location.href = 'login.html';
-        });
-      }
       return;
     }
 
@@ -904,16 +887,8 @@
       updateUserSnapshot({ useBeacon: true });
     });
 
-    if (!user) {
-      if (isGamePage) {
-        return;
-      }
-      if (typeof openLoginFlowHandler === 'function') {
-        openLoginFlowHandler();
-      } else if (!isLoginPage) {
-        window.location.href = 'login.html';
-        return;
-      }
+    if (!user && isGamePage) {
+      return;
     }
 
     if (user && user.username && user.password) {
