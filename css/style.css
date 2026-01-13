@@ -7862,3 +7862,242 @@ body.dark-mode .post-game-metric__caption {
     padding: calc(var(--header-height) + 20px) 16px 30px;
   }
 }
+
+.page-users-admin {
+  background: #0f1a32;
+  color: #ffffff;
+}
+
+.container-screen--usersadmin {
+  padding: calc(var(--header-height) + 40px) 40px 60px;
+}
+
+.users-admin {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.users-admin__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.users-admin__header h1 {
+  font-size: 2rem;
+  margin-bottom: 6px;
+}
+
+.users-admin__header p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.users-admin__search input {
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 20, 50, 0.7);
+  color: #ffffff;
+  min-width: 260px;
+}
+
+.users-admin__status {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.users-admin__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.users-admin__card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(12, 24, 54, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.users-admin__card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+}
+
+.users-admin__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.users-admin__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.users-admin__name {
+  font-weight: 700;
+}
+
+.users-admin__level {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.users-admin__modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.users-admin__modal[hidden] {
+  display: none;
+}
+
+.users-admin__modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 10, 25, 0.75);
+}
+
+.users-admin__modal-card {
+  position: relative;
+  width: min(520px, 92vw);
+  background: #132043;
+  border-radius: 24px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  z-index: 1;
+}
+
+.users-admin__modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.users-admin__modal-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.users-admin__modal-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  object-fit: cover;
+}
+
+.users-admin__modal-level {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.users-admin__modal-close {
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.users-admin__modal-body {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.users-admin__metric {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(12, 24, 54, 0.8);
+  padding: 12px 16px;
+  border-radius: 12px;
+}
+
+.users-admin__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.users-admin__form input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 20, 50, 0.7);
+  color: #ffffff;
+}
+
+.button-primary,
+.button-danger {
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #4a8dff, #2b59ff);
+  color: #ffffff;
+}
+
+.button-danger {
+  background: rgba(255, 84, 84, 0.2);
+  color: #ffb0b0;
+  border: 1px solid rgba(255, 84, 84, 0.4);
+}
+
+.users-admin__message {
+  min-height: 20px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.users-admin__message.is-error {
+  color: #ffb0b0;
+}
+
+@media (max-width: 720px) {
+  .container-screen--usersadmin {
+    padding: calc(var(--header-height) + 24px) 20px 40px;
+  }
+
+  .users-admin__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .users-admin__search input {
+    width: 100%;
+    min-width: 0;
+  }
+}

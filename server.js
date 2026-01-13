@@ -1256,6 +1256,10 @@ app.get(['/levels', '/levels/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'levels.html'));
 });
 
+app.get(['/usersadmin', '/usersadmin/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'usersadmin.html'));
+});
+
 app.use((req, res, next) => {
   if (req.method === 'GET' && req.path.endsWith('.html')) {
     res.status(404).send('Página não encontrada.');
@@ -1551,6 +1555,45 @@ app.post('/api/users/update', async (req, res) => {
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro ao atualizar usuário.' });
+  }
+});
+
+app.post('/api/users/delete', async (req, res) => {
+  const { key } = req.body || {};
+
+  if (!key) {
+    res.status(400).json({ success: false, message: 'Usuário inválido.' });
+    return;
+  }
+
+  try {
+    if (DATABASE_ENABLED) {
+      if (!databaseReadyPromise) {
+        databaseReadyPromise = initDatabase();
+      }
+      await databaseReadyPromise;
+
+      const pool = getPool();
+      const result = await pool.query('DELETE FROM users WHERE key = $1', [key]);
+
+      if (!result.rowCount) {
+        res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+        return;
+      }
+    } else {
+      const database = await readDatabase();
+      if (!database.users[key]) {
+        res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+        return;
+      }
+      delete database.users[key];
+      await writeDatabase(database);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao excluir usuário:', error);
+    res.status(500).json({ success: false, message: 'Erro ao excluir usuário.' });
   }
 });
 
