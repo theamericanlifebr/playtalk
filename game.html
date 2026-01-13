@@ -150,25 +150,19 @@
     .game-medal {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(11, 31, 68, 0.12);
-      box-shadow: 0 6px 16px rgba(11, 31, 68, 0.18);
+      justify-content: center;
+      gap: 0;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
     }
 
     .game-medal img {
       width: 34px;
       height: 34px;
       object-fit: contain;
-    }
-
-    .game-medal span {
-      font-weight: 700;
-      text-transform: capitalize;
-      font-size: 21px;
-      color: var(--text);
     }
 
     main {
@@ -404,14 +398,14 @@
       background: #2c6fbf;
       color: #fff;
       border: none;
-      padding: 19px 29px;
+      padding: 15px 23px;
       border-radius: 12px;
       font-weight: 700;
       cursor: pointer;
       transition: transform 0.15s ease, background 0.2s ease;
-      min-width: 240px;
+      min-width: 192px;
       width: 100%;
-      font-size: 32px;
+      font-size: 26px;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       text-transform: capitalize;
     }
@@ -426,14 +420,14 @@
       background: linear-gradient(120deg, #3a86d1, #4c96dc);
       color: #fff;
       border: none;
-      padding: 22px 35px;
+      padding: 18px 28px;
       border-radius: 16px;
       font-weight: 800;
       cursor: pointer;
       transition: transform 0.15s ease, background 0.2s ease;
-      min-width: 352px;
+      min-width: 282px;
       width: min(450px, 100%);
-      font-size: 38px;
+      font-size: 30px;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       text-transform: capitalize;
       box-shadow: 0 8px 24px rgba(76, 150, 220, 0.3);
@@ -447,10 +441,10 @@
     }
 
     .phase-word-btn--icon-only {
-      width: 138px;
-      height: 138px;
+      width: 110px;
+      height: 110px;
       min-width: auto;
-      font-size: 51px;
+      font-size: 41px;
       border-radius: 50%;
       padding: 0;
       display: inline-flex;
@@ -625,10 +619,10 @@
       background: linear-gradient(120deg, #3a86d1, #4c96dc);
       color: #fff;
       border: none;
-      padding: 19px 29px;
+      padding: 15px 23px;
       border-radius: 12px;
       font-weight: 800;
-      font-size: 20px;
+      font-size: 16px;
       cursor: pointer;
       transition: transform 0.15s ease, opacity 0.2s ease;
     }
@@ -695,7 +689,6 @@
     <div class="game-status game-status--top" aria-label="Medalha atual">
       <div class="game-medal" aria-live="polite">
         <img id="game-medal-icon" src="medalhas/diamante.png" alt="Medalha diamante">
-        <span id="game-medal-label">Diamante</span>
       </div>
     </div>
     <div class="board-wrapper">
