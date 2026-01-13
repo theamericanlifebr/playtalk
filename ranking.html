@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-  <title>Ranking | PlayTalk App</title>
+  <title>Play | PlayTalk App</title>
   <meta
     name="description"
-    content="Conheça o ranking PlayTalk e descubra quem está liderando a fluência na comunidade."
+    content="Jogue PlayTalk diretamente nesta página."
   >
   <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
@@ -15,218 +15,16 @@
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body class="page-ranking" data-lens-context="menus">
-  <header class="site-header" id="global-header">
-    <div class="site-header__profile">
-      <div class="site-header__avatar-container" id="header-avatar-container">
-        <div class="site-header__avatar-ring">
-          <img
-            src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E"
-            alt="Foto do usuário"
-            class="site-header__avatar"
-            id="header-avatar"
-          >
-        </div>
-      </div>
-      <div class="site-header__text">
-        <span class="site-header__name" id="header-username">Jogador</span>
-        <span class="site-header__level" id="header-level">Nível 1</span>
-      </div>
-    </div>
-    <div class="site-header__actions">
-      <button id="login-btn" class="site-header__button" type="button">Entrar</button>
-    </div>
-  </header>
-  <main class="container-screen container-screen--ranking" data-page-transition aria-label="Ranking global">
-    <h1 class="sr-only">Ranking PlayTalk</h1>
-    <section class="ranking-banner" aria-label="Capas dos rankings">
-      <div class="ranking-banner__viewport">
-        <div class="ranking-banner__track" data-ranking-banner-track>
-          <article
-            class="ranking-banner__card is-active"
-            data-ranking-banner="streak"
-            style="--banner-gradient: linear-gradient(135deg, #00c9a7, #0061ff);"
-          >
-            <div class="ranking-banner__content">
-              <p class="ranking-banner__eyebrow">Ranking PlayTalk</p>
-              <h2>Sequência</h2>
-              <p class="ranking-banner__logline">Quem mantém séries de acertos por mais tempo.</p>
-            </div>
-            <div class="ranking-banner__avatars" data-banner-avatars>
-              <span class="ranking-banner__avatar" data-avatar-slot="0">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-              <span class="ranking-banner__avatar" data-avatar-slot="1">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-              <span class="ranking-banner__avatar" data-avatar-slot="2">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-            </div>
-          </article>
-          <article
-            class="ranking-banner__card"
-            data-ranking-banner="fast"
-            style="--banner-gradient: linear-gradient(135deg, #28d7ff, #0d6efd);"
-          >
-            <div class="ranking-banner__content">
-              <p class="ranking-banner__eyebrow">Ranking PlayTalk</p>
-              <h2>Velocidade</h2>
-              <p class="ranking-banner__logline">Ritmos mais rápidos em destaque.</p>
-            </div>
-            <div class="ranking-banner__avatars" data-banner-avatars>
-              <span class="ranking-banner__avatar" data-avatar-slot="0">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-              <span class="ranking-banner__avatar" data-avatar-slot="1">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-              <span class="ranking-banner__avatar" data-avatar-slot="2">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-            </div>
-          </article>
-          <article
-            class="ranking-banner__card"
-            data-ranking-banner="accuracy"
-            style="--banner-gradient: linear-gradient(135deg, #a0f1ff, #50a0ff);"
-          >
-            <div class="ranking-banner__content">
-              <p class="ranking-banner__eyebrow">Ranking PlayTalk</p>
-              <h2>Precisão</h2>
-              <p class="ranking-banner__logline">Os olhos mais certeiros do jogo.</p>
-            </div>
-            <div class="ranking-banner__avatars" data-banner-avatars>
-              <span class="ranking-banner__avatar" data-avatar-slot="0">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-              <span class="ranking-banner__avatar" data-avatar-slot="1">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-              <span class="ranking-banner__avatar" data-avatar-slot="2">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-            </div>
-          </article>
-          <article
-            class="ranking-banner__card"
-            data-ranking-banner="level"
-            style="--banner-gradient: linear-gradient(135deg, #ffe259, #ffa751);"
-          >
-            <div class="ranking-banner__content">
-              <p class="ranking-banner__eyebrow">Ranking PlayTalk</p>
-              <h2>Nível</h2>
-              <p class="ranking-banner__logline">Quem subiu mais degraus na jornada.</p>
-            </div>
-            <div class="ranking-banner__avatars" data-banner-avatars>
-              <span class="ranking-banner__avatar" data-avatar-slot="0">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-              <span class="ranking-banner__avatar" data-avatar-slot="1">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-              <span class="ranking-banner__avatar" data-avatar-slot="2">
-                <img src="selos%20modos%20de%20jogo/logoitalk2.png" alt="Jogador em destaque" loading="lazy">
-              </span>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-    <p class="ranking-error" data-ranking-error role="alert" hidden></p>
-    <section class="ranking-carousel" aria-label="Rankings públicos">
-      <nav class="ranking-carousel__nav" data-ranking-carousel-nav aria-label="Selecionar ranking">
-        <button type="button" class="ranking-carousel__nav-button is-active" data-ranking-nav="streak" aria-label="Sequência" aria-pressed="true">
-          <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-            <path d="M6 26h4l6-8 6 8h4L20 6h-4Z"/>
-          </svg>
-        </button>
-        <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="fast" aria-label="Velocidade" aria-pressed="false">
-          <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-            <path d="M4 17h12l-4 6h4l6-8-6-8h-4l4 6H4Z"/>
-          </svg>
-        </button>
-        <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="accuracy" aria-label="Precisão" aria-pressed="false">
-          <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-            <path d="M16 4 6 10v12l10 6 10-6V10Zm0 2.31L24 11v10l-8 4.69L8 21V11Zm0 2.69a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 2a2 2 0 1 1-2 2 2 2 0 0 1 2-2Z"/>
-          </svg>
-        </button>
-        <button type="button" class="ranking-carousel__nav-button" data-ranking-nav="level" aria-label="Nível" aria-pressed="false">
-          <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-            <path d="M6 26h6V6H6Zm2-18h2v16H8Zm8 18h6V12h-6Zm2-12h2v10h-2Z"/>
-          </svg>
-        </button>
-      </nav>
-      <div class="ranking-carousel__viewport" data-ranking-carousel-viewport>
-        <section class="ranking-grid" data-ranking-carousel-track>
-          <article class="ranking-card is-active" id="ranking-streak" data-ranking-section="streak" aria-hidden="false">
-            <div class="ranking-card__header">
-              <div>
-                <h2>Sequência</h2>
-                <p>Jogadores com maiores sequências de acertos consecutivos.</p>
-              </div>
-              <span class="ranking-tag">sequência</span>
-            </div>
-            <div class="leaderboard-table__head" aria-hidden="true">
-              <span>Rank</span>
-              <span>Jogador</span>
-              <span class="leaderboard-table__head-score">Score</span>
-            </div>
-            <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
-            <p class="ranking-empty" data-ranking-empty hidden>Sem sequências registradas até o momento.</p>
-          </article>
-          <article class="ranking-card" id="ranking-fast" data-ranking-section="fast" aria-hidden="true">
-            <div class="ranking-card__header">
-              <div>
-                <h2>Velocidade</h2>
-                <p>Ritmo de caracteres por segundo com base nas últimas 500 frases concluídas.</p>
-              </div>
-              <span class="ranking-tag">cps</span>
-            </div>
-            <div class="leaderboard-table__head" aria-hidden="true">
-              <span>Rank</span>
-              <span>Jogador</span>
-              <span class="leaderboard-table__head-score">Score</span>
-            </div>
-            <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
-            <p class="ranking-empty" data-ranking-empty hidden>Ninguém apareceu por aqui ainda.</p>
-          </article>
-          <article class="ranking-card" id="ranking-accuracy" data-ranking-section="accuracy" aria-hidden="true">
-            <div class="ranking-card__header">
-              <div>
-                <h2>Precisão</h2>
-                <p>Quem mantém a pontaria mais alta ao longo das rodadas.</p>
-              </div>
-              <span class="ranking-tag">precisão</span>
-            </div>
-            <div class="leaderboard-table__head" aria-hidden="true">
-              <span>Rank</span>
-              <span>Jogador</span>
-              <span class="leaderboard-table__head-score">Score</span>
-            </div>
-            <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
-            <p class="ranking-empty" data-ranking-empty hidden>Nenhum registro de precisão ainda.</p>
-          </article>
-          <article class="ranking-card" id="ranking-level" data-ranking-section="level" aria-hidden="true">
-            <div class="ranking-card__header">
-              <div>
-                <h2>Nível</h2>
-                <p>Ranking das maiores jornadas e progressões de nível.</p>
-              </div>
-              <span class="ranking-tag">nível</span>
-            </div>
-            <div class="leaderboard-table__head" aria-hidden="true">
-              <span>Rank</span>
-              <span>Jogador</span>
-              <span class="leaderboard-table__head-score">Score</span>
-            </div>
-            <ol class="ranking-list" data-ranking-list aria-live="polite"></ol>
-            <p class="ranking-empty" data-ranking-empty hidden>Ainda não temos níveis compartilhados.</p>
-          </article>
-        </section>
-      </div>
-    </section>
-    <p class="ranking-footer-note">Os dados exibidos refletem apenas os jogadores que decidiram compartilhar os resultados no perfil.</p>
+<body class="page-ranking page-ranking-embed" data-lens-context="menus">
+  <main class="container-screen container-screen--embed" aria-label="PlayTalk ao vivo">
+    <iframe
+      class="ranking-embed"
+      src="https://playtalk.life/;game"
+      title="PlayTalk Game"
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      allowfullscreen
+    ></iframe>
   </main>
   <footer class="page-footer">
     <nav id="main-nav">
@@ -248,12 +46,6 @@
         </span>
         <span class="sr-only">Estatísticas</span>
       </a>
-      <a href="ranking.html" class="nav-item active" aria-label="Ranking" data-nav-index="3" aria-current="page">
-        <span class="nav-icon" aria-hidden="true">
-          <svg viewBox="0 0 48 48" role="img" focusable="false"><path d="M14 6a2 2 0 0 0-2 2v4H7a2 2 0 0 0-2 2v4a9 9 0 0 0 9 9 9.06 9.06 0 0 0 8 4.3V38h-4a2 2 0 0 0-2 2v4h20v-4a2 2 0 0 0-2-2h-4v-6.7a9.06 9.06 0 0 0 8-4.3 9 9 0 0 0 9-9v-4a2 2 0 0 0-2-2h-5V8a2 2 0 0 0-2-2Zm2 4h16v2a4 4 0 0 0 4 4h5v2a5 5 0 0 1-5 5H16a5 5 0 0 1-5-5v-2h5a4 4 0 0 0 4-4Zm6 18a9.07 9.07 0 0 0 4 0v6h-4Z"/></svg>
-        </span>
-        <span class="sr-only">Ranking</span>
-      </a>
       <a href="perfil.html" class="nav-item" aria-label="Perfil" data-nav-index="4">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4 0-7 2-7 4.5V21h14v-2.5C19 16 16 14 12 14Z"/></svg>
@@ -262,6 +54,5 @@
       </a>
     </nav>
   </footer>
-  <script src="js/ranking.js"></script>
 </body>
 </html>
