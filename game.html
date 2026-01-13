@@ -106,14 +106,20 @@
       }
     }
 
-    .game-hud {
-      position: fixed;
-      top: 16px;
-      right: 16px;
+    .game-status {
+      width: 100%;
       display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 14px;
       z-index: 8;
+    }
+
+    .game-status--top {
+      margin-bottom: 16px;
+    }
+
+    .game-status--bottom {
+      margin-top: 16px;
     }
 
     .game-hearts {
@@ -161,7 +167,7 @@
     .game-medal span {
       font-weight: 700;
       text-transform: capitalize;
-      font-size: 13px;
+      font-size: 21px;
       color: var(--text);
     }
 
@@ -170,15 +176,17 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 16px 80px;
+      justify-content: center;
+      padding: 40px 16px 100px;
       position: relative;
+      gap: 12px;
     }
 
     .board-wrapper {
       width: 100%;
       display: flex;
       justify-content: center;
-      margin-top: 25px;
+      margin-top: 0;
     }
 
     .board {
@@ -362,6 +370,8 @@
       width: min(480px, 100%);
       min-height: 48px;
       text-align: center;
+      font-size: 22px;
+      font-weight: 700;
       opacity: 0;
       transition: opacity 0.5s ease;
     }
@@ -394,14 +404,14 @@
       background: #2c6fbf;
       color: #fff;
       border: none;
-      padding: 12px 18px;
+      padding: 19px 29px;
       border-radius: 12px;
       font-weight: 700;
       cursor: pointer;
       transition: transform 0.15s ease, background 0.2s ease;
-      min-width: 150px;
+      min-width: 240px;
       width: 100%;
-      font-size: 20px;
+      font-size: 32px;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       text-transform: capitalize;
     }
@@ -416,14 +426,14 @@
       background: linear-gradient(120deg, #3a86d1, #4c96dc);
       color: #fff;
       border: none;
-      padding: 14px 22px;
+      padding: 22px 35px;
       border-radius: 16px;
       font-weight: 800;
       cursor: pointer;
       transition: transform 0.15s ease, background 0.2s ease;
-      min-width: 220px;
+      min-width: 352px;
       width: min(450px, 100%);
-      font-size: 24px;
+      font-size: 38px;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       text-transform: capitalize;
       box-shadow: 0 8px 24px rgba(76, 150, 220, 0.3);
@@ -437,10 +447,10 @@
     }
 
     .phase-word-btn--icon-only {
-      width: 86px;
-      height: 86px;
+      width: 138px;
+      height: 138px;
       min-width: auto;
-      font-size: 32px;
+      font-size: 51px;
       border-radius: 50%;
       padding: 0;
       display: inline-flex;
@@ -615,9 +625,10 @@
       background: linear-gradient(120deg, #3a86d1, #4c96dc);
       color: #fff;
       border: none;
-      padding: 12px 18px;
+      padding: 19px 29px;
       border-radius: 12px;
       font-weight: 800;
+      font-size: 20px;
       cursor: pointer;
       transition: transform 0.15s ease, opacity 0.2s ease;
     }
@@ -633,13 +644,20 @@
       background: linear-gradient(120deg, #ffb347, #ff7a18);
       color: #fff;
       border: none;
-      padding: 16px 18px;
+      padding: 26px 29px;
       border-radius: 12px;
       font-weight: 800;
-      font-size: 18px;
+      font-size: 29px;
       cursor: pointer;
       transition: transform 0.15s ease, opacity 0.2s ease;
       width: 100%;
+    }
+
+    .level-complete__countdown {
+      margin: 8px 0 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
     }
 
     .btn-orange:hover { transform: translateY(-1px); }
@@ -666,37 +684,42 @@
       clip: rect(0, 0, 0, 0);
       border: 0;
     }
+
+    .is-hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
-  <div class="game-hud" aria-label="Status do jogo">
-    <div class="game-hearts" aria-label="Vidas restantes">
-      <span class="game-heart" aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
-        </svg>
-      </span>
-      <span class="game-heart" aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
-        </svg>
-      </span>
-      <span class="game-heart" aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-          <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
-        </svg>
-      </span>
-    </div>
-    <div class="game-medal" aria-live="polite">
-      <img id="game-medal-icon" src="medalhas/diamante.png" alt="Medalha diamante">
-      <span id="game-medal-label">Diamante</span>
-    </div>
-  </div>
-
   <main>
+    <div class="game-status game-status--top" aria-label="Medalha atual">
+      <div class="game-medal" aria-live="polite">
+        <img id="game-medal-icon" src="medalhas/diamante.png" alt="Medalha diamante">
+        <span id="game-medal-label">Diamante</span>
+      </div>
+    </div>
     <div class="board-wrapper">
       <div class="board" id="board">
         <div class="board__inner" id="board-inner"></div>
+      </div>
+    </div>
+    <div class="game-status game-status--bottom" aria-label="Vidas restantes">
+      <div class="game-hearts">
+        <span class="game-heart" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+          </svg>
+        </span>
+        <span class="game-heart" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+          </svg>
+        </span>
+        <span class="game-heart" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+          </svg>
+        </span>
       </div>
     </div>
     <div class="text-container" id="text-container" aria-live="polite"></div>
@@ -730,6 +753,7 @@
     <div class="overlay-card">
       <h1>Pronto para o próximo nível?</h1>
       <p id="level-complete-text"></p>
+      <p class="level-complete__countdown" id="level-countdown"></p>
       <div class="overlay-actions">
         <button class="btn-primary" id="next-level-btn">Ir para o próximo</button>
         <button class="btn-primary" id="replay-level-btn">Jogar novamente</button>

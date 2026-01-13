@@ -11,6 +11,7 @@
   const rotatingText = document.getElementById('rotating-text');
   const levelComplete = document.getElementById('level-complete');
   const levelCompleteText = document.getElementById('level-complete-text');
+  const levelCountdown = document.getElementById('level-countdown');
   const nextLevelBtn = document.getElementById('next-level-btn');
   const replayLevelBtn = document.getElementById('replay-level-btn');
   const phaseTransition = document.getElementById('phase-transition');
@@ -30,6 +31,8 @@
   const PHASE_DISSOLVE_MS = 500;
   const IMAGE_DISSOLVE_MS = 500;
   const MEDAL_STORAGE_KEY = 'vocabulary-medals';
+  const PROGRESS_STORAGE_KEY = 'vocabulary-progress';
+  const COMPLETION_STORAGE_KEY = 'vocabulary-last-complete';
   const MEDAL_RANKING = { prata: 1, ouro: 2, diamante: 3 };
 
   const faseAudios = {
@@ -284,6 +287,40 @@
     localStorage.setItem(MEDAL_STORAGE_KEY, JSON.stringify(data));
   }
 
+  function readProgressStorage() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveProgressStorage(data) {
+    localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function clearProgressStorage() {
+    localStorage.removeItem(PROGRESS_STORAGE_KEY);
+  }
+
+  function readCompletionStorage() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(COMPLETION_STORAGE_KEY) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveCompletionStorage(data) {
+    localStorage.setItem(COMPLETION_STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function clearCompletionStorage() {
+    localStorage.removeItem(COMPLETION_STORAGE_KEY);
+  }
+
   function getMedalForErrors(errorCount) {
     if (errorCount >= 7) return 'prata';
     if (errorCount >= 4) return 'ouro';
@@ -468,6 +505,73 @@
     const total = Math.max(cycle.length, 1);
     const percent = Math.min(100, Math.round((score / total) * 100));
     progressFill.style.width = `${percent}%`;
+    persistProgressState();
+  }
+
+  function persistProgressState() {
+    if (!gameStarted) return;
+    saveProgressStorage({
+      level,
+      phase,
+      index,
+      score,
+      errorStreak,
+      attemptCount,
+      totalErrors,
+      cycle: cycle.map(item => item.file)
+    });
+  }
+
+  function buildCycleFromFiles(files) {
+    if (!Array.isArray(files) || !files.length) return [];
+    const knownEntries = new Map(
+      [...pool, ...images, ...buildingImages]
+        .filter(entry => entry && entry.file)
+        .map(entry => [entry.file, entry])
+    );
+
+    return files
+      .map(file => knownEntries.get(file))
+      .filter(Boolean);
+  }
+
+  function restoreProgressState() {
+    const stored = readProgressStorage();
+    if (!stored || !stored.level || !stored.phase || !Array.isArray(stored.cycle)) {
+      return false;
+    }
+
+    level = stored.level;
+    phase = stored.phase;
+    index = Math.max(0, Number(stored.index) || 0);
+    score = Math.max(0, Number(stored.score) || 0);
+    errorStreak = Math.max(0, Number(stored.errorStreak) || 0);
+    attemptCount = Math.max(0, Number(stored.attemptCount) || 0);
+    totalErrors = Math.max(0, Number(stored.totalErrors) || 0);
+
+    updateLevelIndicators();
+    updatePhaseLabel();
+    updateRecognitionLanguage(phase);
+    applyBoardSizing(phase);
+    filterPool();
+    cycle = buildCycleFromFiles(stored.cycle);
+
+    if (!cycle.length) {
+      cycle = shuffle(pool);
+    }
+
+    const total = Math.max(cycle.length, 1);
+    score = Math.min(score, total);
+    index = Math.min(index, total);
+
+    currentMedalKey = getMedalForErrors(totalErrors);
+    updateHeartsDisplay();
+    updateMedalHud(currentMedalKey);
+    updateFinalMedal(currentMedalKey);
+    updateProgressBar();
+    completionGridShown = false;
+    awaiting = false;
+    return true;
   }
 
   function resetProgressOnStreak() {
@@ -1574,8 +1678,12 @@
     saveLevelToStorage();
     updateLevelIndicators();
     levelCompleteText.textContent = `Você concluiu o nível ${previousLevel}. Vamos para o nível ${nextLevel}?`;
+    if (levelCountdown) {
+      levelCountdown.textContent = '';
+    }
     levelComplete.classList.remove('hidden');
     nextLevelBtn.disabled = true;
+    nextLevelBtn.classList.add('is-hidden');
     nextLevelBtn.textContent = 'Ir para o próximo';
     if (replayLevelBtn) {
       replayLevelBtn.disabled = false;
@@ -1594,16 +1702,26 @@
             clearLevelUnlockTimer();
             nextLevelBtn.disabled = false;
             nextLevelBtn.textContent = `Iniciar nivel ${nextLevel}`;
+            nextLevelBtn.classList.remove('is-hidden');
+            if (levelCountdown) {
+              levelCountdown.textContent = 'Próxima aula liberada!';
+            }
             return;
           }
           const { hours, minutes } = formatCountdownTime(remainingMs);
           nextLevelBtn.disabled = true;
-          nextLevelBtn.textContent = `O nível ${nextLevel} será liberado em ${hours} horas e ${minutes} minutos`;
+          if (levelCountdown) {
+            levelCountdown.textContent = `Próxima aula em ${hours} horas e ${minutes} minutos`;
+          }
         };
         updateUnlockState();
         levelUnlockTimer = window.setInterval(updateUnlockState, 60000);
       } else {
         nextLevelBtn.disabled = false;
+        nextLevelBtn.classList.remove('is-hidden');
+        if (levelCountdown) {
+          levelCountdown.textContent = 'Próxima aula liberada!';
+        }
       }
     });
   }
@@ -1616,6 +1734,12 @@
       registerMedalResult(completedLevel, medalKey);
       updateFinalMedal(medalKey);
       currentMedalKey = medalKey;
+      saveCompletionStorage({
+        completedLevel,
+        medalKey,
+        completedAt: Date.now()
+      });
+      clearProgressStorage();
       level += 1;
       completedLevelSnapshot = completedLevel;
       showFinalSequence(completedLevel);
@@ -1680,6 +1804,8 @@
   function handleStartInteraction() {
     if (gameStarted) return;
     gameStarted = true;
+    clearCompletionStorage();
+    clearProgressStorage();
 
     if (startScreen) {
       startScreen.classList.add('start-screen--blank');
@@ -1697,12 +1823,44 @@
   }
 
   function init() {
-    loadLevelFromStorage();
+    const storedProgress = readProgressStorage();
+    const completionState = readCompletionStorage();
+    if (!storedProgress || !storedProgress.level) {
+      loadLevelFromStorage();
+    }
     updatePhaseLabel();
     setupSpeechRecognition();
-    loadAllImages();
-    startRotatingText();
     resetLevelState();
+    loadAllImages().then(() => {
+      if (storedProgress && restoreProgressState()) {
+        gameStarted = true;
+        if (startScreen) {
+          startScreen.classList.add('start-screen--blank');
+          startScreen.classList.add('hidden');
+        }
+        if (rotationTimer) {
+          clearInterval(rotationTimer);
+          rotationTimer = null;
+        }
+        showPhaseElements();
+        advanceCycle();
+        return;
+      }
+
+      if (completionState && completionState.completedLevel) {
+        gameStarted = true;
+        completedLevelSnapshot = completionState.completedLevel;
+        if (startScreen) {
+          startScreen.classList.add('start-screen--blank');
+          startScreen.classList.add('hidden');
+        }
+        showLevelCompleteOverlay(completionState.completedLevel);
+      }
+    });
+
+    if (!storedProgress && !(completionState && completionState.completedLevel)) {
+      startRotatingText();
+    }
 
     if (startScreen) {
       startScreen.addEventListener('click', handleStartInteraction);
@@ -1715,6 +1873,8 @@
         return;
       }
       clearLevelUnlockTimer();
+      clearCompletionStorage();
+      clearProgressStorage();
       levelComplete.classList.add('hidden');
       phase = 1;
       updatePhaseLabel();
@@ -1724,6 +1884,8 @@
     if (replayLevelBtn) {
       replayLevelBtn.addEventListener('click', () => {
         clearLevelUnlockTimer();
+        clearCompletionStorage();
+        clearProgressStorage();
         levelComplete.classList.add('hidden');
         if (Number.isFinite(completedLevelSnapshot)) {
           level = completedLevelSnapshot;
