@@ -13,8 +13,8 @@ const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
   ? path.resolve(process.env.PLAYTALK_USERS_DB)
   : path.join(DATA_ROOT, 'users.json');
 const DATA_DIR = path.dirname(USERS_DB_PATH);
-const DATABASE_URL = process.env.DATABASE_URL || process.env.PLAYTALK_DATABASE_URL || '';
-const DATABASE_ENABLED = Boolean(DATABASE_URL);
+const dbUrl = process.env.PLAYTALK_DATABASE_URL || process.env.DATABASE_URL || '';
+const DATABASE_ENABLED = Boolean(dbUrl);
 const PG_POOL_MAX = Number.parseInt(process.env.PLAYTALK_PG_POOL_MAX || '10', 10);
 const PG_SSL_SETTING = process.env.PLAYTALK_PG_SSL;
 const PG_SSL = PG_SSL_SETTING === 'false'
@@ -179,7 +179,7 @@ function extractLevelFromRelativePath(relativePath) {
 function getPool() {
   if (!pgPool) {
     pgPool = new Pool({
-      connectionString: DATABASE_URL,
+      connectionString: dbUrl,
       max: Number.isFinite(PG_POOL_MAX) && PG_POOL_MAX > 0 ? PG_POOL_MAX : 10,
       ssl: PG_SSL
     });
