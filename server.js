@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -12,6 +13,15 @@ const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
   ? path.resolve(process.env.PLAYTALK_USERS_DB)
   : path.join(DATA_ROOT, 'users.json');
 const DATA_DIR = path.dirname(USERS_DB_PATH);
+const DATABASE_URL = process.env.DATABASE_URL || process.env.PLAYTALK_DATABASE_URL || '';
+const DATABASE_ENABLED = Boolean(DATABASE_URL);
+const PG_POOL_MAX = Number.parseInt(process.env.PLAYTALK_PG_POOL_MAX || '10', 10);
+const PG_SSL_SETTING = process.env.PLAYTALK_PG_SSL;
+const PG_SSL = PG_SSL_SETTING === 'false'
+  ? false
+  : { rejectUnauthorized: false };
+let pgPool = null;
+let databaseReadyPromise = null;
 
 const DEFAULT_USER = {
   username: 'Rafael',
@@ -164,6 +174,70 @@ function extractLevelFromRelativePath(relativePath) {
   const [firstSegment] = relativePath.split(path.sep);
   const parsed = Number.parseInt(firstSegment, 10);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getPool() {
+  if (!pgPool) {
+    pgPool = new Pool({
+      connectionString: DATABASE_URL,
+      max: Number.isFinite(PG_POOL_MAX) && PG_POOL_MAX > 0 ? PG_POOL_MAX : 10,
+      ssl: PG_SSL
+    });
+  }
+  return pgPool;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function withRetry(operation, { retries = 5, delayMs = 500 } = {}) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (attempt === retries) {
+        break;
+      }
+      const waitTime = delayMs * (attempt + 1);
+      console.warn(`Tentativa ${attempt + 1} falhou ao conectar ao banco. Tentando novamente em ${waitTime}ms.`);
+      await sleep(waitTime);
+    }
+  }
+  throw lastError;
+}
+
+async function initDatabase() {
+  if (!DATABASE_ENABLED) {
+    return;
+  }
+
+  const pool = getPool();
+
+  await withRetry(() => pool.query('SELECT 1'), { retries: 5, delayMs: 500 });
+  console.log('Conexão com PostgreSQL pronta.');
+
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS users (
+      key TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      password TEXT NOT NULL,
+      email TEXT DEFAULT '',
+      email_verified BOOLEAN DEFAULT FALSE,
+      email_verified_at TIMESTAMPTZ,
+      email_verification_code TEXT,
+      email_verification_expires_at TIMESTAMPTZ,
+      email_verification_attempts INTEGER DEFAULT 0,
+      email_verification_last_sent_at TIMESTAMPTZ,
+      data JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `;
+
+  await withRetry(() => pool.query(createTableSQL), { retries: 5, delayMs: 500 });
 }
 
 async function collectImageFiles(directory) {
@@ -410,7 +484,66 @@ function createDefaultData() {
   return data;
 }
 
+function normalizePgTimestamp(value) {
+  if (!value) {
+    return null;
+  }
+  const parsed = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
 async function readDatabase() {
+  if (DATABASE_ENABLED) {
+    if (!databaseReadyPromise) {
+      databaseReadyPromise = initDatabase();
+    }
+    await databaseReadyPromise;
+
+    const pool = getPool();
+    const { rows } = await pool.query(
+      `SELECT
+        key,
+        username,
+        password,
+        email,
+        email_verified,
+        email_verified_at,
+        email_verification_code,
+        email_verification_expires_at,
+        email_verification_attempts,
+        email_verification_last_sent_at,
+        data,
+        updated_at
+       FROM users`
+    );
+    const users = {};
+    let latestUpdate = null;
+
+    rows.forEach(row => {
+      const updatedAt = normalizePgTimestamp(row.updated_at);
+      if (updatedAt && (!latestUpdate || updatedAt > latestUpdate)) {
+        latestUpdate = updatedAt;
+      }
+      users[row.key] = {
+        username: row.username,
+        password: row.password,
+        email: row.email || '',
+        emailVerified: Boolean(row.email_verified),
+        emailVerifiedAt: normalizePgTimestamp(row.email_verified_at),
+        emailVerificationCode: row.email_verification_code || null,
+        emailVerificationExpiresAt: normalizePgTimestamp(row.email_verification_expires_at),
+        emailVerificationAttempts: row.email_verification_attempts || 0,
+        emailVerificationLastSentAt: normalizePgTimestamp(row.email_verification_last_sent_at),
+        data: row.data || {}
+      };
+    });
+
+    return {
+      users,
+      updatedAt: latestUpdate || new Date().toISOString()
+    };
+  }
+
   try {
     const raw = await fs.promises.readFile(USERS_DB_PATH, 'utf8');
     const parsed = JSON.parse(raw);
@@ -427,6 +560,77 @@ async function readDatabase() {
 }
 
 async function writeDatabase(data) {
+  if (DATABASE_ENABLED) {
+    if (!databaseReadyPromise) {
+      databaseReadyPromise = initDatabase();
+    }
+    await databaseReadyPromise;
+
+    const pool = getPool();
+    const client = await pool.connect();
+    const users = data.users || {};
+    const updatedAt = new Date().toISOString();
+
+    try {
+      await client.query('BEGIN');
+
+      for (const [key, user] of Object.entries(users)) {
+        await client.query(
+          `INSERT INTO users (
+             key,
+             username,
+             password,
+             email,
+             email_verified,
+             email_verified_at,
+             email_verification_code,
+             email_verification_expires_at,
+             email_verification_attempts,
+             email_verification_last_sent_at,
+             data,
+             updated_at
+           ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()
+           )
+           ON CONFLICT (key) DO UPDATE SET
+             username = EXCLUDED.username,
+             password = EXCLUDED.password,
+             email = EXCLUDED.email,
+             email_verified = EXCLUDED.email_verified,
+             email_verified_at = EXCLUDED.email_verified_at,
+             email_verification_code = EXCLUDED.email_verification_code,
+             email_verification_expires_at = EXCLUDED.email_verification_expires_at,
+             email_verification_attempts = EXCLUDED.email_verification_attempts,
+             email_verification_last_sent_at = EXCLUDED.email_verification_last_sent_at,
+             data = EXCLUDED.data,
+             updated_at = NOW()`,
+          [
+            key,
+            user.username || key,
+            user.password || '',
+            user.email || '',
+            Boolean(user.emailVerified),
+            user.emailVerifiedAt || null,
+            user.emailVerificationCode || null,
+            user.emailVerificationExpiresAt || null,
+            user.emailVerificationAttempts || 0,
+            user.emailVerificationLastSentAt || null,
+            user.data || {}
+          ]
+        );
+      }
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    return { users, updatedAt };
+  }
+
   const payload = {
     users: data.users || {},
     updatedAt: new Date().toISOString()
@@ -561,6 +765,12 @@ function computeVerificationExpiry(minutes = DEFAULT_VERIFICATION_EXPIRATION_MIN
 function parseDate(dateString) {
   const timestamp = Date.parse(dateString);
   return Number.isNaN(timestamp) ? null : new Date(timestamp);
+}
+
+if (!databaseReadyPromise) {
+  databaseReadyPromise = initDatabase().catch(error => {
+    console.error('Erro ao conectar ao PostgreSQL:', error);
+  });
 }
 
 function canSendNewVerification(user) {
