@@ -2,10 +2,9 @@
   "name": "game",
   "version": "1.0.0",
   "description": "Fluency game",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "db:migrate": "node src/db/migrate.js",
+    "start": "node server.js",
     "build": "node build-static.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,10 +12,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
-    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2",
     "pg": "^8.12.0"
   }
 }
