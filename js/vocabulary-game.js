@@ -84,6 +84,94 @@
   const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
   const audioElementCache = new Map();
   const FINAL_ADVANCE_DELAY_MS = 1500;
+  const TENSE_STYLES = {
+    'present-continuous': {
+      ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
+      animation: 'spin 3s linear infinite'
+    },
+    'present-perfect': {
+      ring: 'conic-gradient(#14245a, #6b4bbf, #a2ff5f, #14245a)',
+      animation: 'spin 3s linear infinite',
+      filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.6) brightness(1.05)'
+    },
+    'present-perfect-continuous': {
+      ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
+      animation: 'spin 3s linear infinite'
+    },
+    'past-simple': {
+      ring: 'conic-gradient(#8d939e, #c6c9d0, #8d939e)',
+      filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.5) brightness(1.06)'
+    },
+    'past-continuous': {
+      ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
+      animation: 'spin 3s linear infinite',
+      filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.55) brightness(1.05)'
+    },
+    'past-perfect': {
+      ring: 'conic-gradient(#c46a2c, #1b2b5a, #6b4b2a, #2f2f38, #c46a2c)',
+      animation: 'spin 8s linear infinite',
+      filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.5) brightness(1.02) blur(1px)'
+    },
+    'past-perfect-continuous': {
+      ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
+      animation: 'spin 3s linear infinite',
+      filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.5) brightness(1.03) blur(0.6px)'
+    },
+    'future-simple': {
+      ring: 'conic-gradient(#5a4ba6, #1c2f6b, #5a4ba6)',
+      mask: 'linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 100%)'
+    },
+    'future-continuous': {
+      ring: 'conic-gradient(#5ed0ff, #36e07a, #5ed0ff)',
+      animation: 'spin 4s linear infinite',
+      glow: '0 0 14px rgba(94, 208, 255, 0.35)'
+    },
+    'future-perfect': {
+      ring: 'conic-gradient(#f6c453, #123b7d, #f6c453)',
+      animation: 'spin 6s linear infinite',
+      glow: '0 0 12px rgba(246, 196, 83, 0.28)'
+    },
+    'future-perfect-continuous': {
+      ring: 'conic-gradient(#f6c453, #123b7d, #f6c453)',
+      animation: 'spin 6s linear infinite',
+      glow: '0 0 12px rgba(246, 196, 83, 0.28)'
+    },
+    'going-to-future': {
+      ring: 'conic-gradient(#1c2f6b, #5a4ba6, #1c2f6b)',
+      animation: 'spin 5s linear infinite',
+      mask: 'linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 100%)'
+    },
+    'present-continuous-future': {
+      ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
+      animation: 'spin-partial 3s linear infinite'
+    },
+    'present-simple-future': {
+      ring: 'conic-gradient(#1b2b5a, #1b2b5a)'
+    },
+    'conditional-would': {
+      lens: 'linear-gradient(40deg, rgba(90, 150, 255, 0.75) 0%, rgba(90, 150, 255, 0) 60%)'
+    }
+  };
+  const SENTENCE_FORM_STYLES = {
+    affirmative: {
+      ring: 'conic-gradient(#29d67b, #7df0ad, #29d67b)',
+      lens: 'linear-gradient(to top, rgba(41, 214, 123, 0.75) 0%, rgba(41, 214, 123, 0) 60%)'
+    },
+    negative: {
+      ring: 'conic-gradient(#ff4d4f, #ff8a8b, #ff4d4f)',
+      lens: 'linear-gradient(to top, rgba(255, 77, 79, 0.75) 0%, rgba(255, 77, 79, 0) 60%)'
+    },
+    question: {
+      ring: 'conic-gradient(#e0711d, #f6b25e, #e0711d)',
+      animation: 'swing 1.5s ease-in-out infinite',
+      lens: 'linear-gradient(to top, rgba(246, 178, 94, 0.75) 0%, rgba(246, 178, 94, 0) 60%)'
+    },
+    imperative: {
+      ring: 'conic-gradient(#f6c453, #f2a80b, #f6c453)',
+      animation: 'spin 2s linear infinite',
+      lens: 'linear-gradient(to top, rgba(246, 196, 83, 0.75) 0%, rgba(246, 196, 83, 0) 60%)'
+    }
+  };
 
   function normalizeImageEntry(entry) {
     if (!entry || typeof entry !== 'object') return null;
@@ -132,6 +220,71 @@
     if (isWebpFile(fileName)) {
       img.classList.add('image--webp');
     }
+  }
+
+  function applyVisualStyles(wrapper, entry = {}) {
+    if (!wrapper) return;
+    const tenseStyle = TENSE_STYLES[entry.tense] || {};
+    const formStyle = SENTENCE_FORM_STYLES[entry.sentenceForm] || {};
+
+    wrapper.style.setProperty('--tense-ring', tenseStyle.ring || 'none');
+    wrapper.style.setProperty('--tense-animation', tenseStyle.animation || 'none');
+    wrapper.style.setProperty('--tense-glow', tenseStyle.glow || 'none');
+    wrapper.style.setProperty('--tense-filter', tenseStyle.filter || 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25))');
+    wrapper.style.setProperty('--tense-mask', tenseStyle.mask || 'none');
+    wrapper.style.setProperty('--tense-lens', tenseStyle.lens || 'none');
+
+    wrapper.style.setProperty('--form-ring', formStyle.ring || 'none');
+    wrapper.style.setProperty('--form-animation', formStyle.animation || 'none');
+    wrapper.style.setProperty('--form-glow', formStyle.glow || 'none');
+    wrapper.style.setProperty('--form-lens', formStyle.lens || 'none');
+  }
+
+  function buildVisualWrapper(entry, img, options = {}) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `image-visual${options.fill ? ' image-visual--fill' : ''}`;
+    applyVisualStyles(wrapper, entry);
+
+    const tenseRing = document.createElement('div');
+    tenseRing.className = 'image-ring image-ring--tense';
+    const formRing = document.createElement('div');
+    formRing.className = 'image-ring image-ring--form';
+    const tenseLens = document.createElement('div');
+    tenseLens.className = 'image-lens image-lens--tense';
+    const formLens = document.createElement('div');
+    formLens.className = 'image-lens image-lens--form';
+
+    wrapper.appendChild(tenseRing);
+    wrapper.appendChild(formRing);
+    wrapper.appendChild(tenseLens);
+    wrapper.appendChild(formLens);
+    wrapper.appendChild(img);
+    return wrapper;
+  }
+
+  function createEntryImage(entry, className, options = {}) {
+    const img = document.createElement('img');
+    img.src = buildImageSrc(entry);
+    img.alt = entry.en;
+    img.className = className;
+    applyImageStyling(img, entry.file);
+    return buildVisualWrapper(entry, img, options);
+  }
+
+  function scheduleButtonTextFit(button, minSize = 14) {
+    if (!button) return;
+    const resize = () => {
+      const computed = window.getComputedStyle(button);
+      const baseSize = Number.parseFloat(computed.fontSize) || 0;
+      if (!baseSize) return;
+      let size = baseSize;
+      button.style.fontSize = `${size}px`;
+      while (button.scrollWidth > button.clientWidth && size > minSize) {
+        size -= 1;
+        button.style.fontSize = `${size}px`;
+      }
+    };
+    window.requestAnimationFrame(resize);
   }
 
   function playAudioElement(audio) {
@@ -459,7 +612,14 @@
 
   function filterPool() {
     if (phase === 7) {
-      pool = buildingImages.slice();
+      const numericLevel = Math.max(1, Number(level) || 1);
+      pool = buildingImages.filter(entry => {
+        const categoryValue = entry?.categoria ?? entry?.category ?? entry?.folder;
+        const categoryNumber = Number(categoryValue);
+        if (categoryNumber === 1) return numericLevel === 1;
+        if (categoryNumber === 2) return numericLevel === 2;
+        return true;
+      });
       return;
     }
 
@@ -874,12 +1034,8 @@
     currentItem = item;
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
-    const img = document.createElement('img');
-    img.src = buildImageSrc(item);
-    img.alt = item.en;
-    img.className = 'board__image-single board__image-single--phase-one';
-    applyImageStyling(img, item.file);
-    boardInner.appendChild(img);
+    const imageWrapper = createEntryImage(item, 'board__image-single board__image-single--phase-one');
+    boardInner.appendChild(imageWrapper);
 
     const wrongItem = getRandomWrongItem(item.file) || item;
     const options = shuffle([
@@ -894,6 +1050,7 @@
       btn.textContent = opt.label;
       btn.addEventListener('click', () => handlePhaseOneChoice(btn, opt.correct));
       choiceRow.appendChild(btn);
+      scheduleButtonTextFit(btn, 16);
     });
   }
 
@@ -963,11 +1120,8 @@
       card.type = 'button';
       card.className = 'grid-card grid-card--enter';
       card.dataset.correct = String(entry.correct === true);
-      const img = document.createElement('img');
-      img.src = buildImageSrc(entry);
-      img.alt = entry.en;
-      applyImageStyling(img, entry.file);
-      card.appendChild(img);
+      const imageWrapper = createEntryImage(entry, 'grid-card__image', { fill: true });
+      card.appendChild(imageWrapper);
       card.addEventListener('click', () => handlePhaseTwoChoice(card));
       boardInner.appendChild(card);
     });
@@ -1044,12 +1198,9 @@
       }
     }
 
-    const img = document.createElement('img');
-    img.src = buildImageSrc(item);
-    img.alt = item.en;
-    img.className = 'board__image-single board__image-speech';
+    const imageWrapper = createEntryImage(item, 'board__image-single board__image-speech');
+    const img = imageWrapper.querySelector('img');
     img.setAttribute('aria-hidden', 'true');
-    applyImageStyling(img, item.file);
 
     const speechBtn = document.createElement('button');
     speechBtn.type = 'button';
@@ -1069,9 +1220,10 @@
     img.addEventListener('touchstart', startListening, { passive: true });
     speechBtn.addEventListener('click', () => playPronunciation(item));
 
-    boardInner.appendChild(img);
+    boardInner.appendChild(imageWrapper);
     choiceRow.innerHTML = '';
     choiceRow.appendChild(speechBtn);
+    scheduleButtonTextFit(speechBtn, 18);
     if (!localStorage.getItem(PHASE_THREE_HINT_STORAGE_KEY)) {
       const hint = document.createElement('p');
       hint.className = 'phase-mic-hint';
@@ -1096,12 +1248,9 @@
 
     const expectedText = item.pt || item.en;
     const buttonText = item.en || expectedText;
-    const img = document.createElement('img');
-    img.src = buildImageSrc(item);
-    img.alt = item.en;
-    img.className = 'board__image-single board__image-speech';
+    const imageWrapper = createEntryImage(item, 'board__image-single board__image-speech');
+    const img = imageWrapper.querySelector('img');
     img.setAttribute('aria-hidden', 'true');
-    applyImageStyling(img, item.file);
 
     const startListening = () => {
       if (awaiting) return;
@@ -1121,9 +1270,10 @@
     speechBtn.setAttribute('aria-label', `Toque e repita: ${expectedText}`);
     speechBtn.addEventListener('click', startListening);
 
-    boardInner.appendChild(img);
+    boardInner.appendChild(imageWrapper);
     choiceRow.innerHTML = '';
     choiceRow.appendChild(speechBtn);
+    scheduleButtonTextFit(speechBtn, 18);
     showText('');
   }
 
@@ -1140,25 +1290,23 @@
     }
 
     const expectedText = item.en;
-    const img = document.createElement('img');
-    img.src = buildImageSrc(item);
-    img.alt = item.en;
-    img.className = 'board__image-single board__image-speech';
+    const imageWrapper = createEntryImage(item, 'board__image-single board__image-speech');
+    const img = imageWrapper.querySelector('img');
     img.setAttribute('aria-hidden', 'true');
-    applyImageStyling(img, item.file);
 
     const startListening = () => {
       if (awaiting) return;
       handleSpeechChallenge(expectedText, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+        requireFullMatch: true
       });
     };
 
     img.addEventListener('click', startListening);
     img.addEventListener('touchstart', startListening, { passive: true });
 
-    boardInner.appendChild(img);
+    boardInner.appendChild(imageWrapper);
     choiceRow.innerHTML = '';
     showText('');
   }
@@ -1177,12 +1325,9 @@
 
     const promptText = item.pt || item.en;
     const expected = item.en;
-    const img = document.createElement('img');
-    img.src = buildImageSrc(item);
-    img.alt = item.en;
-    img.className = 'board__image-single board__image-speech';
+    const imageWrapper = createEntryImage(item, 'board__image-single board__image-speech');
+    const img = imageWrapper.querySelector('img');
     img.setAttribute('aria-hidden', 'true');
-    applyImageStyling(img, item.file);
 
     const startListening = () => {
       if (awaiting) return;
@@ -1202,9 +1347,10 @@
     speechBtn.setAttribute('aria-label', `Toque e repita em inglês: ${promptText}`);
     speechBtn.addEventListener('click', startListening);
 
-    boardInner.appendChild(img);
+    boardInner.appendChild(imageWrapper);
     choiceRow.innerHTML = '';
     choiceRow.appendChild(speechBtn);
+    scheduleButtonTextFit(speechBtn, 18);
     showText('');
   }
 
@@ -1271,15 +1417,17 @@
     return matrix[aLen][bLen];
   }
 
-  function isSpokenCorrect(expected, spoken) {
+  function isSpokenCorrect(expected, spoken, requireFullMatch = false) {
     const expectedWords = splitWords(expected);
     const spokenWords = splitWords(spoken);
 
     if (!expectedWords.length || !spokenWords.length) return false;
 
-    const requiredMatches = expectedWords.length <= 2
+    const requiredMatches = requireFullMatch
       ? expectedWords.length
-      : Math.max(1, expectedWords.length - 1);
+      : (expectedWords.length <= 2
+        ? expectedWords.length
+        : Math.max(1, expectedWords.length - 1));
 
     let matches = 0;
     const usedIndexes = new Set();
@@ -1306,7 +1454,7 @@
     const onResult = (spoken) => {
       if (resolved) return;
       resolved = true;
-      const success = isSpokenCorrect(expected, spoken);
+      const success = isSpokenCorrect(expected, spoken, options.requireFullMatch === true);
 
       if (typeof onListeningEnd === 'function') {
         onListeningEnd();
@@ -1380,11 +1528,8 @@
       card.type = 'button';
       card.className = 'grid-card grid-card--enter';
       card.dataset.file = entry.file;
-      const img = document.createElement('img');
-      img.src = buildImageSrc(entry);
-      img.alt = entry.en;
-      applyImageStyling(img, entry.file);
-      card.appendChild(img);
+      const imageWrapper = createEntryImage(entry, 'grid-card__image', { fill: true });
+      card.appendChild(imageWrapper);
       card.addEventListener('click', () => {
         if (awaiting) return;
         const expected = orderedTargets[sequenceIndex];
@@ -1512,11 +1657,8 @@
     items.forEach(entry => {
       const card = document.createElement('div');
       card.className = 'grid-card grid-card--enter grid-card--static';
-      const img = document.createElement('img');
-      img.src = buildImageSrc(entry);
-      img.alt = entry.en;
-      applyImageStyling(img, entry.file);
-      card.appendChild(img);
+      const imageWrapper = createEntryImage(entry, 'grid-card__image', { fill: true });
+      card.appendChild(imageWrapper);
       boardInner.appendChild(card);
     });
 
