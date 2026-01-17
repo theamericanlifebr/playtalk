@@ -1185,6 +1185,24 @@ app.get('/api/image-levels', async (req, res) => {
   }
 });
 
+app.post('/api/image-levels/refresh', async (req, res) => {
+  try {
+    await refreshImageIndex();
+
+    const levels = {};
+    for (const [fileName, level] of imageLevelIndex.entries()) {
+      if (Number.isFinite(level)) {
+        levels[fileName] = level;
+      }
+    }
+
+    res.json({ success: true, levels });
+  } catch (error) {
+    console.error('Erro ao atualizar níveis das imagens:', error);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar níveis das imagens.' });
+  }
+});
+
 app.get('/api/media/resolve', async (req, res) => {
   try {
     const name = typeof req.query.name === 'string' ? req.query.name : '';

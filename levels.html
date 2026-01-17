@@ -402,6 +402,14 @@
     <div class="controls">
       <button id="new-grid-btn">Nova grade</button>
       <button id="upload-btn">Upload de imagens</button>
+      <button id="refresh-server-btn">Atualizar servidor</button>
+      <div class="controls__level-filter">
+        <label for="source-select">Fonte</label>
+        <select id="source-select">
+          <option value="images">images.json</option>
+          <option value="building">building.json</option>
+        </select>
+      </div>
       <button id="export-json-btn">Exportar JSON</button>
       <button id="export-images-btn">Exportar imagens</button>
       <button id="export-audio-btn">Exportar áudios</button>
@@ -455,6 +463,8 @@
     const audioUploadInput = document.getElementById('audio-upload-input');
     const newGridBtn = document.getElementById('new-grid-btn');
     const uploadBtn = document.getElementById('upload-btn');
+    const refreshServerBtn = document.getElementById('refresh-server-btn');
+    const sourceSelect = document.getElementById('source-select');
     const exportJsonBtn = document.getElementById('export-json-btn');
     const exportImagesBtn = document.getElementById('export-images-btn');
     const exportAudioBtn = document.getElementById('export-audio-btn');
@@ -472,6 +482,7 @@
     let selectedLevelFilter = 'all';
     let pendingAudioIndex = null;
     let activeAudioPlayback = null;
+    let activeSource = 'images';
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'image/svg+xml'];
     const allowedAudioTypes = ['audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/opus', 'audio/webm', 'audio/wav'];
@@ -644,7 +655,7 @@
 
     const saveState = () => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ levels }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ levels, source: activeSource }));
       } catch (err) {
         console.error('Erro ao salvar localmente', err);
       }
@@ -656,7 +667,10 @@
         if (!stored) return null;
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed?.levels)) {
-          return parsed.levels.map((level, idx) => ({ ...defaultLevel(), ...level, order: idx + 1 })).slice(0, MAX_LEVELS);
+          return {
+            levels: parsed.levels.map((level, idx) => ({ ...defaultLevel(), ...level, order: idx + 1 })).slice(0, MAX_LEVELS),
+            source: parsed.source
+          };
         }
       } catch (err) {
         console.warn('Estado local inválido', err);
@@ -669,19 +683,42 @@
       return Number.isFinite(numeric) ? numeric : null;
     };
 
-    const fetchDefaults = async () => {
-      try {
-        const [imageResponse, levelsResponse] = await Promise.all([
-          fetch('images/images.json'),
-          fetch('/api/image-levels')
-        ]);
+    const SOURCE_OPTIONS = {
+      images: {
+        label: 'images.json',
+        url: 'images/images.json',
+        exportName: 'images.json',
+        useServerLevels: true
+      },
+      building: {
+        label: 'building.json',
+        url: 'images/building.json',
+        exportName: 'building.json',
+        useServerLevels: false
+      }
+    };
 
-        if (!imageResponse.ok || !levelsResponse.ok) {
+    const resolveSource = (key) => SOURCE_OPTIONS[key] || SOURCE_OPTIONS.images;
+
+    const fetchDefaults = async (sourceKey = activeSource, { refreshServer = false } = {}) => {
+      try {
+        const source = resolveSource(sourceKey);
+        const requests = [fetch(source.url)];
+        if (source.useServerLevels) {
+          requests.push(fetch(
+            '/api/image-levels' + (refreshServer ? '/refresh' : ''),
+            refreshServer ? { method: 'POST' } : undefined
+          ));
+        }
+        const responses = await Promise.all(requests);
+        const [imageResponse, levelsResponse] = responses;
+
+        if (!imageResponse.ok || (source.useServerLevels && !levelsResponse?.ok)) {
           throw new Error('Não foi possível carregar os dados de imagem.');
         }
 
         const imageData = await imageResponse.json();
-        const levelData = await levelsResponse.json();
+        const levelData = source.useServerLevels && levelsResponse ? await levelsResponse.json() : null;
         const levelMap = new Map(
           Object.entries((levelData && levelData.levels) || {})
             .map(([file, level]) => [file, normalizeLevelNumber(level)])
@@ -691,7 +728,10 @@
         const base = orderedImages.map((item, idx) => {
           const fileName = item.file || item.imagem || '';
           const audioFileName = typeof item.audio === 'string' ? item.audio : '';
-          const levelNumber = normalizeLevelNumber(levelMap.get(fileName));
+          const categoryNumber = normalizeLevelNumber(item.folder || item.categoria);
+          const levelNumber = source.useServerLevels
+            ? normalizeLevelNumber(levelMap.get(fileName))
+            : categoryNumber;
           const targetIndex = Number.isInteger(levelNumber) && levelNumber >= 1 ? levelNumber - 1 : idx;
 
           return {
@@ -1268,6 +1308,7 @@
     };
 
     exportJsonBtn.addEventListener('click', () => {
+      const source = resolveSource(activeSource);
       const payload = levels
         .filter(level => level.file && level.pt && level.en && level.folder)
         .map(level => ({
@@ -1275,10 +1316,12 @@
           nomePortugues: level.pt,
           nomeIngles: level.en,
           categoria: level.folder,
-          audio: level.audioFile || ''
+          audio: level.audioFile || '',
+          tense: level.tense || '',
+          sentenceForm: level.sentenceForm || ''
         }));
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      downloadBlob(blob, 'levels-personalizado.json');
+      downloadBlob(blob, source.exportName);
     });
 
     const fetchRemoteImage = async (path) => {
@@ -1362,18 +1405,48 @@
       downloadBlob(blob, 'levels-audios.zip');
     });
 
+    const refreshFromServer = async ({ refreshLevels = false } = {}) => {
+      toggleLoading(true);
+      levels = await fetchDefaults(activeSource, { refreshServer: refreshLevels });
+      selectedLevelFilter = 'all';
+      buildLevelFilter();
+      saveState();
+      renderGrid();
+      toggleLoading(false);
+    };
+
+    sourceSelect.addEventListener('change', async (event) => {
+      const nextSource = event.target.value;
+      if (nextSource === activeSource) return;
+      if (!confirm('Carregar dados do servidor? Isso substitui sua edição local.')) {
+        sourceSelect.value = activeSource;
+        return;
+      }
+      activeSource = nextSource;
+      await refreshFromServer();
+    });
+
+    refreshServerBtn.addEventListener('click', async () => {
+      await refreshFromServer({ refreshLevels: true });
+    });
+
     const init = async () => {
       toggleLoading(true);
       const local = loadState();
       if (local) {
-        levels = local;
+        levels = local.levels;
+        if (local.source && SOURCE_OPTIONS[local.source]) {
+          activeSource = local.source;
+        }
+        sourceSelect.value = activeSource;
         buildLevelFilter();
         renderGrid();
         toggleLoading(false);
         return;
       }
 
-      levels = await fetchDefaults();
+      sourceSelect.value = activeSource;
+      levels = await fetchDefaults(activeSource);
       buildLevelFilter();
       renderGrid();
       toggleLoading(false);

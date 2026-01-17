@@ -1,86 +1,239 @@
 [
   {
+    "imagem": "01-1767824952267.webp",
+    "nomePortugues": "Eu não estou feliz",
+    "nomeIngles": "I am happy",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
+    "nomePortugues": "Eu não estou cansado",
+    "nomeIngles": "I am tired",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
+    "nomePortugues": "Eu não preciso de ajuda",
+    "nomeIngles": "I need help",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
+    "nomePortugues": "Eu não previso de um taxi",
+    "nomeIngles": "I need a taxi",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
+    "nomePortugues": "Eu não bebo água",
+    "nomeIngles": "I drink water",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
+    "nomePortugues": "Eu não preciso de dinheiro",
+    "nomeIngles": "I need money",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
+    "nomePortugues": "Eu não bebo café",
+    "nomeIngles": "I drink coffee",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
+    "nomePortugues": "Eu não acho que sim",
+    "nomeIngles": "I think so",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
+    "nomePortugues": "Eu não quero comida",
+    "nomeIngles": "I want food",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
+    "nomePortugues": "Eu não pratico esportes",
+    "nomeIngles": "I do sports",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
+    "nomePortugues": "Eu não faço meu melhor",
+    "nomeIngles": "I do my best",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
+    "nomePortugues": "Eu não trabalho",
+    "nomeIngles": "I work",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
+    "nomePortugues": "Eu não leio",
+    "nomeIngles": "I read",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
+    "nomePortugues": "Eu não gosto de suco",
+    "nomeIngles": "I like juice",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
+    "nomePortugues": "Eu não descanso",
+    "nomeIngles": "I rest",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
+    "nomePortugues": "Eu não gosto de cachrros",
+    "nomeIngles": "I like dogs",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
+    "nomePortugues": "Eu não dirijo",
+    "nomeIngles": "I drive",
+    "categoria": "1",
+    "audio": "",
+    "tense": "",
+    "sentenceForm": "negative"
+  },
+  {
     "imagem": "sequ-ncia-02-00_00_27_06-quadro036-1767749086540.webp",
     "nomePortugues": "Mar",
     "nomeIngles": "The sea",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_27_12-quadro037-1767749086572.webp",
     "nomePortugues": "Café",
     "nomeIngles": "The coffee",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_27_12-quadro038-1767749086600.webp",
     "nomePortugues": "Banana",
     "nomeIngles": "The banana",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_27_12-quadro039-1767749086631.webp",
     "nomePortugues": "Bola",
     "nomeIngles": "The ball",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_27_12-quadro040-1767749086657.webp",
     "nomePortugues": "Lápis",
     "nomeIngles": "The pencil",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_27_12-quadro041-1767749086686.webp",
     "nomePortugues": "Relógio",
     "nomeIngles": "The waltch",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_27_12-quadro042-1767749086714.webp",
     "nomePortugues": "Copo",
     "nomeIngles": "The glass",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_27_12-quadro043-1767749086743.webp",
     "nomePortugues": "Maçã",
     "nomeIngles": "The apple",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_28_03-quadro035-1767749086789.webp",
     "nomePortugues": "Carro",
     "nomeIngles": "The car",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_28_14-quadro034-1767749086833.webp",
     "nomePortugues": "Casa",
     "nomeIngles": "The house",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_29_13-quadro031-1767749086872.webp",
     "nomePortugues": "Celular",
     "nomeIngles": "The mobile",
-    "categoria": ".",
+    "categoria": "2",
     "audio": ""
   },
   {
     "imagem": "sequ-ncia-02-00_00_29_13-quadro032-1767749086907.webp",
     "nomePortugues": "Sol",
     "nomeIngles": "The sun",
-    "categoria": ",",
+    "categoria": "2",
     "audio": ""
   }
 ]
