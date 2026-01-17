@@ -2357,8 +2357,10 @@ body.page-image-game #visor {
 .image-game-target {
   width: clamp(180px, 35vw, 280px);
   height: auto;
+  aspect-ratio: 1 / 1;
   max-height: 320px;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: 50%;
   filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.2));
   transition: opacity 0.2s ease;
   touch-action: manipulation;

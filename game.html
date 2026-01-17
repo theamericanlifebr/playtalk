@@ -160,8 +160,8 @@
     }
 
     .game-medal img {
-      width: 54px;
-      height: 54px;
+      width: calc(54px * 1.6);
+      height: calc(54px * 1.6);
       object-fit: contain;
     }
 
@@ -248,6 +248,9 @@
       max-width: 90%;
       max-height: 90%;
       opacity: 0.85;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      object-fit: cover;
     }
 
     .image-visual {
@@ -293,14 +296,14 @@
       --ring-gradient: var(--tense-ring);
       --ring-animation: var(--tense-animation);
       --ring-glow: var(--tense-glow);
-      --ring-width: 14px;
+      --ring-width: 20px;
     }
 
     .image-ring--form {
       --ring-gradient: var(--form-ring);
       --ring-animation: var(--form-animation);
       --ring-glow: var(--form-glow);
-      --ring-width: 8px;
+      --ring-width: 20px;
       z-index: 2;
     }
 
@@ -431,7 +434,7 @@
       height: 100%;
     }
 
-    .grid-card img { width: 100%; height: 100%; object-fit: contain; }
+    .grid-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
     .grid-card img.image--webp { object-fit: cover; border-radius: 50%; }
 
     .board__image-single.image--webp {
@@ -480,6 +483,7 @@
       margin-top: 8px;
       transition: opacity 0.5s ease;
       width: min(450px, 100%);
+      transform: translateY(-20px);
     }
 
     .choice-row--compact {
