@@ -236,15 +236,102 @@
 
     .board__inner--grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-      place-items: center;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: minmax(0, 1fr);
+      gap: 10px;
+      padding: 10px;
+      place-items: stretch;
     }
 
     .board__image-single {
       max-width: 90%;
       max-height: 90%;
       opacity: 0.85;
+    }
+
+    .image-visual {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      --tense-ring: none;
+      --tense-animation: none;
+      --tense-glow: none;
+      --form-ring: none;
+      --form-animation: none;
+      --form-glow: none;
+      --tense-filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25));
+      --tense-mask: none;
+      --tense-lens: none;
+      --form-lens: none;
+    }
+
+    .image-visual--fill {
+      width: 100%;
+      height: 100%;
+    }
+
+    .image-ring,
+    .image-lens {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .image-ring {
+      background: var(--ring-gradient, none);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width, 12px)), #000 calc(100% - var(--ring-width, 12px)));
+      mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width, 12px)), #000 calc(100% - var(--ring-width, 12px)));
+      animation: var(--ring-animation, none);
+      box-shadow: var(--ring-glow, none);
+      z-index: 1;
+    }
+
+    .image-ring--tense {
+      --ring-gradient: var(--tense-ring);
+      --ring-animation: var(--tense-animation);
+      --ring-glow: var(--tense-glow);
+      --ring-width: 14px;
+    }
+
+    .image-ring--form {
+      --ring-gradient: var(--form-ring);
+      --ring-animation: var(--form-animation);
+      --ring-glow: var(--form-glow);
+      --ring-width: 8px;
+      z-index: 2;
+    }
+
+    .image-lens--tense { background: var(--tense-lens, none); }
+    .image-lens--form { background: var(--form-lens, none); }
+
+    .image-lens {
+      inset: 10px;
+      z-index: 4;
+    }
+
+    .image-visual img {
+      filter: var(--tense-filter);
+      -webkit-mask-image: var(--tense-mask);
+      mask-image: var(--tense-mask);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes spin-partial {
+      0% { transform: rotate(0deg); }
+      80% { transform: rotate(270deg); }
+      100% { transform: rotate(270deg); }
+    }
+
+    @keyframes swing {
+      0% { transform: rotate(-90deg); }
+      50% { transform: rotate(90deg); }
+      100% { transform: rotate(-90deg); }
     }
 
     .board__image-single--phase-one {
@@ -318,8 +405,9 @@
     }
 
     .grid-card {
-      width: 150px;
-      height: 150px;
+      width: 100%;
+      height: 100%;
+      padding: 10px;
       border-radius: 20px;
       background-color: rgba(11, 31, 68, 0.08);
       border: none;
@@ -338,7 +426,12 @@
       cursor: default;
     }
 
-    .grid-card img { width: 120px; height: 120px; object-fit: contain; }
+    .grid-card .image-visual {
+      width: 100%;
+      height: 100%;
+    }
+
+    .grid-card img { width: 100%; height: 100%; object-fit: contain; }
     .grid-card img.image--webp { object-fit: cover; border-radius: 50%; }
 
     .board__image-single.image--webp {
@@ -408,6 +501,9 @@
       font-size: 26px;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       text-transform: capitalize;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .choice-btn:hover { transform: translateY(-1px); }
@@ -431,6 +527,9 @@
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       text-transform: capitalize;
       box-shadow: 0 8px 24px rgba(76, 150, 220, 0.3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .phase-word-btn:hover { transform: translateY(-1px); }
