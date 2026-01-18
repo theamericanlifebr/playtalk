@@ -72,6 +72,7 @@
   let phaseFourBatch = [];
   let phaseFourExpectedIndex = 0;
   let phaseFourResolved = 0;
+  let phaseFourAudioPlaying = false;
 
   let awaiting = false;
   let recognition = null;
@@ -1645,6 +1646,7 @@
     currentItem = null;
     clearBoard();
     boardInner.classList.add('board__inner--grid');
+    phaseFourAudioPlaying = false;
     if (recognition && typeof recognition.stop === 'function') {
       try {
         recognition.stop();
@@ -1675,7 +1677,7 @@
       }
 
       card.addEventListener('click', () => {
-        if (awaiting || card.disabled) return;
+        if ((awaiting && !phaseFourAudioPlaying) || card.disabled) return;
         const expected = batch[phaseFourExpectedIndex];
         const isCorrect = expected && entryIndex === phaseFourExpectedIndex;
         if (isCorrect) {
@@ -1735,8 +1737,10 @@
 
     if (phaseFourResolved === 0) {
       awaiting = true;
+      phaseFourAudioPlaying = true;
       playPhaseFourBatchAudio(batch).finally(() => {
         awaiting = false;
+        phaseFourAudioPlaying = false;
       });
     }
   }
