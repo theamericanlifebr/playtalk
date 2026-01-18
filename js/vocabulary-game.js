@@ -70,7 +70,6 @@
   const PHASE_THREE_HINT_STORAGE_KEY = 'vocabulary-phase3-mic-hint';
   const LEVEL_TWO_UNLOCK_STORAGE_KEY = 'vocabulary-level2-unlock-at';
   const LEVEL_TWO_UNLOCK_HOUR = 6;
-  const HOMOPHONES_PATH = 'data/phrases/homophones.json';
 
   let images = [];
   let buildingImages = [];
@@ -92,7 +91,6 @@
   let recognition = null;
   let loadPromise = null;
   let buildingLoadPromise = null;
-  let homophonesLoadPromise = null;
   let fileLevels = new Map();
   let rotationTimer = null;
   let rotationIndex = 0;
@@ -111,10 +109,6 @@
   const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
   const audioElementCache = new Map();
   const FINAL_ADVANCE_DELAY_MS = 1500;
-  const homophones = {
-    normalizedToCanonical: {},
-    loaded: false
-  };
   const TENSE_STYLES = {
     'present-continuous': {
       ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
@@ -722,49 +716,8 @@
     return buildingLoadPromise;
   }
 
-  async function loadHomophones() {
-    if (homophones.loaded) return homophones;
-    if (homophonesLoadPromise) return homophonesLoadPromise;
-
-    homophonesLoadPromise = fetch(HOMOPHONES_PATH)
-      .then(response => (response.ok ? response.json() : []))
-      .then(data => {
-        const normalized = {};
-        if (Array.isArray(data)) {
-          data.forEach((group) => {
-            if (!Array.isArray(group) || group.length < 2) return;
-            const [canonical, ...values] = group;
-            const canonicalWord = String(canonical || '').trim();
-            if (!canonicalWord || /\s/.test(canonicalWord)) return;
-            const canonicalNormalized = normalizeWordKey(canonicalWord);
-            if (canonicalNormalized) {
-              normalized[canonicalNormalized] = canonicalWord;
-            }
-            values.forEach((value) => {
-              const candidate = String(value || '').trim();
-              if (!candidate || /\s/.test(candidate)) return;
-              const normalizedCandidate = normalizeWordKey(candidate);
-              if (normalizedCandidate) {
-                normalized[normalizedCandidate] = canonicalWord;
-              }
-            });
-          });
-        }
-        homophones.normalizedToCanonical = normalized;
-        homophones.loaded = true;
-        return homophones;
-      })
-      .catch(() => {
-        homophones.normalizedToCanonical = {};
-        homophones.loaded = true;
-        return homophones;
-      });
-
-    return homophonesLoadPromise;
-  }
-
   function loadAllImages() {
-    return Promise.all([loadStandardImages(), loadBuildingImages(), loadHomophones()]);
+    return Promise.all([loadStandardImages(), loadBuildingImages()]);
   }
 
   function buildImageSrc(entry) {
@@ -1626,130 +1579,12 @@
     showText('');
   }
 
-  function normalizeText(text) {
-    return (text || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  function normalizeSpeechText(text) {
+    return String(text || '').trim();
   }
 
-  function normalizeWordKey(word) {
-    return String(word || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9']/gi, '')
-      .toLowerCase();
-  }
-
-  function applyHomophoneCanonical(word) {
-    if (!homophones.loaded) return word;
-    const normalized = normalizeWordKey(word);
-    if (!normalized) return word;
-    return homophones.normalizedToCanonical[normalized] || word;
-  }
-
-  function splitWords(text) {
-    return normalizeText(text).split(/[^\p{L}']+/gu).filter(Boolean);
-  }
-
-  function hasSequentialTriplet(expected, spoken) {
-    for (let i = 0; i <= expected.length - 3; i += 1) {
-      const segment = expected.slice(i, i + 3);
-      if (spoken.includes(segment)) return true;
-    }
-    return false;
-  }
-
-  function isWordAccepted(expectedWord, spokenWord) {
-    const expected = normalizeText(applyHomophoneCanonical(expectedWord));
-    const spoken = normalizeText(applyHomophoneCanonical(spokenWord));
-
-    if (!spoken) return false;
-    if (expected === spoken) return true;
-
-    const firstTwo = expected.slice(0, 2);
-    const lastTwo = expected.slice(-2);
-    const lengthDiff = expected.length - spoken.length;
-
-    if (firstTwo && spoken.startsWith(firstTwo)) return true;
-    if (lastTwo && spoken.endsWith(lastTwo)) return true;
-    if (lengthDiff >= 1 && lengthDiff <= 2 && expected.startsWith(spoken)) return true;
-    if (hasSequentialTriplet(expected, spoken)) return true;
-    if (levenshteinDistance(expected, spoken) <= 2) return true;
-
-    return false;
-  }
-
-  function isWordAcceptedStrict(expectedWord, spokenWord, maxDistance = 1) {
-    const expected = normalizeText(applyHomophoneCanonical(expectedWord));
-    const spoken = normalizeText(applyHomophoneCanonical(spokenWord));
-    if (!spoken) return false;
-    return levenshteinDistance(expected, spoken) <= maxDistance;
-  }
-
-  function levenshteinDistance(a, b) {
-    if (a === b) return 0;
-    const aLen = a.length;
-    const bLen = b.length;
-
-    if (aLen === 0) return bLen;
-    if (bLen === 0) return aLen;
-
-    const matrix = Array.from({ length: aLen + 1 }, () => new Array(bLen + 1).fill(0));
-
-    for (let i = 0; i <= aLen; i += 1) matrix[i][0] = i;
-    for (let j = 0; j <= bLen; j += 1) matrix[0][j] = j;
-
-    for (let i = 1; i <= aLen; i += 1) {
-      for (let j = 1; j <= bLen; j += 1) {
-        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j - 1] + cost
-        );
-      }
-    }
-
-    return matrix[aLen][bLen];
-  }
-
-  function isSpokenCorrect(expected, spoken, options = {}) {
-    const expectedWords = splitWords(expected);
-    const spokenWords = splitWords(spoken);
-    const { requireFullMatch = false, strictSequence = false, maxWordDistance = 2 } = options;
-
-    if (!expectedWords.length || !spokenWords.length) return false;
-
-    if (strictSequence) {
-      for (let i = 0; i <= spokenWords.length - expectedWords.length; i += 1) {
-        let isMatch = true;
-        for (let j = 0; j < expectedWords.length; j += 1) {
-          if (!isWordAcceptedStrict(expectedWords[j], spokenWords[i + j], maxWordDistance)) {
-            isMatch = false;
-            break;
-          }
-        }
-        if (isMatch) return true;
-      }
-      return false;
-    }
-
-    const requiredMatches = requireFullMatch
-      ? expectedWords.length
-      : (expectedWords.length <= 2
-        ? expectedWords.length
-        : Math.max(1, expectedWords.length - 1));
-
-    let matches = 0;
-    const usedIndexes = new Set();
-
-    expectedWords.forEach((word) => {
-      const matchIndex = spokenWords.findIndex((spokenWord, idx) => !usedIndexes.has(idx) && isWordAccepted(word, spokenWord));
-      if (matchIndex !== -1) {
-        usedIndexes.add(matchIndex);
-        matches += 1;
-      }
-    });
-
-    return matches >= requiredMatches;
+  function isSpokenCorrect(expected, spoken) {
+    return normalizeSpeechText(expected) === normalizeSpeechText(spoken);
   }
 
   function handleSpeechChallenge(expected, handler, options = {}) {

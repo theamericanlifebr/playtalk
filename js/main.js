@@ -12,8 +12,6 @@ const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
 };
 
 const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
-const WORD_ALTERNATIVES_PATH = 'data/phrases/word-alternatives.json';
-const HOMOPHONES_PATH = 'data/phrases/homophones.json';
 const MODE_PROGRESS_KEY = 'modeProgress';
 const ROUND_STATE_KEY = 'modeRoundState';
 const GENERAL_PROGRESS_KEY = 'generalProgress';
@@ -270,90 +268,6 @@ const phraseLibrary = {
   loaded: false
 };
 
-const wordAlternatives = {
-  normalizedToCanonical: {},
-  phraseAlternatives: [],
-  loaded: false
-};
-
-function normalizeWordKey(word) {
-  return String(word || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9']/gi, '')
-    .toLowerCase();
-}
-
-function normalizePhraseKey(text) {
-  return String(text || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9']+/gi, ' ')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toLowerCase();
-}
-
-function getWordMatches(text) {
-  return [...String(text || '').matchAll(/\b([A-Za-zÀ-ÿ0-9']+)\b/g)];
-}
-
-function applyPhraseAlternatives(text) {
-  if (!wordAlternatives.phraseAlternatives.length) {
-    return text;
-  }
-
-  let adjusted = text;
-  const matches = getWordMatches(adjusted);
-  if (!matches.length) {
-    return adjusted;
-  }
-
-  const normalizedWords = matches.map(match => normalizeWordKey(match[1]));
-  const replacements = [];
-
-  wordAlternatives.phraseAlternatives.forEach(entry => {
-    entry.variants.forEach(variant => {
-      const variantWords = variant.split(' ');
-      if (!variantWords.length) return;
-      for (let i = 0; i <= normalizedWords.length - variantWords.length; i++) {
-        const windowMatches = normalizedWords.slice(i, i + variantWords.length);
-        const isMatch = windowMatches.every((word, idx) => word === variantWords[idx]);
-        if (isMatch) {
-          const start = matches[i].index;
-          const end = matches[i + variantWords.length - 1].index + matches[i + variantWords.length - 1][0].length;
-          replacements.push({ start, end, replacement: entry.canonical });
-        }
-      }
-    });
-  });
-
-  replacements.sort((a, b) => b.start - a.start);
-  const occupied = [];
-  replacements.forEach(rep => {
-    const overlaps = occupied.some(([s, e]) => !(rep.end <= s || rep.start >= e));
-    if (overlaps) return;
-    adjusted = adjusted.slice(0, rep.start) + rep.replacement + adjusted.slice(rep.end);
-    occupied.push([rep.start, rep.end]);
-  });
-
-  return adjusted;
-}
-
-function applyWordAlternatives(text) {
-  if (!text || !wordAlternatives.loaded || !Object.keys(wordAlternatives.normalizedToCanonical).length) {
-    return text || '';
-  }
-
-  const phraseAdjusted = applyPhraseAlternatives(String(text));
-
-  return phraseAdjusted.replace(/\b([A-Za-zÀ-ÿ0-9']+)\b/g, (match, word) => {
-    const normalized = normalizeWordKey(word);
-    const canonical = wordAlternatives.normalizedToCanonical[normalized];
-    if (!canonical) return match;
-    return match.replace(word, canonical);
-  });
-}
 
 function stripGrammarTags(text) {
   if (typeof text !== 'string') {
@@ -632,10 +546,7 @@ async function carregarPastas() {
       );
     });
 
-    await Promise.all([
-      ...fetches,
-      loadWordAlternatives()
-    ]);
+    await Promise.all(fetches);
     phraseLibrary.loaded = true;
   } catch (error) {
     console.error('Erro ao carregar frases do jogo:', error);
@@ -649,137 +560,6 @@ async function carregarPastas() {
   return phraseLibrary;
 }
 
-async function loadWordAlternatives() {
-  if (wordAlternatives.loaded) {
-    return wordAlternatives;
-  }
-
-  try {
-    const response = await fetch(WORD_ALTERNATIVES_PATH);
-    if (!response.ok) {
-      throw new Error(`Alternativas de palavras não encontradas (${response.status})`);
-    }
-    const data = await response.json();
-    let homophones = [];
-    try {
-      const homophonesResponse = await fetch(HOMOPHONES_PATH);
-      if (homophonesResponse.ok) {
-        homophones = await homophonesResponse.json();
-      } else {
-        console.warn(`Homofones não encontrados (${homophonesResponse.status})`);
-      }
-    } catch (error) {
-      console.warn('Erro ao carregar homofones:', error);
-    }
-    const normalized = {};
-    const phraseAlternatives = [];
-
-    const ensurePhraseEntry = (canonical, normalizedCanonical) => {
-      const existing = phraseAlternatives.find(entry => entry.canonical === canonical && entry.normalized === normalizedCanonical);
-      if (existing) {
-        return existing;
-      }
-      const created = { canonical, normalized: normalizedCanonical, variants: new Set([normalizedCanonical]) };
-      phraseAlternatives.push(created);
-      return created;
-    };
-
-    const registerAlternatives = (canonicalEntry, values) => {
-      const canonical = String(canonicalEntry || '').trim();
-      if (!canonical) return;
-      const normalizedCanonicalWord = normalizeWordKey(canonical);
-      const normalizedCanonicalPhrase = normalizePhraseKey(canonical);
-      const isPhrase = normalizedCanonicalPhrase.includes(' ');
-      if (isPhrase) {
-        const entry = ensurePhraseEntry(canonical, normalizedCanonicalPhrase);
-        entry.variants.add(normalizedCanonicalPhrase);
-      } else {
-        normalized[normalizedCanonicalWord] = canonical;
-      }
-      if (Array.isArray(values)) {
-        values.forEach(value => {
-          const normalizedValueWord = normalizeWordKey(value);
-          const normalizedValuePhrase = normalizePhraseKey(value);
-          const isValuePhrase = normalizedValuePhrase.includes(' ');
-          if (isPhrase || isValuePhrase) {
-            const entry = ensurePhraseEntry(canonical, normalizePhraseKey(canonical));
-            if (isValuePhrase) {
-              entry.variants.add(normalizedValuePhrase);
-            } else if (normalizedValueWord) {
-              entry.variants.add(normalizedValueWord);
-            }
-          } else if (normalizedValueWord) {
-            normalized[normalizedValueWord] = canonical;
-          }
-        });
-      }
-    };
-
-    if (data && typeof data === 'object') {
-      Object.entries(data).forEach(([key, values]) => {
-        registerAlternatives(key, values);
-      });
-    }
-
-    if (Array.isArray(homophones)) {
-      homophones.forEach(group => {
-        if (!Array.isArray(group) || group.length < 2) return;
-        const [canonical, ...values] = group;
-        registerAlternatives(canonical, values);
-      });
-    }
-
-    wordAlternatives.normalizedToCanonical = normalized;
-    wordAlternatives.phraseAlternatives = phraseAlternatives.map(entry => ({
-      canonical: entry.canonical,
-      variants: new Set(Array.from(entry.variants).map(item => normalizePhraseKey(item)).filter(Boolean))
-    }));
-    wordAlternatives.loaded = true;
-  } catch (error) {
-    console.error('Erro ao carregar alternativas de palavras:', error);
-    wordAlternatives.normalizedToCanonical = {};
-    wordAlternatives.phraseAlternatives = [];
-    wordAlternatives.loaded = true;
-  }
-
-  return wordAlternatives;
-}
-
-function ehQuaseCorreto(res, esp) {
-  let i = 0, j = 0, dif = 0;
-  while (i < res.length && j < esp.length) {
-    if (res[i] === esp[j]) {
-      i++; j++; continue;
-    }
-    if (i + 1 < res.length && res[i+1] === esp[j] && j + 1 < esp.length && res[i] === esp[j+1]) {
-      return false; // ordem incorreta
-    }
-    if (i + 1 < res.length && res[i+1] === esp[j]) {
-      i++; dif++; // letra extra
-    } else if (j + 1 < esp.length && res[i] === esp[j+1]) {
-      j++; dif++; // letra faltando
-    } else {
-      return false;
-    }
-    if (dif > 2) return false;
-  }
-  dif += (res.length - i) + (esp.length - j);
-  return dif <= 2;
-}
-
-function ehQuaseCorretoPalavras(resp, esp) {
-  const normWord = w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/gi, '').toLowerCase();
-  const rWords = resp.split(/\s+/).map(normWord).filter(Boolean);
-  const eWords = esp.split(/\s+/).map(normWord).filter(Boolean);
-  if (rWords.length < eWords.length || rWords.length - eWords.length > 3) return false;
-  const rCounts = {};
-  rWords.forEach(w => { rCounts[w] = (rCounts[w] || 0) + 1; });
-  for (const w of eWords) {
-    if (!rCounts[w]) return false;
-    rCounts[w]--;
-  }
-  return true;
-}
 
 
 let reconhecimento;
@@ -3720,32 +3500,22 @@ function verificarResposta(overrideText = null) {
   const pt = getPtFromPhrase(currentEntry);
   const enVariants = getEnVariantsFromPhrase(currentEntry);
   const expectedOptions = esperadoLang === 'pt' ? [pt] : (enVariants.length ? enVariants : ['']);
-  const adjustedExpectedOptions = expectedOptions.map(option => applyWordAlternatives(option || ''));
   const expectedPhrase = expectedOptions[0] || '';
-  const phraseLength = expectedPhrase ? expectedPhrase.length : 0;
-  const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
-  const adjustedResposta = applyWordAlternatives(resposta);
-  let normalizadoResp = norm(adjustedResposta);
-  const correto = adjustedExpectedOptions.some(opcao => {
-    const normalizadoEsp = norm(opcao || '');
-    return normalizadoResp === normalizadoEsp ||
-      ehQuaseCorreto(normalizadoResp, normalizadoEsp) ||
-      ehQuaseCorretoPalavras(adjustedResposta, opcao || '');
-  });
+  const correto = expectedOptions.some(option => resposta === String(option || ''));
 
   if (trainingMode) {
     handleTrainingResponse({
       correto,
       expectedPhrase,
       pt,
-      resposta: adjustedResposta
+      resposta
     });
     return;
   }
 
-  const comparisonExpected = adjustedExpectedOptions[0] || expectedPhrase;
+  const comparisonExpected = expectedOptions[0] || expectedPhrase;
   const expectedChars = countCorrectCharacters(comparisonExpected, comparisonExpected);
-  const correctChars = countCorrectCharacters(comparisonExpected, adjustedResposta);
+  const correctChars = countCorrectCharacters(comparisonExpected, resposta);
   stats.totalChars += expectedChars;
   stats.correctChars += correctChars;
   roundCorrectChars += correctChars;
