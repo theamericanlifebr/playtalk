@@ -1,7 +1,6 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -13,34 +12,10 @@ const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
   ? path.resolve(process.env.PLAYTALK_USERS_DB)
   : path.join(DATA_ROOT, 'users.json');
 const DATA_DIR = path.dirname(USERS_DB_PATH);
-const PLAYTALK_DATABASE_URL = process.env.PLAYTALK_DATABASE_URL || '';
-const DATABASE_URL = process.env.DATABASE_URL || '';
-const RENDER_DATABASE_URL = process.env.RENDER_EXTERNAL_DATABASE_URL || '';
-const dbUrl = PLAYTALK_DATABASE_URL || DATABASE_URL || RENDER_DATABASE_URL || '';
-const PGHOST = process.env.PLAYTALK_PGHOST || process.env.PGHOST || '';
-const PGUSER = process.env.PLAYTALK_PGUSER || process.env.PGUSER || '';
-const PGPASSWORD = process.env.PLAYTALK_PGPASSWORD || process.env.PGPASSWORD || '';
-const PGDATABASE = process.env.PLAYTALK_PGDATABASE || process.env.PGDATABASE || '';
-const PGPORT = process.env.PLAYTALK_PGPORT || process.env.PGPORT || '';
-const DATABASE_ENABLED = Boolean(dbUrl || (PGHOST && PGUSER && PGDATABASE));
-const PG_POOL_MAX = Number.parseInt(process.env.PLAYTALK_PG_POOL_MAX || '10', 10);
-const PG_SSL_SETTING = process.env.PLAYTALK_PG_SSL;
-const PG_SSL = PG_SSL_SETTING === 'false'
-  ? false
-  : { rejectUnauthorized: false };
-let pgPool = null;
-let databaseReadyPromise = null;
-
 const DEFAULT_USER = {
   username: 'Rafael',
   password: 'tatatata',
-  email: '',
-  emailVerified: false,
-  emailVerifiedAt: null,
-  emailVerificationCode: null,
-  emailVerificationExpiresAt: null,
-  emailVerificationAttempts: 0,
-  emailVerificationLastSentAt: null
+  email: ''
 };
 
 const PROGRESS_SCHEMA = {
@@ -92,13 +67,6 @@ const PROGRESS_SCHEMA = {
 };
 
 const DEFAULT_AVATAR_URL = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c5d7ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237fa8ff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2248%22%20fill%3D%22url(%23g)%22/%3E%3Cpath%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%20d%3D%22M48%2046a14%2014%200%201%200-14-14A14%2014%200%200%200%2048%2046Zm0%207c-12.1%200-22%206.56-22%2014.66V70a24%2024%200%200%200%2044%200v-2.34C70%2059.56%2060.1%2053%2048%2053Z%22/%3E%3C/svg%3E';
-const DEFAULT_VERIFICATION_EXPIRATION_MINUTES = 10;
-const DEFAULT_VERIFICATION_CODE_LENGTH = 6;
-const DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS = 60;
-const DEFAULT_VERIFICATION_MAX_ATTEMPTS = 5;
-const RESEND_API_KEY = process.env.PLAYTALK_RESEND_API_KEY || '';
-const RESEND_API_URL = process.env.PLAYTALK_RESEND_API_URL || 'https://api.resend.com/emails';
-const RESEND_EMAIL_FROM = process.env.PLAYTALK_EMAIL_FROM || 'PlayTalk <onboarding@resend.dev>';
 const GENERAL_MODE_KEYS = ['2', '3', '4', '5', '6'];
 const MAX_RANKING_ENTRIES = 30;
 const LEGEND_REQUIREMENTS = { cps: 3.5, accuracy: 80, diamonds: 10 };
@@ -184,79 +152,7 @@ function extractLevelFromRelativePath(relativePath) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function getPool() {
-  if (!pgPool) {
-    const baseConfig = {
-      max: Number.isFinite(PG_POOL_MAX) && PG_POOL_MAX > 0 ? PG_POOL_MAX : 10,
-      ssl: PG_SSL
-    };
-    const parsedPort = PGPORT ? Number.parseInt(PGPORT, 10) : NaN;
-    const connectionConfig = dbUrl
-      ? { connectionString: dbUrl }
-      : {
-          host: PGHOST,
-          user: PGUSER,
-          password: PGPASSWORD,
-          database: PGDATABASE,
-          port: Number.isFinite(parsedPort) ? parsedPort : undefined
-        };
-    pgPool = new Pool({ ...baseConfig, ...connectionConfig });
-  }
-  return pgPool;
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function withRetry(operation, { retries = 5, delayMs = 500 } = {}) {
-  let lastError;
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error;
-      if (attempt === retries) {
-        break;
-      }
-      const waitTime = delayMs * (attempt + 1);
-      console.warn(`Tentativa ${attempt + 1} falhou ao conectar ao banco. Tentando novamente em ${waitTime}ms.`);
-      await sleep(waitTime);
-    }
-  }
-  throw lastError;
-}
-
-async function initDatabase() {
-  if (!DATABASE_ENABLED) {
-    return;
-  }
-
-  const pool = getPool();
-
-  await withRetry(() => pool.query('SELECT 1'), { retries: 5, delayMs: 500 });
-  console.log('Conexão com PostgreSQL pronta.');
-
-  const createTableSQL = `
-    CREATE TABLE IF NOT EXISTS users (
-      key TEXT PRIMARY KEY,
-      username TEXT NOT NULL,
-      password TEXT NOT NULL,
-      email TEXT DEFAULT '',
-      email_verified BOOLEAN DEFAULT FALSE,
-      email_verified_at TIMESTAMPTZ,
-      email_verification_code TEXT,
-      email_verification_expires_at TIMESTAMPTZ,
-      email_verification_attempts INTEGER DEFAULT 0,
-      email_verification_last_sent_at TIMESTAMPTZ,
-      data JSONB DEFAULT '{}'::jsonb,
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      updated_at TIMESTAMPTZ DEFAULT NOW()
-    );
-  `;
-
-  await withRetry(() => pool.query(createTableSQL), { retries: 5, delayMs: 500 });
-}
+ 
 
 async function collectImageFiles(directory) {
   const entries = await fs.promises.readdir(directory, { withFileTypes: true });
@@ -502,66 +398,7 @@ function createDefaultData() {
   return data;
 }
 
-function normalizePgTimestamp(value) {
-  if (!value) {
-    return null;
-  }
-  const parsed = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
-}
-
 async function readDatabase() {
-  if (DATABASE_ENABLED) {
-    if (!databaseReadyPromise) {
-      databaseReadyPromise = initDatabase();
-    }
-    await databaseReadyPromise;
-
-    const pool = getPool();
-    const { rows } = await pool.query(
-      `SELECT
-        key,
-        username,
-        password,
-        email,
-        email_verified,
-        email_verified_at,
-        email_verification_code,
-        email_verification_expires_at,
-        email_verification_attempts,
-        email_verification_last_sent_at,
-        data,
-        updated_at
-       FROM users`
-    );
-    const users = {};
-    let latestUpdate = null;
-
-    rows.forEach(row => {
-      const updatedAt = normalizePgTimestamp(row.updated_at);
-      if (updatedAt && (!latestUpdate || updatedAt > latestUpdate)) {
-        latestUpdate = updatedAt;
-      }
-      users[row.key] = {
-        username: row.username,
-        password: row.password,
-        email: row.email || '',
-        emailVerified: Boolean(row.email_verified),
-        emailVerifiedAt: normalizePgTimestamp(row.email_verified_at),
-        emailVerificationCode: row.email_verification_code || null,
-        emailVerificationExpiresAt: normalizePgTimestamp(row.email_verification_expires_at),
-        emailVerificationAttempts: row.email_verification_attempts || 0,
-        emailVerificationLastSentAt: normalizePgTimestamp(row.email_verification_last_sent_at),
-        data: row.data || {}
-      };
-    });
-
-    return {
-      users,
-      updatedAt: latestUpdate || new Date().toISOString()
-    };
-  }
-
   try {
     const raw = await fs.promises.readFile(USERS_DB_PATH, 'utf8');
     const parsed = JSON.parse(raw);
@@ -578,77 +415,6 @@ async function readDatabase() {
 }
 
 async function writeDatabase(data) {
-  if (DATABASE_ENABLED) {
-    if (!databaseReadyPromise) {
-      databaseReadyPromise = initDatabase();
-    }
-    await databaseReadyPromise;
-
-    const pool = getPool();
-    const client = await pool.connect();
-    const users = data.users || {};
-    const updatedAt = new Date().toISOString();
-
-    try {
-      await client.query('BEGIN');
-
-      for (const [key, user] of Object.entries(users)) {
-        await client.query(
-          `INSERT INTO users (
-             key,
-             username,
-             password,
-             email,
-             email_verified,
-             email_verified_at,
-             email_verification_code,
-             email_verification_expires_at,
-             email_verification_attempts,
-             email_verification_last_sent_at,
-             data,
-             updated_at
-           ) VALUES (
-             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()
-           )
-           ON CONFLICT (key) DO UPDATE SET
-             username = EXCLUDED.username,
-             password = EXCLUDED.password,
-             email = EXCLUDED.email,
-             email_verified = EXCLUDED.email_verified,
-             email_verified_at = EXCLUDED.email_verified_at,
-             email_verification_code = EXCLUDED.email_verification_code,
-             email_verification_expires_at = EXCLUDED.email_verification_expires_at,
-             email_verification_attempts = EXCLUDED.email_verification_attempts,
-             email_verification_last_sent_at = EXCLUDED.email_verification_last_sent_at,
-             data = EXCLUDED.data,
-             updated_at = NOW()`,
-          [
-            key,
-            user.username || key,
-            user.password || '',
-            user.email || '',
-            Boolean(user.emailVerified),
-            user.emailVerifiedAt || null,
-            user.emailVerificationCode || null,
-            user.emailVerificationExpiresAt || null,
-            user.emailVerificationAttempts || 0,
-            user.emailVerificationLastSentAt || null,
-            user.data || {}
-          ]
-        );
-      }
-
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-
-    return { users, updatedAt };
-  }
-
   const payload = {
     users: data.users || {},
     updatedAt: new Date().toISOString()
@@ -662,29 +428,6 @@ function ensureUserDefaults(user) {
     user.email = '';
   } else if (typeof user.email === 'string') {
     user.email = user.email.trim();
-  }
-  if (typeof user.emailVerified !== 'boolean') {
-    user.emailVerified = Boolean(user.emailVerified);
-  }
-  if (user.emailVerified) {
-    user.emailVerifiedAt = user.emailVerifiedAt || new Date().toISOString();
-  } else {
-    user.emailVerifiedAt = null;
-  }
-
-  if (!('emailVerificationCode' in user)) {
-    user.emailVerificationCode = null;
-  }
-  if (!('emailVerificationExpiresAt' in user)) {
-    user.emailVerificationExpiresAt = null;
-  }
-  if (!('emailVerificationAttempts' in user)) {
-    user.emailVerificationAttempts = 0;
-  } else {
-    user.emailVerificationAttempts = normalizePositiveInteger(user.emailVerificationAttempts);
-  }
-  if (!('emailVerificationLastSentAt' in user)) {
-    user.emailVerificationLastSentAt = null;
   }
 
   if (!user.data || typeof user.data !== 'object') {
@@ -762,73 +505,6 @@ function buildModeSnapshot(modeKey, stats = {}) {
     currentStreak: normalizePositiveInteger(stats.currentStreak),
     points: Math.max(correctPhrases, normalizePositiveInteger(stats.points))
   };
-}
-
-function createVerificationCode(length = DEFAULT_VERIFICATION_CODE_LENGTH) {
-  const digits = '0123456789';
-  let result = '';
-  for (let i = 0; i < length; i += 1) {
-    const randomIndex = Math.floor(Math.random() * digits.length);
-    result += digits[randomIndex];
-  }
-  return result;
-}
-
-function computeVerificationExpiry(minutes = DEFAULT_VERIFICATION_EXPIRATION_MINUTES) {
-  const expiresAt = new Date();
-  expiresAt.setMinutes(expiresAt.getMinutes() + minutes);
-  return expiresAt.toISOString();
-}
-
-function parseDate(dateString) {
-  const timestamp = Date.parse(dateString);
-  return Number.isNaN(timestamp) ? null : new Date(timestamp);
-}
-
-if (!databaseReadyPromise) {
-  databaseReadyPromise = initDatabase().catch(error => {
-    console.error('Erro ao conectar ao PostgreSQL:', error);
-  });
-}
-
-function canSendNewVerification(user) {
-  if (!user.emailVerificationLastSentAt) {
-    return true;
-  }
-
-  const lastSent = parseDate(user.emailVerificationLastSentAt);
-  if (!lastSent) {
-    return true;
-  }
-
-  const now = Date.now();
-  const elapsedSeconds = Math.floor((now - lastSent.getTime()) / 1000);
-  return elapsedSeconds >= DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS;
-}
-
-async function sendVerificationEmail(to, code) {
-  if (!RESEND_API_KEY) {
-    throw new Error('PLAYTALK_RESEND_API_KEY não configurada.');
-  }
-
-  const response = await fetch(RESEND_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${RESEND_API_KEY}`
-    },
-    body: JSON.stringify({
-      from: RESEND_EMAIL_FROM,
-      to: [to],
-      subject: 'Código de verificação PlayTalk',
-      html: `<p>Seu código de verificação é <strong>${code}</strong>.</p><p>Ele expira em ${DEFAULT_VERIFICATION_EXPIRATION_MINUTES} minutos.</p>`
-    })
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Falha ao enviar e-mail: ${response.status} - ${text}`);
-  }
 }
 
 function createEmptyRecentPhraseStats() {
@@ -1149,8 +825,6 @@ async function ensureDefaultUser() {
       username: DEFAULT_USER.username,
       password: DEFAULT_USER.password,
       email: DEFAULT_USER.email,
-      emailVerified: DEFAULT_USER.emailVerified,
-      emailVerifiedAt: DEFAULT_USER.emailVerifiedAt,
       data: createDefaultData()
     });
 
@@ -1333,212 +1007,6 @@ app.get('/api/rankings', async (req, res) => {
   }
 });
 
-app.post('/api/email/verification-code', async (req, res) => {
-  const { key, email } = req.body || {};
-
-  if (!key) {
-    res.status(400).json({ success: false, message: 'Usuário inválido.' });
-    return;
-  }
-
-  if (!email || typeof email !== 'string' || !email.includes('@')) {
-    res.status(400).json({ success: false, message: 'Informe um e-mail válido.', field: 'email' });
-    return;
-  }
-
-  const normalizedEmail = email.trim();
-
-  try {
-    const database = await readDatabase();
-    const entry = database.users[key];
-
-    if (!entry) {
-      res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-      return;
-    }
-
-    ensureUserDefaults(entry);
-
-    if (!canSendNewVerification(entry)) {
-      res.status(429).json({
-        success: false,
-        message: 'Aguarde antes de solicitar um novo código.',
-        retryAfterSeconds: DEFAULT_VERIFICATION_RESEND_INTERVAL_SECONDS
-      });
-      return;
-    }
-
-    const code = createVerificationCode();
-
-    entry.email = normalizedEmail;
-    entry.emailVerified = false;
-    entry.emailVerifiedAt = null;
-    entry.emailVerificationCode = code;
-    entry.emailVerificationExpiresAt = computeVerificationExpiry();
-    entry.emailVerificationAttempts = 0;
-    entry.emailVerificationLastSentAt = new Date().toISOString();
-
-    await sendVerificationEmail(normalizedEmail, code);
-    await writeDatabase(database);
-
-    res.json({ success: true, message: 'Código de verificação enviado.' });
-  } catch (error) {
-    console.error('Erro ao enviar código de verificação:', error);
-    res.status(500).json({ success: false, message: 'Erro ao enviar código de verificação.' });
-  }
-});
-
-app.post('/api/email/verify', async (req, res) => {
-  const { key, code } = req.body || {};
-
-  if (!key || !code) {
-    res.status(400).json({ success: false, message: 'Usuário e código são obrigatórios.' });
-    return;
-  }
-
-  try {
-    const database = await readDatabase();
-    const entry = database.users[key];
-
-    if (!entry) {
-      res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-      return;
-    }
-
-    ensureUserDefaults(entry);
-
-    if (!entry.emailVerificationCode || !entry.emailVerificationExpiresAt) {
-      res.status(400).json({ success: false, message: 'Nenhum código ativo. Solicite um novo envio.' });
-      return;
-    }
-
-    const expiryDate = parseDate(entry.emailVerificationExpiresAt);
-    if (!expiryDate || expiryDate.getTime() < Date.now()) {
-      entry.emailVerificationCode = null;
-      entry.emailVerificationExpiresAt = null;
-      await writeDatabase(database);
-      res.status(400).json({ success: false, message: 'Código expirado. Solicite um novo envio.' });
-      return;
-    }
-
-    if (entry.emailVerificationAttempts >= DEFAULT_VERIFICATION_MAX_ATTEMPTS) {
-      entry.emailVerificationCode = null;
-      entry.emailVerificationExpiresAt = null;
-      await writeDatabase(database);
-      res.status(429).json({ success: false, message: 'Muitas tentativas. Solicite um novo código.' });
-      return;
-    }
-
-    if (String(code).trim() !== String(entry.emailVerificationCode)) {
-      entry.emailVerificationAttempts += 1;
-      await writeDatabase(database);
-      res.status(400).json({ success: false, message: 'Código inválido.' });
-      return;
-    }
-
-    entry.emailVerified = true;
-    entry.emailVerifiedAt = new Date().toISOString();
-    entry.emailVerificationCode = null;
-    entry.emailVerificationExpiresAt = null;
-    entry.emailVerificationAttempts = 0;
-    entry.emailVerificationLastSentAt = null;
-
-    await writeDatabase(database);
-
-    res.json({
-      success: true,
-      message: 'E-mail verificado com sucesso.',
-      emailVerifiedAt: entry.emailVerifiedAt
-    });
-  } catch (error) {
-    console.error('Erro ao verificar código:', error);
-    res.status(500).json({ success: false, message: 'Erro ao verificar código.' });
-  }
-});
-
-app.post('/api/users/register', async (req, res) => {
-  const { username, password } = req.body || {};
-
-  if (!username) {
-    res.status(400).json({ success: false, message: 'Informe um nome de usuário.', field: 'username' });
-    return;
-  }
-  if (!password) {
-    res.status(400).json({ success: false, message: 'Informe uma senha.', field: 'password' });
-    return;
-  }
-
-  const key = normalizeKey(username);
-
-  try {
-    const database = await readDatabase();
-
-    if (database.users[key]) {
-      res.status(409).json({ success: false, message: 'Usuário já existe.' });
-      return;
-    }
-
-    const user = ensureUserDefaults({
-      username: username.trim(),
-      password,
-      email: '',
-      emailVerified: false,
-      emailVerifiedAt: null,
-      data: createDefaultData()
-    });
-
-    database.users[key] = user;
-    await writeDatabase(database);
-
-    res.status(201).json({
-      success: true,
-      user: { key, ...user }
-    });
-  } catch (error) {
-    console.error('Erro ao registrar usuário:', error);
-    res.status(500).json({ success: false, message: 'Erro ao registrar usuário.' });
-  }
-});
-
-app.post('/api/users/login', async (req, res) => {
-  const { username, password } = req.body || {};
-
-  if (!username || !password) {
-    res.status(400).json({ success: false, message: 'Usuário e senha são obrigatórios.' });
-    return;
-  }
-
-  const key = normalizeKey(username);
-
-  try {
-    const database = await readDatabase();
-    const entry = database.users[key];
-
-    if (!entry || entry.password !== password) {
-      res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
-      return;
-    }
-
-    ensureUserDefaults(entry);
-
-    res.json({
-      success: true,
-      user: {
-        key,
-        username: entry.username || username.trim(),
-        password: entry.password,
-        email: entry.email || '',
-        emailVerified: Boolean(entry.emailVerified),
-        emailVerifiedAt: entry.emailVerifiedAt || null,
-        data: entry.data
-      }
-    });
-  } catch (error) {
-    console.error('Erro ao autenticar usuário:', error);
-    res.status(500).json({ success: false, message: 'Erro ao autenticar usuário.' });
-  }
-});
-
 app.post('/api/users/update', async (req, res) => {
   const { key, data, password, username } = req.body || {};
 
@@ -1582,9 +1050,6 @@ app.post('/api/users/update', async (req, res) => {
         key,
         username: entry.username,
         password: entry.password,
-        email: entry.email || '',
-        emailVerified: Boolean(entry.emailVerified),
-        emailVerifiedAt: entry.emailVerifiedAt || null,
         data: entry.data
       }
     });
@@ -1603,28 +1068,13 @@ app.post('/api/users/delete', async (req, res) => {
   }
 
   try {
-    if (DATABASE_ENABLED) {
-      if (!databaseReadyPromise) {
-        databaseReadyPromise = initDatabase();
-      }
-      await databaseReadyPromise;
-
-      const pool = getPool();
-      const result = await pool.query('DELETE FROM users WHERE key = $1', [key]);
-
-      if (!result.rowCount) {
-        res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-        return;
-      }
-    } else {
-      const database = await readDatabase();
-      if (!database.users[key]) {
-        res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-        return;
-      }
-      delete database.users[key];
-      await writeDatabase(database);
+    const database = await readDatabase();
+    if (!database.users[key]) {
+      res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+      return;
     }
+    delete database.users[key];
+    await writeDatabase(database);
 
     res.json({ success: true });
   } catch (error) {

@@ -43,8 +43,6 @@
   };
 
   let cachedCurrentUser = null;
-  let openLoginFlowHandler = null;
-  let closeLoginFlowHandler = null;
   let closeUserMenu = null;
   let teardownUserMenu = null;
 
@@ -378,28 +376,6 @@
     window.currentUser = cachedCurrentUser;
   }
 
-  async function loginRequest(username, password) {
-    const response = await apiRequest('/api/users/login', {
-      method: 'POST',
-      body: { username, password }
-    });
-    if (!response || !response.success || !response.user) {
-      throw new Error((response && response.message) || 'Não foi possível entrar.');
-    }
-    return response.user;
-  }
-
-  async function registerRequest(username, password) {
-    const response = await apiRequest('/api/users/register', {
-      method: 'POST',
-      body: { username, password }
-    });
-    if (!response || !response.success || !response.user) {
-      throw new Error((response && response.message) || 'Não foi possível registrar.');
-    }
-    return response.user;
-  }
-
   async function updateUserRequest(payload) {
     const response = await apiRequest('/api/users/update', {
       method: 'POST',
@@ -486,7 +462,6 @@
   }
 
   function updateAuthStatus() {
-    const loginBtn = document.getElementById('login-btn');
     const logoutButtons = Array.from(document.querySelectorAll('[data-role="logout"]'));
     const nameEl = document.getElementById('header-username');
     const avatarEl = document.getElementById('header-avatar');
@@ -521,9 +496,6 @@
       avatarEl.alt = `Foto de ${displayName}`;
     }
 
-    if (loginBtn) {
-      loginBtn.style.display = user ? 'none' : 'inline-flex';
-    }
     logoutButtons.forEach(button => {
       const isProfilePage = Boolean(button.closest('.page-profile'));
       const isSwitchButton = button.dataset.switchAccount === 'true';
@@ -538,9 +510,6 @@
     applyBalanceToUI(readStoredBalance());
     if (!user && typeof closeUserMenu === 'function') {
       closeUserMenu();
-    }
-    if (user && typeof closeLoginFlowHandler === 'function') {
-      closeLoginFlowHandler();
     }
     updateHeaderAura();
   }
@@ -596,36 +565,20 @@
     }
   }
 
-  async function finalizeLoginSession(user) {
-    setCurrentUser(user);
-    applyUserDataToStorage(user);
-    await preloadAppContent();
-    updateAuthStatus();
-    dispatchUserChange();
-  }
-
-  async function completeLoginFlow({ username, password }) {
-    if (!username || !password) {
-      throw new Error('Informe usuário e senha.');
+  function setupLogoutHandlers() {
+    if (setupLogoutHandlers.bound) {
+      return;
     }
-
-    try {
-      const user = await loginRequest(username, password);
-      await finalizeLoginSession(user);
-    } catch (loginError) {
-      try {
-        const user = await registerRequest(username, password);
-        await finalizeLoginSession(user);
-      } catch (registerError) {
-        const message =
-          (registerError && registerError.message) ||
-          (loginError && loginError.message) ||
-          'Não foi possível concluir o acesso.';
-        const error = new Error(message);
-        error.step = 'password';
-        throw error;
+    setupLogoutHandlers.bound = true;
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-role="logout"]');
+      if (!button) {
+        return;
       }
-    }
+      event.preventDefault();
+      const stayOnPage = button.dataset.switchAccount === 'true';
+      handleLogout({ stayOnPage });
+    });
   }
 
   function setupUserMenu() {
@@ -717,139 +670,6 @@
     closeMenu();
   }
 
-  function setupLoginFlow() {
-    const loginBtn = document.getElementById('login-btn');
-    const logoutButtons = Array.from(document.querySelectorAll('[data-role="logout"]'));
-    const flow = document.getElementById('login-flow');
-    const form = document.getElementById('login-flow-form');
-    const errorEl = document.getElementById('login-flow-error');
-    const statusEl = document.getElementById('login-flow-status');
-    const usernameInput = document.getElementById('login-flow-username');
-    const passwordInput = document.getElementById('login-flow-password');
-
-    if (!setupLoginFlow.logoutHandler) {
-      setupLoginFlow.logoutHandler = (event) => {
-        const button = event.target.closest('[data-role="logout"]');
-        if (!button) {
-          return;
-        }
-        event.preventDefault();
-        const stayOnPage = button.dataset.switchAccount === 'true';
-        handleLogout({ stayOnPage });
-      };
-      document.addEventListener('click', setupLoginFlow.logoutHandler);
-    }
-
-    if (!flow || !form || !usernameInput || !passwordInput) {
-      openLoginFlowHandler = null;
-      closeLoginFlowHandler = null;
-      return;
-    }
-
-    if (flow.classList.contains('hidden')) {
-      flow.setAttribute('aria-hidden', 'true');
-    }
-
-    function setError(message) {
-      if (errorEl) {
-        errorEl.textContent = message || '';
-      }
-      if (message && statusEl) {
-        statusEl.textContent = '';
-      }
-    }
-
-    function setStatus(message) {
-      if (statusEl) {
-        statusEl.textContent = message || '';
-      }
-    }
-
-    function setButtonActive(active) {
-      if (loginBtn) {
-        loginBtn.classList.toggle('is-active', Boolean(active));
-      }
-    }
-
-    function resetFlow() {
-      form.reset();
-      setError('');
-      setStatus('');
-      usernameInput.focus();
-    }
-
-    function openFlow() {
-      resetFlow();
-      flow.classList.remove('hidden');
-      flow.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('login-flow-open');
-      setButtonActive(true);
-    }
-
-    function closeFlow() {
-      flow.classList.add('hidden');
-      flow.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('login-flow-open');
-      setError('');
-      setStatus('');
-      setButtonActive(false);
-    }
-
-    openLoginFlowHandler = openFlow;
-    closeLoginFlowHandler = closeFlow;
-
-    if (loginBtn) {
-      loginBtn.addEventListener('click', () => openFlow());
-    }
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      setError('');
-
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value;
-
-      if (!username || !password) {
-        setError('Informe usuário e senha.');
-        return;
-      }
-
-      setStatus('Processando...');
-      try {
-        await completeLoginFlow({ username, password });
-        setError('');
-        setStatus('Tudo pronto! Bem-vindo ao PlayTalk.');
-        const onLoginPage = document.body && document.body.classList.contains('page-login');
-        setTimeout(() => {
-          closeFlow();
-          if (onLoginPage) {
-            window.location.href = 'index.html';
-          }
-        }, 800);
-      } catch (err) {
-        console.error('Erro ao concluir fluxo de acesso:', err);
-        const message = err && err.message ? err.message : 'Não foi possível concluir o acesso.';
-        setError(message);
-        const stepName = err && err.step ? err.step : 'password';
-        if (stepName === 'password') {
-          passwordInput.select();
-        } else {
-          usernameInput.select();
-        }
-      }
-    });
-
-    flow.addEventListener('click', (event) => {
-      if (event.target === flow) {
-        closeFlow();
-      }
-    });
-
-    Array.from(flow.querySelectorAll('[data-login-close]')).forEach((button) => {
-      button.addEventListener('click', () => closeFlow());
-    });
-  }
-
   function setupHeaderNavigation() {
     const avatarContainer = document.getElementById('header-avatar-container');
     if (!avatarContainer || avatarContainer.dataset.homeNavBound === 'true') {
@@ -870,7 +690,6 @@
   async function init() {
     readStoredCurrentUser();
     const user = cachedCurrentUser;
-    const isLoginPage = document.body && document.body.classList.contains('page-login');
     const isGamePage = document.body && document.body.classList.contains('page-image-game');
 
     if (user) {
@@ -879,7 +698,7 @@
 
     updateAuthStatus();
     setupUserMenu();
-    setupLoginFlow();
+    setupLogoutHandlers();
     setupHeaderNavigation();
     updateHeaderAura();
 
@@ -891,17 +710,9 @@
       return;
     }
 
-    if (user && user.username && user.password) {
-      try {
-        const refreshedUser = await loginRequest(user.username, user.password);
-        setCurrentUser(refreshedUser);
-        applyUserDataToStorage(refreshedUser);
-        updateAuthStatus();
-      } catch (err) {
-        console.warn('Não foi possível sincronizar usuário atual:', err);
-        applyUserDataToStorage(user);
-        updateAuthStatus();
-      }
+    if (user) {
+      applyUserDataToStorage(user);
+      updateAuthStatus();
     }
   }
 
@@ -938,7 +749,7 @@
     const loadedScripts = new Set();
     const pageCache = new Map();
     const parser = new DOMParser();
-    const insertionAnchor = document.getElementById('login-flow') || document.querySelector('footer.page-footer');
+    const insertionAnchor = document.querySelector('footer.page-footer');
 
     const resolvePathKey = (href) => {
       const url = new URL(href, window.location.href);
@@ -1159,12 +970,7 @@
     getCurrentUser: () => readStoredCurrentUser(),
     persistProgress: () => updateUserSnapshot(),
     applyUserData: applyUserDataToStorage,
-    createDefaultData,
-    openLoginFlow: () => {
-      if (typeof openLoginFlowHandler === 'function') {
-        openLoginFlowHandler();
-      }
-    }
+    createDefaultData
   };
 
   document.addEventListener('playtalk:medal-history-change', () => {
