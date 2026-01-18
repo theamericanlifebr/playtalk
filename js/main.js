@@ -13,6 +13,7 @@ const SETTINGS_FALLBACK = settingsAPI.DEFAULT_SETTINGS || {
 
 const PHRASE_CONFIG_PATH = 'data/phrases/config.json';
 const WORD_ALTERNATIVES_PATH = 'data/phrases/word-alternatives.json';
+const HOMOPHONES_PATH = 'data/phrases/homophones.json';
 const MODE_PROGRESS_KEY = 'modeProgress';
 const ROUND_STATE_KEY = 'modeRoundState';
 const GENERAL_PROGRESS_KEY = 'generalProgress';
@@ -658,6 +659,17 @@ async function loadWordAlternatives() {
       throw new Error(`Alternativas de palavras não encontradas (${response.status})`);
     }
     const data = await response.json();
+    let homophones = [];
+    try {
+      const homophonesResponse = await fetch(HOMOPHONES_PATH);
+      if (homophonesResponse.ok) {
+        homophones = await homophonesResponse.json();
+      } else {
+        console.warn(`Homofones não encontrados (${homophonesResponse.status})`);
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar homofones:', error);
+    }
     const normalized = {};
     const phraseAlternatives = [];
 
@@ -671,36 +683,48 @@ async function loadWordAlternatives() {
       return created;
     };
 
+    const registerAlternatives = (canonicalEntry, values) => {
+      const canonical = String(canonicalEntry || '').trim();
+      if (!canonical) return;
+      const normalizedCanonicalWord = normalizeWordKey(canonical);
+      const normalizedCanonicalPhrase = normalizePhraseKey(canonical);
+      const isPhrase = normalizedCanonicalPhrase.includes(' ');
+      if (isPhrase) {
+        const entry = ensurePhraseEntry(canonical, normalizedCanonicalPhrase);
+        entry.variants.add(normalizedCanonicalPhrase);
+      } else {
+        normalized[normalizedCanonicalWord] = canonical;
+      }
+      if (Array.isArray(values)) {
+        values.forEach(value => {
+          const normalizedValueWord = normalizeWordKey(value);
+          const normalizedValuePhrase = normalizePhraseKey(value);
+          const isValuePhrase = normalizedValuePhrase.includes(' ');
+          if (isPhrase || isValuePhrase) {
+            const entry = ensurePhraseEntry(canonical, normalizePhraseKey(canonical));
+            if (isValuePhrase) {
+              entry.variants.add(normalizedValuePhrase);
+            } else if (normalizedValueWord) {
+              entry.variants.add(normalizedValueWord);
+            }
+          } else if (normalizedValueWord) {
+            normalized[normalizedValueWord] = canonical;
+          }
+        });
+      }
+    };
+
     if (data && typeof data === 'object') {
       Object.entries(data).forEach(([key, values]) => {
-        const canonical = String(key || '').trim();
-        if (!canonical) return;
-        const normalizedCanonicalWord = normalizeWordKey(canonical);
-        const normalizedCanonicalPhrase = normalizePhraseKey(canonical);
-        const isPhrase = normalizedCanonicalPhrase.includes(' ');
-        if (isPhrase) {
-          const entry = ensurePhraseEntry(canonical, normalizedCanonicalPhrase);
-          entry.variants.add(normalizedCanonicalPhrase);
-        } else {
-          normalized[normalizedCanonicalWord] = canonical;
-        }
-        if (Array.isArray(values)) {
-          values.forEach(value => {
-            const normalizedValueWord = normalizeWordKey(value);
-            const normalizedValuePhrase = normalizePhraseKey(value);
-            const isValuePhrase = normalizedValuePhrase.includes(' ');
-            if (isPhrase || isValuePhrase) {
-              const entry = ensurePhraseEntry(canonical, normalizePhraseKey(canonical));
-              if (isValuePhrase) {
-                entry.variants.add(normalizedValuePhrase);
-              } else if (normalizedValueWord) {
-                entry.variants.add(normalizedValueWord);
-              }
-            } else if (normalizedValueWord) {
-              normalized[normalizedValueWord] = canonical;
-            }
-          });
-        }
+        registerAlternatives(key, values);
+      });
+    }
+
+    if (Array.isArray(homophones)) {
+      homophones.forEach(group => {
+        if (!Array.isArray(group) || group.length < 2) return;
+        const [canonical, ...values] = group;
+        registerAlternatives(canonical, values);
       });
     }
 

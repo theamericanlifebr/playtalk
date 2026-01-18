@@ -41,3 +41,20 @@ propriedade é a forma canônica e o valor é um array de alternativas válidas:
 Sempre que o jogo carregar as frases, esse mapa é lido e aplicado no momento da
 comparação. Basta adicionar novas entradas ao JSON para que outras palavras
 isoladas também passem a ser aceitas dentro de frases maiores.
+
+## Homófonos e contrações
+
+Para validar frases com expressões homofônicas (por exemplo, tratar "he's" e
+"he is" como equivalentes), use o arquivo
+`data/phrases/homophones.json`. Ele deve conter um array de listas com as
+variações equivalentes. O primeiro item de cada lista é a forma canônica:
+
+```json
+[
+  ["he's", "he is", "he has", "his"],
+  ["gonna", "going to"]
+]
+```
+
+Quando o jogo compara a frase esperada com a resposta do usuário, qualquer
+variação dentro do mesmo grupo passa a ser considerada correta.
