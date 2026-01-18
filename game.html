@@ -122,6 +122,10 @@
       margin-top: 10px;
     }
 
+    body.phase-1 .game-status--bottom {
+      transform: translateY(-25px);
+    }
+
     .game-hearts {
       display: flex;
       gap: 4px;
@@ -278,6 +282,21 @@
       height: 100%;
     }
 
+    body.phase-2 .image-visual {
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    body.phase-2 .grid-card {
+      aspect-ratio: 1 / 1;
+    }
+
+    body.phase-5 .image-visual,
+    body.phase-7 .image-visual {
+      transform: scale(0.97);
+      transform-origin: center;
+    }
+
     .image-ring,
     .image-lens {
       position: absolute;
@@ -302,12 +321,22 @@
       --ring-width: 14px;
     }
 
+    body.phase-5 .image-ring--tense,
+    body.phase-7 .image-ring--tense {
+      --ring-width: 24px;
+    }
+
     .image-ring--form {
       --ring-gradient: var(--form-ring);
       --ring-animation: var(--form-animation);
       --ring-glow: var(--form-glow);
       --ring-width: 8px;
       z-index: 2;
+    }
+
+    body.phase-5 .image-ring--form,
+    body.phase-7 .image-ring--form {
+      --ring-width: 18px;
     }
 
     .image-lens--tense { background: var(--tense-lens, none); }
@@ -505,6 +534,10 @@
       transition: opacity 0.5s ease;
       width: min(450px, 100%);
       transform: translateY(-20px);
+    }
+
+    body.phase-1 .choice-row {
+      transform: translateY(-60px);
     }
 
     .choice-row--compact {

@@ -37,7 +37,19 @@
   const MEDAL_STORAGE_KEY = 'vocabulary-medals';
   const PROGRESS_STORAGE_KEY = 'vocabulary-progress';
   const COMPLETION_STORAGE_KEY = 'vocabulary-last-complete';
-  const MEDAL_RANKING = { prata: 1, ouro: 2, diamante: 3 };
+  const MEDAL_RANKING = { bronze: 0, prata: 1, ouro: 2, diamante: 3 };
+  const MEDAL_HEARTS = {
+    diamante: 5,
+    ouro: 3,
+    prata: 3,
+    bronze: 0
+  };
+  const MEDAL_DOWNGRADE = {
+    diamante: 'ouro',
+    ouro: 'prata',
+    prata: 'bronze',
+    bronze: 'bronze'
+  };
 
   const faseAudios = {
     1: document.getElementById('audio-abertura'),
@@ -86,6 +98,7 @@
   let attemptCount = 0;
   let totalErrors = 0;
   let currentMedalKey = 'diamante';
+  let heartsRemaining = MEDAL_HEARTS.diamante;
   let completedLevelSnapshot = null;
   let micPromptTimer = null;
   let levelUnlockTimer = null;
@@ -447,6 +460,11 @@
 
   function updatePhaseLabel() {
     if (phaseLabel) phaseLabel.textContent = `Fase ${phase}`;
+    if (document.body) {
+      for (let i = 1; i <= 7; i += 1) {
+        document.body.classList.toggle(`phase-${i}`, phase === i);
+      }
+    }
   }
 
   function readMedalStorage() {
@@ -504,6 +522,8 @@
 
   function getMedalImage(medalKey) {
     switch (medalKey) {
+      case 'bronze':
+        return 'medalhas/bronze.png';
       case 'ouro':
         return 'medalhas/ouro.png';
       case 'prata':
@@ -528,15 +548,24 @@
     if (finalMedalLabel) finalMedalLabel.textContent = label;
   }
 
+  function getHeartsTotal(medalKey) {
+    return MEDAL_HEARTS[medalKey] ?? MEDAL_HEARTS.diamante;
+  }
+
+  function normalizeMedalKey(medalKey) {
+    return MEDAL_HEARTS[medalKey] ? medalKey : 'diamante';
+  }
+
   function getHeartsRemaining(errorCount) {
     const totalHearts = 5;
     return Math.max(0, totalHearts - errorCount);
   }
 
   function updateHeartsDisplay() {
-    const remaining = getHeartsRemaining(totalErrors);
+    const total = getHeartsTotal(currentMedalKey);
+    const remaining = Math.min(Math.max(heartsRemaining, 0), total);
     heartNodes.forEach((node, idx) => {
-      node.classList.toggle('game-heart--lost', idx >= remaining);
+      node.classList.toggle('game-heart--lost', idx >= total || idx >= remaining);
     });
   }
 
@@ -680,6 +709,7 @@
   function resetLevelState() {
     totalErrors = 0;
     currentMedalKey = 'diamante';
+    heartsRemaining = getHeartsTotal(currentMedalKey);
     updateHeartsDisplay();
     updateMedalHud(currentMedalKey);
     updateFinalMedal(currentMedalKey);
@@ -710,6 +740,8 @@
       errorStreak,
       attemptCount,
       totalErrors,
+      medalKey: currentMedalKey,
+      heartsRemaining,
       cycle: cycle.map(item => item.file),
       phaseFour: phase === 4 ? {
         batchStart: phaseFourBatchStart,
@@ -760,7 +792,11 @@
     score = Math.min(score, total);
     index = Math.min(index, total);
 
-    currentMedalKey = getMedalForErrors(totalErrors);
+    currentMedalKey = normalizeMedalKey(stored.medalKey || getMedalForErrors(totalErrors));
+    const totalHearts = getHeartsTotal(currentMedalKey);
+    heartsRemaining = Number.isFinite(stored.heartsRemaining)
+      ? Math.min(Math.max(Number(stored.heartsRemaining), 0), totalHearts)
+      : totalHearts;
     updateHeartsDisplay();
     updateMedalHud(currentMedalKey);
     updateFinalMedal(currentMedalKey);
@@ -794,11 +830,15 @@
   function registerErrorAndCheckReset() {
     errorStreak += 1;
     totalErrors += 1;
-    const nextMedal = getMedalForErrors(totalErrors);
-    if (nextMedal !== currentMedalKey) {
-      currentMedalKey = nextMedal;
-      updateMedalHud(currentMedalKey);
-      updateFinalMedal(currentMedalKey);
+    heartsRemaining = Math.max(0, heartsRemaining - 1);
+    if (heartsRemaining === 0) {
+      const nextMedal = MEDAL_DOWNGRADE[currentMedalKey] || 'bronze';
+      if (nextMedal !== currentMedalKey) {
+        currentMedalKey = nextMedal;
+        heartsRemaining = getHeartsTotal(currentMedalKey);
+        updateMedalHud(currentMedalKey);
+        updateFinalMedal(currentMedalKey);
+      }
     }
     updateHeartsDisplay();
     const shouldReset = errorStreak >= 3;
@@ -1656,6 +1696,7 @@
     }
 
     const batch = initializePhaseFourBatch();
+    const shuffledBatch = shuffle(batch);
     if (!batch.length) {
       handleProgressCompletion();
       return;
@@ -1663,15 +1704,16 @@
     updateProgressBar();
 
     boardInner.innerHTML = '';
-    batch.forEach((entry, entryIndex) => {
+    const resolvedFiles = new Set(batch.slice(0, phaseFourResolved).map(entry => entry.file));
+    shuffledBatch.forEach((entry) => {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'grid-card grid-card--enter';
-      card.dataset.index = String(entryIndex);
+      card.dataset.file = entry.file;
       const imageWrapper = createEntryImage(entry, 'grid-card__image', { fill: true });
       card.appendChild(imageWrapper);
 
-      if (entryIndex < phaseFourResolved) {
+      if (resolvedFiles.has(entry.file)) {
         card.classList.add('grid-card--correct', 'grid-card--gone');
         card.disabled = true;
       }
@@ -1679,7 +1721,7 @@
       card.addEventListener('click', () => {
         if ((awaiting && !phaseFourAudioPlaying) || card.disabled) return;
         const expected = batch[phaseFourExpectedIndex];
-        const isCorrect = expected && entryIndex === phaseFourExpectedIndex;
+        const isCorrect = expected && expected.file === entry.file;
         if (isCorrect) {
           errorStreak = 0;
           card.classList.add('grid-card--correct');
@@ -2039,7 +2081,7 @@
     const { skipIntroAudio = false } = options;
     if (phase === 7) {
       const completedLevel = level;
-      const medalKey = getMedalForErrors(totalErrors);
+      const medalKey = currentMedalKey;
       registerMedalResult(completedLevel, medalKey);
       updateFinalMedal(medalKey);
       currentMedalKey = medalKey;
