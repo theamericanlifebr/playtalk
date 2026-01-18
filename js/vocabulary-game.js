@@ -1479,6 +1479,7 @@
       handleSpeechChallenge(expectedText, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+        afterFeedback: () => playPronunciation(item)
       });
     };
 
@@ -1706,17 +1707,30 @@
         onListeningEnd();
       }
 
+      const triggerFeedback = (wasCorrect) => {
+        const feedbackAudio = wasCorrect ? successAudio : errorAudio;
+        const feedbackPromise = feedbackAudio ? playAudioElement(feedbackAudio) : Promise.resolve(false);
+        if (typeof options.afterFeedback === 'function') {
+          feedbackPromise
+            .catch(() => false)
+            .then(() => options.afterFeedback())
+            .catch(() => {});
+        } else {
+          feedbackPromise.catch(() => {});
+        }
+      };
+
       if (success) {
         applyCorrectOutcome();
-        successAudio && successAudio.play().catch(() => {});
+        triggerFeedback(true);
       } else {
         const autoCorrect = registerAttemptAndCheckAutoCorrect();
         if (autoCorrect) {
           applyCorrectOutcome();
-          successAudio && successAudio.play().catch(() => {});
+          triggerFeedback(true);
         } else {
           registerErrorAndCheckReset();
-          errorAudio && errorAudio.play().catch(() => {});
+          triggerFeedback(false);
         }
       }
 

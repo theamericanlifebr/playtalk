@@ -2,7 +2,7 @@
   {
     "imagem": "01-1767824952267.webp",
     "nomePortugues": "Eu não estou feliz",
-    "nomeIngles": "I am happy",
+    "nomeIngles": "I am not happy",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -11,7 +11,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
     "nomePortugues": "Eu não estou cansado",
-    "nomeIngles": "I am tired",
+    "nomeIngles": "I am not tired",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -20,7 +20,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
     "nomePortugues": "Eu não preciso de ajuda",
-    "nomeIngles": "I need help",
+    "nomeIngles": "I do not need help",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -29,7 +29,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
     "nomePortugues": "Eu não previso de um taxi",
-    "nomeIngles": "I need a taxi",
+    "nomeIngles": "I do not need a taxi",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -38,7 +38,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
     "nomePortugues": "Eu não bebo água",
-    "nomeIngles": "I drink water",
+    "nomeIngles": "I do not drink water",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -47,7 +47,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
     "nomePortugues": "Eu não preciso de dinheiro",
-    "nomeIngles": "I need money",
+    "nomeIngles": "I do not need money",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -56,7 +56,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
     "nomePortugues": "Eu não bebo café",
-    "nomeIngles": "I drink coffee",
+    "nomeIngles": "I do not drink coffee",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -65,7 +65,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
     "nomePortugues": "Eu não acho que sim",
-    "nomeIngles": "I think so",
+    "nomeIngles": "I don't think so",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -74,7 +74,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
     "nomePortugues": "Eu não quero comida",
-    "nomeIngles": "I want food",
+    "nomeIngles": "I do not want food",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -83,7 +83,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
     "nomePortugues": "Eu não pratico esportes",
-    "nomeIngles": "I do sports",
+    "nomeIngles": "I do not do sports",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -92,7 +92,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
     "nomePortugues": "Eu não faço meu melhor",
-    "nomeIngles": "I do my best",
+    "nomeIngles": "I do not do my best",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -101,7 +101,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
     "nomePortugues": "Eu não trabalho",
-    "nomeIngles": "I work",
+    "nomeIngles": "I do not work",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -110,7 +110,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
     "nomePortugues": "Eu não leio",
-    "nomeIngles": "I read",
+    "nomeIngles": "I do not read",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -119,7 +119,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
     "nomePortugues": "Eu não gosto de suco",
-    "nomeIngles": "I like juice",
+    "nomeIngles": "I do not like juice",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -128,7 +128,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
     "nomePortugues": "Eu não descanso",
-    "nomeIngles": "I rest",
+    "nomeIngles": "I do not rest",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -137,7 +137,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
     "nomePortugues": "Eu não gosto de cachrros",
-    "nomeIngles": "I like dogs",
+    "nomeIngles": "I do not like dogs",
     "categoria": "1",
     "audio": "",
     "tense": "",
@@ -146,7 +146,7 @@
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
     "nomePortugues": "Eu não dirijo",
-    "nomeIngles": "I drive",
+    "nomeIngles": "I do not drive",
     "categoria": "1",
     "audio": "",
     "tense": "",
