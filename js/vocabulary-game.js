@@ -591,6 +591,31 @@
     choiceRow.classList.toggle('choice-row--compact', isCompact);
   }
 
+  function splitPhaseSevenText(message, maxLength = 20) {
+    const trimmed = message.trim();
+    if (trimmed.length <= maxLength) return [message];
+    const midpoint = Math.floor(trimmed.length / 2);
+    let splitIndex = -1;
+    let bestDistance = Number.POSITIVE_INFINITY;
+
+    for (let i = 0; i < trimmed.length; i += 1) {
+      if (trimmed[i] !== ' ') continue;
+      const distance = Math.abs(i - midpoint);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        splitIndex = i;
+      }
+    }
+
+    if (splitIndex === -1) {
+      splitIndex = midpoint;
+    }
+
+    const line1 = trimmed.slice(0, splitIndex).trimEnd();
+    const line2 = trimmed.slice(trimmed[splitIndex] === ' ' ? splitIndex + 1 : splitIndex).trimStart();
+    return [line1, line2].filter(Boolean);
+  }
+
   async function loadStandardImages() {
     if (loadPromise) return loadPromise;
     const imagesPromise = fetch('images/images.json').then(response => (
@@ -1085,8 +1110,25 @@
 
   function showText(message) {
     if (!textContainer) return;
-    textContainer.textContent = message || '';
-    textContainer.classList.toggle('active', Boolean(message));
+    if (!message) {
+      textContainer.textContent = '';
+      textContainer.classList.toggle('active', false);
+      return;
+    }
+
+    if (phase === 7 && message.length > 20) {
+      const lines = splitPhaseSevenText(message);
+      textContainer.innerHTML = '';
+      textContainer.appendChild(document.createTextNode(lines[0] || ''));
+      if (lines[1]) {
+        textContainer.appendChild(document.createElement('br'));
+        textContainer.appendChild(document.createTextNode(lines[1]));
+      }
+    } else {
+      textContainer.textContent = message;
+    }
+
+    textContainer.classList.toggle('active', true);
   }
 
   function renderWithDissolve(renderer) {
