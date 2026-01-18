@@ -19,6 +19,8 @@
   const phaseTransitionBtn = document.getElementById('phase-transition-btn');
   const progressCompleteOverlay = document.getElementById('progress-complete-overlay');
   const finalOverlay = document.getElementById('final-overlay');
+  const finalTotalTimeEl = document.getElementById('final-total-time');
+  const finalPronunciationEl = document.getElementById('final-pronunciation');
   const finalProgressBar = document.getElementById('final-progress-bar');
   const finalProgressFill = document.getElementById('final-progress-fill');
   const finalMedalImage = document.getElementById('final-medal-image');
@@ -51,6 +53,7 @@
     prata: 'bronze',
     bronze: 'bronze'
   };
+  const MIRROR_PATH = 'data/mirror.json';
 
   const faseAudios = {
     1: document.getElementById('audio-abertura'),
@@ -103,6 +106,8 @@
   let completedLevelSnapshot = null;
   let levelStartTime = 0;
   let levelElapsedBase = 0;
+  let mirrorGroups = [];
+  let pronunciationSamples = [];
   let micPromptTimer = null;
   let levelUnlockTimer = null;
   const ROTATION_FADE_MS = 400;
@@ -564,6 +569,19 @@
     levelStartTime = 0;
   }
 
+  function formatElapsedTime(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  function getPronunciationAverage() {
+    if (!pronunciationSamples.length) return 0;
+    const sum = pronunciationSamples.reduce((total, value) => total + value, 0);
+    return sum / pronunciationSamples.length;
+  }
+
   function getMedalForErrors(errorCount) {
     if (errorCount >= 7) return 'prata';
     if (errorCount >= 4) return 'ouro';
@@ -604,6 +622,96 @@
 
   function normalizeMedalKey(medalKey) {
     return MEDAL_HEARTS[medalKey] ? medalKey : 'diamante';
+  }
+
+  function normalizeSpeechText(text) {
+    return String(text || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9' ]/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function applyMirrorGroups(text) {
+    if (!mirrorGroups.length || !text) return text;
+    let result = text;
+    mirrorGroups.forEach(group => {
+      const { canonical, variants } = group;
+      variants.forEach(variant => {
+        if (!variant || variant === canonical) return;
+        const escaped = escapeRegExp(variant);
+        const regex = new RegExp(`(^|\\s)${escaped}(?=\\s|$)`, 'g');
+        result = result.replace(regex, `$1${canonical}`);
+      });
+    });
+    return result;
+  }
+
+  function longestCommonSubstringLength(a, b) {
+    if (!a || !b) return 0;
+    const aLen = a.length;
+    const bLen = b.length;
+    const dp = Array.from({ length: aLen + 1 }, () => Array(bLen + 1).fill(0));
+    let maxLen = 0;
+    for (let i = 1; i <= aLen; i += 1) {
+      for (let j = 1; j <= bLen; j += 1) {
+        if (a[i - 1] === b[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+          if (dp[i][j] > maxLen) maxLen = dp[i][j];
+        }
+      }
+    }
+    return maxLen;
+  }
+
+  function calculateSequenceMatchPercent(expected, spoken) {
+    const normalizedExpected = applyMirrorGroups(normalizeSpeechText(expected));
+    const normalizedSpoken = applyMirrorGroups(normalizeSpeechText(spoken));
+    if (!normalizedExpected) return 0;
+    const longestMatch = longestCommonSubstringLength(normalizedExpected, normalizedSpoken);
+    return (longestMatch / normalizedExpected.length) * 100;
+  }
+
+  function isSpokenCorrect(expected, spoken) {
+    const percent = calculateSequenceMatchPercent(expected, spoken);
+    pronunciationSamples.push(percent);
+    return percent >= 50;
+  }
+
+  function normalizeMirrorGroups(data) {
+    if (!data || typeof data !== 'object') return [];
+    return Object.entries(data).map(([canonical, variants]) => {
+      const normalizedCanonical = normalizeSpeechText(canonical);
+      const normalizedVariants = Array.isArray(variants) ? variants : [];
+      const normalizedList = [normalizedCanonical, ...normalizedVariants.map(normalizeSpeechText)]
+        .filter(Boolean);
+      const unique = Array.from(new Set(normalizedList));
+      unique.sort((a, b) => b.length - a.length);
+      return {
+        canonical: normalizedCanonical,
+        variants: unique
+      };
+    }).filter(group => group.canonical);
+  }
+
+  async function loadMirrorGroups() {
+    try {
+      const response = await fetch(MIRROR_PATH);
+      if (!response.ok) {
+        mirrorGroups = [];
+        return;
+      }
+      const data = await response.json();
+      mirrorGroups = normalizeMirrorGroups(data);
+    } catch (error) {
+      mirrorGroups = [];
+    }
   }
 
   function getHeartsRemaining(errorCount) {
@@ -717,7 +825,7 @@
   }
 
   function loadAllImages() {
-    return Promise.all([loadStandardImages(), loadBuildingImages()]);
+    return Promise.all([loadStandardImages(), loadBuildingImages(), loadMirrorGroups()]);
   }
 
   function buildImageSrc(entry) {
@@ -788,6 +896,7 @@
     updateHeartsDisplay();
     updateMedalHud(currentMedalKey);
     updateFinalMedal(currentMedalKey);
+    pronunciationSamples = [];
   }
 
   function updateProgressBar() {
@@ -1579,14 +1688,6 @@
     showText('');
   }
 
-  function normalizeSpeechText(text) {
-    return String(text || '').trim();
-  }
-
-  function isSpokenCorrect(expected, spoken) {
-    return normalizeSpeechText(expected) === normalizeSpeechText(spoken);
-  }
-
   function handleSpeechChallenge(expected, handler, options = {}) {
     if (awaiting) return;
     awaiting = true;
@@ -2113,6 +2214,13 @@
     if (finalOverlay) {
       finalOverlay.classList.add('active');
       finalOverlay.setAttribute('aria-hidden', 'false');
+    }
+    if (finalTotalTimeEl) {
+      finalTotalTimeEl.textContent = `Tempo total: ${formatElapsedTime(getLevelElapsedMs())}`;
+    }
+    if (finalPronunciationEl) {
+      const pronunciationAverage = getPronunciationAverage();
+      finalPronunciationEl.textContent = `Pronúncia: ${pronunciationAverage.toFixed(1)}%`;
     }
 
     const durationMs = finalAudio && finalAudio.duration ? finalAudio.duration * 1000 : 5000;

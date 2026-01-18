@@ -786,6 +786,19 @@
       text-transform: capitalize;
     }
 
+    .final-overlay__stats {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: center;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .final-overlay__stats p {
+      margin: 0;
+    }
+
     .phase-audio-progress {
       width: 100%;
       height: 8px;
@@ -996,6 +1009,10 @@
   <div class="final-overlay" id="final-overlay" aria-hidden="true">
     <div class="final-overlay__bar" id="final-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
       <div class="final-overlay__fill" id="final-progress-fill"></div>
+    </div>
+    <div class="final-overlay__stats">
+      <p id="final-total-time">Tempo total: 00:00</p>
+      <p id="final-pronunciation">Pronúncia: 0%</p>
     </div>
     <div class="final-overlay__medal">
       <img id="final-medal-image" src="medalhas/diamante.png" alt="Medalha diamante">
