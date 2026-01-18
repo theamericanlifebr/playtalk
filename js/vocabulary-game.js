@@ -70,6 +70,7 @@
   const PHASE_THREE_HINT_STORAGE_KEY = 'vocabulary-phase3-mic-hint';
   const LEVEL_TWO_UNLOCK_STORAGE_KEY = 'vocabulary-level2-unlock-at';
   const LEVEL_TWO_UNLOCK_HOUR = 6;
+  const HOMOPHONES_PATH = 'data/phrases/homophones.json';
 
   let images = [];
   let buildingImages = [];
@@ -91,6 +92,7 @@
   let recognition = null;
   let loadPromise = null;
   let buildingLoadPromise = null;
+  let homophonesLoadPromise = null;
   let fileLevels = new Map();
   let rotationTimer = null;
   let rotationIndex = 0;
@@ -109,6 +111,10 @@
   const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
   const audioElementCache = new Map();
   const FINAL_ADVANCE_DELAY_MS = 1500;
+  const homophones = {
+    normalizedToCanonical: {},
+    loaded: false
+  };
   const TENSE_STYLES = {
     'present-continuous': {
       ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
@@ -716,8 +722,49 @@
     return buildingLoadPromise;
   }
 
+  async function loadHomophones() {
+    if (homophones.loaded) return homophones;
+    if (homophonesLoadPromise) return homophonesLoadPromise;
+
+    homophonesLoadPromise = fetch(HOMOPHONES_PATH)
+      .then(response => (response.ok ? response.json() : []))
+      .then(data => {
+        const normalized = {};
+        if (Array.isArray(data)) {
+          data.forEach((group) => {
+            if (!Array.isArray(group) || group.length < 2) return;
+            const [canonical, ...values] = group;
+            const canonicalWord = String(canonical || '').trim();
+            if (!canonicalWord || /\s/.test(canonicalWord)) return;
+            const canonicalNormalized = normalizeWordKey(canonicalWord);
+            if (canonicalNormalized) {
+              normalized[canonicalNormalized] = canonicalWord;
+            }
+            values.forEach((value) => {
+              const candidate = String(value || '').trim();
+              if (!candidate || /\s/.test(candidate)) return;
+              const normalizedCandidate = normalizeWordKey(candidate);
+              if (normalizedCandidate) {
+                normalized[normalizedCandidate] = canonicalWord;
+              }
+            });
+          });
+        }
+        homophones.normalizedToCanonical = normalized;
+        homophones.loaded = true;
+        return homophones;
+      })
+      .catch(() => {
+        homophones.normalizedToCanonical = {};
+        homophones.loaded = true;
+        return homophones;
+      });
+
+    return homophonesLoadPromise;
+  }
+
   function loadAllImages() {
-    return Promise.all([loadStandardImages(), loadBuildingImages()]);
+    return Promise.all([loadStandardImages(), loadBuildingImages(), loadHomophones()]);
   }
 
   function buildImageSrc(entry) {
@@ -1583,6 +1630,21 @@
     return (text || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
   }
 
+  function normalizeWordKey(word) {
+    return String(word || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9']/gi, '')
+      .toLowerCase();
+  }
+
+  function applyHomophoneCanonical(word) {
+    if (!homophones.loaded) return word;
+    const normalized = normalizeWordKey(word);
+    if (!normalized) return word;
+    return homophones.normalizedToCanonical[normalized] || word;
+  }
+
   function splitWords(text) {
     return normalizeText(text).split(/[^\p{L}']+/gu).filter(Boolean);
   }
@@ -1596,8 +1658,8 @@
   }
 
   function isWordAccepted(expectedWord, spokenWord) {
-    const expected = normalizeText(expectedWord);
-    const spoken = normalizeText(spokenWord);
+    const expected = normalizeText(applyHomophoneCanonical(expectedWord));
+    const spoken = normalizeText(applyHomophoneCanonical(spokenWord));
 
     if (!spoken) return false;
     if (expected === spoken) return true;
@@ -1616,8 +1678,8 @@
   }
 
   function isWordAcceptedStrict(expectedWord, spokenWord, maxDistance = 1) {
-    const expected = normalizeText(expectedWord);
-    const spoken = normalizeText(spokenWord);
+    const expected = normalizeText(applyHomophoneCanonical(expectedWord));
+    const spoken = normalizeText(applyHomophoneCanonical(spokenWord));
     if (!spoken) return false;
     return levenshteinDistance(expected, spoken) <= maxDistance;
   }
