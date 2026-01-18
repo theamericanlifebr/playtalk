@@ -37,6 +37,7 @@
   const MEDAL_STORAGE_KEY = 'vocabulary-medals';
   const PROGRESS_STORAGE_KEY = 'vocabulary-progress';
   const COMPLETION_STORAGE_KEY = 'vocabulary-last-complete';
+  const LEVEL_TIME_STORAGE_KEY = 'vocabulary-level-times';
   const MEDAL_RANKING = { bronze: 0, prata: 1, ouro: 2, diamante: 3 };
   const MEDAL_HEARTS = {
     diamante: 5,
@@ -100,6 +101,8 @@
   let currentMedalKey = 'diamante';
   let heartsRemaining = MEDAL_HEARTS.diamante;
   let completedLevelSnapshot = null;
+  let levelStartTime = 0;
+  let levelElapsedBase = 0;
   let micPromptTimer = null;
   let levelUnlockTimer = null;
   const ROTATION_FADE_MS = 400;
@@ -514,6 +517,53 @@
     localStorage.removeItem(COMPLETION_STORAGE_KEY);
   }
 
+  function readLevelTimeStorage() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(LEVEL_TIME_STORAGE_KEY) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveLevelTimeStorage(data) {
+    localStorage.setItem(LEVEL_TIME_STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function updateLevelBestTime(levelNumber, elapsedMs) {
+    if (!Number.isFinite(levelNumber) || levelNumber <= 0) return;
+    if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return;
+    const storage = readLevelTimeStorage();
+    const key = String(levelNumber);
+    const existing = Number(storage[key]);
+    if (!Number.isFinite(existing) || elapsedMs < existing) {
+      storage[key] = Math.round(elapsedMs);
+      saveLevelTimeStorage(storage);
+    }
+  }
+
+  function startLevelTimer() {
+    levelElapsedBase = 0;
+    levelStartTime = Date.now();
+  }
+
+  function resumeLevelTimer(elapsedMs) {
+    levelElapsedBase = Math.max(0, Math.floor(Number(elapsedMs) || 0));
+    levelStartTime = Date.now();
+  }
+
+  function getLevelElapsedMs() {
+    if (!levelStartTime) {
+      return levelElapsedBase;
+    }
+    return levelElapsedBase + Math.max(0, Date.now() - levelStartTime);
+  }
+
+  function resetLevelTimer() {
+    levelElapsedBase = 0;
+    levelStartTime = 0;
+  }
+
   function getMedalForErrors(errorCount) {
     if (errorCount >= 7) return 'prata';
     if (errorCount >= 4) return 'ouro';
@@ -768,6 +818,7 @@
       medalKey: currentMedalKey,
       heartsRemaining,
       cycle: cycle.map(item => item.file),
+      levelElapsedMs: getLevelElapsedMs(),
       phaseFour: phase === 4 ? {
         batchStart: phaseFourBatchStart,
         resolved: phaseFourResolved
@@ -801,6 +852,7 @@
     errorStreak = Math.max(0, Number(stored.errorStreak) || 0);
     attemptCount = Math.max(0, Number(stored.attemptCount) || 0);
     totalErrors = Math.max(0, Number(stored.totalErrors) || 0);
+    resumeLevelTimer(stored.levelElapsedMs);
 
     updateLevelIndicators();
     updatePhaseLabel();
@@ -1468,8 +1520,7 @@
       if (awaiting) return;
       handleSpeechChallenge(expectedText, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
-        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
-        requireFullMatch: true
+        onListeningEnd: () => img.classList.remove('board__image-speech--listening')
       });
     };
 
@@ -2052,6 +2103,7 @@
     stopMicPromptLoop();
     if (nextPhase === 1) {
       resetLevelState();
+      startLevelTimer();
     }
     filterPool();
     resetProgress();
@@ -2125,6 +2177,7 @@
       const completedLevel = level;
       const medalKey = currentMedalKey;
       registerMedalResult(completedLevel, medalKey);
+      updateLevelBestTime(completedLevel, getLevelElapsedMs());
       updateFinalMedal(medalKey);
       currentMedalKey = medalKey;
       saveCompletionStorage({
@@ -2133,6 +2186,7 @@
         completedAt: Date.now()
       });
       clearProgressStorage();
+      resetLevelTimer();
       level += 1;
       completedLevelSnapshot = completedLevel;
       showFinalSequence(completedLevel);
