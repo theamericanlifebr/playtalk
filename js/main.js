@@ -434,6 +434,35 @@ function countCorrectCharacters(expected, answer) {
   return correct;
 }
 
+function evaluateAnswerMatch(expectedOptions, answer) {
+  const normalizedAnswer = String(answer || '').trim();
+  const options = Array.isArray(expectedOptions) ? expectedOptions : [expectedOptions];
+  let best = {
+    expected: '',
+    expectedChars: 0,
+    correctChars: 0,
+    ratio: 0
+  };
+
+  options.forEach((option) => {
+    const expected = String(option || '');
+    const expectedChars = countCorrectCharacters(expected, expected);
+    const correctChars = countCorrectCharacters(expected, normalizedAnswer);
+    const ratio = expectedChars > 0
+      ? correctChars / expectedChars
+      : (normalizedAnswer ? 0 : 1);
+    if (ratio > best.ratio) {
+      best = { expected, expectedChars, correctChars, ratio };
+    }
+  });
+
+  const isCorrect = best.expectedChars > 0
+    ? best.ratio >= 0.5
+    : normalizedAnswer.length === 0;
+
+  return { ...best, isCorrect };
+}
+
 function updateGameBalanceDisplay(balanceValue) {
   const scoreEl = document.getElementById('score');
   if (!scoreEl) {
@@ -3500,8 +3529,9 @@ function verificarResposta(overrideText = null) {
   const pt = getPtFromPhrase(currentEntry);
   const enVariants = getEnVariantsFromPhrase(currentEntry);
   const expectedOptions = esperadoLang === 'pt' ? [pt] : (enVariants.length ? enVariants : ['']);
-  const expectedPhrase = expectedOptions[0] || '';
-  const correto = expectedOptions.some(option => resposta === String(option || ''));
+  const matchResult = evaluateAnswerMatch(expectedOptions, resposta);
+  const expectedPhrase = matchResult.expected || expectedOptions[0] || '';
+  const correto = matchResult.isCorrect;
 
   if (trainingMode) {
     handleTrainingResponse({
@@ -3513,9 +3543,8 @@ function verificarResposta(overrideText = null) {
     return;
   }
 
-  const comparisonExpected = expectedOptions[0] || expectedPhrase;
-  const expectedChars = countCorrectCharacters(comparisonExpected, comparisonExpected);
-  const correctChars = countCorrectCharacters(comparisonExpected, resposta);
+  const expectedChars = matchResult.expectedChars || countCorrectCharacters(expectedPhrase, expectedPhrase);
+  const correctChars = matchResult.expectedChars ? matchResult.correctChars : countCorrectCharacters(expectedPhrase, resposta);
   stats.totalChars += expectedChars;
   stats.correctChars += correctChars;
   roundCorrectChars += correctChars;
