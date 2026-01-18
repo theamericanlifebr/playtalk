@@ -690,6 +690,10 @@
       pointer-events: none;
     }
 
+    body.phase-4 .progress-footer {
+      visibility: hidden;
+    }
+
     .progress-bar {
       width: min(520px, 92%);
       height: 12px;
@@ -736,17 +740,33 @@
     .final-overlay {
       position: fixed;
       inset: 0;
-      background: #fff;
+      background: url('backgrounds/background6.jpg') center/cover no-repeat fixed;
       z-index: 25;
       display: none;
       align-items: center;
       justify-content: center;
       flex-direction: column;
       gap: 24px;
+      color: #fff;
+      text-align: center;
+      overflow: hidden;
     }
 
     .final-overlay.active {
       display: flex;
+    }
+
+    .final-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(7, 19, 40, 0.6);
+      z-index: 0;
+    }
+
+    .final-overlay > * {
+      position: relative;
+      z-index: 1;
     }
 
     .final-overlay__bar {
@@ -757,6 +777,10 @@
       border-radius: 999px;
       overflow: hidden;
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 24px;
     }
 
     .final-overlay__fill {
@@ -770,33 +794,55 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .final-overlay__medal img {
-      width: 120px;
-      height: 120px;
+      width: 160px;
+      height: 160px;
       object-fit: contain;
     }
 
     .final-overlay__medal span {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: 800;
-      color: var(--text);
+      color: #fff;
       text-transform: capitalize;
     }
 
     .final-overlay__stats {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
-      text-align: center;
-      color: var(--text);
-      font-weight: 600;
+      gap: 32px;
+      align-items: center;
+      justify-content: center;
     }
 
-    .final-overlay__stats p {
-      margin: 0;
+    .final-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 160px;
+    }
+
+    .final-stat__icon {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+    }
+
+    .final-stat__value {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .final-stat__label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.85;
     }
 
     .phase-audio-progress {
@@ -1007,16 +1053,24 @@
 
   <div class="full-green-overlay" id="progress-complete-overlay" aria-hidden="true"></div>
   <div class="final-overlay" id="final-overlay" aria-hidden="true">
-    <div class="final-overlay__bar" id="final-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-      <div class="final-overlay__fill" id="final-progress-fill"></div>
-    </div>
-    <div class="final-overlay__stats">
-      <p id="final-total-time">Tempo total: 00:00</p>
-      <p id="final-pronunciation">Pronúncia: 0%</p>
-    </div>
     <div class="final-overlay__medal">
       <img id="final-medal-image" src="medalhas/diamante.png" alt="Medalha diamante">
       <span id="final-medal-label">Diamante</span>
+    </div>
+    <div class="final-overlay__stats">
+      <div class="final-stat">
+        <img class="final-stat__icon" src="SVG/speed.svg" alt="Ícone de tempo">
+        <div class="final-stat__value" id="final-total-time">00:00</div>
+        <div class="final-stat__label">Tempo</div>
+      </div>
+      <div class="final-stat">
+        <img class="final-stat__icon" src="SVG/speed.svg" alt="Ícone de pronúncia">
+        <div class="final-stat__value" id="final-pronunciation">0%</div>
+        <div class="final-stat__label">Pronúncia</div>
+      </div>
+    </div>
+    <div class="final-overlay__bar" id="final-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+      <div class="final-overlay__fill" id="final-progress-fill"></div>
     </div>
   </div>
 
