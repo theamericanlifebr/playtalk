@@ -552,6 +552,17 @@
     levelStartTime = Date.now();
   }
 
+  function pauseLevelTimer() {
+    if (!levelStartTime) return;
+    levelElapsedBase += Math.max(0, Date.now() - levelStartTime);
+    levelStartTime = 0;
+  }
+
+  function resumePausedLevelTimer() {
+    if (levelStartTime) return;
+    levelStartTime = Date.now();
+  }
+
   function resumeLevelTimer(elapsedMs) {
     levelElapsedBase = Math.max(0, Math.floor(Number(elapsedMs) || 0));
     levelStartTime = Date.now();
@@ -2061,6 +2072,8 @@
   }
 
   function handleProgressCompletion() {
+    pauseLevelTimer();
+    persistProgressState();
     if (phase === 1 || phase === 2 || phase === 3 || phase === 4) {
       awaiting = false;
       completionGridShown = true;
@@ -2115,13 +2128,17 @@
     stopMicPromptLoop();
     if (nextPhase === 1) {
       resetLevelState();
-      startLevelTimer();
     }
     filterPool();
     resetProgress();
     preparePhaseIntro();
     if (!skipIntroAudio) {
       await playPhaseIntro(nextPhase);
+    }
+    if (nextPhase === 1) {
+      startLevelTimer();
+    } else {
+      resumePausedLevelTimer();
     }
     advanceCycle();
     requestAnimationFrame(() => {
@@ -2188,8 +2205,9 @@
     if (phase === 7) {
       const completedLevel = level;
       const medalKey = currentMedalKey;
+      const finalElapsedMs = getLevelElapsedMs();
       registerMedalResult(completedLevel, medalKey);
-      updateLevelBestTime(completedLevel, getLevelElapsedMs());
+      updateLevelBestTime(completedLevel, finalElapsedMs);
       updateFinalMedal(medalKey);
       currentMedalKey = medalKey;
       saveCompletionStorage({
@@ -2198,10 +2216,9 @@
         completedAt: Date.now()
       });
       clearProgressStorage();
-      resetLevelTimer();
       level += 1;
       completedLevelSnapshot = completedLevel;
-      showFinalSequence(completedLevel);
+      showFinalSequence(completedLevel, finalElapsedMs);
       return;
     }
 
@@ -2210,17 +2227,17 @@
     });
   }
 
-  function showFinalSequence(completedLevel) {
+  function showFinalSequence(completedLevel, finalElapsedMs = 0) {
     if (finalOverlay) {
       finalOverlay.classList.add('active');
       finalOverlay.setAttribute('aria-hidden', 'false');
     }
     if (finalTotalTimeEl) {
-      finalTotalTimeEl.textContent = `Tempo total: ${formatElapsedTime(getLevelElapsedMs())}`;
+      finalTotalTimeEl.textContent = formatElapsedTime(finalElapsedMs);
     }
     if (finalPronunciationEl) {
       const pronunciationAverage = getPronunciationAverage();
-      finalPronunciationEl.textContent = `Pronúncia: ${pronunciationAverage.toFixed(1)}%`;
+      finalPronunciationEl.textContent = `${pronunciationAverage.toFixed(1)}%`;
     }
 
     const durationMs = finalAudio && finalAudio.duration ? finalAudio.duration * 1000 : 5000;
