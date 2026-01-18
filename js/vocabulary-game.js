@@ -528,13 +528,8 @@
   }
 
   function getHeartsRemaining(errorCount) {
-    if (errorCount <= 3) {
-      return Math.max(0, 3 - errorCount);
-    }
-    if (errorCount <= 6) {
-      return Math.max(0, 7 - errorCount);
-    }
-    return 0;
+    const totalHearts = 5;
+    return Math.max(0, totalHearts - errorCount);
   }
 
   function updateHeartsDisplay() {
