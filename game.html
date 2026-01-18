@@ -245,8 +245,10 @@
     }
 
     .board__image-single {
-      max-width: 90%;
-      max-height: 90%;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
       opacity: 0.85;
       aspect-ratio: 1 / 1;
       border-radius: 50%;
@@ -255,9 +257,10 @@
 
     .image-visual {
       position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
+      width: clamp(140px, 40vw, 220px);
+      height: clamp(140px, 40vw, 220px);
       --tense-ring: none;
       --tense-animation: none;
       --tense-glow: none;
@@ -296,14 +299,14 @@
       --ring-gradient: var(--tense-ring);
       --ring-animation: var(--tense-animation);
       --ring-glow: var(--tense-glow);
-      --ring-width: 20px;
+      --ring-width: 14px;
     }
 
     .image-ring--form {
       --ring-gradient: var(--form-ring);
       --ring-animation: var(--form-animation);
       --ring-glow: var(--form-glow);
-      --ring-width: 20px;
+      --ring-width: 8px;
       z-index: 2;
     }
 
@@ -316,6 +319,8 @@
     }
 
     .image-visual img {
+      width: 100%;
+      height: 100%;
       filter: var(--tense-filter);
       -webkit-mask-image: var(--tense-mask);
       mask-image: var(--tense-mask);
@@ -449,6 +454,16 @@
     .grid-card--enter {
       opacity: 0;
       animation: cardFadeIn 0.5s ease forwards;
+    }
+
+    .grid-card--dissolve {
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    .grid-card--gone {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .board--hidden { opacity: 0; pointer-events: none; }

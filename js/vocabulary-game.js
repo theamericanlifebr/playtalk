@@ -30,6 +30,10 @@
   const phaseAudioProgressFill = document.getElementById('phase-audio-progress-fill');
   const PHASE_DISSOLVE_MS = 500;
   const IMAGE_DISSOLVE_MS = 500;
+  const PHASE_FOUR_BATCH_SIZE = 6;
+  const PHASE_FOUR_GREEN_MS = 1000;
+  const PHASE_FOUR_DISSOLVE_MS = 1000;
+  const AUDIO_SKIP_TAP_COUNT = 5;
   const MEDAL_STORAGE_KEY = 'vocabulary-medals';
   const PROGRESS_STORAGE_KEY = 'vocabulary-progress';
   const COMPLETION_STORAGE_KEY = 'vocabulary-last-complete';
@@ -64,6 +68,10 @@
   let score = 0; // progresso / acertos
   let currentItem = null;
   let completionGridShown = false;
+  let phaseFourBatchStart = 0;
+  let phaseFourBatch = [];
+  let phaseFourExpectedIndex = 0;
+  let phaseFourResolved = 0;
 
   let awaiting = false;
   let recognition = null;
@@ -287,7 +295,7 @@
     window.requestAnimationFrame(resize);
   }
 
-  function playAudioElement(audio) {
+  function playAudioElement(audio, options = {}) {
     return new Promise(resolve => {
       if (!audio) {
         resolve(false);
@@ -295,6 +303,8 @@
       }
 
       let hasPlayed = false;
+      let cleanupSkip = null;
+      const { allowSkip = false, onSkip } = options;
 
       const markPlayed = () => {
         hasPlayed = true;
@@ -304,13 +314,24 @@
         audio.removeEventListener('playing', markPlayed);
         audio.removeEventListener('ended', finish);
         audio.removeEventListener('error', finish);
+        if (cleanupSkip) cleanupSkip();
         resolve(hasPlayed);
+      };
+
+      const handleSkip = () => {
+        audio.pause();
+        audio.currentTime = 0;
+        if (typeof onSkip === 'function') {
+          onSkip();
+        }
+        finish();
       };
 
       audio.currentTime = 0;
       audio.addEventListener('playing', markPlayed);
       audio.addEventListener('ended', finish);
       audio.addEventListener('error', finish);
+      cleanupSkip = allowSkip ? createTapSkipListener(handleSkip) : null;
 
       const playResult = audio.play();
       if (playResult && typeof playResult.then === 'function') {
@@ -602,7 +623,11 @@
   function buildImageSrc(entry) {
     const fileName = entry?.file;
     if (!fileName) return '';
-    return `images/${encodeURIComponent(fileName)}`;
+    const encodedPath = fileName
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
+    return `images/${encodedPath}`;
   }
 
   function getItemLevel(entry) {
@@ -644,6 +669,10 @@
     currentItem = null;
     completionGridShown = false;
     cycle = shuffle(pool);
+    phaseFourBatchStart = 0;
+    phaseFourBatch = [];
+    phaseFourExpectedIndex = 0;
+    phaseFourResolved = 0;
 
     if (!cycle.length) {
       showText('Nenhuma imagem disponível para este nível.');
@@ -662,6 +691,13 @@
 
   function updateProgressBar() {
     if (!progressFill) return;
+    if (phase === 4) {
+      const total = Math.max(phaseFourBatch.length, 1);
+      const percent = Math.min(100, Math.round((phaseFourResolved / total) * 100));
+      progressFill.style.width = `${percent}%`;
+      persistProgressState();
+      return;
+    }
     const total = Math.max(cycle.length, 1);
     const percent = Math.min(100, Math.round((score / total) * 100));
     progressFill.style.width = `${percent}%`;
@@ -678,7 +714,11 @@
       errorStreak,
       attemptCount,
       totalErrors,
-      cycle: cycle.map(item => item.file)
+      cycle: cycle.map(item => item.file),
+      phaseFour: phase === 4 ? {
+        batchStart: phaseFourBatchStart,
+        resolved: phaseFourResolved
+      } : null
     });
   }
 
@@ -728,6 +768,15 @@
     updateHeartsDisplay();
     updateMedalHud(currentMedalKey);
     updateFinalMedal(currentMedalKey);
+    const phaseFourState = stored.phaseFour && typeof stored.phaseFour === 'object' ? stored.phaseFour : null;
+    if (phase === 4) {
+      const batchStart = Number.isFinite(phaseFourState?.batchStart) ? phaseFourState.batchStart : 0;
+      const resolved = Number.isFinite(phaseFourState?.resolved) ? phaseFourState.resolved : 0;
+      phaseFourBatchStart = Math.max(0, batchStart);
+      phaseFourResolved = Math.max(0, resolved);
+      phaseFourExpectedIndex = phaseFourResolved;
+      phaseFourBatch = cycle.slice(phaseFourBatchStart, phaseFourBatchStart + PHASE_FOUR_BATCH_SIZE);
+    }
     updateProgressBar();
     completionGridShown = false;
     awaiting = false;
@@ -740,6 +789,10 @@
     index = 0;
     attemptCount = 0;
     cycle = shuffle(pool);
+    phaseFourBatchStart = 0;
+    phaseFourBatch = [];
+    phaseFourExpectedIndex = 0;
+    phaseFourResolved = 0;
   }
 
   function registerErrorAndCheckReset() {
@@ -784,18 +837,56 @@
     });
   }
 
-  function playAudioSource(src) {
+  function createTapSkipListener(onSkip) {
+    if (typeof onSkip !== 'function') return () => {};
+    let taps = 0;
+
+    const handleTap = () => {
+      taps += 1;
+      if (taps >= AUDIO_SKIP_TAP_COUNT) {
+        cleanup();
+        onSkip();
+      }
+    };
+
+    const cleanup = () => {
+      document.removeEventListener('pointerdown', handleTap);
+    };
+
+    document.addEventListener('pointerdown', handleTap);
+    return cleanup;
+  }
+
+  function playAudioSource(src, options = {}) {
     if (!src) return Promise.reject(new Error('No audio source available'));
 
     return new Promise((resolve, reject) => {
+      const { rate = 1, preservePitch = true, allowSkip = false, onSkip } = options;
       const cachedAudio = audioElementCache.get(src) || new Audio(src);
       audioElementCache.set(src, cachedAudio);
       cachedAudio.pause();
       cachedAudio.currentTime = 0;
+      cachedAudio.playbackRate = rate;
+      if (preservePitch) {
+        cachedAudio.preservesPitch = true;
+        cachedAudio.mozPreservesPitch = true;
+        cachedAudio.webkitPreservesPitch = true;
+      }
 
       const cleanup = () => {
         cachedAudio.removeEventListener('ended', handleEnded);
         cachedAudio.removeEventListener('error', handleError);
+        if (cleanupSkip) cleanupSkip();
+      };
+
+      const handleSkip = () => {
+        cachedAudio.pause();
+        cachedAudio.currentTime = 0;
+        cleanup();
+        if (typeof onSkip === 'function') {
+          onSkip();
+        }
+        resolve(true);
       };
 
       const handleEnded = () => {
@@ -810,6 +901,7 @@
 
       cachedAudio.addEventListener('ended', handleEnded);
       cachedAudio.addEventListener('error', handleError);
+      const cleanupSkip = allowSkip ? createTapSkipListener(handleSkip) : null;
 
       const playResult = cachedAudio.play();
       if (playResult && typeof playResult.then === 'function') {
@@ -818,12 +910,12 @@
     });
   }
 
-  function playPronunciation(entry) {
+  function playPronunciation(entry, options = {}) {
     const audioSrc = buildAudioSrc(entry);
     const text = typeof entry === 'string' ? entry : entry?.en || '';
 
     if (audioSrc) {
-      return playAudioSource(audioSrc).catch(() => speak(text));
+      return playAudioSource(audioSrc, options).catch(() => speak(text));
     }
 
     return speak(text);
@@ -1013,8 +1105,8 @@
     choiceRow.classList.remove('hidden-phase');
   }
 
-  function playPhaseIntro(nextPhase) {
-    return playAudioElement(faseAudios[nextPhase]);
+  function playPhaseIntro(nextPhase, options = {}) {
+    return playAudioElement(faseAudios[nextPhase], { allowSkip: true, ...options });
   }
 
   function preparePhaseIntro() {
@@ -1334,6 +1426,9 @@
       handleSpeechChallenge(expected, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+        requireFullMatch: true,
+        strictSequence: true,
+        maxWordDistance: 1
       });
     };
 
@@ -1390,6 +1485,13 @@
     return false;
   }
 
+  function isWordAcceptedStrict(expectedWord, spokenWord, maxDistance = 1) {
+    const expected = normalizeText(expectedWord);
+    const spoken = normalizeText(spokenWord);
+    if (!spoken) return false;
+    return levenshteinDistance(expected, spoken) <= maxDistance;
+  }
+
   function levenshteinDistance(a, b) {
     if (a === b) return 0;
     const aLen = a.length;
@@ -1417,11 +1519,26 @@
     return matrix[aLen][bLen];
   }
 
-  function isSpokenCorrect(expected, spoken, requireFullMatch = false) {
+  function isSpokenCorrect(expected, spoken, options = {}) {
     const expectedWords = splitWords(expected);
     const spokenWords = splitWords(spoken);
+    const { requireFullMatch = false, strictSequence = false, maxWordDistance = 2 } = options;
 
     if (!expectedWords.length || !spokenWords.length) return false;
+
+    if (strictSequence) {
+      for (let i = 0; i <= spokenWords.length - expectedWords.length; i += 1) {
+        let isMatch = true;
+        for (let j = 0; j < expectedWords.length; j += 1) {
+          if (!isWordAcceptedStrict(expectedWords[j], spokenWords[i + j], maxWordDistance)) {
+            isMatch = false;
+            break;
+          }
+        }
+        if (isMatch) return true;
+      }
+      return false;
+    }
 
     const requiredMatches = requireFullMatch
       ? expectedWords.length
@@ -1454,7 +1571,7 @@
     const onResult = (spoken) => {
       if (resolved) return;
       resolved = true;
-      const success = isSpokenCorrect(expected, spoken, options.requireFullMatch === true);
+      const success = isSpokenCorrect(expected, spoken, options);
 
       if (typeof onListeningEnd === 'function') {
         onListeningEnd();
@@ -1498,8 +1615,39 @@
 
   }
 
-  function showPhaseFourCard(item) {
-    currentItem = item;
+  function playPhaseFourBatchAudio(batch) {
+    let skipAll = false;
+    const markSkip = () => {
+      skipAll = true;
+    };
+
+    return batch.reduce((promise, entry) => (
+      promise.then(() => {
+        if (skipAll) return null;
+        return playPronunciation(entry, {
+          rate: 1.2,
+          preservePitch: true,
+          allowSkip: true,
+          onSkip: markSkip
+        });
+      })
+    ), Promise.resolve());
+  }
+
+  function initializePhaseFourBatch() {
+    if (!cycle.length) return [];
+    if (phaseFourBatchStart > index || index >= phaseFourBatchStart + PHASE_FOUR_BATCH_SIZE) {
+      phaseFourBatchStart = index;
+      phaseFourResolved = 0;
+      phaseFourExpectedIndex = 0;
+    }
+    phaseFourBatch = cycle.slice(phaseFourBatchStart, phaseFourBatchStart + PHASE_FOUR_BATCH_SIZE);
+    phaseFourExpectedIndex = Math.min(phaseFourResolved, phaseFourBatch.length);
+    return phaseFourBatch;
+  }
+
+  function showPhaseFourCard() {
+    currentItem = null;
     clearBoard();
     boardInner.classList.add('board__inner--grid');
     if (recognition && typeof recognition.stop === 'function') {
@@ -1510,71 +1658,77 @@
       }
     }
 
-    const primaryTargets = buildPhaseOptions(item, 3).map(entry => ({ ...entry, correct: true })).slice(0, 3);
-    const orderedTargets = primaryTargets.filter((entry, idx, arr) => arr.findIndex(el => el.file === entry.file) === idx);
-    while (orderedTargets.length < 3) {
-      orderedTargets.push(item);
+    const batch = initializePhaseFourBatch();
+    if (!batch.length) {
+      handleProgressCompletion();
+      return;
     }
-
-    const existingFiles = new Set(orderedTargets.map(entry => entry.file));
-    const fillerPool = shuffle(pool.filter(entry => !existingFiles.has(entry.file)));
-    const fillers = fillerPool.slice(0, Math.max(0, 6 - orderedTargets.length));
-    const selection = shuffle([...orderedTargets, ...fillers]).slice(0, 6);
-    let sequenceIndex = 0;
+    updateProgressBar();
 
     boardInner.innerHTML = '';
-    selection.forEach(entry => {
+    batch.forEach((entry, entryIndex) => {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'grid-card grid-card--enter';
-      card.dataset.file = entry.file;
+      card.dataset.index = String(entryIndex);
       const imageWrapper = createEntryImage(entry, 'grid-card__image', { fill: true });
       card.appendChild(imageWrapper);
+
+      if (entryIndex < phaseFourResolved) {
+        card.classList.add('grid-card--correct', 'grid-card--gone');
+        card.disabled = true;
+      }
+
       card.addEventListener('click', () => {
-        if (awaiting) return;
-        const expected = orderedTargets[sequenceIndex];
-        const isCorrect = expected && card.dataset.file === expected.file;
+        if (awaiting || card.disabled) return;
+        const expected = batch[phaseFourExpectedIndex];
+        const isCorrect = expected && entryIndex === phaseFourExpectedIndex;
         if (isCorrect) {
           errorStreak = 0;
           card.classList.add('grid-card--correct');
           card.disabled = true;
-          sequenceIndex += 1;
-          if (sequenceIndex >= orderedTargets.length) {
+          phaseFourExpectedIndex += 1;
+          phaseFourResolved += 1;
+          applyCorrectOutcome();
+          successAudio && successAudio.play().catch(() => {});
+          updateProgressBar();
+
+          window.setTimeout(() => {
+            card.classList.add('grid-card--dissolve');
+            window.setTimeout(() => {
+              card.classList.add('grid-card--gone');
+            }, PHASE_FOUR_DISSOLVE_MS);
+          }, PHASE_FOUR_GREEN_MS);
+
+          if (phaseFourExpectedIndex >= batch.length) {
             awaiting = true;
-            applyCorrectOutcome();
-            successAudio && successAudio.play().catch(() => {});
-            updateProgressBar();
-            setTimeout(() => {
+            window.setTimeout(() => {
               awaiting = false;
-              advanceCycle();
-            }, getAdvanceDelay(800));
+              if (index >= cycle.length) {
+                handleProgressCompletion();
+              } else {
+                phaseFourBatchStart = index;
+                phaseFourResolved = 0;
+                phaseFourExpectedIndex = 0;
+                advanceCycle();
+              }
+            }, PHASE_FOUR_GREEN_MS + PHASE_FOUR_DISSOLVE_MS);
           }
         } else {
-          const autoCorrect = registerAttemptAndCheckAutoCorrect();
-          if (autoCorrect) {
-            awaiting = true;
-            applyCorrectOutcome();
-            successAudio && successAudio.play().catch(() => {});
-            updateProgressBar();
-            setTimeout(() => {
-              awaiting = false;
+          card.classList.add('grid-card--wrong');
+          const reset = registerErrorAndCheckReset();
+          errorAudio && errorAudio.play().catch(() => {});
+          updateProgressBar();
+          window.setTimeout(() => {
+            card.classList.remove('grid-card--wrong');
+          }, 600);
+          if (reset) {
+            window.setTimeout(() => {
+              phaseFourBatchStart = 0;
+              phaseFourResolved = 0;
+              phaseFourExpectedIndex = 0;
               advanceCycle();
-            }, getAdvanceDelay(800));
-          } else {
-            awaiting = true;
-            card.classList.add('grid-card--wrong');
-            boardInner.querySelectorAll('.grid-card.grid-card--correct').forEach(btn => {
-              btn.classList.remove('grid-card--correct');
-              btn.disabled = false;
-            });
-            sequenceIndex = 0;
-            registerErrorAndCheckReset();
-            errorAudio && errorAudio.play().catch(() => {});
-            updateProgressBar();
-            setTimeout(() => {
-              awaiting = false;
-              advanceCycle();
-            }, getAdvanceDelay(1000));
+            }, 700);
           }
         }
       });
@@ -1583,10 +1737,13 @@
 
     choiceRow.innerHTML = '';
     showText('');
-    orderedTargets.reduce(
-      (prev, entry) => prev.then(() => playPronunciation(entry)),
-      Promise.resolve()
-    );
+
+    if (phaseFourResolved === 0) {
+      awaiting = true;
+      playPhaseFourBatchAudio(batch).finally(() => {
+        awaiting = false;
+      });
+    }
   }
 
   function advanceCycle() {
@@ -1612,7 +1769,7 @@
           showPhaseThreeCard(item);
           break;
         case 4:
-          showPhaseFourCard(item);
+          showPhaseFourCard();
           break;
         case 5:
           showPhaseFiveCard(item);
@@ -1716,27 +1873,38 @@
       phaseTransition.removeEventListener('pointerdown', attemptUnlock);
     };
 
-    function attemptUnlock() {
-      if (audioUnlocked || attemptInProgress) return;
-      attemptInProgress = true;
-      const audio = faseAudios[nextPhase];
-      const cleanupProgress = trackPhaseAudioProgress(audio);
-      playAudioElement(audio).then((played) => {
-        cleanupProgress();
-        attemptInProgress = false;
-        if (!played) return;
-        audioUnlocked = true;
-        phaseTransitionBtn.disabled = false;
-        detachAudioListeners();
-      });
-    }
-
     const startNextPhase = () => {
       phaseTransitionBtn.removeEventListener('click', startNextPhase);
       phaseTransition.classList.add('hidden');
       phaseTransition.setAttribute('aria-hidden', 'true');
       startPhase(nextPhase, { skipIntroAudio: true });
     };
+
+    function attemptUnlock() {
+      if (audioUnlocked || attemptInProgress) return;
+      attemptInProgress = true;
+      const audio = faseAudios[nextPhase];
+      const cleanupProgress = trackPhaseAudioProgress(audio);
+      playAudioElement(audio, {
+        allowSkip: true,
+        onSkip: () => {
+          cleanupProgress();
+          attemptInProgress = false;
+          if (audioUnlocked) return;
+          audioUnlocked = true;
+          phaseTransitionBtn.disabled = false;
+          detachAudioListeners();
+          startNextPhase();
+        }
+      }).then((played) => {
+        cleanupProgress();
+        attemptInProgress = false;
+        if (!played || audioUnlocked) return;
+        audioUnlocked = true;
+        phaseTransitionBtn.disabled = false;
+        detachAudioListeners();
+      });
+    }
 
     phaseTransitionBtn.addEventListener('click', startNextPhase);
     phaseTransition.addEventListener('click', attemptUnlock);
@@ -1964,6 +2132,36 @@
     });
   }
 
+  function setupMedalSkipShortcut() {
+    const medalTarget = gameMedalIcon ? gameMedalIcon.closest('.game-medal') || gameMedalIcon : null;
+    if (!medalTarget) return;
+    let taps = 0;
+    let resetTimer = null;
+
+    const reset = () => {
+      taps = 0;
+      if (resetTimer) {
+        clearTimeout(resetTimer);
+        resetTimer = null;
+      }
+    };
+
+    const handleTap = () => {
+      taps += 1;
+      if (taps >= 3) {
+        reset();
+        handleProgressCompletion();
+        return;
+      }
+      if (resetTimer) {
+        clearTimeout(resetTimer);
+      }
+      resetTimer = window.setTimeout(reset, 800);
+    };
+
+    medalTarget.addEventListener('pointerdown', handleTap);
+  }
+
   function init() {
     const storedProgress = readProgressStorage();
     const completionState = readCompletionStorage();
@@ -2009,6 +2207,8 @@
       startScreen.addEventListener('touchstart', handleStartInteraction, { passive: true });
       startScreen.addEventListener('pointerdown', handleStartInteraction);
     }
+
+    setupMedalSkipShortcut();
 
     nextLevelBtn.addEventListener('click', () => {
       if (level === 2 && isLevelTwoLocked()) {
