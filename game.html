@@ -248,6 +248,21 @@
       place-items: stretch;
     }
 
+    body.phase-4 .board {
+      height: auto;
+      aspect-ratio: 3 / 2;
+    }
+
+    body.phase-4 .board__inner--grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+
+    body.phase-4 .grid-card .image-visual {
+      width: 50%;
+      height: 50%;
+    }
+
     .board__image-single {
       width: 100%;
       height: 100%;
@@ -321,9 +336,12 @@
       --ring-width: 14px;
     }
 
-    body.phase-5 .image-ring--tense,
-    body.phase-7 .image-ring--tense {
+    body.phase-5 .image-ring--tense {
       --ring-width: 24px;
+    }
+
+    body.phase-7 .image-ring--tense {
+      --ring-width: 26px;
     }
 
     .image-ring--form {
@@ -334,9 +352,26 @@
       z-index: 2;
     }
 
-    body.phase-5 .image-ring--form,
-    body.phase-7 .image-ring--form {
+    body.phase-5 .image-ring--form {
       --ring-width: 18px;
+    }
+
+    body.phase-7 .image-ring--form {
+      --ring-width: 20px;
+    }
+
+    body.phase-7 .image-ring {
+      background: linear-gradient(135deg, rgba(8, 14, 32, 0.7), rgba(184, 206, 255, 0.35)), var(--ring-gradient, none);
+    }
+
+    @media (max-width: 768px) {
+      body.phase-7 .image-ring--tense {
+        --ring-width: 21px;
+      }
+
+      body.phase-7 .image-ring--form {
+        --ring-width: 15px;
+      }
     }
 
     .image-lens--tense { background: var(--tense-lens, none); }
