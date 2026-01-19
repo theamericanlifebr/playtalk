@@ -213,15 +213,11 @@
       --ring-gradient: var(--tense-ring);
       --ring-animation: var(--tense-animation);
       --ring-glow: var(--tense-glow);
-      --ring-width: 14px;
+      --ring-width: 15px;
     }
 
     .image-ring--form {
-      --ring-gradient: var(--form-ring);
-      --ring-animation: var(--form-animation);
-      --ring-glow: var(--form-glow);
-      --ring-width: 8px;
-      z-index: 2;
+      display: none;
     }
 
     .image-lens--tense { background: var(--tense-lens, none); }
@@ -564,68 +560,63 @@
     ];
 
     const TENSE_STYLES = {
+      '': {
+        ring: 'conic-gradient(#8dc9ff, #8dc9ff)'
+      },
+      'present-simple': {
+        ring: 'conic-gradient(#8dc9ff, #8dc9ff)'
+      },
       'present-continuous': {
-        ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
+        ring: 'conic-gradient(#8dc9ff, #cfeaff, #8dc9ff)',
         animation: 'spin 3s linear infinite'
       },
       'present-perfect': {
-        ring: 'conic-gradient(#14245a, #6b4bbf, #a2ff5f, #14245a)',
-        animation: 'spin 3s linear infinite',
-        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.6) brightness(1.05)'
+        ring: 'conic-gradient(#8dc9ff, #c2b15a, #f2c14f, #8dc9ff)'
       },
       'present-perfect-continuous': {
-        ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
-        animation: 'spin 3s linear infinite'
+        ring: 'conic-gradient(#8dc9ff, #cfeaff, #f78c1f, #8dc9ff)',
+        animation: 'spin 1s linear infinite'
       },
       'past-simple': {
-        ring: 'conic-gradient(#8d939e, #c6c9d0, #8d939e)',
-        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.5) brightness(1.06)'
+        ring: 'conic-gradient(#8d939e, #8d939e)',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
       },
       'past-continuous': {
-        ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
+        ring: 'conic-gradient(#8d939e, #1b1b1b, #8d939e)',
         animation: 'spin 3s linear infinite',
-        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.55) brightness(1.05)'
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
       },
       'past-perfect': {
-        ring: 'conic-gradient(#c46a2c, #1b2b5a, #6b4b2a, #2f2f38, #c46a2c)',
-        animation: 'spin 8s linear infinite',
-        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.5) brightness(1.02) blur(1px)'
+        ring: 'conic-gradient(#8d939e, #1b1b1b, #f2c14f, #8d939e)',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
       },
       'past-perfect-continuous': {
-        ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
-        animation: 'spin 3s linear infinite',
-        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) saturate(0.5) brightness(1.03) blur(0.6px)'
+        ring: 'conic-gradient(#8d939e, #6f7480, #f78c1f, #8d939e)',
+        animation: 'spin 1s linear infinite',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
       },
       'future-simple': {
-        ring: 'conic-gradient(#5a4ba6, #1c2f6b, #5a4ba6)',
-        mask: 'linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 100%)'
+        ring: 'conic-gradient(#172c6b, #172c6b)'
       },
       'future-continuous': {
-        ring: 'conic-gradient(#5ed0ff, #36e07a, #5ed0ff)',
-        animation: 'spin 4s linear infinite',
-        glow: '0 0 14px rgba(94, 208, 255, 0.35)'
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #172c6b)',
+        animation: 'spin 3s linear infinite'
       },
       'future-perfect': {
-        ring: 'conic-gradient(#f6c453, #123b7d, #f6c453)',
-        animation: 'spin 6s linear infinite',
-        glow: '0 0 12px rgba(246, 196, 83, 0.28)'
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #f2c14f, #172c6b)'
       },
       'future-perfect-continuous': {
-        ring: 'conic-gradient(#f6c453, #123b7d, #f6c453)',
-        animation: 'spin 6s linear infinite',
-        glow: '0 0 12px rgba(246, 196, 83, 0.28)'
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #f78c1f, #172c6b)',
+        animation: 'spin 1s linear infinite'
       },
       'going-to-future': {
-        ring: 'conic-gradient(#1c2f6b, #5a4ba6, #1c2f6b)',
-        animation: 'spin 5s linear infinite',
-        mask: 'linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.6) 100%)'
+        ring: 'conic-gradient(#172c6b, #172c6b)'
       },
       'present-continuous-future': {
-        ring: 'conic-gradient(#f78c1f, #3f8cff, #f6c453, #f78c1f)',
-        animation: 'spin-partial 3s linear infinite'
+        ring: 'conic-gradient(#172c6b, #172c6b)'
       },
       'present-simple-future': {
-        ring: 'conic-gradient(#1b2b5a, #1b2b5a)'
+        ring: 'conic-gradient(#172c6b, #172c6b)'
       },
       'conditional-would': {
         lens: 'linear-gradient(40deg, rgba(90, 150, 255, 0.75) 0%, rgba(90, 150, 255, 0) 60%)'
@@ -634,21 +625,15 @@
 
     const SENTENCE_FORM_STYLES = {
       affirmative: {
-        ring: 'conic-gradient(#29d67b, #7df0ad, #29d67b)',
         lens: 'linear-gradient(to top, rgba(41, 214, 123, 0.75) 0%, rgba(41, 214, 123, 0) 60%)'
       },
       negative: {
-        ring: 'conic-gradient(#ff4d4f, #ff8a8b, #ff4d4f)',
         lens: 'linear-gradient(to top, rgba(255, 77, 79, 0.75) 0%, rgba(255, 77, 79, 0) 60%)'
       },
       question: {
-        ring: 'conic-gradient(#e0711d, #f6b25e, #e0711d)',
-        animation: 'swing 1.5s ease-in-out infinite',
         lens: 'linear-gradient(to top, rgba(246, 178, 94, 0.75) 0%, rgba(246, 178, 94, 0) 60%)'
       },
       imperative: {
-        ring: 'conic-gradient(#f6c453, #f2a80b, #f6c453)',
-        animation: 'spin 2s linear infinite',
         lens: 'linear-gradient(to top, rgba(246, 196, 83, 0.75) 0%, rgba(246, 196, 83, 0) 60%)'
       }
     };
