@@ -1,0 +1,16 @@
+{
+  "days": {
+    "1": {
+      "phases": {
+        "1": "trilha1.mp3",
+        "2": "trilha2.mp3",
+        "3": "trilha3.mp3",
+        "4": "trilha4.mp3",
+        "5": "trilha5.mp3",
+        "6": "trilha6.mp3",
+        "7": "trilha7.mp3"
+      },
+      "postGame": ""
+    }
+  }
+}
