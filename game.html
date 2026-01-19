@@ -861,6 +861,13 @@
       transition: width 0.2s ease;
     }
 
+    .phase-audio-skip {
+      margin: 12px 0 0;
+      font-size: 15px;
+      font-weight: 400;
+      color: #4a4a4a;
+    }
+
     .overlay-card {
       width: min(520px, 92%);
       background: #fff;
@@ -1017,7 +1024,7 @@
   </main>
 
   <div class="progress-footer">
-    <div class="progress-bar" aria-label="Progresso do nível">
+    <div class="progress-bar" aria-label="Progresso do dia">
       <div class="progress-bar__fill" id="progress-fill"></div>
     </div>
   </div>
@@ -1033,6 +1040,7 @@
       <div class="overlay-actions">
         <button class="btn-orange" id="phase-transition-btn">Iniciar fase 2</button>
       </div>
+      <p class="phase-audio-skip is-hidden" id="phase-audio-skip">pular para o jogo</p>
       <div class="phase-audio-progress" id="phase-audio-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="phase-audio-progress__fill" id="phase-audio-progress-fill"></div>
       </div>
@@ -1041,7 +1049,7 @@
 
   <section class="game-overlay hidden" id="level-complete">
     <div class="overlay-card">
-      <h1>Pronto para o próximo nível?</h1>
+      <h1>Pronto para o próximo dia?</h1>
       <p id="level-complete-text"></p>
       <p class="level-complete__countdown" id="level-countdown"></p>
       <div class="overlay-actions">
@@ -1074,17 +1082,9 @@
     </div>
   </div>
 
-  <audio id="audio-abertura" src="gamesounds/abertura.mp3" preload="auto"></audio>
-  <audio id="audio-fase2" src="gamesounds/fase2.mp3" preload="auto"></audio>
-  <audio id="audio-fase3" src="gamesounds/fase3.mp3" preload="auto"></audio>
-  <audio id="audio-fase4" src="gamesounds/fase4.mp3" preload="auto"></audio>
-  <audio id="audio-fase5" src="gamesounds/fase5.mp3" preload="auto"></audio>
-  <audio id="audio-fase6" src="gamesounds/fase6.mp3" preload="auto"></audio>
-  <audio id="audio-fase7" src="gamesounds/fase7.mp3" preload="auto"></audio>
   <audio id="audio-success" src="gamesounds/success.mp3" preload="auto"></audio>
   <audio id="audio-error" src="gamesounds/error.mp3" preload="auto"></audio>
   <audio id="audio-conclusao" src="gamesounds/conclusao.mp3" preload="auto"></audio>
-  <audio id="audio-final" src="gamesounds/final_1.mp3" preload="auto"></audio>
   <audio id="audio-mic" src="gamesounds/mic.mp3" preload="auto"></audio>
 
   <script src="js/vocabulary-game.js"></script>
