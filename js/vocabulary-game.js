@@ -69,6 +69,9 @@
   const ACCURACY_RING_RESET_MS = 1000;
   const STREAK_HEART_TARGET = 10;
   const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
+  const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
+  const FLASHCARD_PRONUNCIATION_LIMIT = 10;
+  const FLASHCARD_TIME_LIMIT = 10;
   const AUDIO_RESOLVE_ENDPOINT = '/api/media/resolve';
   const successAudio = document.getElementById('audio-success');
   const errorAudio = document.getElementById('audio-error');
@@ -861,6 +864,92 @@
     return (longestMatch / normalizedExpected.length) * 100;
   }
 
+  function readFlashcardStats() {
+    try {
+      const stored = localStorage.getItem(FLASHCARD_STATS_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveFlashcardStats(stats) {
+    localStorage.setItem(FLASHCARD_STATS_STORAGE_KEY, JSON.stringify(stats));
+  }
+
+  function getFlashcardKey(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const text = entry.en || entry.nomeIngles || '';
+    const normalizedText = normalizeSpeechText(text);
+    if (normalizedText) return normalizedText;
+    return String(entry.file || entry.imagem || '').trim().toLowerCase();
+  }
+
+  function getFlashcardStatsEntry(stats, key) {
+    if (!key) return null;
+    if (!stats[key]) {
+      stats[key] = {
+        pronunciation: [],
+        durations: [],
+        lastPlayedAt: null,
+        lastSpokenAt: null,
+        lastHeardAt: null
+      };
+    }
+    return stats[key];
+  }
+
+  function pushLimited(list, value, limit) {
+    if (!Array.isArray(list)) return;
+    list.push(value);
+    while (list.length > limit) {
+      list.shift();
+    }
+  }
+
+  function recordFlashcardPlayed(entry) {
+    const key = getFlashcardKey(entry);
+    if (!key) return;
+    const stats = readFlashcardStats();
+    const record = getFlashcardStatsEntry(stats, key);
+    if (!record) return;
+    record.lastPlayedAt = Date.now();
+    saveFlashcardStats(stats);
+  }
+
+  function recordFlashcardHeard(entry) {
+    const key = getFlashcardKey(entry);
+    if (!key) return;
+    const stats = readFlashcardStats();
+    const record = getFlashcardStatsEntry(stats, key);
+    if (!record) return;
+    record.lastHeardAt = Date.now();
+    saveFlashcardStats(stats);
+  }
+
+  function recordFlashcardSpoken(entry, percent) {
+    const key = getFlashcardKey(entry);
+    if (!key) return;
+    const stats = readFlashcardStats();
+    const record = getFlashcardStatsEntry(stats, key);
+    if (!record) return;
+    const normalizedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    pushLimited(record.pronunciation, normalizedPercent, FLASHCARD_PRONUNCIATION_LIMIT);
+    record.lastSpokenAt = Date.now();
+    saveFlashcardStats(stats);
+  }
+
+  function recordFlashcardDuration(entry, durationMs) {
+    const key = getFlashcardKey(entry);
+    if (!key) return;
+    const stats = readFlashcardStats();
+    const record = getFlashcardStatsEntry(stats, key);
+    if (!record) return;
+    const normalizedDuration = Math.max(0, Number(durationMs) || 0);
+    pushLimited(record.durations, normalizedDuration, FLASHCARD_TIME_LIMIT);
+    saveFlashcardStats(stats);
+  }
+
   function isSpokenCorrect(expected, spoken) {
     const percent = calculateSequenceMatchPercent(expected, spoken);
     pronunciationSamples.push(percent);
@@ -1391,6 +1480,9 @@
     const text = typeof entry === 'string' ? entry : entry?.en || '';
 
     if (audioSrc) {
+      if (entry && typeof entry === 'object') {
+        recordFlashcardHeard(entry);
+      }
       return playAudioSource(audioSrc, options).catch(() => speak(text));
     }
 
@@ -1629,6 +1721,7 @@
 
   function showPhaseOneCard(item) {
     currentItem = item;
+    recordFlashcardPlayed(item);
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
     const imageWrapper = createEntryImage(item, 'board__image-single board__image-single--phase-one');
@@ -1708,6 +1801,7 @@
 
   function showPhaseTwoCards(item) {
     currentItem = item;
+    recordFlashcardPlayed(item);
     clearBoard();
     boardInner.classList.add('board__inner--grid');
     const selection = buildPhaseOptions(item, 4);
@@ -1785,6 +1879,7 @@
 
   function showPhaseThreeCard(item) {
     currentItem = item;
+    recordFlashcardPlayed(item);
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
     if (recognition && typeof recognition.stop === 'function') {
@@ -1811,7 +1906,8 @@
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
         progressTarget: imageWrapper,
-        evaluationTarget: img
+        evaluationTarget: img,
+        entry: item
       });
     };
 
@@ -1835,6 +1931,7 @@
 
   function showPhaseFiveCard(item) {
     currentItem = item;
+    recordFlashcardPlayed(item);
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
     if (recognition && typeof recognition.stop === 'function') {
@@ -1872,7 +1969,8 @@
             evaluationTarget: img,
             errorTextTarget: speechBtn,
             errorText: expectedText,
-            defaultText: buttonText
+            defaultText: buttonText,
+            entry: item
           });
         });
     };
@@ -1890,6 +1988,7 @@
 
   function showPhaseSixCard(item) {
     currentItem = item;
+    recordFlashcardPlayed(item);
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
     if (recognition && typeof recognition.stop === 'function') {
@@ -1911,7 +2010,8 @@
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
         progressTarget: imageWrapper,
-        evaluationTarget: img
+        evaluationTarget: img,
+        entry: item
       });
     };
 
@@ -1925,6 +2025,7 @@
 
   function showPhaseSevenCard(item) {
     currentItem = item;
+    recordFlashcardPlayed(item);
     clearBoard();
     boardInner.classList.remove('board__inner--grid');
     if (recognition && typeof recognition.stop === 'function') {
@@ -1950,7 +2051,8 @@
         strictSequence: true,
         maxWordDistance: 1,
         progressTarget: imageWrapper,
-        evaluationTarget: img
+        evaluationTarget: img,
+        entry: item
       });
     };
 
@@ -1974,6 +2076,7 @@
   function handleSpeechChallenge(expected, handler, options = {}) {
     if (awaiting) return;
     awaiting = true;
+    const speechStartedAt = Date.now();
     const {
       onListeningStart,
       onListeningEnd,
@@ -1990,6 +2093,7 @@
       if (resolved) return;
       resolved = true;
       const { success, percent } = isSpokenCorrect(expected, spoken, options);
+      const entry = options.entry || currentItem;
 
       if (typeof onListeningEnd === 'function') {
         onListeningEnd();
@@ -2057,6 +2161,12 @@
       await accuracyAnimation;
       if (evaluationTarget) {
         evaluationTarget.classList.remove('board__image-speech--evaluating');
+      }
+      if (entry && (phase === 3 || phase === 6 || phase === 7)) {
+        recordFlashcardSpoken(entry, percent);
+        if (phase === 6) {
+          recordFlashcardDuration(entry, Date.now() - speechStartedAt);
+        }
       }
       if (shouldRestoreText && errorTextTarget && typeof defaultText === 'string') {
         errorTextTarget.textContent = defaultText;
@@ -2135,6 +2245,7 @@
       handleProgressCompletion();
       return;
     }
+    batch.forEach(entry => recordFlashcardPlayed(entry));
     updateProgressBar();
 
     boardInner.innerHTML = '';
