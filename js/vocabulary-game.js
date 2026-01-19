@@ -30,6 +30,7 @@
   const heartNodes = Array.from(document.querySelectorAll('.game-heart'));
   const phaseAudioProgress = document.getElementById('phase-audio-progress');
   const phaseAudioProgressFill = document.getElementById('phase-audio-progress-fill');
+  const phaseAudioSkip = document.getElementById('phase-audio-skip');
   const PHASE_DISSOLVE_MS = 500;
   const IMAGE_DISSOLVE_MS = 500;
   const PHASE_FOUR_BATCH_SIZE = 6;
@@ -54,20 +55,12 @@
     bronze: 'bronze'
   };
   const MIRROR_PATH = 'data/mirror.json';
-
-  const faseAudios = {
-    1: document.getElementById('audio-abertura'),
-    2: document.getElementById('audio-fase2'),
-    3: document.getElementById('audio-fase3'),
-    4: document.getElementById('audio-fase4'),
-    5: document.getElementById('audio-fase5') || document.getElementById('audio-fase3'),
-    6: document.getElementById('audio-fase6') || document.getElementById('audio-fase3'),
-    7: document.getElementById('audio-fase7') || document.getElementById('audio-fase3')
-  };
+  const AUDIO_LEVELS_PATH = 'data/audiosniveis.json';
+  const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
+  const AUDIO_RESOLVE_ENDPOINT = '/api/media/resolve';
   const successAudio = document.getElementById('audio-success');
   const errorAudio = document.getElementById('audio-error');
   const conclusionAudio = document.getElementById('audio-conclusao');
-  const finalAudio = document.getElementById('audio-final');
   const micAudio = document.getElementById('audio-mic');
   const MIC_PROMPT_STORAGE_KEY = 'vocabulary-mic-prompted';
   const PHASE_THREE_HINT_STORAGE_KEY = 'vocabulary-phase3-mic-hint';
@@ -89,6 +82,9 @@
   let phaseFourExpectedIndex = 0;
   let phaseFourResolved = 0;
   let phaseFourAudioPlaying = false;
+  let audioLevelsConfig = null;
+  let audioLevelsPromise = null;
+  const resolvedAudioCache = new Map();
 
   let awaiting = false;
   let recognition = null;
@@ -463,7 +459,7 @@
   }
 
   function updateLevelIndicators() {
-    if (levelBadge) levelBadge.textContent = `Nível ${level}`;
+    if (levelBadge) levelBadge.textContent = `Dia ${level}`;
   }
 
   function updatePhaseLabel() {
@@ -516,6 +512,98 @@
 
   function saveCompletionStorage(data) {
     localStorage.setItem(COMPLETION_STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function readAudioListenedStorage() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(AUDIO_LISTENED_STORAGE_KEY) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveAudioListenedStorage(data) {
+    localStorage.setItem(AUDIO_LISTENED_STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function getPhaseAudioStorageKey(day, phaseNumber) {
+    return `day-${day}-phase-${phaseNumber}`;
+  }
+
+  function hasListenedPhaseAudio(day, phaseNumber) {
+    const storage = readAudioListenedStorage();
+    return Boolean(storage[getPhaseAudioStorageKey(day, phaseNumber)]);
+  }
+
+  function markPhaseAudioListened(day, phaseNumber) {
+    const storage = readAudioListenedStorage();
+    storage[getPhaseAudioStorageKey(day, phaseNumber)] = true;
+    saveAudioListenedStorage(storage);
+  }
+
+  function loadAudioLevelsConfig() {
+    if (audioLevelsConfig) return Promise.resolve(audioLevelsConfig);
+    if (audioLevelsPromise) return audioLevelsPromise;
+    audioLevelsPromise = fetch(AUDIO_LEVELS_PATH)
+      .then(response => (response.ok ? response.json() : {}))
+      .catch(() => ({}))
+      .then(data => {
+        audioLevelsConfig = data && typeof data === 'object' ? data : {};
+        return audioLevelsConfig;
+      });
+    return audioLevelsPromise;
+  }
+
+  function getDayAudioConfig(dayNumber) {
+    if (!audioLevelsConfig || typeof audioLevelsConfig !== 'object') return {};
+    const days = audioLevelsConfig.days && typeof audioLevelsConfig.days === 'object' ? audioLevelsConfig.days : {};
+    return days[String(dayNumber)] || {};
+  }
+
+  function getPhaseAudioName(dayNumber, phaseNumber) {
+    const dayConfig = getDayAudioConfig(dayNumber);
+    const phases = dayConfig.phases && typeof dayConfig.phases === 'object' ? dayConfig.phases : {};
+    const audioName = phases[String(phaseNumber)];
+    return typeof audioName === 'string' ? audioName.trim() : '';
+  }
+
+  function getPostGameAudioName(dayNumber) {
+    const dayConfig = getDayAudioConfig(dayNumber);
+    const audioName = dayConfig.postGame;
+    return typeof audioName === 'string' ? audioName.trim() : '';
+  }
+
+  async function resolveMediaUrl(fileName) {
+    const trimmed = typeof fileName === 'string' ? fileName.trim() : '';
+    if (!trimmed) return '';
+    if (resolvedAudioCache.has(trimmed)) {
+      return resolvedAudioCache.get(trimmed) || '';
+    }
+    try {
+      const response = await fetch(`${AUDIO_RESOLVE_ENDPOINT}?name=${encodeURIComponent(trimmed)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.success && typeof data.url === 'string') {
+          resolvedAudioCache.set(trimmed, data.url);
+          return data.url;
+        }
+      }
+    } catch (error) {
+      // ignore and fallback
+    }
+    const fallbackPath = trimmed
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
+    resolvedAudioCache.set(trimmed, `gamesounds/${fallbackPath}`);
+    return `gamesounds/${fallbackPath}`;
+  }
+
+  async function getAudioElementFromName(fileName) {
+    const src = await resolveMediaUrl(fileName);
+    if (!src) return null;
+    return getCachedAudioElement(src);
   }
 
   function clearCompletionStorage() {
@@ -894,7 +982,7 @@
     phaseFourResolved = 0;
 
     if (!cycle.length) {
-      showText('Nenhuma imagem disponível para este nível.');
+      showText('Nenhuma imagem disponível para este dia.');
     }
 
     updateProgressBar();
@@ -1090,13 +1178,19 @@
     return cleanup;
   }
 
+  function getCachedAudioElement(src) {
+    if (!src) return null;
+    const cached = audioElementCache.get(src) || new Audio(src);
+    audioElementCache.set(src, cached);
+    return cached;
+  }
+
   function playAudioSource(src, options = {}) {
     if (!src) return Promise.reject(new Error('No audio source available'));
 
     return new Promise((resolve, reject) => {
       const { rate = 1, preservePitch = true, allowSkip = false, onSkip } = options;
-      const cachedAudio = audioElementCache.get(src) || new Audio(src);
-      audioElementCache.set(src, cachedAudio);
+      const cachedAudio = getCachedAudioElement(src);
       cachedAudio.pause();
       cachedAudio.currentTime = 0;
       cachedAudio.playbackRate = rate;
@@ -1355,8 +1449,17 @@
     choiceRow.classList.remove('hidden-phase');
   }
 
-  function playPhaseIntro(nextPhase, options = {}) {
-    return playAudioElement(faseAudios[nextPhase], { allowSkip: true, ...options });
+  async function playPhaseIntro(nextPhase, options = {}) {
+    await loadAudioLevelsConfig();
+    const audioName = getPhaseAudioName(level, nextPhase);
+    if (!audioName) return false;
+    const audio = await getAudioElementFromName(audioName);
+    if (!audio) return false;
+    const listened = hasListenedPhaseAudio(level, nextPhase);
+    audio.addEventListener('ended', () => markPhaseAudioListened(level, nextPhase), { once: true });
+    const allowSkip = listened && options.allowSkip !== false;
+    const { allowSkip: _ignored, ...rest } = options;
+    return playAudioElement(audio, { ...rest, allowSkip });
   }
 
   function preparePhaseIntro() {
@@ -1986,7 +2089,7 @@
         progressCompleteOverlay.setAttribute('aria-hidden', 'false');
       }
 
-      playAudioElement(faseAudios[nextPhase]).then(() => {
+      Promise.resolve(playPhaseIntro(nextPhase)).then(() => {
         if (progressCompleteOverlay) {
           progressCompleteOverlay.classList.remove('active');
           progressCompleteOverlay.setAttribute('aria-hidden', 'true');
@@ -1996,7 +2099,7 @@
     });
   }
 
-  function showPhaseTransition(nextPhase) {
+  async function showPhaseTransition(nextPhase) {
     if (!phaseTransition || !phaseTransitionBtn || !phaseTransitionTitle) {
       startPhase(nextPhase);
       return;
@@ -2021,8 +2124,20 @@
     phaseTransition.setAttribute('aria-hidden', 'false');
 
     phaseTransitionBtn.disabled = true;
-    let audioUnlocked = false;
-    let attemptInProgress = false;
+    if (phaseAudioSkip) {
+      phaseAudioSkip.classList.add('is-hidden');
+    }
+    if (phaseAudioProgress) {
+      phaseAudioProgress.classList.remove('is-hidden');
+    }
+
+    await loadAudioLevelsConfig();
+    const audioName = getPhaseAudioName(level, nextPhase);
+    const audio = audioName ? await getAudioElementFromName(audioName) : null;
+    const hasAudio = Boolean(audioName && audio);
+    let audioPlaying = false;
+    let cleanupProgress = null;
+    let listened = hasAudio ? hasListenedPhaseAudio(level, nextPhase) : false;
 
     const detachAudioListeners = () => {
       phaseTransition.removeEventListener('click', attemptUnlock);
@@ -2032,43 +2147,72 @@
 
     const startNextPhase = () => {
       phaseTransitionBtn.removeEventListener('click', startNextPhase);
+      detachAudioListeners();
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      if (cleanupProgress) {
+        cleanupProgress();
+        cleanupProgress = null;
+      }
       phaseTransition.classList.add('hidden');
       phaseTransition.setAttribute('aria-hidden', 'true');
       startPhase(nextPhase, { skipIntroAudio: true });
     };
 
     function attemptUnlock() {
-      if (audioUnlocked || attemptInProgress) return;
-      attemptInProgress = true;
-      const audio = faseAudios[nextPhase];
-      const cleanupProgress = trackPhaseAudioProgress(audio);
-      playAudioElement(audio, {
-        allowSkip: true,
-        onSkip: () => {
-          cleanupProgress();
-          attemptInProgress = false;
-          if (audioUnlocked) return;
-          audioUnlocked = true;
+      if (!hasAudio || audioPlaying || !audio) return;
+      audioPlaying = true;
+      if (cleanupProgress) cleanupProgress();
+      cleanupProgress = trackPhaseAudioProgress(audio);
+      audio.addEventListener(
+        'ended',
+        () => {
+          markPhaseAudioListened(level, nextPhase);
+          listened = true;
           phaseTransitionBtn.disabled = false;
-          detachAudioListeners();
-          startNextPhase();
+        },
+        { once: true }
+      );
+      playAudioElement(audio).then((played) => {
+        audioPlaying = false;
+        if (cleanupProgress) {
+          cleanupProgress();
+          cleanupProgress = null;
         }
-      }).then((played) => {
-        cleanupProgress();
-        attemptInProgress = false;
-        if (!played || audioUnlocked) return;
-        audioUnlocked = true;
+        if (!played) {
+          if (audio.error) {
+            phaseTransitionBtn.disabled = false;
+          }
+          return;
+        }
+        if (!listened) {
+          markPhaseAudioListened(level, nextPhase);
+          listened = true;
+        }
         phaseTransitionBtn.disabled = false;
-        detachAudioListeners();
       });
     }
 
     phaseTransitionBtn.addEventListener('click', startNextPhase);
-    phaseTransition.addEventListener('click', attemptUnlock);
-    phaseTransition.addEventListener('touchstart', attemptUnlock, { passive: true });
-    phaseTransition.addEventListener('pointerdown', attemptUnlock);
-
-    attemptUnlock();
+    if (hasAudio) {
+      if (listened) {
+        phaseTransitionBtn.disabled = false;
+        if (phaseAudioSkip) {
+          phaseAudioSkip.classList.remove('is-hidden');
+        }
+      }
+      phaseTransition.addEventListener('click', attemptUnlock);
+      phaseTransition.addEventListener('touchstart', attemptUnlock, { passive: true });
+      phaseTransition.addEventListener('pointerdown', attemptUnlock);
+      attemptUnlock();
+    } else {
+      phaseTransitionBtn.disabled = false;
+      if (phaseAudioProgress) {
+        phaseAudioProgress.classList.add('is-hidden');
+      }
+    }
   }
 
   function handleProgressCompletion() {
@@ -2151,7 +2295,7 @@
     const nextLevel = level;
     saveLevelToStorage();
     updateLevelIndicators();
-    levelCompleteText.textContent = `Você concluiu o nível ${previousLevel}. Vamos para o nível ${nextLevel}?`;
+    levelCompleteText.textContent = `Você concluiu o dia ${previousLevel}. Vamos para o dia ${nextLevel}?`;
     if (levelCountdown) {
       levelCountdown.textContent = '';
     }
@@ -2175,17 +2319,17 @@
           if (remainingMs <= 0) {
             clearLevelUnlockTimer();
             nextLevelBtn.disabled = false;
-            nextLevelBtn.textContent = `Iniciar nivel ${nextLevel}`;
+            nextLevelBtn.textContent = `Iniciar dia ${nextLevel}`;
             nextLevelBtn.classList.remove('is-hidden');
             if (levelCountdown) {
-              levelCountdown.textContent = 'Próxima aula liberada!';
+              levelCountdown.textContent = 'Próximo dia liberado!';
             }
             return;
           }
           const { hours, minutes } = formatCountdownTime(remainingMs);
           nextLevelBtn.disabled = true;
           if (levelCountdown) {
-            levelCountdown.textContent = `Próxima aula em ${hours} horas e ${minutes} minutos`;
+            levelCountdown.textContent = `Próximo dia em ${hours} horas e ${minutes} minutos`;
           }
         };
         updateUnlockState();
@@ -2194,7 +2338,7 @@
         nextLevelBtn.disabled = false;
         nextLevelBtn.classList.remove('is-hidden');
         if (levelCountdown) {
-          levelCountdown.textContent = 'Próxima aula liberada!';
+          levelCountdown.textContent = 'Próximo dia liberado!';
         }
       }
     });
@@ -2227,7 +2371,7 @@
     });
   }
 
-  function showFinalSequence(completedLevel, finalElapsedMs = 0) {
+  async function showFinalSequence(completedLevel, finalElapsedMs = 0) {
     if (finalOverlay) {
       finalOverlay.classList.add('active');
       finalOverlay.setAttribute('aria-hidden', 'false');
@@ -2240,7 +2384,10 @@
       finalPronunciationEl.textContent = `${pronunciationAverage.toFixed(1)}%`;
     }
 
-    const durationMs = finalAudio && finalAudio.duration ? finalAudio.duration * 1000 : 5000;
+    await loadAudioLevelsConfig();
+    const postGameAudioName = getPostGameAudioName(completedLevel);
+    const postGameAudio = postGameAudioName ? await getAudioElementFromName(postGameAudioName) : null;
+    const durationMs = postGameAudio && postGameAudio.duration ? postGameAudio.duration * 1000 : 5000;
     const updateProgress = (percent) => {
       if (finalProgressFill) {
         finalProgressFill.style.width = `${percent}%`;
@@ -2277,8 +2424,8 @@
       showLevelCompleteOverlay(completedLevel);
     };
 
-    if (finalAudio) {
-      playAudioElement(finalAudio).then(finalize);
+    if (postGameAudio) {
+      playAudioElement(postGameAudio).then(finalize);
     } else {
       window.setTimeout(finalize, durationMs);
     }

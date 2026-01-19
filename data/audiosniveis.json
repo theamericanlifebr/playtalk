@@ -1,0 +1,16 @@
+{
+  "days": {
+    "1": {
+      "phases": {
+        "1": "abertura.mp3",
+        "2": "fase2.mp3",
+        "3": "fase3.mp3",
+        "4": "fase4.mp3",
+        "5": "fase5.mp3",
+        "6": "fase6.mp3",
+        "7": "fase7.mp3"
+      },
+      "postGame": "final_1.mp3"
+    }
+  }
+}
