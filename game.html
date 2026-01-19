@@ -359,6 +359,21 @@
       display: none;
     }
 
+    .image-ring--accuracy {
+      --accuracy-progress: 0deg;
+      --accuracy-opacity: 0;
+      --ring-width: 14px;
+      background: conic-gradient(
+        #22c55e 0deg,
+        #22c55e var(--accuracy-progress),
+        rgba(34, 197, 94, 0) var(--accuracy-progress),
+        rgba(34, 197, 94, 0) 360deg
+      );
+      opacity: var(--accuracy-opacity);
+      transition: --accuracy-progress 500ms linear, opacity 150ms linear;
+      z-index: 2;
+    }
+
     .image-lens--tense { background: var(--tense-lens, none); }
     .image-lens--form { background: var(--form-lens, none); }
 

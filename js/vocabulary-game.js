@@ -271,6 +271,8 @@
     tenseRing.className = 'image-ring image-ring--tense';
     const formRing = document.createElement('div');
     formRing.className = 'image-ring image-ring--form';
+    const accuracyRing = document.createElement('div');
+    accuracyRing.className = 'image-ring image-ring--accuracy';
     const tenseLens = document.createElement('div');
     tenseLens.className = 'image-lens image-lens--tense';
     const formLens = document.createElement('div');
@@ -278,6 +280,7 @@
 
     wrapper.appendChild(tenseRing);
     wrapper.appendChild(formRing);
+    wrapper.appendChild(accuracyRing);
     wrapper.appendChild(tenseLens);
     wrapper.appendChild(formLens);
     wrapper.appendChild(img);
@@ -850,7 +853,46 @@
   function isSpokenCorrect(expected, spoken) {
     const percent = calculateSequenceMatchPercent(expected, spoken);
     pronunciationSamples.push(percent);
-    return percent >= 50;
+    return {
+      percent,
+      success: percent >= 50
+    };
+  }
+
+  function getAccuracyRing(wrapper) {
+    if (!wrapper) return null;
+    return wrapper.querySelector('.image-ring--accuracy');
+  }
+
+  function setAccuracyRingProgress(ring, percent, isVisible) {
+    if (!ring) return;
+    const clamped = Math.max(0, Math.min(100, percent));
+    ring.style.setProperty('--accuracy-progress', `${clamped * 3.6}deg`);
+    ring.style.setProperty('--accuracy-opacity', isVisible ? '1' : '0');
+  }
+
+  function animateAccuracyRing(wrapper, percent) {
+    const ring = getAccuracyRing(wrapper);
+    if (!ring) return Promise.resolve();
+    const clamped = Math.max(0, Math.min(100, percent));
+    const animationDurationMs = 500;
+    const holdDurationMs = 500;
+
+    setAccuracyRingProgress(ring, 0, true);
+    return new Promise(resolve => {
+      window.requestAnimationFrame(() => {
+        setAccuracyRingProgress(ring, clamped, true);
+        window.setTimeout(() => {
+          window.setTimeout(() => {
+            setAccuracyRingProgress(ring, 0, true);
+            window.setTimeout(() => {
+              setAccuracyRingProgress(ring, 0, false);
+              resolve();
+            }, animationDurationMs);
+          }, holdDurationMs);
+        }, animationDurationMs);
+      });
+    });
   }
 
   function normalizeMirrorGroups(data) {
@@ -1728,6 +1770,7 @@
       handleSpeechChallenge(item.en, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+        progressTarget: imageWrapper
       });
     };
 
@@ -1772,7 +1815,8 @@
       handleSpeechChallenge(expectedText, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
-        afterFeedback: () => playPronunciation(item)
+        afterFeedback: () => playPronunciation(item),
+        progressTarget: imageWrapper
       });
     };
 
@@ -1814,7 +1858,8 @@
       if (awaiting) return;
       handleSpeechChallenge(expectedText, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
-        onListeningEnd: () => img.classList.remove('board__image-speech--listening')
+        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+        progressTarget: imageWrapper
       });
     };
 
@@ -1851,7 +1896,8 @@
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
         requireFullMatch: true,
         strictSequence: true,
-        maxWordDistance: 1
+        maxWordDistance: 1,
+        progressTarget: imageWrapper
       });
     };
 
@@ -1880,14 +1926,16 @@
       onListeningStart();
     }
     let resolved = false;
-    const onResult = (spoken) => {
+    const onResult = async (spoken) => {
       if (resolved) return;
       resolved = true;
-      const success = isSpokenCorrect(expected, spoken, options);
+      const { success, percent } = isSpokenCorrect(expected, spoken, options);
 
       if (typeof onListeningEnd === 'function') {
         onListeningEnd();
       }
+
+      const accuracyAnimation = animateAccuracyRing(options.progressTarget, percent);
 
       const triggerFeedback = (wasCorrect) => {
         const feedbackAudio = wasCorrect ? successAudio : errorAudio;
@@ -1917,10 +1965,11 @@
       }
 
       updateProgressBar();
+      await accuracyAnimation;
       setTimeout(() => {
         awaiting = false;
         advanceCycle();
-      }, getAdvanceDelay(1000));
+      }, getAdvanceDelay(0));
     };
 
     if (recognition) {
