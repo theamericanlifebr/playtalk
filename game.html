@@ -352,45 +352,11 @@
       --ring-gradient: var(--tense-ring);
       --ring-animation: var(--tense-animation);
       --ring-glow: var(--tense-glow);
-      --ring-width: 14px;
-    }
-
-    body.phase-5 .image-ring--tense {
-      --ring-width: 24px;
-    }
-
-    body.phase-7 .image-ring--tense {
-      --ring-width: 26px;
+      --ring-width: 15px;
     }
 
     .image-ring--form {
-      --ring-gradient: var(--form-ring);
-      --ring-animation: var(--form-animation);
-      --ring-glow: var(--form-glow);
-      --ring-width: 8px;
-      z-index: 2;
-    }
-
-    body.phase-5 .image-ring--form {
-      --ring-width: 18px;
-    }
-
-    body.phase-7 .image-ring--form {
-      --ring-width: 20px;
-    }
-
-    body.phase-7 .image-ring {
-      background: linear-gradient(135deg, rgba(8, 14, 32, 0.7), rgba(184, 206, 255, 0.35)), var(--ring-gradient, none);
-    }
-
-    @media (max-width: 768px) {
-      body.phase-7 .image-ring--tense {
-        --ring-width: 21px;
-      }
-
-      body.phase-7 .image-ring--form {
-        --ring-width: 15px;
-      }
+      display: none;
     }
 
     .image-lens--tense { background: var(--tense-lens, none); }
