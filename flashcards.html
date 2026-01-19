@@ -84,7 +84,7 @@
 
     main {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+      grid-template-columns: minmax(0, 1fr);
       gap: clamp(16px, 3vw, 32px);
       padding: clamp(16px, 4vw, 40px);
     }
@@ -184,17 +184,52 @@
       font-weight: 600;
     }
 
+    .detail-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 31, 68, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      padding: 20px;
+    }
+
+    .detail-modal.is-open {
+      display: flex;
+    }
+
     .detail-panel {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.96);
       border-radius: 20px;
       border: 1px solid var(--border);
-      padding: 24px;
+      padding: 28px;
       display: flex;
       flex-direction: column;
       gap: 18px;
-      position: sticky;
-      top: 120px;
+      position: relative;
       height: fit-content;
+    }
+
+    .detail-panel--modal {
+      width: min(960px, 90vw);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .detail-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      border: none;
+      background: rgba(11, 31, 68, 0.08);
+      color: var(--primary);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 16px;
     }
 
     .detail-header {
@@ -418,7 +453,7 @@
     <h1>Painel de Flashcards</h1>
     <div class="header-controls">
       <label class="control">
-        Níveis
+        Dia
         <select id="levelFilter"></select>
       </label>
       <label class="control">
@@ -434,10 +469,15 @@
   <main>
     <section>
       <div class="flashcard-grid" id="flashcardGrid"></div>
-      <p class="empty-state" id="emptyState" hidden>Nenhum flashcard desbloqueado neste nível ainda.</p>
+      <p class="empty-state" id="emptyState" hidden>Nenhum flashcard disponível para este dia.</p>
     </section>
+  </main>
 
-    <aside class="detail-panel" id="detailPanel">
+  <div class="detail-modal" id="detailModal" aria-hidden="true">
+    <div class="detail-panel detail-panel--modal" id="detailPanel">
+      <button class="detail-close" id="detailClose" type="button" aria-label="Fechar detalhes">
+        ✕
+      </button>
       <div class="detail-header">
         <div class="detail-header__circle" id="detailImage"></div>
         <div class="detail-header__info">
@@ -463,6 +503,10 @@
         <div class="stat">
           <h3>Falado há</h3>
           <span id="detailFalado">--</span>
+        </div>
+        <div class="stat">
+          <h3>Ouvido há</h3>
+          <span id="detailOuvido">--</span>
         </div>
       </div>
 
@@ -494,8 +538,8 @@
       </div>
       <p class="audio-note" id="audioNote">Toque novamente para ouvir 25% mais lento mantendo o tom.</p>
       <p class="detail-footer" id="detailFooter">Selecione um flashcard para ver o histórico.</p>
-    </aside>
-  </main>
+    </div>
+  </div>
 
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="modal-card">
@@ -533,83 +577,10 @@
   </div>
 
   <script>
-    const flashcards = [
-      {
-        id: 1,
-        imagem: 'images/1/01-1767824952267.webp',
-        nomePortugues: 'Eu estou feliz',
-        nomeIngles: 'I am happy',
-        categoria: 'Presente simples',
-        audio: 'voices/1/01-1767742955934.mp3',
-        level: 'Nível 1',
-        unlocked: true,
-        active: true,
-        attempts: [92, 95, 90, 93, 96],
-        durations: [3.2, 2.8, 3.6, 2.9, 3.1],
-        lastPlayedAt: minutesAgo(32),
-        lastSpokenAt: minutesAgo(48)
-      },
-      {
-        id: 2,
-        imagem: 'images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp',
-        nomePortugues: 'Ela corre rápido',
-        nomeIngles: 'She runs fast',
-        categoria: 'Presente simples',
-        audio: 'voices/1/02-1767742960153.mp3',
-        level: 'Nível 1',
-        unlocked: true,
-        active: true,
-        attempts: [86, 88, 84, 90, 87, 89, 91],
-        durations: [3.5, 3.1, 3.0, 2.7, 3.2, 3.0, 2.9],
-        lastPlayedAt: minutesAgo(130),
-        lastSpokenAt: minutesAgo(120)
-      },
-      {
-        id: 3,
-        imagem: 'images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp',
-        nomePortugues: 'Nós viajamos amanhã',
-        nomeIngles: 'We travel tomorrow',
-        categoria: 'Futuro próximo',
-        audio: 'voices/1/03-1767742963886.mp3',
-        level: 'Nível 2',
-        unlocked: true,
-        active: false,
-        attempts: [70, 72, 68, 74],
-        durations: [4.2, 4.0, 4.5, 3.9],
-        lastPlayedAt: hoursAgo(5),
-        lastSpokenAt: hoursAgo(7)
-      },
-      {
-        id: 4,
-        imagem: 'images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp',
-        nomePortugues: 'Eles estavam cansados',
-        nomeIngles: 'They were tired',
-        categoria: 'Passado simples',
-        audio: 'voices/1/04-1767742968105.mp3',
-        level: 'Nível 2',
-        unlocked: true,
-        active: true,
-        attempts: [78, 80, 76, 82, 79],
-        durations: [4.0, 3.8, 4.1, 3.9, 3.7],
-        lastPlayedAt: hoursAgo(26),
-        lastSpokenAt: hoursAgo(30)
-      },
-      {
-        id: 5,
-        imagem: 'images/1/gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp',
-        nomePortugues: 'Eu gosto de música',
-        nomeIngles: 'I like music',
-        categoria: 'Presente simples',
-        audio: 'voices/1/05-1767742974323.mp3',
-        level: 'Nível 3',
-        unlocked: false,
-        active: true,
-        attempts: [90, 91],
-        durations: [3.1, 3.0],
-        lastPlayedAt: daysAgo(2),
-        lastSpokenAt: daysAgo(3)
-      }
-    ];
+    const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
+    const FLASHCARD_PRONUNCIATION_LIMIT = 10;
+    const FLASHCARD_TIME_LIMIT = 10;
+    const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
 
     const flashcardGrid = document.getElementById('flashcardGrid');
     const levelFilter = document.getElementById('levelFilter');
@@ -621,6 +592,7 @@
     const detailTempo = document.getElementById('detailTempo');
     const detailJogado = document.getElementById('detailJogado');
     const detailFalado = document.getElementById('detailFalado');
+    const detailOuvido = document.getElementById('detailOuvido');
     const detailFooter = document.getElementById('detailFooter');
     const detailImage = document.getElementById('detailImage');
     const emptyState = document.getElementById('emptyState');
@@ -636,33 +608,135 @@
     const editState = document.getElementById('editState');
     const cancelEdit = document.getElementById('cancelEdit');
     const saveEdit = document.getElementById('saveEdit');
+    const detailModal = document.getElementById('detailModal');
+    const detailClose = document.getElementById('detailClose');
 
+    let flashcards = [];
     let selectedCardId = null;
     let audioInstance = null;
     let audioClickCount = 0;
+    let recognition = null;
+    let flashcardStats = loadFlashcardStats();
 
-    function minutesAgo(value) {
-      const date = new Date();
-      date.setMinutes(date.getMinutes() - value);
-      return date;
+    function loadFlashcardStats() {
+      try {
+        const stored = localStorage.getItem(FLASHCARD_STATS_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+      } catch (error) {
+        return {};
+      }
     }
 
-    function hoursAgo(value) {
-      const date = new Date();
-      date.setHours(date.getHours() - value);
-      return date;
+    function saveFlashcardStats(stats) {
+      localStorage.setItem(FLASHCARD_STATS_STORAGE_KEY, JSON.stringify(stats));
+      flashcardStats = stats;
     }
 
-    function daysAgo(value) {
-      const date = new Date();
-      date.setDate(date.getDate() - value);
-      return date;
+    function normalizeSpeechText(text) {
+      return String(text || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9\s']/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
     }
 
-    function formatSince(date) {
-      if (!date) return '--';
-      const diffMs = Date.now() - date.getTime();
+    function longestCommonSubstringLength(a, b) {
+      if (!a || !b) return 0;
+      const aLen = a.length;
+      const bLen = b.length;
+      const dp = Array.from({ length: aLen + 1 }, () => Array(bLen + 1).fill(0));
+      let maxLen = 0;
+      for (let i = 1; i <= aLen; i += 1) {
+        for (let j = 1; j <= bLen; j += 1) {
+          if (a[i - 1] === b[j - 1]) {
+            dp[i][j] = dp[i - 1][j - 1] + 1;
+            if (dp[i][j] > maxLen) maxLen = dp[i][j];
+          }
+        }
+      }
+      return maxLen;
+    }
+
+    function calculateSequenceMatchPercent(expected, spoken) {
+      const normalizedExpected = normalizeSpeechText(expected);
+      const normalizedSpoken = normalizeSpeechText(spoken);
+      if (!normalizedExpected) return 0;
+      const longestMatch = longestCommonSubstringLength(normalizedExpected, normalizedSpoken);
+      return (longestMatch / normalizedExpected.length) * 100;
+    }
+
+    function getFlashcardKey(card) {
+      if (!card) return '';
+      const normalizedText = normalizeSpeechText(card.nomeIngles || card.en || '');
+      if (normalizedText) return normalizedText;
+      return String(card.file || '').trim().toLowerCase();
+    }
+
+    function ensureStatsEntry(stats, key) {
+      if (!stats[key]) {
+        stats[key] = {
+          pronunciation: [],
+          durations: [],
+          lastPlayedAt: null,
+          lastSpokenAt: null,
+          lastHeardAt: null
+        };
+      }
+      return stats[key];
+    }
+
+    function pushLimited(list, value, limit) {
+      if (!Array.isArray(list)) return;
+      list.push(value);
+      while (list.length > limit) {
+        list.shift();
+      }
+    }
+
+    function updatePronunciationStats(card, percent) {
+      const key = getFlashcardKey(card);
+      if (!key) return;
+      const stats = loadFlashcardStats();
+      const entry = ensureStatsEntry(stats, key);
+      const normalizedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+      pushLimited(entry.pronunciation, normalizedPercent, FLASHCARD_PRONUNCIATION_LIMIT);
+      entry.lastSpokenAt = Date.now();
+      saveFlashcardStats(stats);
+    }
+
+    function updateHeardStats(card) {
+      const key = getFlashcardKey(card);
+      if (!key) return;
+      const stats = loadFlashcardStats();
+      const entry = ensureStatsEntry(stats, key);
+      entry.lastHeardAt = Date.now();
+      saveFlashcardStats(stats);
+    }
+
+    function getPronuncia(card) {
+      const key = getFlashcardKey(card);
+      const entry = key ? flashcardStats[key] : null;
+      if (!entry || !Array.isArray(entry.pronunciation) || !entry.pronunciation.length) return null;
+      const total = entry.pronunciation.reduce((acc, value) => acc + value, 0);
+      return Math.round(total / entry.pronunciation.length);
+    }
+
+    function getTempo(card) {
+      const key = getFlashcardKey(card);
+      const entry = key ? flashcardStats[key] : null;
+      if (!entry || !Array.isArray(entry.durations) || !entry.durations.length) return null;
+      const total = entry.durations.reduce((acc, value) => acc + value, 0);
+      const averageMs = total / entry.durations.length;
+      return (averageMs / 1000).toFixed(1);
+    }
+
+    function formatSince(timestamp) {
+      if (!timestamp) return '--';
+      const diffMs = Date.now() - timestamp;
       const diffMinutes = Math.floor(diffMs / 60000);
+      if (diffMinutes < 1) return 'agora';
       if (diffMinutes < 60) return `${diffMinutes} minuto(s)`;
       const diffHours = Math.floor(diffMinutes / 60);
       if (diffHours < 24) return `${diffHours} horas`;
@@ -670,97 +744,103 @@
       return `${diffDays} dias`;
     }
 
-    function average(values) {
-      if (!values || values.length === 0) return 0;
-      return values.reduce((acc, value) => acc + value, 0) / values.length;
+    function hasSupportedAudioExtension(fileName = '') {
+      const lower = fileName.toLowerCase();
+      return SUPPORTED_AUDIO_EXTENSIONS.some(ext => lower.endsWith(ext));
     }
 
-    function getPronuncia(card) {
-      return Math.round(average(card.attempts));
+    function buildAudioSrc(audioName = '') {
+      const trimmed = audioName.trim();
+      if (!trimmed || !hasSupportedAudioExtension(trimmed)) return '';
+      const sanitized = trimmed.replace(/^[/\\]+/, '');
+      const encodedPath = sanitized
+        .split('/')
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
+      return sanitized.toLowerCase().startsWith('voices/') ? encodedPath : `voices/${encodedPath}`;
     }
 
-    function getTempo(card) {
-      return average(card.durations).toFixed(1);
+    function buildImageSrc(fileName = '') {
+      if (!fileName) return '';
+      const encodedPath = fileName
+        .split('/')
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
+      return `images/${encodedPath}`;
     }
 
-    function renderLevels() {
-      const levels = Array.from(new Set(flashcards.filter(card => card.unlocked).map(card => card.level)));
+    function getStoredDay() {
+      const stored = localStorage.getItem('vocabulary-level') || localStorage.getItem('pastaAtual');
+      const numeric = Number.parseInt(stored || '1', 10);
+      return Number.isFinite(numeric) && numeric > 0 ? numeric : 1;
+    }
+
+    function normalizeFlashcardEntry(entry, source, levelMap) {
+      if (!entry || typeof entry !== 'object') return null;
+      const file = entry.file || entry.imagem;
+      const en = entry.en || entry.nomeIngles;
+      if (!file || !en) return null;
+      const pt = entry.pt || entry.nomePortugues || '';
+      const categoria = entry.categoria || entry.category || entry.tense || '';
+      const categoryLabel = String(categoria || '').trim();
+      const numericCategory = Number(categoryLabel);
+      const day = source === 'building'
+        ? (Number.isFinite(numericCategory) && numericCategory > 0 ? numericCategory : 1)
+        : (levelMap.get(file) || 1);
+      return {
+        id: `${source}:${file}:${en}`,
+        file,
+        nomePortugues: pt,
+        nomeIngles: en,
+        categoria: !Number.isFinite(numericCategory) ? categoryLabel : (entry.sentenceForm || entry.tense || ''),
+        audio: entry.audio || '',
+        audioSrc: buildAudioSrc(entry.audio || ''),
+        imageSrc: buildImageSrc(file),
+        source,
+        day,
+        active: true
+      };
+    }
+
+    async function loadFlashcards() {
+      const [imagesData, buildingData, levelsData] = await Promise.all([
+        fetch('images/images.json')
+          .then(response => (response.ok ? response.json() : []))
+          .catch(() => []),
+        fetch('images/building.json')
+          .then(response => (response.ok ? response.json() : []))
+          .catch(() => []),
+        fetch('/api/image-levels').then(response => (response.ok ? response.json() : {})).catch(() => ({}))
+      ]);
+
+      const levelEntries = levelsData && typeof levelsData === 'object' ? levelsData.levels || {} : {};
+      const levelMap = new Map(Object.entries(levelEntries).map(([fileName, value]) => [fileName, Number(value)]));
+
+      const imageCards = Array.isArray(imagesData)
+        ? imagesData.map(entry => normalizeFlashcardEntry(entry, 'images', levelMap)).filter(Boolean)
+        : [];
+
+      const buildingCards = Array.isArray(buildingData)
+        ? buildingData.map(entry => normalizeFlashcardEntry(entry, 'building', levelMap)).filter(Boolean)
+        : [];
+
+      flashcards = [...imageCards, ...buildingCards];
+    }
+
+    function renderDays() {
+      const days = Array.from(new Set(flashcards.map(card => card.day))).sort((a, b) => a - b);
       levelFilter.innerHTML = '';
-      levels.forEach((level, index) => {
+      const storedDay = getStoredDay();
+      days.forEach(day => {
         const option = document.createElement('option');
-        option.value = level;
-        option.textContent = level;
-        if (index === 0) option.selected = true;
+        option.value = String(day);
+        option.textContent = `Dia ${day}`;
+        if (day === storedDay) option.selected = true;
         levelFilter.appendChild(option);
       });
-    }
-
-    function renderCards() {
-      const level = levelFilter.value;
-      const sortDirection = sortFilter.value;
-      const unlockedCards = flashcards.filter(card => card.unlocked && card.level === level);
-
-      unlockedCards.sort((a, b) => {
-        const diff = getPronuncia(a) - getPronuncia(b);
-        return sortDirection === 'asc' ? diff : -diff;
-      });
-
-      flashcardGrid.innerHTML = '';
-      if (unlockedCards.length === 0) {
-        emptyState.hidden = false;
-      } else {
-        emptyState.hidden = true;
+      if (!levelFilter.value && days.length) {
+        levelFilter.value = String(days[0]);
       }
-
-      unlockedCards.forEach(card => {
-        const cardEl = document.createElement('button');
-        cardEl.type = 'button';
-        cardEl.className = `flashcard ${card.active ? '' : 'is-disabled'} ${card.id === selectedCardId ? 'is-selected' : ''}`.trim();
-        cardEl.dataset.id = card.id;
-
-        const circle = document.createElement('div');
-        circle.className = 'flashcard__circle';
-
-        if (card.imagem) {
-          const img = document.createElement('img');
-          img.src = card.imagem;
-          img.alt = card.nomePortugues || 'Flashcard';
-          circle.appendChild(img);
-        } else {
-          circle.appendChild(createPlaceholder());
-        }
-
-        cardEl.appendChild(circle);
-        const title = document.createElement('div');
-        title.className = 'flashcard__title';
-        title.textContent = card.nomePortugues || 'Novo flashcard';
-        cardEl.appendChild(title);
-
-        const subtitle = document.createElement('div');
-        subtitle.className = 'flashcard__subtitle';
-        subtitle.textContent = card.nomeIngles || 'Toque para editar';
-        cardEl.appendChild(subtitle);
-
-        const meta = document.createElement('div');
-        meta.className = 'flashcard__meta';
-        meta.textContent = card.categoria || 'Tempo verbal';
-        cardEl.appendChild(meta);
-
-        cardEl.addEventListener('click', () => selectCard(card.id));
-        flashcardGrid.appendChild(cardEl);
-      });
-
-      const addCard = document.createElement('button');
-      addCard.type = 'button';
-      addCard.className = 'flashcard';
-      addCard.innerHTML = `
-        <div class="flashcard__circle">${createPlaceholder().outerHTML}</div>
-        <div class="flashcard__title">Adicionar flashcard</div>
-        <div class="flashcard__subtitle">Toque para criar um novo</div>
-        <div class="flashcard__meta">Painel PlayTalk</div>
-      `;
-      addCard.addEventListener('click', createNewFlashcard);
-      flashcardGrid.appendChild(addCard);
     }
 
     function createPlaceholder() {
@@ -776,6 +856,72 @@
       return placeholder;
     }
 
+    function renderCards() {
+      const day = Number(levelFilter.value || getStoredDay());
+      const sortDirection = sortFilter.value;
+      const dayCards = flashcards.filter(card => card.day === day);
+
+      dayCards.sort((a, b) => {
+        const aValue = getPronuncia(a) ?? 0;
+        const bValue = getPronuncia(b) ?? 0;
+        const diff = aValue - bValue;
+        return sortDirection === 'asc' ? diff : -diff;
+      });
+
+      flashcardGrid.innerHTML = '';
+      emptyState.hidden = dayCards.length > 0;
+
+      dayCards.forEach(card => {
+        const cardEl = document.createElement('button');
+        cardEl.type = 'button';
+        cardEl.className = `flashcard ${card.active ? '' : 'is-disabled'} ${card.id === selectedCardId ? 'is-selected' : ''}`.trim();
+        cardEl.dataset.id = card.id;
+
+        const circle = document.createElement('div');
+        circle.className = 'flashcard__circle';
+
+        if (card.imageSrc) {
+          const img = document.createElement('img');
+          img.src = card.imageSrc;
+          img.alt = card.nomePortugues || 'Flashcard';
+          circle.appendChild(img);
+        } else {
+          circle.appendChild(createPlaceholder());
+        }
+
+        cardEl.appendChild(circle);
+        const title = document.createElement('div');
+        title.className = 'flashcard__title';
+        title.textContent = card.nomePortugues || 'Flashcard';
+        cardEl.appendChild(title);
+
+        const subtitle = document.createElement('div');
+        subtitle.className = 'flashcard__subtitle';
+        subtitle.textContent = card.nomeIngles || 'Toque para ver';
+        cardEl.appendChild(subtitle);
+
+        const meta = document.createElement('div');
+        meta.className = 'flashcard__meta';
+        meta.textContent = card.categoria || 'Flashcard';
+        cardEl.appendChild(meta);
+
+        cardEl.addEventListener('click', () => selectCard(card.id));
+        flashcardGrid.appendChild(cardEl);
+      });
+    }
+
+    function openDetailModal() {
+      detailModal.classList.add('is-open');
+      detailModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeDetailModal() {
+      detailModal.classList.remove('is-open');
+      detailModal.setAttribute('aria-hidden', 'true');
+      selectedCardId = null;
+      renderCards();
+    }
+
     function selectCard(id) {
       const card = flashcards.find(item => item.id === id);
       if (!card) return;
@@ -783,38 +929,85 @@
       audioClickCount = 0;
       renderCards();
       updateDetail(card);
+      openDetailModal();
     }
 
     function updateDetail(card) {
+      flashcardStats = loadFlashcardStats();
+      const key = getFlashcardKey(card);
+      const stats = key ? flashcardStats[key] : null;
       detailTitle.textContent = card.nomePortugues || 'Flashcard em branco';
       detailSubtitle.textContent = card.nomeIngles || 'Edite as informações do flashcard.';
-      detailCategory.textContent = card.categoria || 'Tempo verbal não definido';
-      detailPronuncia.textContent = `${getPronuncia(card)}%`;
-      detailTempo.textContent = `${getTempo(card)}s`;
-      detailJogado.textContent = formatSince(card.lastPlayedAt);
-      detailFalado.textContent = formatSince(card.lastSpokenAt);
-      detailFooter.innerHTML = `Última atualização: <strong>${new Date(card.lastPlayedAt || Date.now()).toLocaleString('pt-BR')}</strong>`;
+      detailCategory.textContent = card.categoria || 'Flashcard';
+
+      const pronuncia = getPronuncia(card);
+      detailPronuncia.textContent = pronuncia === null ? '--' : `${pronuncia}%`;
+      const tempo = getTempo(card);
+      detailTempo.textContent = tempo === null ? '--' : `${tempo}s`;
+      detailJogado.textContent = formatSince(stats?.lastPlayedAt);
+      detailFalado.textContent = formatSince(stats?.lastSpokenAt);
+      detailOuvido.textContent = formatSince(stats?.lastHeardAt);
+      const lastUpdate = stats?.lastPlayedAt || stats?.lastSpokenAt || stats?.lastHeardAt;
+      detailFooter.innerHTML = lastUpdate
+        ? `Última atualização: <strong>${new Date(lastUpdate).toLocaleString('pt-BR')}</strong>`
+        : 'Sem histórico registrado ainda.';
 
       detailImage.innerHTML = '';
       const img = document.createElement('img');
-      img.src = card.imagem || 'SVG/logo.svg';
+      img.src = card.imageSrc || 'SVG/logo.svg';
       img.alt = card.nomePortugues || 'Flashcard';
       detailImage.appendChild(img);
 
-      const progress = getPronuncia(card);
+      const progress = pronuncia === null ? 0 : pronuncia;
       micProgress.style.setProperty('--progress', progress);
+      audioButton.disabled = !card.audioSrc;
     }
 
-    function simulatePronuncia() {
+    function setupSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+      }
+    }
+
+    function listenForSpeech() {
+      if (!recognition) {
+        const typed = window.prompt('Diga a frase em inglês:') || '';
+        return Promise.resolve(typed);
+      }
+      return new Promise(resolve => {
+        let resolved = false;
+        const finalize = (value) => {
+          if (resolved) return;
+          resolved = true;
+          resolve(value);
+        };
+        recognition.onresult = event => {
+          const text = Array.from(event.results)
+            .map(result => result[0] && result[0].transcript)
+            .join(' ');
+          finalize(text);
+        };
+        recognition.onerror = () => finalize('');
+        recognition.onend = () => finalize('');
+        recognition.start();
+      });
+    }
+
+    async function handlePronuncia() {
       if (!selectedCardId) return;
       const card = flashcards.find(item => item.id === selectedCardId);
       if (!card) return;
-      const newScore = Math.round(70 + Math.random() * 30);
-      const newDuration = (2 + Math.random() * 2).toFixed(1);
-      card.attempts = [...card.attempts, newScore].slice(-10);
-      card.durations = [...card.durations, Number(newDuration)].slice(-10);
-      card.lastPlayedAt = new Date();
-      card.lastSpokenAt = new Date();
+      micButton.disabled = true;
+      micButton.classList.add('is-listening');
+      const spoken = await listenForSpeech();
+      micButton.classList.remove('is-listening');
+      const percent = Math.round(calculateSequenceMatchPercent(card.nomeIngles || '', spoken));
+      updatePronunciationStats(card, percent);
+      micButton.disabled = false;
       updateDetail(card);
       renderCards();
     }
@@ -822,7 +1015,7 @@
     function playAudio() {
       if (!selectedCardId) return;
       const card = flashcards.find(item => item.id === selectedCardId);
-      if (!card || !card.audio) return;
+      if (!card || !card.audioSrc) return;
 
       if (audioInstance) {
         audioInstance.pause();
@@ -831,19 +1024,21 @@
 
       audioClickCount += 1;
       const rate = audioClickCount % 2 === 0 ? 0.75 : 1;
-      audioInstance = new Audio(card.audio);
+      audioInstance = new Audio(card.audioSrc);
       audioInstance.playbackRate = rate;
       audioInstance.preservesPitch = true;
       audioInstance.mozPreservesPitch = true;
       audioInstance.webkitPreservesPitch = true;
-      audioInstance.play();
+      audioInstance.play().catch(() => {});
+      updateHeardStats(card);
+      updateDetail(card);
     }
 
     function openEditModal() {
       if (!selectedCardId) return;
       const card = flashcards.find(item => item.id === selectedCardId);
       if (!card) return;
-      editImage.value = card.imagem || '';
+      editImage.value = card.imageSrc || '';
       editPortuguese.value = card.nomePortugues || '';
       editEnglish.value = card.nomeIngles || '';
       editCategory.value = card.categoria || '';
@@ -861,66 +1056,43 @@
       if (!selectedCardId) return;
       const card = flashcards.find(item => item.id === selectedCardId);
       if (!card) return;
-      card.imagem = editImage.value.trim();
+      const imageInput = editImage.value.trim();
+      card.imageSrc = imageInput || card.imageSrc;
       card.nomePortugues = editPortuguese.value.trim() || 'Sem frase em português';
       card.nomeIngles = editEnglish.value.trim() || 'Sem frase em inglês';
-      card.categoria = editCategory.value.trim() || 'Tempo verbal';
+      card.categoria = editCategory.value.trim() || 'Flashcard';
       card.active = editState.value === 'active';
       renderCards();
       updateDetail(card);
       closeEditModal();
     }
 
-    function createNewFlashcard() {
-      const nextId = Math.max(...flashcards.map(card => card.id)) + 1;
-      const newCard = {
-        id: nextId,
-        imagem: '',
-        nomePortugues: '',
-        nomeIngles: '',
-        categoria: '',
-        audio: '',
-        level: levelFilter.value,
-        unlocked: true,
-        active: true,
-        attempts: [0],
-        durations: [0],
-        lastPlayedAt: new Date(),
-        lastSpokenAt: new Date()
-      };
-      flashcards.push(newCard);
-      selectedCardId = nextId;
-      renderCards();
-      updateDetail(newCard);
-      openEditModal();
-    }
-
     levelFilter.addEventListener('change', () => {
-      renderCards();
-      selectedCardId = null;
-      detailTitle.textContent = 'Selecione um flashcard';
-      detailSubtitle.textContent = 'Veja histórico, pronúncia e ações rápidas.';
-      detailCategory.textContent = '';
-      detailPronuncia.textContent = '--';
-      detailTempo.textContent = '--';
-      detailJogado.textContent = '--';
-      detailFalado.textContent = '--';
-      detailFooter.textContent = 'Selecione um flashcard para ver o histórico.';
-      detailImage.innerHTML = '';
+      closeDetailModal();
     });
 
     sortFilter.addEventListener('change', renderCards);
-    micButton.addEventListener('click', simulatePronuncia);
+    micButton.addEventListener('click', handlePronuncia);
     audioButton.addEventListener('click', playAudio);
     editButton.addEventListener('click', openEditModal);
     cancelEdit.addEventListener('click', closeEditModal);
     saveEdit.addEventListener('click', saveEditModal);
+    detailClose.addEventListener('click', closeDetailModal);
+    detailModal.addEventListener('click', event => {
+      if (event.target === detailModal) closeDetailModal();
+    });
     editModal.addEventListener('click', event => {
       if (event.target === editModal) closeEditModal();
     });
 
-    renderLevels();
-    renderCards();
+    async function initializePage() {
+      setupSpeechRecognition();
+      await loadFlashcards();
+      renderDays();
+      renderCards();
+    }
+
+    initializePage();
   </script>
 </body>
 </html>
