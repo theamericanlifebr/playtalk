@@ -97,7 +97,7 @@
 
     .flashcard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
       gap: 20px;
     }
 
@@ -130,9 +130,32 @@
       box-shadow: 0 0 0 6px rgba(76, 150, 220, 0.2);
     }
 
-    .flashcard__circle {
+    .flashcard__visual {
+      position: relative;
       width: 120px;
       height: 120px;
+      display: grid;
+      place-items: center;
+      --tense-ring: none;
+      --tense-animation: none;
+      --tense-glow: none;
+      --form-ring: none;
+      --form-animation: none;
+      --form-glow: none;
+      --tense-filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25));
+      --tense-mask: none;
+      --tense-lens: none;
+      --form-lens: none;
+    }
+
+    .flashcard__visual--detail {
+      width: 88px;
+      height: 88px;
+    }
+
+    .flashcard__circle {
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
       background: var(--panel);
       display: flex;
@@ -141,12 +164,56 @@
       overflow: hidden;
       border: 2px solid rgba(11, 31, 68, 0.1);
       position: relative;
+      z-index: 2;
     }
 
     .flashcard__circle img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      filter: var(--tense-filter);
+      -webkit-mask-image: var(--tense-mask);
+      mask-image: var(--tense-mask);
+    }
+
+    .flashcard__circle .flashcard__placeholder {
+      filter: var(--tense-filter);
+    }
+
+    .image-ring,
+    .image-lens {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .image-ring {
+      background: var(--ring-gradient, none);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width, 12px)), #000 calc(100% - var(--ring-width, 12px)));
+      mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width, 12px)), #000 calc(100% - var(--ring-width, 12px)));
+      animation: var(--ring-animation, none);
+      box-shadow: var(--ring-glow, none);
+      z-index: 1;
+    }
+
+    .image-ring--tense {
+      --ring-gradient: var(--tense-ring);
+      --ring-animation: var(--tense-animation);
+      --ring-glow: var(--tense-glow);
+      --ring-width: 12px;
+    }
+
+    .image-ring--form {
+      display: none;
+    }
+
+    .image-lens--tense { background: var(--tense-lens, none); }
+    .image-lens--form { background: var(--form-lens, none); }
+
+    .image-lens {
+      inset: 8px;
+      z-index: 3;
     }
 
     .flashcard__placeholder {
@@ -168,20 +235,61 @@
       height: 36px;
     }
 
-    .flashcard__title {
-      font-weight: 700;
-      font-size: 15px;
+    .flashcard__phrase {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .flashcard__subtitle {
-      font-size: 13px;
-      color: var(--muted);
+    .flashcard__phrase:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
     }
 
     .flashcard__meta {
       font-size: 12px;
       color: var(--secondary);
-      font-weight: 600;
+      font-weight: 700;
+    }
+
+    .flashcard__actions {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .flashcard__action {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 12px;
+      padding: 8px 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .flashcard__action:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .flashcard__action svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--primary);
     }
 
     .detail-modal {
@@ -242,8 +350,10 @@
       width: 88px;
       height: 88px;
       border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid rgba(11, 31, 68, 0.1);
+      overflow: visible;
+      border: none;
+      display: grid;
+      place-items: center;
     }
 
     .detail-header__circle img {
@@ -446,6 +556,10 @@
       color: var(--primary);
       border: 1px solid var(--border);
     }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -581,6 +695,7 @@
     const FLASHCARD_PRONUNCIATION_LIMIT = 10;
     const FLASHCARD_TIME_LIMIT = 10;
     const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
+    const MIRROR_PATH = 'data/mirror.json';
 
     const flashcardGrid = document.getElementById('flashcardGrid');
     const levelFilter = document.getElementById('levelFilter');
@@ -616,7 +731,88 @@
     let audioInstance = null;
     let audioClickCount = 0;
     let recognition = null;
+    let mirrorGroups = [];
+    let phraseIntervals = [];
     let flashcardStats = loadFlashcardStats();
+
+    const TENSE_STYLES = {
+      '': {
+        ring: 'conic-gradient(#8dc9ff, #8dc9ff)'
+      },
+      'present-simple': {
+        ring: 'conic-gradient(#8dc9ff, #8dc9ff)'
+      },
+      'present-continuous': {
+        ring: 'conic-gradient(#8dc9ff, #cfeaff, #8dc9ff)',
+        animation: 'spin 3s linear infinite'
+      },
+      'present-perfect': {
+        ring: 'conic-gradient(#8dc9ff, #c2b15a, #f2c14f, #8dc9ff)'
+      },
+      'present-perfect-continuous': {
+        ring: 'conic-gradient(#8dc9ff, #cfeaff, #f78c1f, #8dc9ff)',
+        animation: 'spin 1s linear infinite'
+      },
+      'past-simple': {
+        ring: 'conic-gradient(#8d939e, #8d939e)',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
+      },
+      'past-continuous': {
+        ring: 'conic-gradient(#8d939e, #1b1b1b, #8d939e)',
+        animation: 'spin 3s linear infinite',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
+      },
+      'past-perfect': {
+        ring: 'conic-gradient(#8d939e, #1b1b1b, #f2c14f, #8d939e)',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
+      },
+      'past-perfect-continuous': {
+        ring: 'conic-gradient(#8d939e, #6f7480, #f78c1f, #8d939e)',
+        animation: 'spin 1s linear infinite',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
+      },
+      'future-simple': {
+        ring: 'conic-gradient(#172c6b, #172c6b)'
+      },
+      'future-continuous': {
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #172c6b)',
+        animation: 'spin 3s linear infinite'
+      },
+      'future-perfect': {
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #f2c14f, #172c6b)'
+      },
+      'future-perfect-continuous': {
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #f78c1f, #172c6b)',
+        animation: 'spin 1s linear infinite'
+      },
+      'going-to-future': {
+        ring: 'conic-gradient(#172c6b, #172c6b)'
+      },
+      'present-continuous-future': {
+        ring: 'conic-gradient(#172c6b, #172c6b)'
+      },
+      'present-simple-future': {
+        ring: 'conic-gradient(#172c6b, #172c6b)'
+      },
+      'conditional-would': {
+        lens: 'linear-gradient(40deg, rgba(90, 150, 255, 0.75) 0%, rgba(90, 150, 255, 0) 60%)'
+      }
+    };
+
+    const SENTENCE_FORM_STYLES = {
+      affirmative: {
+        lens: 'linear-gradient(to top, rgba(41, 214, 123, 0.75) 0%, rgba(41, 214, 123, 0) 60%)'
+      },
+      negative: {
+        lens: 'linear-gradient(to top, rgba(255, 77, 79, 0.75) 0%, rgba(255, 77, 79, 0) 60%)'
+      },
+      question: {
+        lens: 'linear-gradient(to top, rgba(246, 178, 94, 0.75) 0%, rgba(246, 178, 94, 0) 60%)'
+      },
+      imperative: {
+        lens: 'linear-gradient(to top, rgba(246, 196, 83, 0.75) 0%, rgba(246, 196, 83, 0) 60%)'
+      }
+    };
 
     function loadFlashcardStats() {
       try {
@@ -636,10 +832,29 @@
       return String(text || '')
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .replace(/[^a-z0-9\s']/g, '')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9' ]/gi, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+    }
+
+    function escapeRegExp(value) {
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function applyMirrorGroups(text) {
+      if (!mirrorGroups.length || !text) return text;
+      let result = text;
+      mirrorGroups.forEach(group => {
+        const { canonical, variants } = group;
+        variants.forEach(variant => {
+          if (!variant || variant === canonical) return;
+          const escaped = escapeRegExp(variant);
+          const regex = new RegExp(`(^|\\s)${escaped}(?=\\s|$)`, 'g');
+          result = result.replace(regex, `$1${canonical}`);
+        });
+      });
+      return result;
     }
 
     function longestCommonSubstringLength(a, b) {
@@ -660,11 +875,41 @@
     }
 
     function calculateSequenceMatchPercent(expected, spoken) {
-      const normalizedExpected = normalizeSpeechText(expected);
-      const normalizedSpoken = normalizeSpeechText(spoken);
+      const normalizedExpected = applyMirrorGroups(normalizeSpeechText(expected));
+      const normalizedSpoken = applyMirrorGroups(normalizeSpeechText(spoken));
       if (!normalizedExpected) return 0;
       const longestMatch = longestCommonSubstringLength(normalizedExpected, normalizedSpoken);
       return (longestMatch / normalizedExpected.length) * 100;
+    }
+
+    function normalizeMirrorGroups(data) {
+      if (!data || typeof data !== 'object') return [];
+      return Object.entries(data).map(([canonical, variants]) => {
+        const normalizedCanonical = normalizeSpeechText(canonical);
+        const normalizedVariants = Array.isArray(variants) ? variants : [];
+        const normalizedList = [normalizedCanonical, ...normalizedVariants.map(normalizeSpeechText)]
+          .filter(Boolean);
+        const unique = Array.from(new Set(normalizedList));
+        unique.sort((a, b) => b.length - a.length);
+        return {
+          canonical: normalizedCanonical,
+          variants: unique
+        };
+      }).filter(group => group.canonical);
+    }
+
+    async function loadMirrorGroups() {
+      try {
+        const response = await fetch(MIRROR_PATH);
+        if (!response.ok) {
+          mirrorGroups = [];
+          return;
+        }
+        const data = await response.json();
+        mirrorGroups = normalizeMirrorGroups(data);
+      } catch (error) {
+        mirrorGroups = [];
+      }
     }
 
     function getFlashcardKey(card) {
@@ -721,6 +966,13 @@
       if (!entry || !Array.isArray(entry.pronunciation) || !entry.pronunciation.length) return null;
       const total = entry.pronunciation.reduce((acc, value) => acc + value, 0);
       return Math.round(total / entry.pronunciation.length);
+    }
+
+    function getSpokenCount(card) {
+      const key = getFlashcardKey(card);
+      const entry = key ? flashcardStats[key] : null;
+      if (!entry || !Array.isArray(entry.pronunciation)) return 0;
+      return entry.pronunciation.length;
     }
 
     function getTempo(card) {
@@ -782,6 +1034,8 @@
       if (!file || !en) return null;
       const pt = entry.pt || entry.nomePortugues || '';
       const categoria = entry.categoria || entry.category || entry.tense || '';
+      const tense = entry.tense || '';
+      const sentenceForm = entry.sentenceForm || '';
       const categoryLabel = String(categoria || '').trim();
       const numericCategory = Number(categoryLabel);
       const day = source === 'building'
@@ -793,6 +1047,8 @@
         nomePortugues: pt,
         nomeIngles: en,
         categoria: !Number.isFinite(numericCategory) ? categoryLabel : (entry.sentenceForm || entry.tense || ''),
+        tense,
+        sentenceForm,
         audio: entry.audio || '',
         audioSrc: buildAudioSrc(entry.audio || ''),
         imageSrc: buildImageSrc(file),
@@ -800,6 +1056,71 @@
         day,
         active: true
       };
+    }
+
+    function getAccuracyBackground(accuracy) {
+      const percent = Math.max(0, Math.min(100, Number(accuracy) || 0));
+      if (percent <= 50) return '#e74c3c';
+      if (percent <= 60) return '#f39c12';
+      if (percent <= 69) return '#b8860b';
+      if (percent <= 79) return '#2ecc71';
+      if (percent <= 89) return 'linear-gradient(135deg, #2ecc71, #7bed9f)';
+      return '#2f8dff';
+    }
+
+    function applyTenseStyles(wrapper, card) {
+      if (!wrapper || !card) return;
+      const tenseStyle = TENSE_STYLES[card.tense] || {};
+      const formStyle = SENTENCE_FORM_STYLES[card.sentenceForm] || {};
+      wrapper.style.setProperty('--tense-ring', tenseStyle.ring || 'none');
+      wrapper.style.setProperty('--tense-animation', tenseStyle.animation || 'none');
+      wrapper.style.setProperty('--tense-glow', tenseStyle.glow || 'none');
+      wrapper.style.setProperty('--tense-filter', tenseStyle.filter || 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25))');
+      wrapper.style.setProperty('--tense-mask', tenseStyle.mask || 'none');
+      wrapper.style.setProperty('--tense-lens', tenseStyle.lens || 'none');
+      wrapper.style.setProperty('--form-ring', formStyle.ring || 'none');
+      wrapper.style.setProperty('--form-animation', formStyle.animation || 'none');
+      wrapper.style.setProperty('--form-glow', formStyle.glow || 'none');
+      wrapper.style.setProperty('--form-lens', formStyle.lens || 'none');
+    }
+
+    function createFlashcardVisual(card, options = {}) {
+      const visual = document.createElement('div');
+      visual.className = `flashcard__visual ${options.className || ''}`.trim();
+      applyTenseStyles(visual, card);
+
+      const tenseRing = document.createElement('div');
+      tenseRing.className = 'image-ring image-ring--tense';
+      const formRing = document.createElement('div');
+      formRing.className = 'image-ring image-ring--form';
+      const tenseLens = document.createElement('div');
+      tenseLens.className = 'image-lens image-lens--tense';
+      const formLens = document.createElement('div');
+      formLens.className = 'image-lens image-lens--form';
+
+      const circle = document.createElement('div');
+      circle.className = 'flashcard__circle';
+
+      if (card.imageSrc) {
+        const img = document.createElement('img');
+        img.src = card.imageSrc;
+        img.alt = card.nomePortugues || 'Flashcard';
+        circle.appendChild(img);
+      } else {
+        circle.appendChild(createPlaceholder());
+      }
+
+      visual.appendChild(tenseRing);
+      visual.appendChild(formRing);
+      visual.appendChild(circle);
+      visual.appendChild(tenseLens);
+      visual.appendChild(formLens);
+      return visual;
+    }
+
+    function clearPhraseIntervals() {
+      phraseIntervals.forEach(intervalId => clearInterval(intervalId));
+      phraseIntervals = [];
     }
 
     async function loadFlashcards() {
@@ -857,6 +1178,8 @@
     }
 
     function renderCards() {
+      flashcardStats = loadFlashcardStats();
+      clearPhraseIntervals();
       const day = Number(levelFilter.value || getStoredDay());
       const sortDirection = sortFilter.value;
       const dayCards = flashcards.filter(card => card.day === day);
@@ -872,40 +1195,88 @@
       emptyState.hidden = dayCards.length > 0;
 
       dayCards.forEach(card => {
-        const cardEl = document.createElement('button');
-        cardEl.type = 'button';
+        const cardEl = document.createElement('div');
         cardEl.className = `flashcard ${card.active ? '' : 'is-disabled'} ${card.id === selectedCardId ? 'is-selected' : ''}`.trim();
         cardEl.dataset.id = card.id;
+        cardEl.setAttribute('role', 'button');
+        cardEl.tabIndex = 0;
 
-        const circle = document.createElement('div');
-        circle.className = 'flashcard__circle';
+        const visual = createFlashcardVisual(card);
+        cardEl.appendChild(visual);
 
-        if (card.imageSrc) {
-          const img = document.createElement('img');
-          img.src = card.imageSrc;
-          img.alt = card.nomePortugues || 'Flashcard';
-          circle.appendChild(img);
-        } else {
-          circle.appendChild(createPlaceholder());
+        const phraseButton = document.createElement('button');
+        phraseButton.type = 'button';
+        phraseButton.className = 'flashcard__phrase';
+        const portuguese = card.nomePortugues || 'Flashcard';
+        const english = card.nomeIngles || '';
+        const phrases = english ? [portuguese, english] : [portuguese];
+        let phraseIndex = 0;
+        phraseButton.textContent = phrases[phraseIndex];
+        phraseButton.style.background = getAccuracyBackground(getPronuncia(card));
+        phraseButton.addEventListener('click', event => {
+          event.stopPropagation();
+          selectCard(card.id);
+        });
+        if (phrases.length > 1) {
+          const intervalId = window.setInterval(() => {
+            phraseIndex = (phraseIndex + 1) % phrases.length;
+            phraseButton.textContent = phrases[phraseIndex];
+          }, 3000);
+          phraseIntervals.push(intervalId);
         }
-
-        cardEl.appendChild(circle);
-        const title = document.createElement('div');
-        title.className = 'flashcard__title';
-        title.textContent = card.nomePortugues || 'Flashcard';
-        cardEl.appendChild(title);
-
-        const subtitle = document.createElement('div');
-        subtitle.className = 'flashcard__subtitle';
-        subtitle.textContent = card.nomeIngles || 'Toque para ver';
-        cardEl.appendChild(subtitle);
+        cardEl.appendChild(phraseButton);
 
         const meta = document.createElement('div');
         meta.className = 'flashcard__meta';
-        meta.textContent = card.categoria || 'Flashcard';
+        const spokenCount = getSpokenCount(card);
+        meta.textContent = `Falado ${spokenCount} ${spokenCount === 1 ? 'vez' : 'vezes'}`;
         cardEl.appendChild(meta);
 
+        const actions = document.createElement('div');
+        actions.className = 'flashcard__actions';
+
+        const pronounceButton = document.createElement('button');
+        pronounceButton.type = 'button';
+        pronounceButton.className = 'flashcard__action';
+        pronounceButton.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.09a6 6 0 0 0 5-5.91z" />
+          </svg>
+          Pronunciar
+        `;
+        pronounceButton.addEventListener('click', async event => {
+          event.stopPropagation();
+          pronounceButton.disabled = true;
+          await handlePronunciaForCard(card);
+          pronounceButton.disabled = false;
+        });
+
+        const hearButton = document.createElement('button');
+        hearButton.type = 'button';
+        hearButton.className = 'flashcard__action';
+        hearButton.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 5V4L8 9H4zm13.5 3a4.5 4.5 0 0 0-2.34-3.95l-1 1.73A2.5 2.5 0 0 1 16.5 12a2.5 2.5 0 0 1-2.34 2.22l1 1.73A4.5 4.5 0 0 0 17.5 12zm2.5 0c0 2.4-1.26 4.51-3.16 5.7l1 1.73A8 8 0 0 0 22 12a8 8 0 0 0-3.16-6.43l-1 1.73A6 6 0 0 1 20 12z" />
+          </svg>
+          Ouvir
+        `;
+        hearButton.disabled = !card.audioSrc;
+        hearButton.addEventListener('click', event => {
+          event.stopPropagation();
+          playAudioForCard(card);
+        });
+
+        actions.appendChild(pronounceButton);
+        actions.appendChild(hearButton);
+        cardEl.appendChild(actions);
+
         cardEl.addEventListener('click', () => selectCard(card.id));
+        cardEl.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            selectCard(card.id);
+          }
+        });
         flashcardGrid.appendChild(cardEl);
       });
     }
@@ -953,10 +1324,8 @@
         : 'Sem histórico registrado ainda.';
 
       detailImage.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = card.imageSrc || 'SVG/logo.svg';
-      img.alt = card.nomePortugues || 'Flashcard';
-      detailImage.appendChild(img);
+      const visual = createFlashcardVisual(card, { className: 'flashcard__visual--detail' });
+      detailImage.appendChild(visual);
 
       const progress = pronuncia === null ? 0 : pronuncia;
       micProgress.style.setProperty('--progress', progress);
@@ -997,24 +1366,29 @@
       });
     }
 
+    async function handlePronunciaForCard(card) {
+      if (!card) return;
+      const spoken = await listenForSpeech();
+      const percent = Math.round(calculateSequenceMatchPercent(card.nomeIngles || '', spoken));
+      updatePronunciationStats(card, percent);
+      if (selectedCardId === card.id) {
+        updateDetail(card);
+      }
+      renderCards();
+    }
+
     async function handlePronuncia() {
       if (!selectedCardId) return;
       const card = flashcards.find(item => item.id === selectedCardId);
       if (!card) return;
       micButton.disabled = true;
       micButton.classList.add('is-listening');
-      const spoken = await listenForSpeech();
+      await handlePronunciaForCard(card);
       micButton.classList.remove('is-listening');
-      const percent = Math.round(calculateSequenceMatchPercent(card.nomeIngles || '', spoken));
-      updatePronunciationStats(card, percent);
       micButton.disabled = false;
-      updateDetail(card);
-      renderCards();
     }
 
-    function playAudio() {
-      if (!selectedCardId) return;
-      const card = flashcards.find(item => item.id === selectedCardId);
+    function playAudioForCard(card) {
       if (!card || !card.audioSrc) return;
 
       if (audioInstance) {
@@ -1031,7 +1405,15 @@
       audioInstance.webkitPreservesPitch = true;
       audioInstance.play().catch(() => {});
       updateHeardStats(card);
-      updateDetail(card);
+      if (selectedCardId === card.id) {
+        updateDetail(card);
+      }
+    }
+
+    function playAudio() {
+      if (!selectedCardId) return;
+      const card = flashcards.find(item => item.id === selectedCardId);
+      playAudioForCard(card);
     }
 
     function openEditModal() {
@@ -1087,6 +1469,7 @@
 
     async function initializePage() {
       setupSpeechRecognition();
+      await loadMirrorGroups();
       await loadFlashcards();
       renderDays();
       renderCards();
