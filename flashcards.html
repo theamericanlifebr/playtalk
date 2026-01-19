@@ -97,11 +97,13 @@
 
     .flashcard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      grid-template-columns: repeat(3, 240px);
+      justify-content: center;
       gap: 20px;
     }
 
     .flashcard {
+      width: 240px;
       background: rgba(255, 255, 255, 0.92);
       border-radius: 18px;
       border: 1px solid var(--border);
@@ -114,6 +116,13 @@
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       position: relative;
+    }
+
+    @media (max-width: 900px) {
+      .flashcard-grid {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
     }
 
     .flashcard:hover {
