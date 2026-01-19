@@ -44,9 +44,15 @@
   const MEDAL_RANKING = { bronze: 0, prata: 1, ouro: 2, diamante: 3 };
   const MEDAL_HEARTS = {
     diamante: 5,
-    ouro: 3,
-    prata: 3,
-    bronze: 0
+    ouro: 5,
+    prata: 5,
+    bronze: 5
+  };
+  const MEDAL_UPGRADE = {
+    bronze: 'prata',
+    prata: 'ouro',
+    ouro: 'diamante',
+    diamante: 'bronze'
   };
   const MEDAL_DOWNGRADE = {
     diamante: 'ouro',
@@ -57,8 +63,11 @@
   const MIRROR_PATH = 'data/mirror.json';
   const AUDIO_LEVELS_PATH = 'data/audiosniveis.json';
   const PHASE_TRACKS_PATH = 'data/trilhas.json';
-  const PHASE_TRACK_VOLUME = 0.5;
+  const PHASE_TRACK_VOLUME = 0.25;
   const PHASE_TRACK_FADEOUT_MS = 2000;
+  const ACCURACY_RING_ANIMATION_MS = 1000;
+  const ACCURACY_RING_RESET_MS = 1000;
+  const STREAK_HEART_TARGET = 10;
   const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
   const AUDIO_RESOLVE_ENDPOINT = '/api/media/resolve';
   const successAudio = document.getElementById('audio-success');
@@ -103,6 +112,7 @@
   let gameStarted = false;
   let errorStreak = 0;
   let attemptCount = 0;
+  let correctStreak = 0;
   let totalErrors = 0;
   let currentMedalKey = 'diamante';
   let heartsRemaining = MEDAL_HEARTS.diamante;
@@ -749,9 +759,10 @@
   }
 
   function getPronunciationAverage() {
-    if (!pronunciationSamples.length) return 0;
-    const sum = pronunciationSamples.reduce((total, value) => total + value, 0);
-    return sum / pronunciationSamples.length;
+    const filtered = pronunciationSamples.filter(value => value >= 50);
+    if (!filtered.length) return 0;
+    const sum = filtered.reduce((total, value) => total + value, 0);
+    return sum / filtered.length;
   }
 
   function getMedalForErrors(errorCount) {
@@ -871,26 +882,31 @@
     ring.style.setProperty('--accuracy-opacity', isVisible ? '1' : '0');
   }
 
-  function animateAccuracyRing(wrapper, percent) {
+  function animateAccuracyRing(wrapper, percent, options = {}) {
     const ring = getAccuracyRing(wrapper);
-    if (!ring) return Promise.resolve();
+    if (!ring) {
+      if (typeof options.onPeak === 'function') {
+        options.onPeak();
+      }
+      return Promise.resolve();
+    }
     const clamped = Math.max(0, Math.min(100, percent));
-    const animationDurationMs = 500;
-    const holdDurationMs = 500;
+    const { onPeak } = options;
 
     setAccuracyRingProgress(ring, 0, true);
     return new Promise(resolve => {
       window.requestAnimationFrame(() => {
         setAccuracyRingProgress(ring, clamped, true);
         window.setTimeout(() => {
+          if (typeof onPeak === 'function') {
+            onPeak();
+          }
+          setAccuracyRingProgress(ring, 0, true);
           window.setTimeout(() => {
-            setAccuracyRingProgress(ring, 0, true);
-            window.setTimeout(() => {
-              setAccuracyRingProgress(ring, 0, false);
-              resolve();
-            }, animationDurationMs);
-          }, holdDurationMs);
-        }, animationDurationMs);
+            setAccuracyRingProgress(ring, 0, false);
+            resolve();
+          }, ACCURACY_RING_RESET_MS);
+        }, ACCURACY_RING_ANIMATION_MS);
       });
     });
   }
@@ -936,6 +952,23 @@
     heartNodes.forEach((node, idx) => {
       node.classList.toggle('game-heart--lost', idx >= total || idx >= remaining);
     });
+  }
+
+  function isStreakPhase(targetPhase) {
+    return targetPhase === 3 || targetPhase === 5 || targetPhase === 6 || targetPhase === 7;
+  }
+
+  function awardStreakHeart() {
+    const total = getHeartsTotal(currentMedalKey);
+    if (heartsRemaining < total) {
+      heartsRemaining += 1;
+    } else {
+      currentMedalKey = MEDAL_UPGRADE[currentMedalKey] || 'bronze';
+      heartsRemaining = 1;
+      updateMedalHud(currentMedalKey);
+      updateFinalMedal(currentMedalKey);
+    }
+    updateHeartsDisplay();
   }
 
   function registerMedalResult(levelNumber, medalKey) {
@@ -1084,6 +1117,7 @@
     index = 0;
     score = 0;
     errorStreak = 0;
+    correctStreak = 0;
     attemptCount = 0;
     currentItem = null;
     completionGridShown = false;
@@ -1108,6 +1142,7 @@
     updateMedalHud(currentMedalKey);
     updateFinalMedal(currentMedalKey);
     pronunciationSamples = [];
+    correctStreak = 0;
   }
 
   function updateProgressBar() {
@@ -1134,6 +1169,7 @@
       score,
       errorStreak,
       attemptCount,
+      correctStreak,
       totalErrors,
       medalKey: currentMedalKey,
       heartsRemaining,
@@ -1171,6 +1207,7 @@
     score = Math.max(0, Number(stored.score) || 0);
     errorStreak = Math.max(0, Number(stored.errorStreak) || 0);
     attemptCount = Math.max(0, Number(stored.attemptCount) || 0);
+    correctStreak = Math.max(0, Number(stored.correctStreak) || 0);
     totalErrors = Math.max(0, Number(stored.totalErrors) || 0);
     resumeLevelTimer(stored.levelElapsedMs);
 
@@ -1490,6 +1527,7 @@
     if (!textContainer) return;
     if (!message) {
       textContainer.textContent = '';
+      textContainer.classList.remove('text-container--split');
       textContainer.classList.toggle('active', false);
       return;
     }
@@ -1502,8 +1540,10 @@
         textContainer.appendChild(document.createElement('br'));
         textContainer.appendChild(document.createTextNode(lines[1]));
       }
+      textContainer.classList.add('text-container--split');
     } else {
       textContainer.textContent = message;
+      textContainer.classList.remove('text-container--split');
     }
 
     textContainer.classList.toggle('active', true);
@@ -1596,8 +1636,8 @@
 
     const wrongItem = getRandomWrongItem(item.file) || item;
     const options = shuffle([
-      { label: item.en, correct: true },
-      { label: wrongItem.en, correct: false }
+      { label: item.pt || item.en, correct: true },
+      { label: wrongItem.pt || wrongItem.en, correct: false }
     ]);
 
     choiceRow.innerHTML = '';
@@ -1683,7 +1723,7 @@
       boardInner.appendChild(card);
     });
 
-    playPronunciation(item);
+    playPronunciation(item, { rate: 0.8, preservePitch: true });
   }
 
   function highlightCorrectCard() {
@@ -1770,7 +1810,8 @@
       handleSpeechChallenge(item.en, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
-        progressTarget: imageWrapper
+        progressTarget: imageWrapper,
+        evaluationTarget: img
       });
     };
 
@@ -1810,24 +1851,34 @@
     const img = imageWrapper.querySelector('img');
     img.setAttribute('aria-hidden', 'true');
 
-    const startListening = () => {
-      if (awaiting) return;
-      handleSpeechChallenge(expectedText, startListening, {
-        onListeningStart: () => img.classList.add('board__image-speech--listening'),
-        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
-        afterFeedback: () => playPronunciation(item),
-        progressTarget: imageWrapper
-      });
-    };
-
-    img.addEventListener('click', startListening);
-    img.addEventListener('touchstart', startListening, { passive: true });
-
+    let promptPlaying = false;
     const speechBtn = document.createElement('button');
     speechBtn.type = 'button';
     speechBtn.className = 'phase-word-btn';
     speechBtn.textContent = buttonText;
     speechBtn.setAttribute('aria-label', `Toque e repita: ${expectedText}`);
+
+    const startListening = () => {
+      if (awaiting || promptPlaying) return;
+      promptPlaying = true;
+      Promise.resolve(playPronunciation(item))
+        .catch(() => {})
+        .finally(() => {
+          promptPlaying = false;
+          handleSpeechChallenge(expectedText, startListening, {
+            onListeningStart: () => img.classList.add('board__image-speech--listening'),
+            onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+            progressTarget: imageWrapper,
+            evaluationTarget: img,
+            errorTextTarget: speechBtn,
+            errorText: expectedText,
+            defaultText: buttonText
+          });
+        });
+    };
+
+    img.addEventListener('click', startListening);
+    img.addEventListener('touchstart', startListening, { passive: true });
     speechBtn.addEventListener('click', startListening);
 
     boardInner.appendChild(imageWrapper);
@@ -1859,7 +1910,8 @@
       handleSpeechChallenge(expectedText, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
-        progressTarget: imageWrapper
+        progressTarget: imageWrapper,
+        evaluationTarget: img
       });
     };
 
@@ -1897,7 +1949,8 @@
         requireFullMatch: true,
         strictSequence: true,
         maxWordDistance: 1,
-        progressTarget: imageWrapper
+        progressTarget: imageWrapper,
+        evaluationTarget: img
       });
     };
 
@@ -1921,7 +1974,14 @@
   function handleSpeechChallenge(expected, handler, options = {}) {
     if (awaiting) return;
     awaiting = true;
-    const { onListeningStart, onListeningEnd } = options;
+    const {
+      onListeningStart,
+      onListeningEnd,
+      evaluationTarget,
+      errorTextTarget,
+      errorText,
+      defaultText
+    } = options;
     if (typeof onListeningStart === 'function') {
       onListeningStart();
     }
@@ -1935,7 +1995,16 @@
         onListeningEnd();
       }
 
-      const accuracyAnimation = animateAccuracyRing(options.progressTarget, percent);
+      if (evaluationTarget) {
+        evaluationTarget.classList.add('board__image-speech--evaluating');
+      }
+
+      let shouldRestoreText = false;
+      if (!success && errorTextTarget && typeof errorText === 'string') {
+        errorTextTarget.textContent = errorText;
+        scheduleButtonTextFit(errorTextTarget, 18);
+        shouldRestoreText = true;
+      }
 
       const triggerFeedback = (wasCorrect) => {
         const feedbackAudio = wasCorrect ? successAudio : errorAudio;
@@ -1950,22 +2019,49 @@
         }
       };
 
+      let wasCorrect = success;
       if (success) {
         applyCorrectOutcome();
-        triggerFeedback(true);
       } else {
         const autoCorrect = registerAttemptAndCheckAutoCorrect();
         if (autoCorrect) {
           applyCorrectOutcome();
-          triggerFeedback(true);
+          wasCorrect = true;
         } else {
           registerErrorAndCheckReset();
-          triggerFeedback(false);
         }
       }
 
+      if (isStreakPhase(phase)) {
+        if (wasCorrect) {
+          correctStreak += 1;
+          if (correctStreak >= STREAK_HEART_TARGET) {
+            correctStreak = 0;
+            awardStreakHeart();
+          }
+        } else {
+          correctStreak = 0;
+        }
+      }
+
+      let feedbackTriggered = false;
+      const accuracyAnimation = animateAccuracyRing(options.progressTarget, percent, {
+        onPeak: () => {
+          if (feedbackTriggered) return;
+          feedbackTriggered = true;
+          triggerFeedback(wasCorrect);
+        }
+      });
+
       updateProgressBar();
       await accuracyAnimation;
+      if (evaluationTarget) {
+        evaluationTarget.classList.remove('board__image-speech--evaluating');
+      }
+      if (shouldRestoreText && errorTextTarget && typeof defaultText === 'string') {
+        errorTextTarget.textContent = defaultText;
+        scheduleButtonTextFit(errorTextTarget, 18);
+      }
       setTimeout(() => {
         awaiting = false;
         advanceCycle();
@@ -2386,6 +2482,9 @@
   async function startPhase(nextPhase, options = {}) {
     const { skipIntroAudio = false } = options;
     phase = nextPhase;
+    if (!isStreakPhase(nextPhase)) {
+      correctStreak = 0;
+    }
     updatePhaseLabel();
     updateRecognitionLanguage(nextPhase);
     applyBoardSizing(nextPhase);

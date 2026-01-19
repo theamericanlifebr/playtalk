@@ -321,12 +321,13 @@
     }
 
     body.phase-7 .image-visual {
-      transform: scale(0.94);
+      transform: scale(1);
       transform-origin: center;
+      --image-visual-size: clamp(168px, 48vw, 264px);
     }
 
     body.phase-7 .image-visual img {
-      border: 18px solid transparent;
+      border: 22px solid transparent;
       border-radius: 50%;
       box-sizing: border-box;
     }
@@ -370,7 +371,7 @@
         rgba(34, 197, 94, 0) 360deg
       );
       opacity: var(--accuracy-opacity);
-      transition: --accuracy-progress 500ms linear, opacity 150ms linear;
+      transition: --accuracy-progress 1000ms linear;
       z-index: 2;
     }
 
@@ -423,6 +424,14 @@
     .board__image-speech--listening {
       opacity: 1;
       transform: scale(1.02);
+    }
+
+    .board__image-speech--evaluating {
+      opacity: 1;
+    }
+
+    body.phase-7 .image-ring--accuracy {
+      --ring-width: 17px;
     }
 
     .board__mic-prompt {
@@ -552,6 +561,12 @@
     }
 
     .text-container.active { opacity: 1; }
+
+    .text-container--split {
+      text-align: justify;
+      text-align-last: justify;
+      text-justify: inter-word;
+    }
 
     .text-container--compact {
       width: auto;
