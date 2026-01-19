@@ -56,6 +56,9 @@
   };
   const MIRROR_PATH = 'data/mirror.json';
   const AUDIO_LEVELS_PATH = 'data/audiosniveis.json';
+  const PHASE_TRACKS_PATH = 'data/trilhas.json';
+  const PHASE_TRACK_VOLUME = 0.5;
+  const PHASE_TRACK_FADEOUT_MS = 2000;
   const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
   const AUDIO_RESOLVE_ENDPOINT = '/api/media/resolve';
   const successAudio = document.getElementById('audio-success');
@@ -84,6 +87,10 @@
   let phaseFourAudioPlaying = false;
   let audioLevelsConfig = null;
   let audioLevelsPromise = null;
+  let phaseTracksConfig = null;
+  let phaseTracksPromise = null;
+  let currentPhaseTrack = null;
+  let phaseTrackFadeFrame = null;
   const resolvedAudioCache = new Map();
 
   let awaiting = false;
@@ -555,9 +562,28 @@
     return audioLevelsPromise;
   }
 
+  function loadPhaseTracksConfig() {
+    if (phaseTracksConfig) return Promise.resolve(phaseTracksConfig);
+    if (phaseTracksPromise) return phaseTracksPromise;
+    phaseTracksPromise = fetch(PHASE_TRACKS_PATH)
+      .then(response => (response.ok ? response.json() : {}))
+      .catch(() => ({}))
+      .then(data => {
+        phaseTracksConfig = data && typeof data === 'object' ? data : {};
+        return phaseTracksConfig;
+      });
+    return phaseTracksPromise;
+  }
+
   function getDayAudioConfig(dayNumber) {
     if (!audioLevelsConfig || typeof audioLevelsConfig !== 'object') return {};
     const days = audioLevelsConfig.days && typeof audioLevelsConfig.days === 'object' ? audioLevelsConfig.days : {};
+    return days[String(dayNumber)] || {};
+  }
+
+  function getDayTrackConfig(dayNumber) {
+    if (!phaseTracksConfig || typeof phaseTracksConfig !== 'object') return {};
+    const days = phaseTracksConfig.days && typeof phaseTracksConfig.days === 'object' ? phaseTracksConfig.days : {};
     return days[String(dayNumber)] || {};
   }
 
@@ -568,10 +594,65 @@
     return typeof audioName === 'string' ? audioName.trim() : '';
   }
 
+  function getPhaseTrackName(dayNumber, phaseNumber) {
+    const dayConfig = getDayTrackConfig(dayNumber);
+    const phases = dayConfig.phases && typeof dayConfig.phases === 'object' ? dayConfig.phases : {};
+    const trackName = phases[String(phaseNumber)];
+    return typeof trackName === 'string' ? trackName.trim() : '';
+  }
+
   function getPostGameAudioName(dayNumber) {
     const dayConfig = getDayAudioConfig(dayNumber);
     const audioName = dayConfig.postGame;
     return typeof audioName === 'string' ? audioName.trim() : '';
+  }
+
+  function stopPhaseTrack({ fadeOut = true } = {}) {
+    if (!currentPhaseTrack) return;
+    const audio = currentPhaseTrack;
+    currentPhaseTrack = null;
+    if (phaseTrackFadeFrame) {
+      cancelAnimationFrame(phaseTrackFadeFrame);
+      phaseTrackFadeFrame = null;
+    }
+    if (!fadeOut) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = PHASE_TRACK_VOLUME;
+      return;
+    }
+
+    const startVolume = Math.min(audio.volume || PHASE_TRACK_VOLUME, PHASE_TRACK_VOLUME);
+    const startTime = performance.now();
+    const tick = (now) => {
+      const progress = Math.min(1, (now - startTime) / PHASE_TRACK_FADEOUT_MS);
+      audio.volume = Math.max(0, startVolume * (1 - progress));
+      if (progress < 1 && !audio.paused) {
+        phaseTrackFadeFrame = requestAnimationFrame(tick);
+      } else {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = PHASE_TRACK_VOLUME;
+        phaseTrackFadeFrame = null;
+      }
+    };
+
+    phaseTrackFadeFrame = requestAnimationFrame(tick);
+  }
+
+  async function playPhaseTrack(phaseNumber) {
+    await loadPhaseTracksConfig();
+    const trackName = getPhaseTrackName(level, phaseNumber);
+    if (!trackName) return false;
+    const audio = await getAudioElementFromName(trackName);
+    if (!audio) return false;
+    currentPhaseTrack = audio;
+    audio.pause();
+    audio.currentTime = 0;
+    audio.loop = true;
+    audio.volume = PHASE_TRACK_VOLUME;
+    audio.play().catch(() => {});
+    return true;
   }
 
   async function resolveMediaUrl(fileName) {
@@ -2216,6 +2297,7 @@
   }
 
   function handleProgressCompletion() {
+    stopPhaseTrack();
     pauseLevelTimer();
     persistProgressState();
     if (phase === 1 || phase === 2 || phase === 3 || phase === 4) {
@@ -2279,6 +2361,7 @@
     if (!skipIntroAudio) {
       await playPhaseIntro(nextPhase);
     }
+    await playPhaseTrack(nextPhase);
     if (nextPhase === 1) {
       startLevelTimer();
     } else {
@@ -2346,6 +2429,7 @@
 
   function handlePhaseComplete(options = {}) {
     const { skipIntroAudio = false } = options;
+    stopPhaseTrack();
     if (phase === 7) {
       const completedLevel = level;
       const medalKey = currentMedalKey;
