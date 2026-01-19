@@ -116,6 +116,7 @@
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       position: relative;
+      overflow: hidden;
     }
 
     @media (max-width: 900px) {
@@ -158,8 +159,8 @@
     }
 
     .flashcard__visual--detail {
-      width: 88px;
-      height: 88px;
+      width: 180px;
+      height: 180px;
     }
 
     .flashcard__circle {
@@ -171,7 +172,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      border: 2px solid rgba(11, 31, 68, 0.1);
+      border: 20px solid rgba(11, 31, 68, 0.1);
       position: relative;
       z-index: 2;
     }
@@ -221,7 +222,7 @@
     .image-lens--form { background: var(--form-lens, none); }
 
     .image-lens {
-      inset: 8px;
+      inset: 0;
       z-index: 3;
     }
 
@@ -247,13 +248,18 @@
     .flashcard__phrase {
       width: 100%;
       border: none;
-      border-radius: 12px;
-      padding: 10px 12px;
+      border-radius: 20px;
+      padding: 12px 14px;
       font-size: 14px;
       font-weight: 800;
       color: #fff;
+      background: #2f8dff;
+      min-height: 56px;
+      line-height: 1.2;
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
     }
 
     .flashcard__phrase:hover {
@@ -275,19 +281,20 @@
 
     .flashcard__action {
       flex: 1;
-      border: 1px solid var(--border);
-      background: #fff;
-      border-radius: 12px;
-      padding: 8px 6px;
+      border: none;
+      background: #2f8dff;
+      border-radius: 16px;
+      padding: 16px 6px;
       font-size: 12px;
       font-weight: 700;
-      color: var(--primary);
+      color: #fff;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      min-height: 56px;
     }
 
     .flashcard__action:hover {
@@ -296,9 +303,29 @@
     }
 
     .flashcard__action svg {
-      width: 16px;
-      height: 16px;
-      fill: var(--primary);
+      width: 28px;
+      height: 28px;
+      fill: #fff;
+    }
+
+    .flashcard::after,
+    .detail-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(var(--accuracy-color, 76, 150, 220), 1) 0%, rgba(var(--accuracy-color, 76, 150, 220), 0) 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .flashcard > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .detail-panel > * {
+      position: relative;
+      z-index: 1;
     }
 
     .detail-modal {
@@ -326,6 +353,7 @@
       gap: 18px;
       position: relative;
       height: fit-content;
+      overflow: hidden;
     }
 
     .detail-panel--modal {
@@ -351,13 +379,15 @@
 
     .detail-header {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
+      text-align: center;
     }
 
     .detail-header__circle {
-      width: 88px;
-      height: 88px;
+      width: 180px;
+      height: 180px;
       border-radius: 50%;
       overflow: visible;
       border: none;
@@ -380,6 +410,35 @@
     .detail-header__info p {
       font-size: 14px;
       color: var(--muted);
+    }
+
+    .detail-phrase {
+      width: min(360px, 100%);
+      border: none;
+      border-radius: 20px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      background: #2f8dff;
+      cursor: pointer;
+      line-height: 1.2;
+      min-height: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .detail-phrase::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(var(--accuracy-color, 76, 150, 220), 0.55) 0%, rgba(var(--accuracy-color, 76, 150, 220), 0) 50%);
+      pointer-events: none;
+    }
+
+    .detail-phrase span {
+      position: relative;
+      z-index: 1;
     }
 
     .stats-grid {
@@ -407,6 +466,16 @@
       color: var(--primary);
     }
 
+    .stat--pronuncia {
+      color: #fff;
+      background: rgb(var(--accuracy-color, 76, 150, 220));
+    }
+
+    .stat--pronuncia h3,
+    .stat--pronuncia span {
+      color: #fff;
+    }
+
     .action-row {
       display: flex;
       gap: 12px;
@@ -417,17 +486,16 @@
     .icon-button {
       flex: 1 1 90px;
       border: none;
-      background: #fff;
-      border-radius: 16px;
+      background: #2f8dff;
+      border-radius: 18px;
       padding: 14px 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      border: 1px solid var(--border);
       font-weight: 700;
-      color: var(--primary);
+      color: #fff;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
@@ -440,10 +508,10 @@
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.15);
       display: grid;
       place-items: center;
-      border: 2px solid rgba(11, 31, 68, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.4);
       position: relative;
     }
 
@@ -459,7 +527,7 @@
     .icon-button svg {
       width: 26px;
       height: 26px;
-      fill: var(--primary);
+      fill: #fff;
     }
 
     .audio-note {
@@ -579,13 +647,6 @@
         Dia
         <select id="levelFilter"></select>
       </label>
-      <label class="control">
-        Ordenar por
-        <select id="sortFilter">
-          <option value="desc">Mais precisão</option>
-          <option value="asc">Menos precisão</option>
-        </select>
-      </label>
     </div>
   </header>
 
@@ -603,6 +664,7 @@
       </button>
       <div class="detail-header">
         <div class="detail-header__circle" id="detailImage"></div>
+        <button class="detail-phrase" id="detailPhrase" type="button">Selecione um flashcard</button>
         <div class="detail-header__info">
           <h2 id="detailTitle">Selecione um flashcard</h2>
           <p id="detailSubtitle">Veja histórico, pronúncia e ações rápidas.</p>
@@ -611,7 +673,7 @@
       </div>
 
       <div class="stats-grid">
-        <div class="stat">
+        <div class="stat stat--pronuncia" id="detailPronunciaCard">
           <h3>Pronúncia</h3>
           <span id="detailPronuncia">--</span>
         </div>
@@ -631,24 +693,26 @@
           <h3>Ouvido há</h3>
           <span id="detailOuvido">--</span>
         </div>
+        <div class="stat">
+          <h3>Repetições</h3>
+          <span id="detailRepeticoes">--</span>
+        </div>
       </div>
 
       <div class="action-row">
-        <button class="icon-button" id="micButton" type="button">
+        <button class="icon-button" id="micButton" type="button" aria-label="Pronunciar">
           <span class="icon-circle" id="micProgress">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.09a6 6 0 0 0 5-5.91z" />
             </svg>
           </span>
-          Pronunciar
         </button>
-        <button class="icon-button" id="audioButton" type="button">
+        <button class="icon-button" id="audioButton" type="button" aria-label="Ouvir">
           <span class="icon-circle">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 9v6h4l5 5V4L8 9H4zm13.5 3a4.5 4.5 0 0 0-2.34-3.95l-1 1.73A2.5 2.5 0 0 1 16.5 12a2.5 2.5 0 0 1-2.34 2.22l1 1.73A4.5 4.5 0 0 0 17.5 12zm2.5 0c0 2.4-1.26 4.51-3.16 5.7l1 1.73A8 8 0 0 0 22 12a8 8 0 0 0-3.16-6.43l-1 1.73A6 6 0 0 1 20 12z" />
             </svg>
           </span>
-          Ouvir
         </button>
         <button class="icon-button" id="editButton" type="button">
           <span class="icon-circle">
@@ -708,17 +772,19 @@
 
     const flashcardGrid = document.getElementById('flashcardGrid');
     const levelFilter = document.getElementById('levelFilter');
-    const sortFilter = document.getElementById('sortFilter');
     const detailTitle = document.getElementById('detailTitle');
     const detailSubtitle = document.getElementById('detailSubtitle');
     const detailCategory = document.getElementById('detailCategory');
     const detailPronuncia = document.getElementById('detailPronuncia');
+    const detailPronunciaCard = document.getElementById('detailPronunciaCard');
     const detailTempo = document.getElementById('detailTempo');
     const detailJogado = document.getElementById('detailJogado');
     const detailFalado = document.getElementById('detailFalado');
     const detailOuvido = document.getElementById('detailOuvido');
+    const detailRepeticoes = document.getElementById('detailRepeticoes');
     const detailFooter = document.getElementById('detailFooter');
     const detailImage = document.getElementById('detailImage');
+    const detailPhrase = document.getElementById('detailPhrase');
     const emptyState = document.getElementById('emptyState');
     const micButton = document.getElementById('micButton');
     const micProgress = document.getElementById('micProgress');
@@ -733,6 +799,7 @@
     const cancelEdit = document.getElementById('cancelEdit');
     const saveEdit = document.getElementById('saveEdit');
     const detailModal = document.getElementById('detailModal');
+    const detailPanel = document.getElementById('detailPanel');
     const detailClose = document.getElementById('detailClose');
 
     let flashcards = [];
@@ -1067,14 +1134,14 @@
       };
     }
 
-    function getAccuracyBackground(accuracy) {
+    function getAccuracyColorRgb(accuracy) {
       const percent = Math.max(0, Math.min(100, Number(accuracy) || 0));
-      if (percent <= 50) return '#e74c3c';
-      if (percent <= 60) return '#f39c12';
-      if (percent <= 69) return '#b8860b';
-      if (percent <= 79) return '#2ecc71';
-      if (percent <= 89) return 'linear-gradient(135deg, #2ecc71, #7bed9f)';
-      return '#2f8dff';
+      if (percent <= 50) return '231, 76, 60';
+      if (percent <= 60) return '243, 156, 18';
+      if (percent <= 69) return '241, 196, 15';
+      if (percent <= 79) return '46, 204, 113';
+      if (percent <= 89) return '62, 201, 109';
+      return '47, 141, 255';
     }
 
     function applyTenseStyles(wrapper, card) {
@@ -1190,14 +1257,13 @@
       flashcardStats = loadFlashcardStats();
       clearPhraseIntervals();
       const day = Number(levelFilter.value || getStoredDay());
-      const sortDirection = sortFilter.value;
-      const dayCards = flashcards.filter(card => card.day === day);
+      const dayCards = flashcards
+        .filter(card => card.day === day && card.imageSrc);
 
       dayCards.sort((a, b) => {
-        const aValue = getPronuncia(a) ?? 0;
-        const bValue = getPronuncia(b) ?? 0;
-        const diff = aValue - bValue;
-        return sortDirection === 'asc' ? diff : -diff;
+        const aLabel = (a.nomePortugues || a.nomeIngles || '').trim();
+        const bLabel = (b.nomePortugues || b.nomeIngles || '').trim();
+        return aLabel.localeCompare(bLabel, 'pt-BR', { sensitivity: 'base' });
       });
 
       flashcardGrid.innerHTML = '';
@@ -1209,6 +1275,7 @@
         cardEl.dataset.id = card.id;
         cardEl.setAttribute('role', 'button');
         cardEl.tabIndex = 0;
+        cardEl.style.setProperty('--accuracy-color', getAccuracyColorRgb(getPronuncia(card)));
 
         const visual = createFlashcardVisual(card);
         cardEl.appendChild(visual);
@@ -1221,7 +1288,6 @@
         const phrases = english ? [portuguese, english] : [portuguese];
         let phraseIndex = 0;
         phraseButton.textContent = phrases[phraseIndex];
-        phraseButton.style.background = getAccuracyBackground(getPronuncia(card));
         phraseButton.addEventListener('click', event => {
           event.stopPropagation();
           selectCard(card.id);
@@ -1251,8 +1317,8 @@
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.09a6 6 0 0 0 5-5.91z" />
           </svg>
-          Pronunciar
         `;
+        pronounceButton.setAttribute('aria-label', 'Pronunciar');
         pronounceButton.addEventListener('click', async event => {
           event.stopPropagation();
           pronounceButton.disabled = true;
@@ -1267,8 +1333,8 @@
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 9v6h4l5 5V4L8 9H4zm13.5 3a4.5 4.5 0 0 0-2.34-3.95l-1 1.73A2.5 2.5 0 0 1 16.5 12a2.5 2.5 0 0 1-2.34 2.22l1 1.73A4.5 4.5 0 0 0 17.5 12zm2.5 0c0 2.4-1.26 4.51-3.16 5.7l1 1.73A8 8 0 0 0 22 12a8 8 0 0 0-3.16-6.43l-1 1.73A6 6 0 0 1 20 12z" />
           </svg>
-          Ouvir
         `;
+        hearButton.setAttribute('aria-label', 'Ouvir');
         hearButton.disabled = !card.audioSrc;
         hearButton.addEventListener('click', event => {
           event.stopPropagation();
@@ -1322,6 +1388,7 @@
 
       const pronuncia = getPronuncia(card);
       detailPronuncia.textContent = pronuncia === null ? '--' : `${pronuncia}%`;
+      detailRepeticoes.textContent = getSpokenCount(card);
       const tempo = getTempo(card);
       detailTempo.textContent = tempo === null ? '--' : `${tempo}s`;
       detailJogado.textContent = formatSince(stats?.lastPlayedAt);
@@ -1338,6 +1405,17 @@
 
       const progress = pronuncia === null ? 0 : pronuncia;
       micProgress.style.setProperty('--progress', progress);
+      const accuracyColor = getAccuracyColorRgb(pronuncia);
+      detailPanel.style.setProperty('--accuracy-color', accuracyColor);
+      detailPronunciaCard.style.setProperty('--accuracy-color', accuracyColor);
+
+      const portuguese = card.nomePortugues || 'Flashcard';
+      const english = card.nomeIngles || '';
+      detailPhrase.dataset.primary = portuguese;
+      detailPhrase.dataset.secondary = english;
+      detailPhrase.innerHTML = english
+        ? `<span>${portuguese}</span>`
+        : `<span>${portuguese}</span>`;
       audioButton.disabled = !card.audioSrc;
     }
 
@@ -1462,12 +1540,19 @@
       closeDetailModal();
     });
 
-    sortFilter.addEventListener('change', renderCards);
     micButton.addEventListener('click', handlePronuncia);
     audioButton.addEventListener('click', playAudio);
     editButton.addEventListener('click', openEditModal);
     cancelEdit.addEventListener('click', closeEditModal);
     saveEdit.addEventListener('click', saveEditModal);
+    detailPhrase.addEventListener('click', () => {
+      const primary = detailPhrase.dataset.primary || '';
+      const secondary = detailPhrase.dataset.secondary || '';
+      if (!secondary) return;
+      const current = detailPhrase.textContent.trim();
+      const next = current === primary ? secondary : primary;
+      detailPhrase.innerHTML = `<span>${next}</span>`;
+    });
     detailClose.addEventListener('click', closeDetailModal);
     detailModal.addEventListener('click', event => {
       if (event.target === detailModal) closeDetailModal();
