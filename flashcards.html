@@ -29,7 +29,7 @@
 
     body {
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #ffffff;
+      background: #ffffff url('backgrounds/background6.jpg') center/cover fixed no-repeat;
       color: var(--text);
       min-height: 100vh;
       font-weight: 700;
@@ -219,7 +219,7 @@
       --ring-gradient: var(--tense-ring);
       --ring-animation: var(--tense-animation);
       --ring-glow: var(--tense-glow);
-      --ring-width: 15px;
+      --ring-width: 10px;
     }
 
     .image-ring--form {
@@ -256,25 +256,24 @@
     .flashcard__phrase {
       width: calc(100% + 50px);
       margin: 0 -25px;
-      border: 1px solid var(--border);
+      border: none;
       border-radius: 20px;
       padding: 12px 14px;
       font-size: 22px;
       font-weight: 800;
-      color: var(--primary);
+      color: transparent;
       background: transparent;
       min-height: 56px;
       line-height: 1.2;
       cursor: pointer;
-      box-shadow: 0 10px 24px rgba(var(--accuracy-color, 76, 150, 220), 0.35);
-      transition: transform 0.2s ease, box-shadow 1.2s ease;
+      box-shadow: none;
+      transition: transform 0.2s ease;
       position: relative;
       overflow: hidden;
     }
 
     .flashcard__phrase:hover {
       transform: translateY(-2px);
-      box-shadow: 0 14px 28px rgba(var(--accuracy-color, 76, 150, 220), 0.45);
     }
 
     .flashcard__stars {
@@ -285,7 +284,7 @@
     }
 
     .flashcard__star {
-      font-size: 23px;
+      font-size: 28.75px;
       color: #ffd644;
       opacity: 0.4;
       transition: opacity 0.2s ease;
@@ -403,20 +402,19 @@
 
     .detail-phrase {
       width: min(410px, 100%);
-      border: 1px solid var(--border);
+      border: none;
       border-radius: 20px;
       padding: 14px 16px;
       font-size: 24px;
       font-weight: 800;
-      color: var(--primary);
+      color: transparent;
       background: transparent;
       cursor: pointer;
       line-height: 1.2;
       min-height: 64px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 10px 24px rgba(var(--accuracy-color, 76, 150, 220), 0.35);
-      transition: box-shadow 1.2s ease;
+      box-shadow: none;
     }
 
     .detail-phrase::after {
@@ -426,7 +424,6 @@
       background: linear-gradient(to top, rgba(var(--accuracy-color, 76, 150, 220), 0.55) 0%, rgba(var(--accuracy-color, 76, 150, 220), 0) 100%);
       pointer-events: none;
       opacity: 0;
-      transition: background 1.2s ease;
     }
 
     .detail-phrase span {
@@ -700,6 +697,7 @@
     let cardLongPressTimer = null;
     let cardLongPressTriggered = false;
     let lastLongPressCardId = null;
+    const accuracyColorCache = new Map();
     let flashcardStats = loadFlashcardStats();
 
     const TENSE_STYLES = {
@@ -1032,6 +1030,7 @@
       { percent: 85, color: [46, 204, 113] },
       { percent: 100, color: [47, 141, 255] }
     ];
+    const ACCURACY_COLOR_TRANSITION_MS = 1200;
 
     function interpolateColor(start, end, ratio) {
       const clampRatio = Math.max(0, Math.min(1, ratio));
@@ -1059,6 +1058,45 @@
       const ratio = (percent - lowerStop.percent) / (upperStop.percent - lowerStop.percent);
       const blended = interpolateColor(lowerStop.color, upperStop.color, ratio);
       return blended.join(', ');
+    }
+
+    function parseRgbTriplet(value) {
+      if (!value) return null;
+      const parts = value.split(',').map(part => Number.parseFloat(part.trim()));
+      if (parts.length < 3) return null;
+      const channels = parts.slice(0, 3);
+      if (channels.some(channel => Number.isNaN(channel))) return null;
+      return channels;
+    }
+
+    function getCurrentAccuracyColor(element) {
+      if (!element) return null;
+      const computed = window.getComputedStyle(element).getPropertyValue('--accuracy-color').trim();
+      return parseRgbTriplet(computed);
+    }
+
+    function animateAccuracyColor(element, targetRgb, duration = ACCURACY_COLOR_TRANSITION_MS) {
+      if (!element || !targetRgb) return;
+      const target = parseRgbTriplet(targetRgb);
+      if (!target) return;
+      const start = getCurrentAccuracyColor(element);
+      if (!start) {
+        element.style.setProperty('--accuracy-color', target.join(', '));
+        return;
+      }
+      if (start.every((value, index) => value === target[index])) return;
+      const startTime = window.performance.now();
+      const easeOut = value => 1 - Math.pow(1 - value, 2);
+      const step = now => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = easeOut(progress);
+        const blended = interpolateColor(start, target, eased);
+        element.style.setProperty('--accuracy-color', blended.join(', '));
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
     }
 
     function applyTenseStyles(wrapper, card) {
@@ -1190,7 +1228,13 @@
         const cardEl = document.createElement('div');
         cardEl.className = `flashcard ${card.active ? '' : 'is-disabled'} ${card.id === selectedCardId ? 'is-selected' : ''}`.trim();
         cardEl.dataset.id = card.id;
-        cardEl.style.setProperty('--accuracy-color', getAccuracyColorRgb(getPronuncia(card)));
+        const accuracyColor = getAccuracyColorRgb(getPronuncia(card));
+        const cachedAccuracyColor = accuracyColorCache.get(card.id);
+        if (cachedAccuracyColor) {
+          cardEl.style.setProperty('--accuracy-color', cachedAccuracyColor);
+        }
+        animateAccuracyColor(cardEl, accuracyColor);
+        accuracyColorCache.set(card.id, accuracyColor);
 
         const visual = createFlashcardVisual(card);
         visual.addEventListener('click', event => {
@@ -1318,8 +1362,8 @@
       detailImage.appendChild(visual);
 
       const accuracyColor = getAccuracyColorRgb(pronuncia);
-      detailPanel.style.setProperty('--accuracy-color', accuracyColor);
-      detailPronunciaCard.style.setProperty('--accuracy-color', accuracyColor);
+      animateAccuracyColor(detailPanel, accuracyColor);
+      animateAccuracyColor(detailPronunciaCard, accuracyColor);
 
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
