@@ -10,14 +10,14 @@
   <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
   <style>
     :root {
-      --primary: #0b1f44;
+      --primary: #ffffff;
       --secondary: #4c96dc;
       --panel: rgba(11, 31, 68, 0.06);
       --border: rgba(11, 31, 68, 0.12);
-      --text: #0b1f44;
+      --text: #ffffff;
       --success: #2ecc71;
       --danger: #e74c3c;
-      --muted: rgba(11, 31, 68, 0.68);
+      --muted: rgba(255, 255, 255, 0.72);
       --shadow: 0 18px 40px rgba(11, 31, 68, 0.15);
     }
 
@@ -254,7 +254,8 @@
     }
 
     .flashcard__phrase {
-      width: 100%;
+      width: calc(100% + 50px);
+      margin: 0 -25px;
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 12px 14px;
@@ -266,7 +267,7 @@
       line-height: 1.2;
       cursor: pointer;
       box-shadow: 0 10px 24px rgba(var(--accuracy-color, 76, 150, 220), 0.35);
-      transition: transform 0.2s ease, box-shadow 1s ease;
+      transition: transform 0.2s ease, box-shadow 1.2s ease;
       position: relative;
       overflow: hidden;
     }
@@ -302,7 +303,7 @@
       background: linear-gradient(to top, rgba(var(--accuracy-color, 76, 150, 220), 1) 0%, rgba(var(--accuracy-color, 76, 150, 220), 0) 100%);
       pointer-events: none;
       z-index: 0;
-      transition: background 1s ease;
+      transition: background 1.2s ease;
     }
 
     .flashcard > * {
@@ -401,7 +402,7 @@
     }
 
     .detail-phrase {
-      width: min(360px, 100%);
+      width: min(410px, 100%);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 14px 16px;
@@ -415,7 +416,7 @@
       position: relative;
       overflow: hidden;
       box-shadow: 0 10px 24px rgba(var(--accuracy-color, 76, 150, 220), 0.35);
-      transition: box-shadow 1s ease;
+      transition: box-shadow 1.2s ease;
     }
 
     .detail-phrase::after {
@@ -425,7 +426,7 @@
       background: linear-gradient(to top, rgba(var(--accuracy-color, 76, 150, 220), 0.55) 0%, rgba(var(--accuracy-color, 76, 150, 220), 0) 100%);
       pointer-events: none;
       opacity: 0;
-      transition: background 1s ease;
+      transition: background 1.2s ease;
     }
 
     .detail-phrase span {
@@ -465,7 +466,7 @@
     .stat--pronuncia {
       color: #fff;
       background: rgb(var(--accuracy-color, 76, 150, 220));
-      transition: background-color 1s ease;
+      transition: background-color 1.2s ease;
     }
 
     .stat--pronuncia h3,
