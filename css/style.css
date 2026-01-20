@@ -462,10 +462,11 @@ body.page-inplay {
 
 .game-background i {
   position: absolute;
-  width: 120px;
-  height: 120px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   animation: screen infinite;
+  filter: saturate(1.4) brightness(1.12) hue-rotate(-12deg);
 }
 
 .game-background i:nth-child(1) {
@@ -5083,8 +5084,8 @@ body.page-transition-leave [data-page-transition] {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-width: 180px;
-  height: 56px;
+  min-width: 210px;
+  height: 50px;
   padding: 0;
   border: none;
   border-radius: 15px;
@@ -5113,8 +5114,8 @@ body.page-transition-leave [data-page-transition] {
 
 .playtalk-cta__inner {
   width: calc(100% - 4px);
-  min-height: 52px;
-  padding: 0 18px;
+  min-height: 46px;
+  padding: 0 33px;
   border-radius: 13px;
   background-color: #1a1a1a;
   display: inline-flex;
@@ -5139,7 +5140,7 @@ body.page-transition-leave [data-page-transition] {
 }
 
 .playtalk-cta--wide {
-  min-width: 210px;
+  min-width: 240px;
 }
 
 .playtalk-cta input[type='file'] {
@@ -6325,7 +6326,7 @@ body.dark-mode .game-overlay__panel {
 }
 
 .game-overlay__logo {
-  width: clamp(200px, 50vw, 300px);
+  width: clamp(220px, 55vw, 330px);
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -6334,8 +6335,8 @@ body.dark-mode .game-overlay__panel {
 
 .game-overlay__logo > svg {
   display: block;
-  width: 70%;
-  height: 70%;
+  width: 77%;
+  height: 77%;
 }
 
 .pre-game-hero {
