@@ -172,9 +172,18 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      border: 20px solid rgba(11, 31, 68, 0.1);
       position: relative;
       z-index: 2;
+    }
+
+    .flashcard__circle::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 20px solid rgba(11, 31, 68, 0.1);
+      z-index: 3;
+      pointer-events: none;
     }
 
     .flashcard__circle img {
@@ -184,6 +193,9 @@
       filter: var(--tense-filter);
       -webkit-mask-image: var(--tense-mask);
       mask-image: var(--tense-mask);
+      transform: scale(1.15);
+      position: relative;
+      z-index: 1;
     }
 
     .flashcard__circle .flashcard__placeholder {
@@ -223,7 +235,7 @@
 
     .image-lens {
       inset: 0;
-      z-index: 3;
+      z-index: 2;
     }
 
     .flashcard__placeholder {
@@ -250,7 +262,7 @@
       border: none;
       border-radius: 20px;
       padding: 12px 14px;
-      font-size: 14px;
+      font-size: 17px;
       font-weight: 800;
       color: #fff;
       background: #2f8dff;
@@ -268,9 +280,10 @@
     }
 
     .flashcard__meta {
-      font-size: 12px;
-      color: var(--secondary);
+      font-size: 14px;
+      color: #fff;
       font-weight: 700;
+      margin-top: 2px;
     }
 
     .flashcard__actions {
@@ -282,7 +295,7 @@
     .flashcard__action {
       flex: 1;
       border: none;
-      background: #2f8dff;
+      background: transparent;
       border-radius: 16px;
       padding: 16px 6px;
       font-size: 12px;
@@ -299,7 +312,7 @@
 
     .flashcard__action:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow);
+      box-shadow: none;
     }
 
     .flashcard__action svg {
@@ -417,7 +430,7 @@
       border: none;
       border-radius: 20px;
       padding: 14px 16px;
-      font-size: 16px;
+      font-size: 19px;
       font-weight: 800;
       color: #fff;
       background: #2f8dff;
@@ -474,75 +487,6 @@
     .stat--pronuncia h3,
     .stat--pronuncia span {
       color: #fff;
-    }
-
-    .action-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: space-between;
-    }
-
-    .icon-button {
-      flex: 1 1 90px;
-      border: none;
-      background: #2f8dff;
-      border-radius: 18px;
-      padding: 14px 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      color: #fff;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .icon-button:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow);
-    }
-
-    .icon-button .icon-circle {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      display: grid;
-      place-items: center;
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      position: relative;
-    }
-
-    .icon-button .icon-circle::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      background: conic-gradient(var(--success) calc(var(--progress, 0) * 1%), rgba(11, 31, 68, 0.08) 0);
-      z-index: -1;
-    }
-
-    .icon-button svg {
-      width: 26px;
-      height: 26px;
-      fill: #fff;
-    }
-
-    .audio-note {
-      font-size: 12px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    .detail-footer {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .detail-footer strong {
-      color: var(--primary);
     }
 
     .empty-state {
@@ -665,21 +609,12 @@
       <div class="detail-header">
         <div class="detail-header__circle" id="detailImage"></div>
         <button class="detail-phrase" id="detailPhrase" type="button">Selecione um flashcard</button>
-        <div class="detail-header__info">
-          <h2 id="detailTitle">Selecione um flashcard</h2>
-          <p id="detailSubtitle">Veja histórico, pronúncia e ações rápidas.</p>
-          <p class="flashcard__meta" id="detailCategory"></p>
-        </div>
       </div>
 
       <div class="stats-grid">
         <div class="stat stat--pronuncia" id="detailPronunciaCard">
           <h3>Pronúncia</h3>
           <span id="detailPronuncia">--</span>
-        </div>
-        <div class="stat">
-          <h3>Tempo médio</h3>
-          <span id="detailTempo">--</span>
         </div>
         <div class="stat">
           <h3>Jogado há</h3>
@@ -693,38 +628,8 @@
           <h3>Ouvido há</h3>
           <span id="detailOuvido">--</span>
         </div>
-        <div class="stat">
-          <h3>Repetições</h3>
-          <span id="detailRepeticoes">--</span>
-        </div>
       </div>
 
-      <div class="action-row">
-        <button class="icon-button" id="micButton" type="button" aria-label="Pronunciar">
-          <span class="icon-circle" id="micProgress">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.09a6 6 0 0 0 5-5.91z" />
-            </svg>
-          </span>
-        </button>
-        <button class="icon-button" id="audioButton" type="button" aria-label="Ouvir">
-          <span class="icon-circle">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 9v6h4l5 5V4L8 9H4zm13.5 3a4.5 4.5 0 0 0-2.34-3.95l-1 1.73A2.5 2.5 0 0 1 16.5 12a2.5 2.5 0 0 1-2.34 2.22l1 1.73A4.5 4.5 0 0 0 17.5 12zm2.5 0c0 2.4-1.26 4.51-3.16 5.7l1 1.73A8 8 0 0 0 22 12a8 8 0 0 0-3.16-6.43l-1 1.73A6 6 0 0 1 20 12z" />
-            </svg>
-          </span>
-        </button>
-        <button class="icon-button" id="editButton" type="button">
-          <span class="icon-circle">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 17.25V21h3.75l11-11-3.75-3.75-11 11zM20.71 7.04a1.003 1.003 0 0 0 0-1.42L18.37 3.29a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.83z" />
-            </svg>
-          </span>
-          Editar
-        </button>
-      </div>
-      <p class="audio-note" id="audioNote">Toque novamente para ouvir 25% mais lento mantendo o tom.</p>
-      <p class="detail-footer" id="detailFooter">Selecione um flashcard para ver o histórico.</p>
     </div>
   </div>
 
@@ -772,24 +677,14 @@
 
     const flashcardGrid = document.getElementById('flashcardGrid');
     const levelFilter = document.getElementById('levelFilter');
-    const detailTitle = document.getElementById('detailTitle');
-    const detailSubtitle = document.getElementById('detailSubtitle');
-    const detailCategory = document.getElementById('detailCategory');
     const detailPronuncia = document.getElementById('detailPronuncia');
     const detailPronunciaCard = document.getElementById('detailPronunciaCard');
-    const detailTempo = document.getElementById('detailTempo');
     const detailJogado = document.getElementById('detailJogado');
     const detailFalado = document.getElementById('detailFalado');
     const detailOuvido = document.getElementById('detailOuvido');
-    const detailRepeticoes = document.getElementById('detailRepeticoes');
-    const detailFooter = document.getElementById('detailFooter');
     const detailImage = document.getElementById('detailImage');
     const detailPhrase = document.getElementById('detailPhrase');
     const emptyState = document.getElementById('emptyState');
-    const micButton = document.getElementById('micButton');
-    const micProgress = document.getElementById('micProgress');
-    const audioButton = document.getElementById('audioButton');
-    const editButton = document.getElementById('editButton');
     const editModal = document.getElementById('editModal');
     const editImage = document.getElementById('editImage');
     const editPortuguese = document.getElementById('editPortuguese');
@@ -809,6 +704,9 @@
     let recognition = null;
     let mirrorGroups = [];
     let phraseIntervals = [];
+    let detailPhraseInterval = null;
+    let detailPressTimer = null;
+    let detailLongPressTriggered = false;
     let flashcardStats = loadFlashcardStats();
 
     const TENSE_STYLES = {
@@ -1002,8 +900,14 @@
           durations: [],
           lastPlayedAt: null,
           lastSpokenAt: null,
-          lastHeardAt: null
+          lastHeardAt: null,
+          spokenCount: 0
         };
+      }
+      if (typeof stats[key].spokenCount !== 'number') {
+        stats[key].spokenCount = Array.isArray(stats[key].pronunciation)
+          ? stats[key].pronunciation.length
+          : 0;
       }
       return stats[key];
     }
@@ -1023,6 +927,7 @@
       const entry = ensureStatsEntry(stats, key);
       const normalizedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
       pushLimited(entry.pronunciation, normalizedPercent, FLASHCARD_PRONUNCIATION_LIMIT);
+      entry.spokenCount += 1;
       entry.lastSpokenAt = Date.now();
       saveFlashcardStats(stats);
     }
@@ -1047,17 +952,10 @@
     function getSpokenCount(card) {
       const key = getFlashcardKey(card);
       const entry = key ? flashcardStats[key] : null;
-      if (!entry || !Array.isArray(entry.pronunciation)) return 0;
+      if (!entry) return 0;
+      if (typeof entry.spokenCount === 'number') return entry.spokenCount;
+      if (!Array.isArray(entry.pronunciation)) return 0;
       return entry.pronunciation.length;
-    }
-
-    function getTempo(card) {
-      const key = getFlashcardKey(card);
-      const entry = key ? flashcardStats[key] : null;
-      if (!entry || !Array.isArray(entry.durations) || !entry.durations.length) return null;
-      const total = entry.durations.reduce((acc, value) => acc + value, 0);
-      const averageMs = total / entry.durations.length;
-      return (averageMs / 1000).toFixed(1);
     }
 
     function formatSince(timestamp) {
@@ -1065,7 +963,7 @@
       const diffMs = Date.now() - timestamp;
       const diffMinutes = Math.floor(diffMs / 60000);
       if (diffMinutes < 1) return 'agora';
-      if (diffMinutes < 60) return `${diffMinutes} minuto(s)`;
+      if (diffMinutes < 60) return `${diffMinutes} min`;
       const diffHours = Math.floor(diffMinutes / 60);
       if (diffHours < 24) return `${diffHours} horas`;
       const diffDays = Math.floor(diffHours / 24);
@@ -1301,12 +1199,6 @@
         }
         cardEl.appendChild(phraseButton);
 
-        const meta = document.createElement('div');
-        meta.className = 'flashcard__meta';
-        const spokenCount = getSpokenCount(card);
-        meta.textContent = `Falado ${spokenCount} ${spokenCount === 1 ? 'vez' : 'vezes'}`;
-        cardEl.appendChild(meta);
-
         const actions = document.createElement('div');
         actions.className = 'flashcard__actions';
 
@@ -1345,6 +1237,12 @@
         actions.appendChild(hearButton);
         cardEl.appendChild(actions);
 
+        const meta = document.createElement('div');
+        meta.className = 'flashcard__meta';
+        const spokenCount = getSpokenCount(card);
+        meta.textContent = `Falado ${spokenCount} ${spokenCount === 1 ? 'vez' : 'vezes'}`;
+        cardEl.appendChild(meta);
+
         cardEl.addEventListener('click', () => selectCard(card.id));
         cardEl.addEventListener('keydown', event => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -1364,6 +1262,10 @@
     function closeDetailModal() {
       detailModal.classList.remove('is-open');
       detailModal.setAttribute('aria-hidden', 'true');
+      if (detailPhraseInterval) {
+        clearInterval(detailPhraseInterval);
+        detailPhraseInterval = null;
+      }
       selectedCardId = null;
       renderCards();
     }
@@ -1382,29 +1284,16 @@
       flashcardStats = loadFlashcardStats();
       const key = getFlashcardKey(card);
       const stats = key ? flashcardStats[key] : null;
-      detailTitle.textContent = card.nomePortugues || 'Flashcard em branco';
-      detailSubtitle.textContent = card.nomeIngles || 'Edite as informações do flashcard.';
-      detailCategory.textContent = card.categoria || 'Flashcard';
-
       const pronuncia = getPronuncia(card);
       detailPronuncia.textContent = pronuncia === null ? '--' : `${pronuncia}%`;
-      detailRepeticoes.textContent = getSpokenCount(card);
-      const tempo = getTempo(card);
-      detailTempo.textContent = tempo === null ? '--' : `${tempo}s`;
       detailJogado.textContent = formatSince(stats?.lastPlayedAt);
       detailFalado.textContent = formatSince(stats?.lastSpokenAt);
       detailOuvido.textContent = formatSince(stats?.lastHeardAt);
-      const lastUpdate = stats?.lastPlayedAt || stats?.lastSpokenAt || stats?.lastHeardAt;
-      detailFooter.innerHTML = lastUpdate
-        ? `Última atualização: <strong>${new Date(lastUpdate).toLocaleString('pt-BR')}</strong>`
-        : 'Sem histórico registrado ainda.';
 
       detailImage.innerHTML = '';
       const visual = createFlashcardVisual(card, { className: 'flashcard__visual--detail' });
       detailImage.appendChild(visual);
 
-      const progress = pronuncia === null ? 0 : pronuncia;
-      micProgress.style.setProperty('--progress', progress);
       const accuracyColor = getAccuracyColorRgb(pronuncia);
       detailPanel.style.setProperty('--accuracy-color', accuracyColor);
       detailPronunciaCard.style.setProperty('--accuracy-color', accuracyColor);
@@ -1413,10 +1302,20 @@
       const english = card.nomeIngles || '';
       detailPhrase.dataset.primary = portuguese;
       detailPhrase.dataset.secondary = english;
-      detailPhrase.innerHTML = english
-        ? `<span>${portuguese}</span>`
-        : `<span>${portuguese}</span>`;
-      audioButton.disabled = !card.audioSrc;
+      detailPhrase.innerHTML = `<span>${portuguese}</span>`;
+
+      if (detailPhraseInterval) {
+        clearInterval(detailPhraseInterval);
+        detailPhraseInterval = null;
+      }
+      if (english) {
+        let phraseIndex = 0;
+        const phrases = [portuguese, english];
+        detailPhraseInterval = window.setInterval(() => {
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          detailPhrase.innerHTML = `<span>${phrases[phraseIndex]}</span>`;
+        }, 3000);
+      }
     }
 
     function setupSpeechRecognition() {
@@ -1464,17 +1363,6 @@
       renderCards();
     }
 
-    async function handlePronuncia() {
-      if (!selectedCardId) return;
-      const card = flashcards.find(item => item.id === selectedCardId);
-      if (!card) return;
-      micButton.disabled = true;
-      micButton.classList.add('is-listening');
-      await handlePronunciaForCard(card);
-      micButton.classList.remove('is-listening');
-      micButton.disabled = false;
-    }
-
     function playAudioForCard(card) {
       if (!card || !card.audioSrc) return;
 
@@ -1501,6 +1389,13 @@
       if (!selectedCardId) return;
       const card = flashcards.find(item => item.id === selectedCardId);
       playAudioForCard(card);
+    }
+
+    async function handlePronunciaForSelected() {
+      if (!selectedCardId) return;
+      const card = flashcards.find(item => item.id === selectedCardId);
+      if (!card) return;
+      await handlePronunciaForCard(card);
     }
 
     function openEditModal() {
@@ -1540,19 +1435,45 @@
       closeDetailModal();
     });
 
-    micButton.addEventListener('click', handlePronuncia);
-    audioButton.addEventListener('click', playAudio);
-    editButton.addEventListener('click', openEditModal);
     cancelEdit.addEventListener('click', closeEditModal);
     saveEdit.addEventListener('click', saveEditModal);
-    detailPhrase.addEventListener('click', () => {
-      const primary = detailPhrase.dataset.primary || '';
-      const secondary = detailPhrase.dataset.secondary || '';
-      if (!secondary) return;
-      const current = detailPhrase.textContent.trim();
-      const next = current === primary ? secondary : primary;
-      detailPhrase.innerHTML = `<span>${next}</span>`;
+    detailImage.addEventListener('pointerdown', event => {
+      if (!selectedCardId) return;
+      event.preventDefault();
+      detailLongPressTriggered = false;
+      if (detailPressTimer) {
+        clearTimeout(detailPressTimer);
+      }
+      detailPressTimer = window.setTimeout(() => {
+        detailLongPressTriggered = true;
+        openEditModal();
+      }, 500);
     });
+    detailImage.addEventListener('pointerup', () => {
+      if (detailPressTimer) {
+        clearTimeout(detailPressTimer);
+        detailPressTimer = null;
+      }
+      if (!detailLongPressTriggered) {
+        handlePronunciaForSelected();
+      }
+      detailLongPressTriggered = false;
+    });
+    detailImage.addEventListener('pointerleave', () => {
+      if (detailPressTimer) {
+        clearTimeout(detailPressTimer);
+        detailPressTimer = null;
+      }
+      detailLongPressTriggered = false;
+    });
+    detailImage.addEventListener('pointercancel', () => {
+      if (detailPressTimer) {
+        clearTimeout(detailPressTimer);
+        detailPressTimer = null;
+      }
+      detailLongPressTriggered = false;
+    });
+    detailPhrase.addEventListener('click', playAudio);
     detailClose.addEventListener('click', closeDetailModal);
     detailModal.addEventListener('click', event => {
       if (event.target === detailModal) closeDetailModal();
