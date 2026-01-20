@@ -98,13 +98,14 @@
 
     .flashcard-grid {
       display: grid;
-      grid-template-columns: repeat(3, 240px);
+      grid-template-columns: repeat(3, 270px);
       justify-content: center;
       gap: 20px;
     }
 
     .flashcard {
-      width: 240px;
+      width: 270px;
+      height: 365px;
       background: rgba(255, 255, 255, 0.92) url('images/city.png') center/cover no-repeat;
       border-radius: 18px;
       border: 1px solid var(--border);
@@ -261,7 +262,7 @@
       padding: 12px 14px;
       font-size: 22px;
       font-weight: 800;
-      color: transparent;
+      color: #ffffff;
       background: transparent;
       min-height: 56px;
       line-height: 1.2;
@@ -318,7 +319,7 @@
     .detail-modal {
       position: fixed;
       inset: 0;
-      background: rgba(11, 31, 68, 0.45);
+      background: #000;
       display: none;
       align-items: center;
       justify-content: center;
@@ -564,7 +565,12 @@
 
     .flashcard__phrase.is-listening,
     .detail-phrase.is-listening {
-      background: #28c76f;
+      background: transparent;
+      color: #ffd644;
+    }
+
+    .detail-phrase.is-listening span {
+      color: #ffd644;
     }
 
     @keyframes spin {
@@ -942,6 +948,22 @@
       return Math.round(total / entry.pronunciation.length);
     }
 
+    function getSpeakingLabel(card) {
+      const pronuncia = getPronuncia(card);
+      const label = pronuncia === null ? '--' : pronuncia;
+      return `Speaking ${label}%`;
+    }
+
+    function buildRotatingPhrases(card) {
+      const portuguese = card.nomePortugues || 'Flashcard';
+      const english = card.nomeIngles || '';
+      const phrases = [];
+      if (english) phrases.push(english);
+      phrases.push(getSpeakingLabel(card));
+      phrases.push(portuguese);
+      return phrases;
+    }
+
     function getSpokenCount(card) {
       const key = getFlashcardKey(card);
       const entry = key ? flashcardStats[key] : null;
@@ -1252,9 +1274,7 @@
         const phraseButton = document.createElement('button');
         phraseButton.type = 'button';
         phraseButton.className = 'flashcard__phrase';
-        const portuguese = card.nomePortugues || 'Flashcard';
-        const english = card.nomeIngles || '';
-        const phrases = english ? [portuguese, english] : [portuguese];
+        const phrases = buildRotatingPhrases(card);
         let phraseIndex = 0;
         phraseButton.textContent = phrases[phraseIndex];
         phraseButton.addEventListener('click', event => {
@@ -1265,13 +1285,11 @@
           }
           playAudioForCard(card);
         });
-        if (phrases.length > 1) {
-          const intervalId = window.setInterval(() => {
-            phraseIndex = (phraseIndex + 1) % phrases.length;
-            phraseButton.textContent = phrases[phraseIndex];
-          }, 3000);
-          phraseIntervals.push(intervalId);
-        }
+        const intervalId = window.setInterval(() => {
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          phraseButton.textContent = phrases[phraseIndex];
+        }, 3000);
+        phraseIntervals.push(intervalId);
         cardEl.appendChild(phraseButton);
 
         const stars = document.createElement('div');
@@ -1369,22 +1387,20 @@
 
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
+      const phrases = buildRotatingPhrases(card);
       detailPhrase.dataset.primary = portuguese;
       detailPhrase.dataset.secondary = english;
-      detailPhrase.innerHTML = `<span>${portuguese}</span>`;
+      detailPhrase.innerHTML = `<span>${phrases[0]}</span>`;
 
       if (detailPhraseInterval) {
         clearInterval(detailPhraseInterval);
         detailPhraseInterval = null;
       }
-      if (english) {
-        let phraseIndex = 0;
-        const phrases = [portuguese, english];
-        detailPhraseInterval = window.setInterval(() => {
-          phraseIndex = (phraseIndex + 1) % phrases.length;
-          detailPhrase.innerHTML = `<span>${phrases[phraseIndex]}</span>`;
-        }, 3000);
-      }
+      let phraseIndex = 0;
+      detailPhraseInterval = window.setInterval(() => {
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        detailPhrase.innerHTML = `<span>${phrases[phraseIndex]}</span>`;
+      }, 3000);
     }
 
     function setupSpeechRecognition() {
