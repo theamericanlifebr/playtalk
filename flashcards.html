@@ -181,7 +181,7 @@
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      border: 20px solid rgba(11, 31, 68, 0.1);
+      border: 15px solid rgba(11, 31, 68, 1);
       z-index: 3;
       pointer-events: none;
     }
@@ -196,6 +196,10 @@
       transform: scale(1.15);
       position: relative;
       z-index: 1;
+    }
+
+    .flashcard__circle {
+      cursor: pointer;
     }
 
     .flashcard__circle .flashcard__placeholder {
@@ -279,46 +283,49 @@
       box-shadow: var(--shadow);
     }
 
-    .flashcard__meta {
-      font-size: 14px;
-      color: #fff;
-      font-weight: 700;
+    .flashcard__stars {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
       margin-top: 2px;
     }
 
-    .flashcard__actions {
-      display: flex;
-      gap: 8px;
-      width: 100%;
+    .flashcard__star {
+      font-size: 18px;
+      color: #f2c14f;
+      opacity: 0.4;
+      transition: opacity 0.2s ease;
     }
 
-    .flashcard__action {
-      flex: 1;
+    .flashcard__star.is-active {
+      opacity: 1;
+    }
+
+    .flashcard__icon {
+      position: absolute;
+      top: 10px;
+      width: 26px;
+      height: 26px;
       border: none;
       background: transparent;
-      border-radius: 16px;
-      padding: 16px 6px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #fff;
+      padding: 0;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      min-height: 56px;
+      opacity: 0.5;
+      z-index: 4;
     }
 
-    .flashcard__action:hover {
-      transform: translateY(-2px);
-      box-shadow: none;
+    .flashcard__icon svg {
+      width: 100%;
+      height: 100%;
+      fill: #000;
     }
 
-    .flashcard__action svg {
-      width: 28px;
-      height: 28px;
-      fill: #fff;
+    .flashcard__icon--left {
+      left: 10px;
+    }
+
+    .flashcard__icon--right {
+      right: 10px;
     }
 
     .flashcard::after,
@@ -1171,11 +1178,45 @@
         const cardEl = document.createElement('div');
         cardEl.className = `flashcard ${card.active ? '' : 'is-disabled'} ${card.id === selectedCardId ? 'is-selected' : ''}`.trim();
         cardEl.dataset.id = card.id;
-        cardEl.setAttribute('role', 'button');
-        cardEl.tabIndex = 0;
         cardEl.style.setProperty('--accuracy-color', getAccuracyColorRgb(getPronuncia(card)));
 
+        const detailButton = document.createElement('button');
+        detailButton.type = 'button';
+        detailButton.className = 'flashcard__icon flashcard__icon--left';
+        detailButton.setAttribute('aria-label', 'Abrir detalhes');
+        detailButton.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M11 5a1 1 0 0 1 2 0v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H5a1 1 0 1 1 0-2h6V5z" />
+          </svg>
+        `;
+        detailButton.addEventListener('click', event => {
+          event.stopPropagation();
+          openDetailForCard(card);
+        });
+        cardEl.appendChild(detailButton);
+
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'flashcard__icon flashcard__icon--right';
+        editButton.setAttribute('aria-label', 'Editar flashcard');
+        editButton.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 17.25V21h3.75l11-11-3.75-3.75-11 11zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+          </svg>
+        `;
+        editButton.addEventListener('click', event => {
+          event.stopPropagation();
+          selectedCardId = card.id;
+          updateDetail(card);
+          openEditModal();
+        });
+        cardEl.appendChild(editButton);
+
         const visual = createFlashcardVisual(card);
+        visual.addEventListener('click', event => {
+          event.stopPropagation();
+          handlePronunciaForCard(card);
+        });
         cardEl.appendChild(visual);
 
         const phraseButton = document.createElement('button');
@@ -1188,7 +1229,7 @@
         phraseButton.textContent = phrases[phraseIndex];
         phraseButton.addEventListener('click', event => {
           event.stopPropagation();
-          selectCard(card.id);
+          playAudioForCard(card);
         });
         if (phrases.length > 1) {
           const intervalId = window.setInterval(() => {
@@ -1199,57 +1240,18 @@
         }
         cardEl.appendChild(phraseButton);
 
-        const actions = document.createElement('div');
-        actions.className = 'flashcard__actions';
-
-        const pronounceButton = document.createElement('button');
-        pronounceButton.type = 'button';
-        pronounceButton.className = 'flashcard__action';
-        pronounceButton.innerHTML = `
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.09a6 6 0 0 0 5-5.91z" />
-          </svg>
-        `;
-        pronounceButton.setAttribute('aria-label', 'Pronunciar');
-        pronounceButton.addEventListener('click', async event => {
-          event.stopPropagation();
-          pronounceButton.disabled = true;
-          await handlePronunciaForCard(card);
-          pronounceButton.disabled = false;
-        });
-
-        const hearButton = document.createElement('button');
-        hearButton.type = 'button';
-        hearButton.className = 'flashcard__action';
-        hearButton.innerHTML = `
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 9v6h4l5 5V4L8 9H4zm13.5 3a4.5 4.5 0 0 0-2.34-3.95l-1 1.73A2.5 2.5 0 0 1 16.5 12a2.5 2.5 0 0 1-2.34 2.22l1 1.73A4.5 4.5 0 0 0 17.5 12zm2.5 0c0 2.4-1.26 4.51-3.16 5.7l1 1.73A8 8 0 0 0 22 12a8 8 0 0 0-3.16-6.43l-1 1.73A6 6 0 0 1 20 12z" />
-          </svg>
-        `;
-        hearButton.setAttribute('aria-label', 'Ouvir');
-        hearButton.disabled = !card.audioSrc;
-        hearButton.addEventListener('click', event => {
-          event.stopPropagation();
-          playAudioForCard(card);
-        });
-
-        actions.appendChild(pronounceButton);
-        actions.appendChild(hearButton);
-        cardEl.appendChild(actions);
-
-        const meta = document.createElement('div');
-        meta.className = 'flashcard__meta';
+        const stars = document.createElement('div');
+        stars.className = 'flashcard__stars';
         const spokenCount = getSpokenCount(card);
-        meta.textContent = `Falado ${spokenCount} ${spokenCount === 1 ? 'vez' : 'vezes'}`;
-        cardEl.appendChild(meta);
+        const activeStars = Math.max(0, Math.min(5, spokenCount));
+        for (let i = 0; i < 5; i += 1) {
+          const star = document.createElement('span');
+          star.className = `flashcard__star ${i < activeStars ? 'is-active' : ''}`.trim();
+          star.textContent = '★';
+          stars.appendChild(star);
+        }
+        cardEl.appendChild(stars);
 
-        cardEl.addEventListener('click', () => selectCard(card.id));
-        cardEl.addEventListener('keydown', event => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            selectCard(card.id);
-          }
-        });
         flashcardGrid.appendChild(cardEl);
       });
     }
@@ -1270,10 +1272,9 @@
       renderCards();
     }
 
-    function selectCard(id) {
-      const card = flashcards.find(item => item.id === id);
+    function openDetailForCard(card) {
       if (!card) return;
-      selectedCardId = id;
+      selectedCardId = card.id;
       audioClickCount = 0;
       renderCards();
       updateDetail(card);
