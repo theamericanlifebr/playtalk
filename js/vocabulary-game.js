@@ -67,7 +67,7 @@
   const PHASE_TRACK_FADEOUT_MS = 2000;
   const ACCURACY_RING_ANIMATION_MS = 1000;
   const ACCURACY_RING_RESET_MS = 1000;
-  const STREAK_HEART_TARGET = 10;
+  const STREAK_HEART_TARGET = 8;
   const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
   const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
   const FLASHCARD_PRONUNCIATION_LIMIT = 10;
@@ -762,10 +762,9 @@
   }
 
   function getPronunciationAverage() {
-    const filtered = pronunciationSamples.filter(value => value >= 50);
-    if (!filtered.length) return 0;
-    const sum = filtered.reduce((total, value) => total + value, 0);
-    return sum / filtered.length;
+    if (!pronunciationSamples.length) return 0;
+    const sum = pronunciationSamples.reduce((total, value) => total + value, 0);
+    return sum / pronunciationSamples.length;
   }
 
   function getMedalForErrors(errorCount) {
@@ -1206,7 +1205,6 @@
     index = 0;
     score = 0;
     errorStreak = 0;
-    correctStreak = 0;
     attemptCount = 0;
     currentItem = null;
     completionGridShown = false;
@@ -1231,7 +1229,6 @@
     updateMedalHud(currentMedalKey);
     updateFinalMedal(currentMedalKey);
     pronunciationSamples = [];
-    correctStreak = 0;
   }
 
   function updateProgressBar() {
@@ -1338,18 +1335,6 @@
     return true;
   }
 
-  function resetProgressOnStreak() {
-    errorStreak = 0;
-    score = 0;
-    index = 0;
-    attemptCount = 0;
-    cycle = shuffle(pool);
-    phaseFourBatchStart = 0;
-    phaseFourBatch = [];
-    phaseFourExpectedIndex = 0;
-    phaseFourResolved = 0;
-  }
-
   function registerErrorAndCheckReset() {
     errorStreak += 1;
     totalErrors += 1;
@@ -1364,11 +1349,7 @@
       }
     }
     updateHeartsDisplay();
-    const shouldReset = errorStreak >= 3;
-    if (shouldReset) {
-      resetProgressOnStreak();
-    }
-    return shouldReset;
+    return false;
   }
 
   function registerAttemptAndCheckAutoCorrect() {
@@ -1378,6 +1359,12 @@
 
   function applyCorrectOutcome() {
     errorStreak = 0;
+    attemptCount = 0;
+    score += 1;
+    index += 1;
+  }
+
+  function applyIncorrectOutcome() {
     attemptCount = 0;
     score += 1;
     index += 1;
@@ -1761,10 +1748,8 @@
         audio = successAudio;
       } else {
         btn.classList.add('error');
-        const reset = registerErrorAndCheckReset();
-        if (reset) {
-          btn.classList.remove('error');
-        }
+        registerErrorAndCheckReset();
+        applyIncorrectOutcome();
         audio = errorAudio;
       }
     }
@@ -1851,6 +1836,7 @@
         card.classList.add('grid-card--correct');
       } else {
         registerErrorAndCheckReset();
+        applyIncorrectOutcome();
         audio = errorAudio;
       }
     }
@@ -2133,6 +2119,7 @@
           wasCorrect = true;
         } else {
           registerErrorAndCheckReset();
+          applyIncorrectOutcome();
         }
       }
 
@@ -2300,20 +2287,12 @@
           }
         } else {
           card.classList.add('grid-card--wrong');
-          const reset = registerErrorAndCheckReset();
+          registerErrorAndCheckReset();
           errorAudio && errorAudio.play().catch(() => {});
           updateProgressBar();
           window.setTimeout(() => {
             card.classList.remove('grid-card--wrong');
           }, 600);
-          if (reset) {
-            window.setTimeout(() => {
-              phaseFourBatchStart = 0;
-              phaseFourResolved = 0;
-              phaseFourExpectedIndex = 0;
-              advanceCycle();
-            }, 700);
-          }
         }
       });
       boardInner.appendChild(card);
@@ -2593,9 +2572,6 @@
   async function startPhase(nextPhase, options = {}) {
     const { skipIntroAudio = false } = options;
     phase = nextPhase;
-    if (!isStreakPhase(nextPhase)) {
-      correctStreak = 0;
-    }
     updatePhaseLabel();
     updateRecognitionLanguage(nextPhase);
     applyBoardSizing(nextPhase);

@@ -813,6 +813,20 @@
       justify-content: center;
     }
 
+    .final-overlay__actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .final-overlay__actions .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
     .final-stat {
       display: flex;
       flex-direction: column;
@@ -1072,6 +1086,10 @@
         <div class="final-stat__value" id="final-pronunciation">0%</div>
         <div class="final-stat__label">Pronúncia</div>
       </div>
+    </div>
+    <div class="final-overlay__actions">
+      <a class="btn-primary" href="flashcards.html">FlashCards</a>
+      <a class="btn-primary" href="medalhas">Meus selos</a>
     </div>
     <div class="final-overlay__bar" id="final-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
       <div class="final-overlay__fill" id="final-progress-fill"></div>
