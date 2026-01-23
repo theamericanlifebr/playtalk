@@ -169,7 +169,12 @@
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background: var(--panel);
+      background: linear-gradient(
+        to bottom,
+        rgba(11, 31, 68, 0) 0%,
+        var(--panel) 50%,
+        rgba(11, 31, 68, 0) 100%
+      );
       display: flex;
       align-items: center;
       justify-content: center;
@@ -712,6 +717,7 @@
       3: 'images/mind.png',
       4: 'images/connect.png'
     };
+    const MEMORY_SEEDING_BACKGROUND = 'images/seeding.png';
     const MEMORY_LENS_SEEDED_COLOR = '28, 94, 50';
     const MEMORY_LENS_MASTERED_COLOR = '0, 0, 0';
     const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
@@ -1014,6 +1020,9 @@
     }
 
     function getMemoryBackground(entry) {
+      if (isMemorySeeding(entry)) {
+        return MEMORY_SEEDING_BACKGROUND;
+      }
       const stage = entry?.memoryStage ?? 0;
       return MEMORY_BACKGROUND_IMAGES[stage] || MEMORY_BACKGROUND_IMAGES[0];
     }
@@ -1159,7 +1168,7 @@
       const pt = entry.pt || entry.nomePortugues || '';
       const categoria = entry.categoria || entry.category || entry.tense || '';
       const tense = entry.tense || '';
-      const sentenceForm = entry.sentenceForm || '';
+      const sentenceForm = entry.sentenceForm || entry.state || entry.estado || entry.form || '';
       const categoryLabel = String(categoria || '').trim();
       const numericCategory = Number(categoryLabel);
       const day = source === 'building'

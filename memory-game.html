@@ -82,13 +82,25 @@
       display: grid;
       place-items: center;
       position: relative;
+      --tense-ring: none;
+      --tense-animation: none;
+      --tense-glow: none;
+      --tense-filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25));
+      --tense-mask: none;
+      --tense-lens: none;
+      --form-lens: none;
     }
 
     .memory-card__circle {
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background: var(--panel);
+      background: linear-gradient(
+        to bottom,
+        rgba(11, 31, 68, 0) 0%,
+        var(--panel) 50%,
+        rgba(11, 31, 68, 0) 100%
+      );
       display: flex;
       align-items: center;
       justify-content: center;
@@ -102,17 +114,60 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      filter: var(--tense-filter);
+      -webkit-mask-image: var(--tense-mask);
+      mask-image: var(--tense-mask);
       transform: scale(1.2);
+    }
+
+    .image-ring,
+    .image-lens {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .image-ring {
+      background: var(--ring-gradient, none);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width, 12px)), #000 calc(100% - var(--ring-width, 12px)));
+      mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width, 12px)), #000 calc(100% - var(--ring-width, 12px)));
+      animation: var(--ring-animation, none);
+      box-shadow: var(--ring-glow, none);
+      z-index: 5;
+    }
+
+    .image-ring--tense {
+      --ring-gradient: var(--tense-ring);
+      --ring-animation: var(--tense-animation);
+      --ring-glow: var(--tense-glow);
+      --ring-width: 10px;
+    }
+
+    .image-ring--form {
+      display: none;
+    }
+
+    .image-lens--tense { background: var(--tense-lens, none); }
+    .image-lens--form { background: var(--form-lens, none); }
+
+    .image-lens {
+      inset: 0;
+      z-index: 3;
     }
 
     .memory-card__lens {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(var(--lens-color, 76, 150, 220), 0.7) 0%, rgba(var(--lens-color, 76, 150, 220), 0) 65%);
-      opacity: 0.6;
+      background: linear-gradient(
+        to top,
+        rgba(var(--lens-color, 76, 150, 220), 0) 0%,
+        rgba(var(--lens-color, 76, 150, 220), 0.75) 50%,
+        rgba(var(--lens-color, 76, 150, 220), 0) 100%
+      );
       transition: background 1s ease;
       pointer-events: none;
-      z-index: 1;
+      z-index: 4;
     }
 
     .memory-card__prompt {
@@ -163,6 +218,10 @@
       30% { opacity: 1; }
       100% { opacity: 0; }
     }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -173,9 +232,13 @@
 
   <main>
     <section class="memory-card" id="memoryCard" aria-live="polite">
-      <div class="memory-card__visual">
-        <div class="memory-card__lens" id="memoryLens"></div>
+      <div class="memory-card__visual" id="memoryVisual">
+        <div class="image-ring image-ring--tense"></div>
+        <div class="image-ring image-ring--form"></div>
         <div class="memory-card__circle" id="memoryCircle"></div>
+        <div class="image-lens image-lens--tense"></div>
+        <div class="image-lens image-lens--form"></div>
+        <div class="memory-card__lens" id="memoryLens"></div>
       </div>
       <div class="memory-card__prompt" id="memoryPrompt">Speak now</div>
       <div class="memory-stars" id="memoryStars"></div>
@@ -194,6 +257,9 @@
       3: 'images/mind.png',
       4: 'images/connect.png'
     };
+    const MEMORY_SEEDING_BACKGROUND = 'images/seeding.png';
+    const MEMORY_LENS_SEEDED_COLOR = '28, 94, 50';
+    const MEMORY_LENS_MASTERED_COLOR = '0, 0, 0';
     const MIRROR_PATH = 'data/mirror.json';
 
     const memoryCard = document.getElementById('memoryCard');
@@ -203,6 +269,7 @@
     const memoryEmpty = document.getElementById('memoryEmpty');
     const memoryLevelLabel = document.getElementById('memoryLevelLabel');
     const memoryLens = document.getElementById('memoryLens');
+    const memoryVisual = document.getElementById('memoryVisual');
 
     let flashcards = [];
     let availableCards = [];
@@ -210,6 +277,85 @@
     let recognition = null;
     let mirrorGroups = [];
     let isListening = false;
+
+    const TENSE_STYLES = {
+      '': {
+        ring: 'conic-gradient(#8dc9ff, #8dc9ff)'
+      },
+      'present-simple': {
+        ring: 'conic-gradient(#8dc9ff, #8dc9ff)'
+      },
+      'present-continuous': {
+        ring: 'conic-gradient(#8dc9ff, #cfeaff, #8dc9ff)',
+        animation: 'spin 3s linear infinite'
+      },
+      'present-perfect': {
+        ring: 'conic-gradient(#8dc9ff, #c2b15a, #f2c14f, #8dc9ff)'
+      },
+      'present-perfect-continuous': {
+        ring: 'conic-gradient(#8dc9ff, #cfeaff, #f78c1f, #8dc9ff)',
+        animation: 'spin 1s linear infinite'
+      },
+      'past-simple': {
+        ring: 'conic-gradient(#8d939e, #8d939e)',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
+      },
+      'past-continuous': {
+        ring: 'conic-gradient(#8d939e, #1b1b1b, #8d939e)',
+        animation: 'spin 3s linear infinite',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
+      },
+      'past-perfect': {
+        ring: 'conic-gradient(#8d939e, #1b1b1b, #f2c14f, #8d939e)',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
+      },
+      'past-perfect-continuous': {
+        ring: 'conic-gradient(#8d939e, #6f7480, #f78c1f, #8d939e)',
+        animation: 'spin 1s linear infinite',
+        filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25)) grayscale(1)'
+      },
+      'future-simple': {
+        ring: 'conic-gradient(#172c6b, #172c6b)'
+      },
+      'future-continuous': {
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #172c6b)',
+        animation: 'spin 3s linear infinite'
+      },
+      'future-perfect': {
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #f2c14f, #172c6b)'
+      },
+      'future-perfect-continuous': {
+        ring: 'conic-gradient(#172c6b, #0a0a0a, #f78c1f, #172c6b)',
+        animation: 'spin 1s linear infinite'
+      },
+      'going-to-future': {
+        ring: 'conic-gradient(#172c6b, #172c6b)'
+      },
+      'present-continuous-future': {
+        ring: 'conic-gradient(#172c6b, #172c6b)'
+      },
+      'present-simple-future': {
+        ring: 'conic-gradient(#172c6b, #172c6b)'
+      },
+      'conditional-would': {
+        lens: 'linear-gradient(40deg, rgba(90, 150, 255, 0.75) 0%, rgba(90, 150, 255, 0) 60%)'
+      }
+    };
+
+    const SENTENCE_FORM_STYLES = {
+      affirmative: {
+        lens: 'linear-gradient(to top, rgba(41, 214, 123, 0.75) 0%, rgba(41, 214, 123, 0) 60%)'
+      },
+      negative: {
+        lens: 'linear-gradient(to top, rgba(255, 77, 79, 0.75) 0%, rgba(255, 77, 79, 0) 60%)'
+      },
+      question: {
+        lens: 'linear-gradient(to top, rgba(246, 178, 94, 0.75) 0%, rgba(246, 178, 94, 0) 60%)'
+      },
+      imperative: {
+        lens: 'linear-gradient(to top, rgba(246, 196, 83, 0.75) 0%, rgba(246, 196, 83, 0) 60%)'
+      }
+    };
 
     function loadFlashcardStats() {
       try {
@@ -422,6 +568,9 @@
     }
 
     function getMemoryBackground(entry) {
+      if (isMemorySeeding(entry)) {
+        return MEMORY_SEEDING_BACKGROUND;
+      }
       const stage = entry?.memoryStage ?? 0;
       return MEMORY_BACKGROUND_IMAGES[stage] || MEMORY_BACKGROUND_IMAGES[0];
     }
@@ -430,6 +579,12 @@
       if (!entry) return 0;
       if (entry.memoryMastered) return 10;
       return Math.max(0, Math.min(10, Number(entry.memoryStreak) || 0));
+    }
+
+    function getPronunciaValue(entry) {
+      if (!entry || !Array.isArray(entry.pronunciation) || !entry.pronunciation.length) return null;
+      const total = entry.pronunciation.reduce((acc, value) => acc + value, 0);
+      return Math.round(total / entry.pronunciation.length);
     }
 
     const ACCURACY_COLOR_STOPS = [
@@ -473,6 +628,19 @@
       memoryLens.style.setProperty('--lens-color', targetRgb);
     }
 
+    function applyTenseStyles(wrapper, card) {
+      if (!wrapper || !card) return;
+      const tenseStyle = TENSE_STYLES[card.tense] || {};
+      const formStyle = SENTENCE_FORM_STYLES[card.sentenceForm] || {};
+      wrapper.style.setProperty('--tense-ring', tenseStyle.ring || 'none');
+      wrapper.style.setProperty('--tense-animation', tenseStyle.animation || 'none');
+      wrapper.style.setProperty('--tense-glow', tenseStyle.glow || 'none');
+      wrapper.style.setProperty('--tense-filter', tenseStyle.filter || 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25))');
+      wrapper.style.setProperty('--tense-mask', tenseStyle.mask || 'none');
+      wrapper.style.setProperty('--tense-lens', tenseStyle.lens || 'none');
+      wrapper.style.setProperty('--form-lens', formStyle.lens || 'none');
+    }
+
     function buildImageSrc(fileName = '') {
       if (!fileName) return '';
       const encodedPath = fileName
@@ -489,6 +657,8 @@
       if (!file || !en) return null;
       const pt = entry.pt || entry.nomePortugues || '';
       const categoria = entry.categoria || entry.category || entry.tense || '';
+      const tense = entry.tense || '';
+      const sentenceForm = entry.sentenceForm || entry.state || entry.estado || entry.form || '';
       const numericCategory = Number(categoria);
       const day = source === 'building'
         ? (Number.isFinite(numericCategory) && numericCategory > 0 ? numericCategory : 1)
@@ -499,7 +669,9 @@
         nomePortugues: pt,
         nomeIngles: en,
         imageSrc: buildImageSrc(file),
-        day
+        day,
+        tense,
+        sentenceForm
       };
     }
 
@@ -578,17 +750,20 @@
       if (entry && syncMemoryState(entry)) {
         saveFlashcardStats(stats);
       }
+      applyTenseStyles(memoryVisual, card);
       memoryCircle.innerHTML = '';
       const img = document.createElement('img');
       img.src = card.imageSrc;
       img.alt = card.nomePortugues || 'Flashcard';
       memoryCircle.appendChild(img);
       memoryCard.style.backgroundImage = `url('${getMemoryBackground(entry)}')`;
+      let lensColor = getAccuracyColorRgb(getPronunciaValue(entry));
       if (entry?.memoryMastered) {
-        animateLensColor('0, 0, 0');
-      } else {
-        animateLensColor('76, 150, 220');
+        lensColor = MEMORY_LENS_MASTERED_COLOR;
+      } else if (isMemorySeeding(entry)) {
+        lensColor = MEMORY_LENS_SEEDED_COLOR;
       }
+      animateLensColor(lensColor);
       renderStars(entry);
     }
 
@@ -653,17 +828,24 @@
       try {
         const spoken = await listenForSpeech();
         const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
-        const wasCorrect = percent >= 88;
+        const wasCorrect = percent >= 83;
         const accuracyColor = getAccuracyColorRgb(percent);
         animateLensColor(accuracyColor);
 
         const outcome = recordMemoryAttempt(currentCard, wasCorrect);
+        const stats = loadFlashcardStats();
+        const key = getFlashcardKey(currentCard);
+        const entry = key ? ensureStatsEntry(stats, key) : null;
+        renderStars(entry);
+        if (entry) {
+          memoryCard.style.backgroundImage = `url('${getMemoryBackground(entry)}')`;
+        }
         if (wasCorrect && outcome.seeded) {
           memoryCard.classList.add('memory-card--flash');
-          animateLensColor('28, 94, 50');
+          animateLensColor(MEMORY_LENS_SEEDED_COLOR);
         }
         if (outcome.mastered) {
-          animateLensColor('0, 0, 0');
+          animateLensColor(MEMORY_LENS_MASTERED_COLOR);
         }
         window.setTimeout(() => {
           memoryCard.classList.remove('memory-card--flash');
