@@ -21,6 +21,7 @@
   const finalOverlay = document.getElementById('final-overlay');
   const finalTotalTimeEl = document.getElementById('final-total-time');
   const finalPronunciationEl = document.getElementById('final-pronunciation');
+  const finalMemoryEl = document.getElementById('final-memory');
   const finalProgressBar = document.getElementById('final-progress-bar');
   const finalProgressFill = document.getElementById('final-progress-fill');
   const finalMedalImage = document.getElementById('final-medal-image');
@@ -72,6 +73,8 @@
   const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
   const FLASHCARD_PRONUNCIATION_LIMIT = 10;
   const FLASHCARD_TIME_LIMIT = 10;
+  const MEMORY_HISTORY_LIMIT = 10;
+  const MEMORY_SEEDING_DAYS = [3, 7, 30];
   const AUDIO_RESOLVE_ENDPOINT = '/api/media/resolve';
   const successAudio = document.getElementById('audio-success');
   const errorAudio = document.getElementById('audio-error');
@@ -116,6 +119,7 @@
   let errorStreak = 0;
   let attemptCount = 0;
   let correctStreak = 0;
+  let sessionMemoryHistory = [];
   let totalErrors = 0;
   let currentMedalKey = 'diamante';
   let heartsRemaining = MEDAL_HEARTS.diamante;
@@ -767,6 +771,12 @@
     return sum / pronunciationSamples.length;
   }
 
+  function getSessionMemorySummary() {
+    if (!sessionMemoryHistory.length) return { total: 0, correct: 0 };
+    const correct = sessionMemoryHistory.filter(Boolean).length;
+    return { total: sessionMemoryHistory.length, correct };
+  }
+
   function getMedalForErrors(errorCount) {
     if (errorCount >= 7) return 'prata';
     if (errorCount >= 4) return 'ouro';
@@ -892,8 +902,28 @@
         durations: [],
         lastPlayedAt: null,
         lastSpokenAt: null,
-        lastHeardAt: null
+        lastHeardAt: null,
+        memoryHistory: [],
+        memoryStreak: 0,
+        memoryStage: 0,
+        memorySeedingUntil: null,
+        memoryMastered: false
       };
+    }
+    if (!Array.isArray(stats[key].memoryHistory)) {
+      stats[key].memoryHistory = [];
+    }
+    if (typeof stats[key].memoryStreak !== 'number') {
+      stats[key].memoryStreak = 0;
+    }
+    if (typeof stats[key].memoryStage !== 'number') {
+      stats[key].memoryStage = 0;
+    }
+    if (typeof stats[key].memorySeedingUntil !== 'number') {
+      stats[key].memorySeedingUntil = null;
+    }
+    if (typeof stats[key].memoryMastered !== 'boolean') {
+      stats[key].memoryMastered = false;
     }
     return stats[key];
   }
@@ -946,6 +976,74 @@
     if (!record) return;
     const normalizedDuration = Math.max(0, Number(durationMs) || 0);
     pushLimited(record.durations, normalizedDuration, FLASHCARD_TIME_LIMIT);
+    saveFlashcardStats(stats);
+  }
+
+  function syncMemoryState(record) {
+    if (!record) return false;
+    let changed = false;
+    const now = Date.now();
+    if (record.memorySeedingUntil && now >= record.memorySeedingUntil) {
+      record.memorySeedingUntil = null;
+      record.memoryStreak = 0;
+      if (record.memoryStage < 3) {
+        record.memoryStage += 1;
+      }
+      changed = true;
+    }
+    if (record.memoryMastered && record.memoryStage !== 4) {
+      record.memoryStage = 4;
+      changed = true;
+    }
+    return changed;
+  }
+
+  function recordMemoryAttempt(entry, wasCorrect) {
+    const key = getFlashcardKey(entry);
+    if (!key) return;
+    const stats = readFlashcardStats();
+    const record = getFlashcardStatsEntry(stats, key);
+    if (!record) return;
+    syncMemoryState(record);
+    const now = Date.now();
+    if (record.memorySeedingUntil && now < record.memorySeedingUntil) {
+      saveFlashcardStats(stats);
+      return;
+    }
+
+    record.memoryHistory.push(Boolean(wasCorrect));
+    while (record.memoryHistory.length > MEMORY_HISTORY_LIMIT) {
+      record.memoryHistory.shift();
+    }
+
+    if (record.memoryMastered) {
+      record.memoryStreak = 10;
+      saveFlashcardStats(stats);
+      return;
+    }
+
+    if (wasCorrect) {
+      record.memoryStreak += 1;
+    } else {
+      record.memoryStreak = 0;
+    }
+
+    if (record.memoryStage <= 2 && record.memoryStreak >= 10) {
+      const days = MEMORY_SEEDING_DAYS[record.memoryStage] || 3;
+      record.memorySeedingUntil = now + days * 24 * 60 * 60 * 1000;
+      record.memoryStreak = 0;
+    }
+
+    if (record.memoryStage === 3 && record.memoryStreak >= 5) {
+      record.memoryMastered = true;
+      record.memoryStage = 4;
+      record.memoryStreak = 10;
+    }
+
+    sessionMemoryHistory.push(Boolean(wasCorrect));
+    while (sessionMemoryHistory.length > MEMORY_HISTORY_LIMIT) {
+      sessionMemoryHistory.shift();
+    }
     saveFlashcardStats(stats);
   }
 
@@ -1229,6 +1327,7 @@
     updateMedalHud(currentMedalKey);
     updateFinalMedal(currentMedalKey);
     pronunciationSamples = [];
+    sessionMemoryHistory = [];
   }
 
   function updateProgressBar() {
@@ -2152,6 +2251,7 @@
       if (entry && (phase === 3 || phase === 6 || phase === 7)) {
         recordFlashcardSpoken(entry, percent);
         if (phase === 6) {
+          recordMemoryAttempt(entry, wasCorrect);
           recordFlashcardDuration(entry, Date.now() - speechStartedAt);
         }
       }
@@ -2690,6 +2790,10 @@
     if (finalPronunciationEl) {
       const pronunciationAverage = getPronunciationAverage();
       finalPronunciationEl.textContent = `${pronunciationAverage.toFixed(1)}%`;
+    }
+    if (finalMemoryEl) {
+      const { total, correct } = getSessionMemorySummary();
+      finalMemoryEl.textContent = total ? `${correct}/${total}` : '--';
     }
 
     await loadAudioLevelsConfig();
