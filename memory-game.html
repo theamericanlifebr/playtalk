@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>PlayTalk | Jogo da memória</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
+  <style>
+    :root {
+      --primary: #0b1f44;
+      --secondary: #4c96dc;
+      --panel: rgba(11, 31, 68, 0.06);
+      --border: rgba(11, 31, 68, 0.12);
+      --text: #0b1f44;
+      --muted: rgba(11, 31, 68, 0.7);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #ffffff url('backgrounds/background6.jpg') center/cover fixed no-repeat;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 32px;
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    header span {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px 48px;
+    }
+
+    .memory-card {
+      width: min(360px, 90vw);
+      height: 520px;
+      background: rgba(255, 255, 255, 0.92) url('images/galaxy.png') center/cover no-repeat;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 35px rgba(11, 31, 68, 0.18);
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .memory-card__visual {
+      width: 260px;
+      height: 260px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .memory-card__circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+      cursor: pointer;
+    }
+
+    .memory-card__circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.2);
+    }
+
+    .memory-card__lens {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(var(--lens-color, 76, 150, 220), 0.7) 0%, rgba(var(--lens-color, 76, 150, 220), 0) 65%);
+      opacity: 0.6;
+      transition: background 1s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .memory-card__prompt {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffd644;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .memory-card__prompt.is-visible {
+      opacity: 1;
+    }
+
+    .memory-stars {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .memory-star {
+      font-size: 30px;
+      color: transparent;
+      background: linear-gradient(90deg, #ffd644 var(--fill, 0%), rgba(255, 214, 68, 0.35) var(--fill, 0%));
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
+    .memory-empty {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .memory-card--flash::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.9);
+      animation: flash 0.6s ease;
+      pointer-events: none;
+    }
+
+    @keyframes flash {
+      0% { opacity: 0; }
+      30% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Jogo da memória</h1>
+    <span id="memoryLevelLabel">Dia --</span>
+  </header>
+
+  <main>
+    <section class="memory-card" id="memoryCard" aria-live="polite">
+      <div class="memory-card__visual">
+        <div class="memory-card__lens" id="memoryLens"></div>
+        <div class="memory-card__circle" id="memoryCircle"></div>
+      </div>
+      <div class="memory-card__prompt" id="memoryPrompt">Speak now</div>
+      <div class="memory-stars" id="memoryStars"></div>
+    </section>
+    <p class="memory-empty" id="memoryEmpty" hidden>Todos os cards estão em seeding.</p>
+  </main>
+
+  <script>
+    const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
+    const MEMORY_HISTORY_LIMIT = 10;
+    const MEMORY_SEEDING_DAYS = [3, 7, 30];
+    const MEMORY_BACKGROUND_IMAGES = {
+      0: 'images/galaxy.png',
+      1: 'images/gold.png',
+      2: 'images/diamond.png',
+      3: 'images/mind.png',
+      4: 'images/connect.png'
+    };
+    const MIRROR_PATH = 'data/mirror.json';
+
+    const memoryCard = document.getElementById('memoryCard');
+    const memoryCircle = document.getElementById('memoryCircle');
+    const memoryStars = document.getElementById('memoryStars');
+    const memoryPrompt = document.getElementById('memoryPrompt');
+    const memoryEmpty = document.getElementById('memoryEmpty');
+    const memoryLevelLabel = document.getElementById('memoryLevelLabel');
+    const memoryLens = document.getElementById('memoryLens');
+
+    let flashcards = [];
+    let availableCards = [];
+    let currentCard = null;
+    let recognition = null;
+    let mirrorGroups = [];
+    let isListening = false;
+
+    function loadFlashcardStats() {
+      try {
+        const stored = localStorage.getItem(FLASHCARD_STATS_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveFlashcardStats(stats) {
+      localStorage.setItem(FLASHCARD_STATS_STORAGE_KEY, JSON.stringify(stats));
+    }
+
+    function normalizeSpeechText(text) {
+      return String(text || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9' ]/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function escapeRegExp(value) {
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function applyMirrorGroups(text) {
+      if (!mirrorGroups.length || !text) return text;
+      let result = text;
+      mirrorGroups.forEach(group => {
+        const { canonical, variants } = group;
+        variants.forEach(variant => {
+          if (!variant || variant === canonical) return;
+          const escaped = escapeRegExp(variant);
+          const regex = new RegExp(`(^|\\s)${escaped}(?=\\s|$)`, 'g');
+          result = result.replace(regex, `$1${canonical}`);
+        });
+      });
+      return result;
+    }
+
+    function longestCommonSubstringLength(a, b) {
+      if (!a || !b) return 0;
+      const aLen = a.length;
+      const bLen = b.length;
+      const dp = Array.from({ length: aLen + 1 }, () => Array(bLen + 1).fill(0));
+      let maxLen = 0;
+      for (let i = 1; i <= aLen; i += 1) {
+        for (let j = 1; j <= bLen; j += 1) {
+          if (a[i - 1] === b[j - 1]) {
+            dp[i][j] = dp[i - 1][j - 1] + 1;
+            if (dp[i][j] > maxLen) maxLen = dp[i][j];
+          }
+        }
+      }
+      return maxLen;
+    }
+
+    function calculateSequenceMatchPercent(expected, spoken) {
+      const normalizedExpected = applyMirrorGroups(normalizeSpeechText(expected));
+      const normalizedSpoken = applyMirrorGroups(normalizeSpeechText(spoken));
+      if (!normalizedExpected) return 0;
+      const longestMatch = longestCommonSubstringLength(normalizedExpected, normalizedSpoken);
+      return (longestMatch / normalizedExpected.length) * 100;
+    }
+
+    function normalizeMirrorGroups(data) {
+      if (!data || typeof data !== 'object') return [];
+      return Object.entries(data).map(([canonical, variants]) => {
+        const normalizedCanonical = normalizeSpeechText(canonical);
+        const normalizedVariants = Array.isArray(variants) ? variants : [];
+        const normalizedList = [normalizedCanonical, ...normalizedVariants.map(normalizeSpeechText)]
+          .filter(Boolean);
+        const unique = Array.from(new Set(normalizedList));
+        unique.sort((a, b) => b.length - a.length);
+        return {
+          canonical: normalizedCanonical,
+          variants: unique
+        };
+      }).filter(group => group.canonical);
+    }
+
+    async function loadMirrorGroups() {
+      try {
+        const response = await fetch(MIRROR_PATH);
+        if (!response.ok) {
+          mirrorGroups = [];
+          return;
+        }
+        const data = await response.json();
+        mirrorGroups = normalizeMirrorGroups(data);
+      } catch (error) {
+        mirrorGroups = [];
+      }
+    }
+
+    function getFlashcardKey(card) {
+      if (!card) return '';
+      const normalizedText = normalizeSpeechText(card.nomeIngles || card.en || '');
+      if (normalizedText) return normalizedText;
+      return String(card.file || '').trim().toLowerCase();
+    }
+
+    function ensureStatsEntry(stats, key) {
+      if (!stats[key]) {
+        stats[key] = {
+          pronunciation: [],
+          durations: [],
+          lastPlayedAt: null,
+          lastSpokenAt: null,
+          lastHeardAt: null,
+          memoryHistory: [],
+          memoryStreak: 0,
+          memoryStage: 0,
+          memorySeedingUntil: null,
+          memoryMastered: false
+        };
+      }
+      if (!Array.isArray(stats[key].memoryHistory)) {
+        stats[key].memoryHistory = [];
+      }
+      if (typeof stats[key].memoryStreak !== 'number') {
+        stats[key].memoryStreak = 0;
+      }
+      if (typeof stats[key].memoryStage !== 'number') {
+        stats[key].memoryStage = 0;
+      }
+      if (typeof stats[key].memorySeedingUntil !== 'number') {
+        stats[key].memorySeedingUntil = null;
+      }
+      if (typeof stats[key].memoryMastered !== 'boolean') {
+        stats[key].memoryMastered = false;
+      }
+      return stats[key];
+    }
+
+    function syncMemoryState(entry) {
+      if (!entry) return false;
+      let changed = false;
+      const now = Date.now();
+      if (entry.memorySeedingUntil && now >= entry.memorySeedingUntil) {
+        entry.memorySeedingUntil = null;
+        entry.memoryStreak = 0;
+        if (entry.memoryStage < 3) {
+          entry.memoryStage += 1;
+        }
+        changed = true;
+      }
+      if (entry.memoryMastered && entry.memoryStage !== 4) {
+        entry.memoryStage = 4;
+        changed = true;
+      }
+      return changed;
+    }
+
+    function isMemorySeeding(entry) {
+      return Boolean(entry?.memorySeedingUntil && Date.now() < entry.memorySeedingUntil);
+    }
+
+    function recordMemoryAttempt(card, wasCorrect) {
+      const key = getFlashcardKey(card);
+      if (!key) return { seeded: false, mastered: false };
+      const stats = loadFlashcardStats();
+      const entry = ensureStatsEntry(stats, key);
+      const now = Date.now();
+      syncMemoryState(entry);
+      if (entry.memorySeedingUntil && now < entry.memorySeedingUntil) {
+        saveFlashcardStats(stats);
+        return { seeded: false, mastered: false };
+      }
+
+      entry.memoryHistory.push(Boolean(wasCorrect));
+      while (entry.memoryHistory.length > MEMORY_HISTORY_LIMIT) {
+        entry.memoryHistory.shift();
+      }
+
+      if (entry.memoryMastered) {
+        entry.memoryStreak = 10;
+        saveFlashcardStats(stats);
+        return { seeded: false, mastered: true };
+      }
+
+      if (wasCorrect) {
+        entry.memoryStreak += 1;
+      } else {
+        entry.memoryStreak = 0;
+      }
+
+      let seeded = false;
+      let mastered = false;
+
+      if (entry.memoryStage <= 2 && entry.memoryStreak >= 10) {
+        const days = MEMORY_SEEDING_DAYS[entry.memoryStage] || 3;
+        entry.memorySeedingUntil = now + days * 24 * 60 * 60 * 1000;
+        entry.memoryStreak = 0;
+        seeded = true;
+      }
+
+      if (entry.memoryStage === 3 && entry.memoryStreak >= 5) {
+        entry.memoryMastered = true;
+        entry.memoryStage = 4;
+        entry.memoryStreak = 10;
+        mastered = true;
+      }
+
+      saveFlashcardStats(stats);
+      return { seeded, mastered };
+    }
+
+    function getMemoryBackground(entry) {
+      const stage = entry?.memoryStage ?? 0;
+      return MEMORY_BACKGROUND_IMAGES[stage] || MEMORY_BACKGROUND_IMAGES[0];
+    }
+
+    function getMemoryStreak(entry) {
+      if (!entry) return 0;
+      if (entry.memoryMastered) return 10;
+      return Math.max(0, Math.min(10, Number(entry.memoryStreak) || 0));
+    }
+
+    const ACCURACY_COLOR_STOPS = [
+      { percent: 0, color: [128, 0, 32] },
+      { percent: 50, color: [231, 76, 60] },
+      { percent: 70, color: [243, 156, 18] },
+      { percent: 85, color: [46, 204, 113] },
+      { percent: 100, color: [47, 141, 255] }
+    ];
+
+    function interpolateColor(start, end, ratio) {
+      const clampRatio = Math.max(0, Math.min(1, ratio));
+      return start.map((channel, index) => {
+        const value = channel + (end[index] - channel) * clampRatio;
+        return Math.round(value);
+      });
+    }
+
+    function getAccuracyColorRgb(accuracy) {
+      const percent = Math.max(0, Math.min(100, Number(accuracy) || 0));
+      const upperIndex = ACCURACY_COLOR_STOPS.findIndex(stop => percent <= stop.percent);
+      const lowerIndex = upperIndex <= 0 ? 0 : upperIndex - 1;
+      const lowerStop = ACCURACY_COLOR_STOPS[lowerIndex];
+      const upperStop = ACCURACY_COLOR_STOPS[Math.max(upperIndex, 0)];
+
+      if (!upperStop) {
+        return ACCURACY_COLOR_STOPS[ACCURACY_COLOR_STOPS.length - 1].color.join(', ');
+      }
+
+      if (upperStop.percent === lowerStop.percent) {
+        return upperStop.color.join(', ');
+      }
+
+      const ratio = (percent - lowerStop.percent) / (upperStop.percent - lowerStop.percent);
+      const blended = interpolateColor(lowerStop.color, upperStop.color, ratio);
+      return blended.join(', ');
+    }
+
+    function animateLensColor(targetRgb) {
+      if (!memoryLens) return;
+      memoryLens.style.setProperty('--lens-color', targetRgb);
+    }
+
+    function buildImageSrc(fileName = '') {
+      if (!fileName) return '';
+      const encodedPath = fileName
+        .split('/')
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
+      return `images/${encodedPath}`;
+    }
+
+    function normalizeFlashcardEntry(entry, source, levelMap) {
+      if (!entry || typeof entry !== 'object') return null;
+      const file = entry.file || entry.imagem;
+      const en = entry.en || entry.nomeIngles;
+      if (!file || !en) return null;
+      const pt = entry.pt || entry.nomePortugues || '';
+      const categoria = entry.categoria || entry.category || entry.tense || '';
+      const numericCategory = Number(categoria);
+      const day = source === 'building'
+        ? (Number.isFinite(numericCategory) && numericCategory > 0 ? numericCategory : 1)
+        : (levelMap.get(file) || 1);
+      return {
+        id: `${source}:${file}:${en}`,
+        file,
+        nomePortugues: pt,
+        nomeIngles: en,
+        imageSrc: buildImageSrc(file),
+        day
+      };
+    }
+
+    async function loadFlashcards() {
+      const [imagesData, buildingData, levelsData] = await Promise.all([
+        fetch('images/images.json')
+          .then(response => (response.ok ? response.json() : []))
+          .catch(() => []),
+        fetch('images/building.json')
+          .then(response => (response.ok ? response.json() : []))
+          .catch(() => []),
+        fetch('/api/image-levels').then(response => (response.ok ? response.json() : {})).catch(() => ({}))
+      ]);
+
+      const levelEntries = levelsData && typeof levelsData === 'object' ? levelsData.levels || {} : {};
+      const levelMap = new Map(Object.entries(levelEntries).map(([fileName, value]) => [fileName, Number(value)]));
+
+      const imageCards = Array.isArray(imagesData)
+        ? imagesData.map(entry => normalizeFlashcardEntry(entry, 'images', levelMap)).filter(Boolean)
+        : [];
+
+      const buildingCards = Array.isArray(buildingData)
+        ? buildingData.map(entry => normalizeFlashcardEntry(entry, 'building', levelMap)).filter(Boolean)
+        : [];
+
+      flashcards = [...imageCards, ...buildingCards];
+    }
+
+    function getStoredDay() {
+      const stored = localStorage.getItem('vocabulary-level') || localStorage.getItem('pastaAtual');
+      const numeric = Number.parseInt(stored || '1', 10);
+      return Number.isFinite(numeric) && numeric > 0 ? numeric : 1;
+    }
+
+    function getDayFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const value = Number.parseInt(params.get('day') || '', 10);
+      if (Number.isFinite(value) && value > 0) return value;
+      return getStoredDay();
+    }
+
+    function refreshAvailableCards(day) {
+      const stats = loadFlashcardStats();
+      let changed = false;
+      availableCards = flashcards.filter(card => card.day === day && card.imageSrc);
+      availableCards = availableCards.filter(card => {
+        const key = getFlashcardKey(card);
+        const entry = key ? ensureStatsEntry(stats, key) : null;
+        if (entry && syncMemoryState(entry)) {
+          changed = true;
+        }
+        return entry ? !isMemorySeeding(entry) : true;
+      });
+      if (changed) saveFlashcardStats(stats);
+    }
+
+    function renderStars(entry) {
+      memoryStars.innerHTML = '';
+      const streak = getMemoryStreak(entry);
+      for (let i = 0; i < 5; i += 1) {
+        const star = document.createElement('span');
+        const remaining = streak - i * 2;
+        const fillRatio = Math.max(0, Math.min(1, remaining / 2));
+        star.className = 'memory-star';
+        star.style.setProperty('--fill', `${fillRatio * 100}%`);
+        star.textContent = '★';
+        memoryStars.appendChild(star);
+      }
+    }
+
+    function renderCard(card) {
+      if (!card) return;
+      const stats = loadFlashcardStats();
+      const key = getFlashcardKey(card);
+      const entry = key ? ensureStatsEntry(stats, key) : null;
+      if (entry && syncMemoryState(entry)) {
+        saveFlashcardStats(stats);
+      }
+      memoryCircle.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = card.imageSrc;
+      img.alt = card.nomePortugues || 'Flashcard';
+      memoryCircle.appendChild(img);
+      memoryCard.style.backgroundImage = `url('${getMemoryBackground(entry)}')`;
+      if (entry?.memoryMastered) {
+        animateLensColor('0, 0, 0');
+      } else {
+        animateLensColor('76, 150, 220');
+      }
+      renderStars(entry);
+    }
+
+    function pickNextCard(day) {
+      refreshAvailableCards(day);
+      if (!availableCards.length) {
+        currentCard = null;
+        memoryCard.hidden = true;
+        memoryEmpty.hidden = false;
+        return;
+      }
+      memoryEmpty.hidden = true;
+      memoryCard.hidden = false;
+      let next = availableCards[Math.floor(Math.random() * availableCards.length)];
+      if (currentCard && availableCards.length > 1) {
+        while (next.id === currentCard.id) {
+          next = availableCards[Math.floor(Math.random() * availableCards.length)];
+        }
+      }
+      currentCard = next;
+      renderCard(currentCard);
+    }
+
+    function setupSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+      }
+    }
+
+    function listenForSpeech() {
+      if (!recognition) {
+        const typed = window.prompt('Diga a frase em inglês:') || '';
+        return Promise.resolve(typed);
+      }
+      return new Promise(resolve => {
+        let resolved = false;
+        const finalize = (value) => {
+          if (resolved) return;
+          resolved = true;
+          resolve(value);
+        };
+        recognition.onresult = event => {
+          const text = Array.from(event.results)
+            .map(result => result[0] && result[0].transcript)
+            .join(' ');
+          finalize(text);
+        };
+        recognition.onerror = () => finalize('');
+        recognition.onend = () => finalize('');
+        recognition.start();
+      });
+    }
+
+    async function handleSpeechAttempt(day) {
+      if (!currentCard || isListening) return;
+      isListening = true;
+      memoryPrompt.classList.add('is-visible');
+      try {
+        const spoken = await listenForSpeech();
+        const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
+        const wasCorrect = percent >= 88;
+        const accuracyColor = getAccuracyColorRgb(percent);
+        animateLensColor(accuracyColor);
+
+        const outcome = recordMemoryAttempt(currentCard, wasCorrect);
+        if (wasCorrect && outcome.seeded) {
+          memoryCard.classList.add('memory-card--flash');
+          animateLensColor('28, 94, 50');
+        }
+        if (outcome.mastered) {
+          animateLensColor('0, 0, 0');
+        }
+        window.setTimeout(() => {
+          memoryCard.classList.remove('memory-card--flash');
+          pickNextCard(day);
+        }, 900);
+      } finally {
+        memoryPrompt.classList.remove('is-visible');
+        isListening = false;
+      }
+    }
+
+    async function initialize() {
+      const day = getDayFromQuery();
+      memoryLevelLabel.textContent = `Dia ${day}`;
+      setupSpeechRecognition();
+      await loadMirrorGroups();
+      await loadFlashcards();
+      refreshAvailableCards(day);
+      pickNextCard(day);
+
+      memoryCircle.addEventListener('click', () => handleSpeechAttempt(day));
+      memoryCircle.addEventListener('touchstart', () => handleSpeechAttempt(day), { passive: true });
+    }
+
+    initialize();
+  </script>
+</body>
+</html>
