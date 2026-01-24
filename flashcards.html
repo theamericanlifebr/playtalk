@@ -317,8 +317,8 @@
     }
 
     .flashcard__seeding small {
-      font-size: 12px;
-      font-weight: 700;
+      font-size: inherit;
+      font-weight: 800;
       color: var(--muted);
       text-transform: none;
     }
@@ -1478,7 +1478,7 @@
 
         const stars = document.createElement('div');
         stars.className = 'flashcard__stars';
-        const streakValue = getMemoryStreakValue(statsEntry);
+        const streakValue = isSeeding ? MEMORY_STAR_COUNT : getMemoryStreakValue(statsEntry);
         for (let i = 0; i < MEMORY_STAR_COUNT; i += 1) {
           const star = document.createElement('span');
           const fillRatio = i < streakValue ? 1 : 0;
