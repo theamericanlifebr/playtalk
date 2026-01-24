@@ -161,9 +161,8 @@
       inset: 0;
       background: linear-gradient(
         to top,
-        rgba(var(--lens-color, 76, 150, 220), 0) 0%,
-        rgba(var(--lens-color, 76, 150, 220), 0.75) 50%,
-        rgba(var(--lens-color, 76, 150, 220), 0) 100%
+        rgba(var(--lens-color, 76, 150, 220), 1) 0%,
+        rgba(var(--lens-color, 76, 150, 220), 0) 50%
       );
       transition: background 1s ease;
       pointer-events: none;
@@ -209,7 +208,7 @@
       position: absolute;
       inset: 0;
       background: rgba(255, 255, 255, 0.9);
-      animation: flash 0.6s ease;
+      animation: flash 1.5s ease;
       pointer-events: none;
     }
 
@@ -249,7 +248,8 @@
   <script>
     const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
     const MEMORY_HISTORY_LIMIT = 10;
-    const MEMORY_SEEDING_DAYS = [3, 7, 30];
+    const MEMORY_SEEDING_DAYS = [3, 3, 3];
+    const MEMORY_STAR_COUNT = 6;
     const MEMORY_BACKGROUND_IMAGES = {
       0: 'images/galaxy.png',
       1: 'images/gold.png',
@@ -535,13 +535,13 @@
       }
 
       if (entry.memoryMastered) {
-        entry.memoryStreak = 10;
+        entry.memoryStreak = MEMORY_STAR_COUNT;
         saveFlashcardStats(stats);
         return { seeded: false, mastered: true };
       }
 
       if (wasCorrect) {
-        entry.memoryStreak += 1;
+        entry.memoryStreak = Math.min(entry.memoryStreak + 1, MEMORY_STAR_COUNT);
       } else {
         entry.memoryStreak = 0;
       }
@@ -549,17 +549,17 @@
       let seeded = false;
       let mastered = false;
 
-      if (entry.memoryStage <= 2 && entry.memoryStreak >= 10) {
+      if (entry.memoryStage <= 2 && entry.memoryStreak >= MEMORY_STAR_COUNT) {
         const days = MEMORY_SEEDING_DAYS[entry.memoryStage] || 3;
         entry.memorySeedingUntil = now + days * 24 * 60 * 60 * 1000;
         entry.memoryStreak = 0;
         seeded = true;
       }
 
-      if (entry.memoryStage === 3 && entry.memoryStreak >= 5) {
+      if (entry.memoryStage === 3 && entry.memoryStreak >= MEMORY_STAR_COUNT) {
         entry.memoryMastered = true;
         entry.memoryStage = 4;
-        entry.memoryStreak = 10;
+        entry.memoryStreak = MEMORY_STAR_COUNT;
         mastered = true;
       }
 
@@ -577,8 +577,8 @@
 
     function getMemoryStreak(entry) {
       if (!entry) return 0;
-      if (entry.memoryMastered) return 10;
-      return Math.max(0, Math.min(10, Number(entry.memoryStreak) || 0));
+      if (entry.memoryMastered) return MEMORY_STAR_COUNT;
+      return Math.max(0, Math.min(MEMORY_STAR_COUNT, Number(entry.memoryStreak) || 0));
     }
 
     function getPronunciaValue(entry) {
@@ -731,10 +731,9 @@
     function renderStars(entry) {
       memoryStars.innerHTML = '';
       const streak = getMemoryStreak(entry);
-      for (let i = 0; i < 5; i += 1) {
+      for (let i = 0; i < MEMORY_STAR_COUNT; i += 1) {
         const star = document.createElement('span');
-        const remaining = streak - i * 2;
-        const fillRatio = Math.max(0, Math.min(1, remaining / 2));
+        const fillRatio = i < streak ? 1 : 0;
         star.className = 'memory-star';
         star.style.setProperty('--fill', `${fillRatio * 100}%`);
         star.textContent = '★';
@@ -828,7 +827,7 @@
       try {
         const spoken = await listenForSpeech();
         const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
-        const wasCorrect = percent >= 83;
+        const wasCorrect = percent >= 80;
         const accuracyColor = getAccuracyColorRgb(percent);
         animateLensColor(accuracyColor);
 
@@ -850,7 +849,7 @@
         window.setTimeout(() => {
           memoryCard.classList.remove('memory-card--flash');
           pickNextCard(day);
-        }, 900);
+        }, 1500);
       } finally {
         memoryPrompt.classList.remove('is-visible');
         isListening = false;

@@ -709,7 +709,8 @@
     const FLASHCARD_PRONUNCIATION_LIMIT = 10;
     const FLASHCARD_TIME_LIMIT = 10;
     const MEMORY_HISTORY_LIMIT = 10;
-    const MEMORY_SEEDING_DAYS = [3, 7, 30];
+    const MEMORY_SEEDING_DAYS = [3, 3, 3];
+    const MEMORY_STAR_COUNT = 6;
     const MEMORY_BACKGROUND_IMAGES = {
       0: 'images/galaxy.png',
       1: 'images/gold.png',
@@ -1043,8 +1044,8 @@
 
     function getMemoryStreakValue(entry) {
       if (!entry) return 0;
-      if (entry.memoryMastered) return 10;
-      return Math.max(0, Math.min(10, Number(entry.memoryStreak) || 0));
+      if (entry.memoryMastered) return MEMORY_STAR_COUNT;
+      return Math.max(0, Math.min(MEMORY_STAR_COUNT, Number(entry.memoryStreak) || 0));
     }
 
     function formatRemainingSeeding(entry) {
@@ -1053,8 +1054,8 @@
       if (diffMs <= 0) return 'pronto';
       const diffMinutes = Math.ceil(diffMs / 60000);
       if (diffMinutes < 60) return `${diffMinutes} minutos restantes`;
-      const diffHours = Math.ceil(diffMinutes / 60);
-      if (diffHours < 24) return `${diffHours} horas restantes`;
+      const diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) return `${Math.max(1, diffHours)} horas restantes`;
       const diffDays = Math.ceil(diffHours / 24);
       return `${diffDays} dias restantes`;
     }
@@ -1435,7 +1436,22 @@
         if (isSeeding) {
           const seedingLabel = document.createElement('div');
           seedingLabel.className = 'flashcard__seeding';
-          seedingLabel.innerHTML = `Seeding <small>${formatRemainingSeeding(statsEntry)}</small>`;
+          const seedingTitle = document.createElement('span');
+          seedingTitle.textContent = 'Seeding';
+          const seedingCountdown = document.createElement('small');
+          seedingCountdown.textContent = formatRemainingSeeding(statsEntry);
+          seedingLabel.appendChild(seedingTitle);
+          seedingLabel.appendChild(seedingCountdown);
+          let showCountdown = false;
+          const updateSeedingLabel = () => {
+            seedingCountdown.textContent = formatRemainingSeeding(statsEntry);
+            seedingTitle.hidden = showCountdown;
+            seedingCountdown.hidden = !showCountdown;
+            showCountdown = !showCountdown;
+          };
+          updateSeedingLabel();
+          const intervalId = window.setInterval(updateSeedingLabel, 3000);
+          phraseIntervals.push(intervalId);
           cardEl.appendChild(seedingLabel);
         } else {
           const phraseButton = document.createElement('button');
@@ -1463,10 +1479,9 @@
         const stars = document.createElement('div');
         stars.className = 'flashcard__stars';
         const streakValue = getMemoryStreakValue(statsEntry);
-        for (let i = 0; i < 5; i += 1) {
+        for (let i = 0; i < MEMORY_STAR_COUNT; i += 1) {
           const star = document.createElement('span');
-          const remaining = streakValue - i * 2;
-          const fillRatio = Math.max(0, Math.min(1, remaining / 2));
+          const fillRatio = i < streakValue ? 1 : 0;
           star.className = 'flashcard__star';
           star.style.setProperty('--fill', `${fillRatio * 100}%`);
           star.textContent = '★';
@@ -1474,10 +1489,12 @@
         }
         cardEl.appendChild(stars);
 
-        const memoryLabel = document.createElement('div');
-        memoryLabel.className = 'flashcard__memory';
-        memoryLabel.textContent = getMemoryLabel(statsEntry);
-        cardEl.appendChild(memoryLabel);
+        if (!isSeeding) {
+          const memoryLabel = document.createElement('div');
+          memoryLabel.className = 'flashcard__memory';
+          memoryLabel.textContent = getMemoryLabel(statsEntry);
+          cardEl.appendChild(memoryLabel);
+        }
 
         cardEl.addEventListener('pointerdown', event => {
           if (isSeeding) return;
