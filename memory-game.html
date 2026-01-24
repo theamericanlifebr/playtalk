@@ -159,12 +159,8 @@
     .memory-card__lens {
       position: absolute;
       inset: 0;
-      background: linear-gradient(
-        to top,
-        rgba(var(--lens-color, 76, 150, 220), 1) 0%,
-        rgba(var(--lens-color, 76, 150, 220), 0) 50%
-      );
-      transition: background 1s ease;
+      background: var(--form-lens, none);
+      transition: background 0.6s ease;
       pointer-events: none;
       z-index: 4;
     }
@@ -258,8 +254,6 @@
       4: 'images/connect.png'
     };
     const MEMORY_SEEDING_BACKGROUND = 'images/seeding.png';
-    const MEMORY_LENS_SEEDED_COLOR = '28, 94, 50';
-    const MEMORY_LENS_MASTERED_COLOR = '0, 0, 0';
     const MIRROR_PATH = 'data/mirror.json';
 
     const memoryCard = document.getElementById('memoryCard');
@@ -581,53 +575,6 @@
       return Math.max(0, Math.min(MEMORY_STAR_COUNT, Number(entry.memoryStreak) || 0));
     }
 
-    function getPronunciaValue(entry) {
-      if (!entry || !Array.isArray(entry.pronunciation) || !entry.pronunciation.length) return null;
-      const total = entry.pronunciation.reduce((acc, value) => acc + value, 0);
-      return Math.round(total / entry.pronunciation.length);
-    }
-
-    const ACCURACY_COLOR_STOPS = [
-      { percent: 0, color: [128, 0, 32] },
-      { percent: 50, color: [231, 76, 60] },
-      { percent: 70, color: [243, 156, 18] },
-      { percent: 85, color: [46, 204, 113] },
-      { percent: 100, color: [47, 141, 255] }
-    ];
-
-    function interpolateColor(start, end, ratio) {
-      const clampRatio = Math.max(0, Math.min(1, ratio));
-      return start.map((channel, index) => {
-        const value = channel + (end[index] - channel) * clampRatio;
-        return Math.round(value);
-      });
-    }
-
-    function getAccuracyColorRgb(accuracy) {
-      const percent = Math.max(0, Math.min(100, Number(accuracy) || 0));
-      const upperIndex = ACCURACY_COLOR_STOPS.findIndex(stop => percent <= stop.percent);
-      const lowerIndex = upperIndex <= 0 ? 0 : upperIndex - 1;
-      const lowerStop = ACCURACY_COLOR_STOPS[lowerIndex];
-      const upperStop = ACCURACY_COLOR_STOPS[Math.max(upperIndex, 0)];
-
-      if (!upperStop) {
-        return ACCURACY_COLOR_STOPS[ACCURACY_COLOR_STOPS.length - 1].color.join(', ');
-      }
-
-      if (upperStop.percent === lowerStop.percent) {
-        return upperStop.color.join(', ');
-      }
-
-      const ratio = (percent - lowerStop.percent) / (upperStop.percent - lowerStop.percent);
-      const blended = interpolateColor(lowerStop.color, upperStop.color, ratio);
-      return blended.join(', ');
-    }
-
-    function animateLensColor(targetRgb) {
-      if (!memoryLens) return;
-      memoryLens.style.setProperty('--lens-color', targetRgb);
-    }
-
     function applyTenseStyles(wrapper, card) {
       if (!wrapper || !card) return;
       const tenseStyle = TENSE_STYLES[card.tense] || {};
@@ -756,13 +703,6 @@
       img.alt = card.nomePortugues || 'Flashcard';
       memoryCircle.appendChild(img);
       memoryCard.style.backgroundImage = `url('${getMemoryBackground(entry)}')`;
-      let lensColor = getAccuracyColorRgb(getPronunciaValue(entry));
-      if (entry?.memoryMastered) {
-        lensColor = MEMORY_LENS_MASTERED_COLOR;
-      } else if (isMemorySeeding(entry)) {
-        lensColor = MEMORY_LENS_SEEDED_COLOR;
-      }
-      animateLensColor(lensColor);
       renderStars(entry);
     }
 
@@ -828,9 +768,6 @@
         const spoken = await listenForSpeech();
         const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
         const wasCorrect = percent >= 80;
-        const accuracyColor = getAccuracyColorRgb(percent);
-        animateLensColor(accuracyColor);
-
         const outcome = recordMemoryAttempt(currentCard, wasCorrect);
         const stats = loadFlashcardStats();
         const key = getFlashcardKey(currentCard);
@@ -841,10 +778,6 @@
         }
         if (wasCorrect && outcome.seeded) {
           memoryCard.classList.add('memory-card--flash');
-          animateLensColor(MEMORY_LENS_SEEDED_COLOR);
-        }
-        if (outcome.mastered) {
-          animateLensColor(MEMORY_LENS_MASTERED_COLOR);
         }
         window.setTimeout(() => {
           memoryCard.classList.remove('memory-card--flash');
