@@ -1589,7 +1589,11 @@
       let accuracyColor = getAccuracyColorRgb(pronuncia);
       animateAccuracyColor(detailPanel, accuracyColor);
       animateAccuracyColor(detailPronunciaCard, accuracyColor);
-      detailPanel.style.backgroundImage = '';
+      if (stats && isMemorySeeding(stats)) {
+        detailPanel.style.backgroundImage = `url('${MEMORY_SEEDING_BACKGROUND}')`;
+      } else {
+        detailPanel.style.backgroundImage = '';
+      }
 
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
