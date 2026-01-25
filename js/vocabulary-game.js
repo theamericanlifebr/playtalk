@@ -75,7 +75,7 @@
   const FLASHCARD_METRIC_LIMIT = 10;
   const FLASHCARD_TIME_LIMIT = 10;
   const MEMORY_HISTORY_LIMIT = 10;
-  const MEMORY_SEEDING_DAYS = [3, 7, 30];
+  const MEMORY_SEEDING_DAYS = [3, 3, 3];
   const AUDIO_RESOLVE_ENDPOINT = '/api/media/resolve';
   const successAudio = document.getElementById('audio-success');
   const errorAudio = document.getElementById('audio-error');
@@ -1070,6 +1070,25 @@
     return changed;
   }
 
+  function filterSeedingEntries(entries) {
+    if (requestedMode !== 'reading') return entries;
+    const stats = readFlashcardStats();
+    let changed = false;
+    const now = Date.now();
+    const filtered = entries.filter(entry => {
+      const key = getFlashcardKey(entry);
+      if (!key) return true;
+      const record = getFlashcardStatsEntry(stats, key);
+      if (!record) return true;
+      if (syncMemoryState(record)) {
+        changed = true;
+      }
+      return !(record.memorySeedingUntil && now < record.memorySeedingUntil);
+    });
+    if (changed) saveFlashcardStats(stats);
+    return filtered;
+  }
+
   function recordMemoryAttempt(entry, wasCorrect) {
     const key = getFlashcardKey(entry);
     if (!key) return;
@@ -1355,11 +1374,13 @@
         if (categoryNumber === 2) return numericLevel === 2;
         return true;
       });
+      pool = filterSeedingEntries(pool);
       return;
     }
 
     const numericLevel = Math.max(1, Number(level) || 1);
     pool = images.filter(item => getItemLevel(item) === numericLevel);
+    pool = filterSeedingEntries(pool);
   }
 
   function shuffle(list) {
