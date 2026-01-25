@@ -4,7 +4,7 @@
     "nomePortugues": "Eu não estou feliz",
     "nomeIngles": "I am not happy",
     "categoria": "1",
-    "audio": "",
+    "audio": "happy.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -13,7 +13,7 @@
     "nomePortugues": "Eu não estou cansado",
     "nomeIngles": "I am not tired",
     "categoria": "1",
-    "audio": "",
+    "audio": "taxi.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -22,7 +22,7 @@
     "nomePortugues": "Eu não preciso de ajuda",
     "nomeIngles": "I do not need help",
     "categoria": "1",
-    "audio": "",
+    "audio": "help.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -31,7 +31,7 @@
     "nomePortugues": "Eu não previso de um taxi",
     "nomeIngles": "I do not need a taxi",
     "categoria": "1",
-    "audio": "",
+    "audio": "taxi.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -40,8 +40,8 @@
     "nomePortugues": "Eu não bebo água",
     "nomeIngles": "I do not drink water",
     "categoria": "1",
-    "audio": "",
-    "tense": "water.mp3",
+    "audio": "water.mp3",
+    "tense": "",
     "sentenceForm": "negative"
   },
   {
