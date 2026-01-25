@@ -41,7 +41,7 @@
     "nomeIngles": "I do not drink water",
     "categoria": "1",
     "audio": "",
-    "tense": "",
+    "tense": "water.mp3",
     "sentenceForm": "negative"
   },
   {
@@ -49,7 +49,7 @@
     "nomePortugues": "Eu não preciso de dinheiro",
     "nomeIngles": "I do not need money",
     "categoria": "1",
-    "audio": "",
+    "audio": "money.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -58,7 +58,7 @@
     "nomePortugues": "Eu não bebo café",
     "nomeIngles": "I do not drink coffee",
     "categoria": "1",
-    "audio": "",
+    "audio": "coffee.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -67,7 +67,7 @@
     "nomePortugues": "Eu não acho que sim",
     "nomeIngles": "I don't think so",
     "categoria": "1",
-    "audio": "",
+    "audio": "so.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -76,7 +76,7 @@
     "nomePortugues": "Eu não quero comida",
     "nomeIngles": "I do not want food",
     "categoria": "1",
-    "audio": "",
+    "audio": "food.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -85,7 +85,7 @@
     "nomePortugues": "Eu não pratico esportes",
     "nomeIngles": "I do not do sports",
     "categoria": "1",
-    "audio": "",
+    "audio": "sports.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -94,7 +94,7 @@
     "nomePortugues": "Eu não faço meu melhor",
     "nomeIngles": "I do not do my best",
     "categoria": "1",
-    "audio": "",
+    "audio": "best.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -103,7 +103,7 @@
     "nomePortugues": "Eu não trabalho",
     "nomeIngles": "I do not work",
     "categoria": "1",
-    "audio": "",
+    "audio": "work.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -112,7 +112,7 @@
     "nomePortugues": "Eu não leio",
     "nomeIngles": "I do not read",
     "categoria": "1",
-    "audio": "",
+    "audio": "read.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -121,7 +121,7 @@
     "nomePortugues": "Eu não gosto de suco",
     "nomeIngles": "I do not like juice",
     "categoria": "1",
-    "audio": "",
+    "audio": "juice.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -130,7 +130,7 @@
     "nomePortugues": "Eu não descanso",
     "nomeIngles": "I do not rest",
     "categoria": "1",
-    "audio": "",
+    "audio": "rest.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -139,7 +139,7 @@
     "nomePortugues": "Eu não gosto de cachrros",
     "nomeIngles": "I do not like dogs",
     "categoria": "1",
-    "audio": "",
+    "audio": "dogs.mp3",
     "tense": "",
     "sentenceForm": "negative"
   },
@@ -149,7 +149,7 @@
     "nomeIngles": "I do not drive",
     "categoria": "1",
     "audio": "",
-    "tense": "",
+    "tense": "drive.mp3",
     "sentenceForm": "negative"
   },
   {
