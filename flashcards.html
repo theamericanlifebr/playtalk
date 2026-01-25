@@ -316,6 +316,12 @@
       text-transform: uppercase;
     }
 
+    .flashcard__seeding img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+
     .flashcard__seeding small {
       font-size: inherit;
       font-weight: 800;
@@ -1491,6 +1497,9 @@
         cardEl.dataset.id = card.id;
         const key = getFlashcardKey(card);
         const statsEntry = key ? ensureStatsEntry(flashcardStats, key) : null;
+        if (statsEntry && syncMemoryState(statsEntry)) {
+          saveFlashcardStats(flashcardStats);
+        }
         let accuracyColor = getAccuracyColorRgb(getPronuncia(card));
         const cachedAccuracyColor = accuracyColorCache.get(card.id);
         if (cachedAccuracyColor) {
@@ -1530,6 +1539,40 @@
         }, 3000);
         phraseIntervals.push(intervalId);
         cardEl.appendChild(phraseButton);
+
+        const memoryInfo = document.createElement('div');
+        memoryInfo.className = 'flashcard__memory';
+        if (isMemorySeeding(statsEntry)) {
+          const seeding = document.createElement('div');
+          seeding.className = 'flashcard__seeding';
+          const seedingImage = document.createElement('img');
+          seedingImage.src = MEMORY_SEEDING_BACKGROUND;
+          seedingImage.alt = 'Seeding';
+          const seedingTitle = document.createElement('span');
+          seedingTitle.textContent = 'SEEDING';
+          const seedingTime = document.createElement('small');
+          seedingTime.textContent = formatRemainingSeeding(statsEntry);
+          seeding.appendChild(seedingImage);
+          seeding.appendChild(seedingTitle);
+          seeding.appendChild(seedingTime);
+          memoryInfo.appendChild(seeding);
+        } else {
+          memoryInfo.textContent = getMemoryLabel(statsEntry);
+        }
+        cardEl.appendChild(memoryInfo);
+
+        const stars = document.createElement('div');
+        stars.className = 'flashcard__stars';
+        const streak = getMemoryStreakValue(statsEntry);
+        for (let i = 0; i < MEMORY_STAR_COUNT; i += 1) {
+          const star = document.createElement('span');
+          const fillRatio = i < streak ? 1 : 0;
+          star.className = 'flashcard__star';
+          star.style.setProperty('--fill', `${fillRatio * 100}%`);
+          star.textContent = '★';
+          stars.appendChild(star);
+        }
+        cardEl.appendChild(stars);
 
         cardEl.addEventListener('pointerdown', event => {
           if (event.button && event.button !== 0) return;

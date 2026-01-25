@@ -269,6 +269,10 @@
     const MEMORY_HISTORY_LIMIT = 10;
     const MEMORY_SEEDING_DAYS = [3, 3, 3];
     const MEMORY_STAR_COUNT = 6;
+    const MEMORY_DECK_STORAGE_KEY = 'playtalk-memory-deck';
+    const MEMORY_DECK_INITIAL = 6;
+    const MEMORY_DECK_ADD = 2;
+    const MEMORY_DECK_MAX = 24;
     const MEMORY_BACKGROUND_IMAGES = {
       0: 'images/galaxy.png',
       1: 'images/gold.png',
@@ -295,6 +299,7 @@
     let recognition = null;
     let mirrorGroups = [];
     let isListening = false;
+    let memoryDeck = [];
 
     const TENSE_STYLES = {
       '': {
@@ -395,6 +400,19 @@
 
     function saveFlashcardStats(stats) {
       localStorage.setItem(FLASHCARD_STATS_STORAGE_KEY, JSON.stringify(stats));
+    }
+
+    function loadMemoryDeckState() {
+      try {
+        const stored = localStorage.getItem(MEMORY_DECK_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveMemoryDeckState(state) {
+      localStorage.setItem(MEMORY_DECK_STORAGE_KEY, JSON.stringify(state));
     }
 
     function normalizeSpeechText(text) {
@@ -839,18 +857,90 @@
       return getStoredDay();
     }
 
+    function getDayCards(day) {
+      return flashcards.filter(card => card.day === day && card.imageSrc);
+    }
+
+    function shuffleArray(values) {
+      const array = [...values];
+      for (let i = array.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function pickRandomCards(cards, count, excludeIds = new Set(), stats = null) {
+      const candidates = cards.filter(card => {
+        if (excludeIds.has(card.id)) return false;
+        if (!stats) return true;
+        const key = getFlashcardKey(card);
+        const entry = key ? ensureStatsEntry(stats, key) : null;
+        return entry ? !isMemorySeeding(entry) : true;
+      });
+      return shuffleArray(candidates).slice(0, count);
+    }
+
+    function ensureMemoryDeck(day, dayCards, stats = null) {
+      const state = loadMemoryDeckState();
+      const validIds = new Set(dayCards.map(card => card.id));
+      let deck = Array.isArray(state[day]) ? state[day].filter(id => validIds.has(id)) : [];
+      if (!deck.length && dayCards.length) {
+        deck = pickRandomCards(dayCards, Math.min(MEMORY_DECK_INITIAL, dayCards.length), new Set(), stats)
+          .map(card => card.id);
+      }
+      state[day] = deck;
+      saveMemoryDeckState(state);
+      return deck;
+    }
+
+    function updateDeckForSeeding(day, dayCards, stats, seededIds) {
+      if (!seededIds.length) return memoryDeck;
+      const state = loadMemoryDeckState();
+      let deck = Array.isArray(state[day]) ? state[day] : [];
+      deck = deck.filter(id => !seededIds.includes(id));
+      const maxAdditions = Math.min(MEMORY_DECK_MAX - deck.length, seededIds.length * MEMORY_DECK_ADD);
+      if (maxAdditions > 0) {
+        const exclude = new Set(deck);
+        const additions = pickRandomCards(dayCards, maxAdditions, exclude, stats).map(card => card.id);
+        deck = deck.concat(additions);
+      }
+      state[day] = deck;
+      saveMemoryDeckState(state);
+      memoryDeck = deck;
+      return deck;
+    }
+
     function refreshAvailableCards(day) {
       const stats = loadFlashcardStats();
       let changed = false;
-      availableCards = flashcards.filter(card => card.day === day && card.imageSrc);
-      availableCards = availableCards.filter(card => {
+      const dayCards = getDayCards(day);
+      let deck = ensureMemoryDeck(day, dayCards, stats);
+      const seededIds = [];
+      deck.forEach(id => {
+        const card = dayCards.find(item => item.id === id);
+        if (!card) return;
         const key = getFlashcardKey(card);
         const entry = key ? ensureStatsEntry(stats, key) : null;
         if (entry && syncMemoryState(entry)) {
           changed = true;
         }
-        return entry ? !isMemorySeeding(entry) : true;
+        if (entry && isMemorySeeding(entry)) {
+          seededIds.push(id);
+        }
       });
+      if (seededIds.length) {
+        deck = updateDeckForSeeding(day, dayCards, stats, seededIds);
+      } else {
+        memoryDeck = deck;
+      }
+      availableCards = deck
+        .map(id => dayCards.find(card => card.id === id))
+        .filter(card => card && (() => {
+          const key = getFlashcardKey(card);
+          const entry = key ? ensureStatsEntry(stats, key) : null;
+          return entry ? !isMemorySeeding(entry) : true;
+        })());
       if (changed) saveFlashcardStats(stats);
     }
 
@@ -966,6 +1056,8 @@
         }
         updateAccuracyLens(currentCard);
         if (wasCorrect && outcome.seeded) {
+          const dayCards = getDayCards(day);
+          updateDeckForSeeding(day, dayCards, stats, [currentCard.id]);
           memoryCard.classList.add('memory-card--flash');
         }
         await playPronunciation(currentCard);
