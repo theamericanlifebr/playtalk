@@ -609,6 +609,18 @@
       margin-top: 6px;
     }
 
+    .game-mode-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .game-mode-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -649,8 +661,20 @@
           <span id="detailPronuncia">--</span>
         </div>
         <div class="stat stat--plain">
-          <h3>Memory</h3>
-          <span id="detailMemory">--</span>
+          <h3>Listening</h3>
+          <span id="detailListening">--</span>
+        </div>
+        <div class="stat stat--plain">
+          <h3>Reading</h3>
+          <span id="detailReading">--</span>
+        </div>
+        <div class="stat stat--plain">
+          <h3>Association</h3>
+          <span id="detailAssociation">--</span>
+        </div>
+        <div class="stat stat--plain">
+          <h3>Meaning</h3>
+          <span id="detailMeaning">--</span>
         </div>
         <div class="stat stat--plain">
           <h3>Jogado há</h3>
@@ -666,6 +690,22 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <div class="modal" id="gameModeModal" aria-hidden="true">
+    <div class="modal-card">
+      <h2>Escolha o modo do jogo</h2>
+      <p class="game-mode-note">Selecione como treinar este dia.</p>
+      <div class="game-mode-grid">
+        <button class="btn btn-primary" type="button" data-game-mode="memory">Memory</button>
+        <button class="btn btn-primary" type="button" data-game-mode="listening">Listening</button>
+        <button class="btn btn-primary" type="button" data-game-mode="reading">Reading</button>
+        <button class="btn btn-primary" type="button" data-game-mode="association">Association</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="closeGameMode" type="button">Cancelar</button>
+      </div>
     </div>
   </div>
 
@@ -707,6 +747,7 @@
   <script>
     const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
     const FLASHCARD_PRONUNCIATION_LIMIT = 10;
+    const FLASHCARD_METRIC_LIMIT = 10;
     const FLASHCARD_TIME_LIMIT = 10;
     const MEMORY_HISTORY_LIMIT = 10;
     const MEMORY_SEEDING_DAYS = [3, 3, 3];
@@ -728,7 +769,10 @@
     const levelFilter = document.getElementById('levelFilter');
     const detailPronuncia = document.getElementById('detailPronuncia');
     const detailPronunciaCard = document.getElementById('detailPronunciaCard');
-    const detailMemory = document.getElementById('detailMemory');
+    const detailListening = document.getElementById('detailListening');
+    const detailReading = document.getElementById('detailReading');
+    const detailAssociation = document.getElementById('detailAssociation');
+    const detailMeaning = document.getElementById('detailMeaning');
     const detailJogado = document.getElementById('detailJogado');
     const detailFalado = document.getElementById('detailFalado');
     const detailOuvido = document.getElementById('detailOuvido');
@@ -743,6 +787,8 @@
     const editState = document.getElementById('editState');
     const cancelEdit = document.getElementById('cancelEdit');
     const saveEdit = document.getElementById('saveEdit');
+    const gameModeModal = document.getElementById('gameModeModal');
+    const closeGameMode = document.getElementById('closeGameMode');
     const detailModal = document.getElementById('detailModal');
     const detailPanel = document.getElementById('detailPanel');
     const detailClose = document.getElementById('detailClose');
@@ -952,6 +998,10 @@
       if (!stats[key]) {
         stats[key] = {
           pronunciation: [],
+          listening: [],
+          reading: [],
+          association: [],
+          meaning: [],
           durations: [],
           lastPlayedAt: null,
           lastSpokenAt: null,
@@ -968,6 +1018,18 @@
         stats[key].spokenCount = Array.isArray(stats[key].pronunciation)
           ? stats[key].pronunciation.length
           : 0;
+      }
+      if (!Array.isArray(stats[key].listening)) {
+        stats[key].listening = [];
+      }
+      if (!Array.isArray(stats[key].reading)) {
+        stats[key].reading = [];
+      }
+      if (!Array.isArray(stats[key].association)) {
+        stats[key].association = [];
+      }
+      if (!Array.isArray(stats[key].meaning)) {
+        stats[key].meaning = [];
       }
       if (!Array.isArray(stats[key].memoryHistory)) {
         stats[key].memoryHistory = [];
@@ -1089,6 +1151,17 @@
       return Math.round(total / entry.pronunciation.length);
     }
 
+    function getMetricAverage(entry, key) {
+      if (!entry || !Array.isArray(entry[key]) || !entry[key].length) return null;
+      const total = entry[key].reduce((acc, value) => acc + value, 0);
+      return Math.round(total / entry[key].length);
+    }
+
+    function formatMetric(entry, key) {
+      const average = getMetricAverage(entry, key);
+      return average === null ? '--' : `${average}%`;
+    }
+
     function getSpeakingLabel(card) {
       const pronuncia = getPronuncia(card);
       const label = pronuncia === null ? '--' : pronuncia;
@@ -1098,13 +1171,9 @@
     function buildRotatingPhrases(card) {
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
-      const key = getFlashcardKey(card);
-      const entry = key ? flashcardStats[key] : null;
-      const memoryLabel = getMemoryLabel(entry);
       const phrases = [];
       if (english) phrases.push(english);
       phrases.push(getSpeakingLabel(card));
-      phrases.push(memoryLabel);
       phrases.push(portuguese);
       return phrases;
     }
@@ -1383,7 +1452,6 @@
       const day = Number(levelFilter.value || getStoredDay());
       const dayCards = flashcards
         .filter(card => card.day === day && card.imageSrc);
-      let statsUpdated = false;
 
       dayCards.sort((a, b) => {
         const aLabel = (a.nomePortugues || a.nomeIngles || '').trim();
@@ -1400,19 +1468,7 @@
         cardEl.dataset.id = card.id;
         const key = getFlashcardKey(card);
         const statsEntry = key ? ensureStatsEntry(flashcardStats, key) : null;
-        if (statsEntry && syncMemoryState(statsEntry)) {
-          statsUpdated = true;
-        }
-        const isSeeding = isMemorySeeding(statsEntry);
-        if (statsEntry) {
-          cardEl.style.backgroundImage = `url('${getMemoryBackground(statsEntry)}')`;
-        }
         let accuracyColor = getAccuracyColorRgb(getPronuncia(card));
-        if (statsEntry?.memoryMastered) {
-          accuracyColor = MEMORY_LENS_MASTERED_COLOR;
-        } else if (isSeeding) {
-          accuracyColor = MEMORY_LENS_SEEDED_COLOR;
-        }
         const cachedAccuracyColor = accuracyColorCache.get(card.id);
         if (cachedAccuracyColor) {
           cardEl.style.setProperty('--accuracy-color', cachedAccuracyColor);
@@ -1421,83 +1477,38 @@
         accuracyColorCache.set(card.id, accuracyColor);
 
         const visual = createFlashcardVisual(card);
-        if (!isSeeding) {
-          visual.addEventListener('click', event => {
-            event.stopPropagation();
-            if (lastLongPressCardId === card.id) {
-              lastLongPressCardId = null;
-              return;
-            }
-            handlePronunciaForCard(card);
-          });
-        }
+        visual.addEventListener('click', event => {
+          event.stopPropagation();
+          if (lastLongPressCardId === card.id) {
+            lastLongPressCardId = null;
+            return;
+          }
+          handlePronunciaForCard(card);
+        });
         cardEl.appendChild(visual);
 
-        if (isSeeding) {
-          const seedingLabel = document.createElement('div');
-          seedingLabel.className = 'flashcard__seeding';
-          const seedingTitle = document.createElement('span');
-          seedingTitle.textContent = 'Seeding';
-          const seedingCountdown = document.createElement('small');
-          seedingCountdown.textContent = formatRemainingSeeding(statsEntry);
-          seedingLabel.appendChild(seedingTitle);
-          seedingLabel.appendChild(seedingCountdown);
-          let showCountdown = false;
-          const updateSeedingLabel = () => {
-            seedingCountdown.textContent = formatRemainingSeeding(statsEntry);
-            seedingTitle.hidden = showCountdown;
-            seedingCountdown.hidden = !showCountdown;
-            showCountdown = !showCountdown;
-          };
-          updateSeedingLabel();
-          const intervalId = window.setInterval(updateSeedingLabel, 3000);
-          phraseIntervals.push(intervalId);
-          cardEl.appendChild(seedingLabel);
-        } else {
-          const phraseButton = document.createElement('button');
-          phraseButton.type = 'button';
-          phraseButton.className = 'flashcard__phrase';
-          const phrases = buildRotatingPhrases(card);
-          let phraseIndex = 0;
+        const phraseButton = document.createElement('button');
+        phraseButton.type = 'button';
+        phraseButton.className = 'flashcard__phrase';
+        const phrases = buildRotatingPhrases(card);
+        let phraseIndex = 0;
+        phraseButton.textContent = phrases[phraseIndex];
+        phraseButton.addEventListener('click', event => {
+          event.stopPropagation();
+          if (lastLongPressCardId === card.id) {
+            lastLongPressCardId = null;
+            return;
+          }
+          playAudioForCard(card);
+        });
+        const intervalId = window.setInterval(() => {
+          phraseIndex = (phraseIndex + 1) % phrases.length;
           phraseButton.textContent = phrases[phraseIndex];
-          phraseButton.addEventListener('click', event => {
-            event.stopPropagation();
-            if (lastLongPressCardId === card.id) {
-              lastLongPressCardId = null;
-              return;
-            }
-            playAudioForCard(card);
-          });
-          const intervalId = window.setInterval(() => {
-            phraseIndex = (phraseIndex + 1) % phrases.length;
-            phraseButton.textContent = phrases[phraseIndex];
-          }, 3000);
-          phraseIntervals.push(intervalId);
-          cardEl.appendChild(phraseButton);
-        }
-
-        const stars = document.createElement('div');
-        stars.className = 'flashcard__stars';
-        const streakValue = isSeeding ? MEMORY_STAR_COUNT : getMemoryStreakValue(statsEntry);
-        for (let i = 0; i < MEMORY_STAR_COUNT; i += 1) {
-          const star = document.createElement('span');
-          const fillRatio = i < streakValue ? 1 : 0;
-          star.className = 'flashcard__star';
-          star.style.setProperty('--fill', `${fillRatio * 100}%`);
-          star.textContent = '★';
-          stars.appendChild(star);
-        }
-        cardEl.appendChild(stars);
-
-        if (!isSeeding) {
-          const memoryLabel = document.createElement('div');
-          memoryLabel.className = 'flashcard__memory';
-          memoryLabel.textContent = getMemoryLabel(statsEntry);
-          cardEl.appendChild(memoryLabel);
-        }
+        }, 3000);
+        phraseIntervals.push(intervalId);
+        cardEl.appendChild(phraseButton);
 
         cardEl.addEventListener('pointerdown', event => {
-          if (isSeeding) return;
           if (event.button && event.button !== 0) return;
           cardLongPressTriggered = false;
           if (cardLongPressTimer) {
@@ -1534,9 +1545,6 @@
         flashcardGrid.appendChild(cardEl);
       });
 
-      if (statsUpdated) {
-        saveFlashcardStats(flashcardStats);
-      }
     }
 
     function openDetailModal() {
@@ -1568,12 +1576,12 @@
       flashcardStats = loadFlashcardStats();
       const key = getFlashcardKey(card);
       const stats = key ? ensureStatsEntry(flashcardStats, key) : null;
-      if (stats && syncMemoryState(stats)) {
-        saveFlashcardStats(flashcardStats);
-      }
       const pronuncia = getPronuncia(card);
       detailPronuncia.textContent = pronuncia === null ? '--' : `${pronuncia}%`;
-      detailMemory.textContent = getMemoryLabel(stats);
+      detailListening.textContent = formatMetric(stats, 'listening');
+      detailReading.textContent = formatMetric(stats, 'reading');
+      detailAssociation.textContent = formatMetric(stats, 'association');
+      detailMeaning.textContent = formatMetric(stats, 'meaning');
       detailJogado.textContent = formatSince(stats?.lastPlayedAt);
       detailFalado.textContent = formatSince(stats?.lastSpokenAt);
       detailOuvido.textContent = formatSince(stats?.lastHeardAt);
@@ -1583,39 +1591,26 @@
       detailImage.appendChild(visual);
 
       let accuracyColor = getAccuracyColorRgb(pronuncia);
-      if (stats?.memoryMastered) {
-        accuracyColor = MEMORY_LENS_MASTERED_COLOR;
-      } else if (isMemorySeeding(stats)) {
-        accuracyColor = MEMORY_LENS_SEEDED_COLOR;
-      }
       animateAccuracyColor(detailPanel, accuracyColor);
       animateAccuracyColor(detailPronunciaCard, accuracyColor);
-      if (stats) {
-        detailPanel.style.backgroundImage = `url('${getMemoryBackground(stats)}')`;
-      }
+      detailPanel.style.backgroundImage = '';
 
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
       const phrases = buildRotatingPhrases(card);
       detailPhrase.dataset.primary = portuguese;
       detailPhrase.dataset.secondary = english;
-      if (isMemorySeeding(stats)) {
-        detailPhrase.innerHTML = `<span>Seeding</span><small>${formatRemainingSeeding(stats)}</small>`;
-      } else {
-        detailPhrase.innerHTML = `<span>${phrases[0]}</span>`;
-      }
+      detailPhrase.innerHTML = `<span>${phrases[0]}</span>`;
 
       if (detailPhraseInterval) {
         clearInterval(detailPhraseInterval);
         detailPhraseInterval = null;
       }
-      if (!isMemorySeeding(stats)) {
-        let phraseIndex = 0;
-        detailPhraseInterval = window.setInterval(() => {
-          phraseIndex = (phraseIndex + 1) % phrases.length;
-          detailPhrase.innerHTML = `<span>${phrases[phraseIndex]}</span>`;
-        }, 3000);
-      }
+      let phraseIndex = 0;
+      detailPhraseInterval = window.setInterval(() => {
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        detailPhrase.innerHTML = `<span>${phrases[phraseIndex]}</span>`;
+      }, 3000);
     }
 
     function setupSpeechRecognition() {
@@ -1656,8 +1651,9 @@
       if (!card) return;
       flashcardStats = loadFlashcardStats();
       const entry = getFlashcardKey(card);
-      const stats = entry ? ensureStatsEntry(flashcardStats, entry) : null;
-      if (stats && isMemorySeeding(stats)) return;
+      if (entry) {
+        ensureStatsEntry(flashcardStats, entry);
+      }
       setListeningState(card.id, true);
       try {
         const spoken = await listenForSpeech();
@@ -1675,8 +1671,9 @@
     function playAudioForCard(card) {
       if (!card || !card.audioSrc) return;
       const entryKey = getFlashcardKey(card);
-      const stats = entryKey ? ensureStatsEntry(loadFlashcardStats(), entryKey) : null;
-      if (stats && isMemorySeeding(stats)) return;
+      if (entryKey) {
+        ensureStatsEntry(loadFlashcardStats(), entryKey);
+      }
 
       if (audioInstance) {
         audioInstance.pause();
@@ -1807,8 +1804,49 @@
       if (event.target === editModal) closeEditModal();
     });
     openMemoryGame.addEventListener('click', () => {
+      if (gameModeModal) {
+        gameModeModal.classList.add('is-open');
+        gameModeModal.setAttribute('aria-hidden', 'false');
+      }
+    });
+
+    function closeGameModeModal() {
+      if (!gameModeModal) return;
+      gameModeModal.classList.remove('is-open');
+      gameModeModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function openGameMode(mode) {
       const day = levelFilter.value || String(getStoredDay());
-      window.open(`memory-game.html?day=${encodeURIComponent(day)}`, '_blank', 'noopener,noreferrer');
+      if (day) {
+        localStorage.setItem('vocabulary-level', String(day));
+      }
+      if (mode === 'memory') {
+        window.open(`memory-game.html?day=${encodeURIComponent(day)}`, '_blank', 'noopener,noreferrer');
+        return;
+      }
+      const url = `game.html?mode=${encodeURIComponent(mode)}&day=${encodeURIComponent(day)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    if (gameModeModal) {
+      gameModeModal.addEventListener('click', event => {
+        if (event.target === gameModeModal) closeGameModeModal();
+      });
+    }
+
+    if (closeGameMode) {
+      closeGameMode.addEventListener('click', closeGameModeModal);
+    }
+
+    document.querySelectorAll('[data-game-mode]').forEach(button => {
+      button.addEventListener('click', () => {
+        const mode = button.dataset.gameMode;
+        closeGameModeModal();
+        if (mode) {
+          openGameMode(mode);
+        }
+      });
     });
 
     async function initializePage() {
