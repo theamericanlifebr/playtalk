@@ -71,7 +71,7 @@
   const STREAK_HEART_TARGET = 8;
   const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
   const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
-  const FLASHCARD_PRONUNCIATION_LIMIT = 10;
+  const FLASHCARD_PRONUNCIATION_LIMIT = 6;
   const FLASHCARD_METRIC_LIMIT = 10;
   const FLASHCARD_TIME_LIMIT = 10;
   const MEMORY_HISTORY_LIMIT = 10;
@@ -101,6 +101,7 @@
     ? requestedPhase
     : (Number.isFinite(modePhase) ? modePhase : null);
   const singlePhaseMode = Number.isFinite(forcedPhase) && forcedPhase >= 1 && forcedPhase <= 8;
+  const isFlashcardLaunch = urlParams.get('source') === 'flashcards';
 
   let images = [];
   let buildingImages = [];
@@ -939,6 +940,8 @@
         lastPlayedAt: null,
         lastSpokenAt: null,
         lastHeardAt: null,
+        spokenCount: 0,
+        listenedCount: 0,
         memoryHistory: [],
         memoryStreak: 0,
         memoryStage: 0,
@@ -960,6 +963,14 @@
     }
     if (!Array.isArray(stats[key].memoryHistory)) {
       stats[key].memoryHistory = [];
+    }
+    if (typeof stats[key].spokenCount !== 'number') {
+      stats[key].spokenCount = Array.isArray(stats[key].pronunciation)
+        ? stats[key].pronunciation.length
+        : 0;
+    }
+    if (typeof stats[key].listenedCount !== 'number') {
+      stats[key].listenedCount = 0;
     }
     if (typeof stats[key].memoryStreak !== 'number') {
       stats[key].memoryStreak = 0;
@@ -1000,6 +1011,7 @@
     const stats = readFlashcardStats();
     const record = getFlashcardStatsEntry(stats, key);
     if (!record) return;
+    record.listenedCount += 1;
     record.lastHeardAt = Date.now();
     saveFlashcardStats(stats);
   }
@@ -1012,6 +1024,7 @@
     if (!record) return;
     const normalizedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
     pushLimited(record.pronunciation, normalizedPercent, FLASHCARD_PRONUNCIATION_LIMIT);
+    record.spokenCount += 1;
     record.lastSpokenAt = Date.now();
     saveFlashcardStats(stats);
   }
@@ -1494,6 +1507,9 @@
   }
 
   function registerErrorAndCheckReset() {
+    if (isFlashcardLaunch) {
+      return false;
+    }
     errorStreak += 1;
     totalErrors += 1;
     heartsRemaining = Math.max(0, heartsRemaining - 1);
@@ -1526,6 +1542,11 @@
     attemptCount = 0;
     score += 1;
     index += 1;
+  }
+
+  function buildGoogleTtsUrl(text) {
+    const query = encodeURIComponent(text || '');
+    return `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=en&q=${query}`;
   }
 
   function speak(text) {
@@ -1620,18 +1641,27 @@
     });
   }
 
+  function playGoogleTts(text, options = {}) {
+    if (!text) return Promise.resolve(false);
+    const url = buildGoogleTtsUrl(text);
+    return playAudioSource(url, options);
+  }
+
   function playPronunciation(entry, options = {}) {
     const audioSrc = buildAudioSrc(entry);
     const text = typeof entry === 'string' ? entry : entry?.en || '';
 
-    if (audioSrc) {
-      if (entry && typeof entry === 'object') {
-        recordFlashcardHeard(entry);
-      }
-      return playAudioSource(audioSrc, options).catch(() => speak(text));
+    if (entry && typeof entry === 'object') {
+      recordFlashcardHeard(entry);
     }
 
-    return speak(text);
+    if (audioSrc) {
+      return playAudioSource(audioSrc, options)
+        .catch(() => playGoogleTts(text, options))
+        .catch(() => speak(text));
+    }
+
+    return playGoogleTts(text, options).catch(() => speak(text));
   }
 
   function shouldShowMicPrompt() {
@@ -3023,6 +3053,9 @@
   function init() {
     const storedProgress = singlePhaseMode ? null : readProgressStorage();
     const completionState = singlePhaseMode ? null : readCompletionStorage();
+    if (isFlashcardLaunch) {
+      document.body.classList.add('from-flashcards');
+    }
     if (Number.isFinite(requestedDay) && requestedDay > 0) {
       level = requestedDay;
       saveLevelToStorage();
@@ -3035,6 +3068,20 @@
     setupSpeechRecognition();
     resetLevelState();
     loadAllImages().then(() => {
+      if (isFlashcardLaunch) {
+        gameStarted = true;
+        if (startScreen) {
+          startScreen.classList.add('start-screen--blank');
+          startScreen.classList.add('hidden');
+        }
+        if (rotationTimer) {
+          clearInterval(rotationTimer);
+          rotationTimer = null;
+        }
+        const phaseToStart = Number.isFinite(forcedPhase) ? forcedPhase : 1;
+        startPhase(phaseToStart, { skipIntroAudio: true });
+        return;
+      }
       if (storedProgress && restoreProgressState()) {
         gameStarted = true;
         if (startScreen) {
@@ -3062,10 +3109,12 @@
     });
 
     if (!storedProgress && !(completionState && completionState.completedLevel)) {
-      startRotatingText();
+      if (!isFlashcardLaunch) {
+        startRotatingText();
+      }
     }
 
-    if (startScreen) {
+    if (startScreen && !isFlashcardLaunch) {
       startScreen.addEventListener('click', handleStartInteraction);
       startScreen.addEventListener('touchstart', handleStartInteraction, { passive: true });
       startScreen.addEventListener('pointerdown', handleStartInteraction);

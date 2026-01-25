@@ -74,6 +74,26 @@
       justify-content: space-between;
       position: relative;
       overflow: hidden;
+      --accuracy-color: 76, 150, 220;
+    }
+
+    .memory-card__overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: linear-gradient(
+        to top,
+        rgba(var(--accuracy-color, 76, 150, 220), 1) 0%,
+        rgba(var(--accuracy-color, 76, 150, 220), 0) 50%
+      );
+      transition: background 1000ms ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .memory-card > :not(.memory-card__overlay) {
+      position: relative;
+      z-index: 2;
     }
 
     .memory-card__visual {
@@ -159,6 +179,7 @@
     .memory-card__lens {
       position: absolute;
       inset: 0;
+      border-radius: 50%;
       background: var(--form-lens, none);
       transition: background 0.6s ease;
       pointer-events: none;
@@ -227,6 +248,7 @@
 
   <main>
     <section class="memory-card" id="memoryCard" aria-live="polite">
+      <div class="memory-card__overlay" id="memoryAccuracy"></div>
       <div class="memory-card__visual" id="memoryVisual">
         <div class="image-ring image-ring--tense"></div>
         <div class="image-ring image-ring--form"></div>
@@ -243,6 +265,7 @@
 
   <script>
     const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
+    const FLASHCARD_PRONUNCIATION_LIMIT = 6;
     const MEMORY_HISTORY_LIMIT = 10;
     const MEMORY_SEEDING_DAYS = [3, 3, 3];
     const MEMORY_STAR_COUNT = 6;
@@ -254,6 +277,7 @@
       4: 'images/connect.png'
     };
     const MEMORY_SEEDING_BACKGROUND = 'images/seeding.png';
+    const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
     const MIRROR_PATH = 'data/mirror.json';
 
     const memoryCard = document.getElementById('memoryCard');
@@ -351,6 +375,15 @@
       }
     };
 
+    const ACCURACY_COLOR_STOPS = [
+      { percent: 0, color: [128, 0, 32] },
+      { percent: 50, color: [231, 76, 60] },
+      { percent: 70, color: [243, 156, 18] },
+      { percent: 85, color: [46, 204, 113] },
+      { percent: 100, color: [47, 141, 255] }
+    ];
+    const ACCURACY_COLOR_TRANSITION_MS = 1000;
+
     function loadFlashcardStats() {
       try {
         const stored = localStorage.getItem(FLASHCARD_STATS_STORAGE_KEY);
@@ -434,6 +467,41 @@
       }).filter(group => group.canonical);
     }
 
+    function interpolateColor(start, end, ratio) {
+      const clampRatio = Math.max(0, Math.min(1, ratio));
+      return start.map((channel, index) => {
+        const value = channel + (end[index] - channel) * clampRatio;
+        return Math.round(value);
+      });
+    }
+
+    function getAccuracyColorRgb(accuracy) {
+      const percent = Math.max(0, Math.min(100, Number(accuracy) || 0));
+      const upperIndex = ACCURACY_COLOR_STOPS.findIndex(stop => percent <= stop.percent);
+      const lowerIndex = upperIndex <= 0 ? 0 : upperIndex - 1;
+      const lowerStop = ACCURACY_COLOR_STOPS[lowerIndex];
+      const upperStop = ACCURACY_COLOR_STOPS[Math.max(upperIndex, 0)];
+
+      if (!upperStop) {
+        return ACCURACY_COLOR_STOPS[ACCURACY_COLOR_STOPS.length - 1].color.join(', ');
+      }
+
+      if (upperStop.percent === lowerStop.percent) {
+        return upperStop.color.join(', ');
+      }
+
+      const ratio = (percent - lowerStop.percent) / (upperStop.percent - lowerStop.percent);
+      const blended = interpolateColor(lowerStop.color, upperStop.color, ratio);
+      return blended.join(', ');
+    }
+
+    function animateAccuracyColor(element, targetRgb, duration = ACCURACY_COLOR_TRANSITION_MS) {
+      if (!element || !targetRgb) return;
+      element.style.setProperty('--accuracy-color', targetRgb);
+      if (!duration) return;
+      element.style.transition = `background ${duration}ms ease`;
+    }
+
     async function loadMirrorGroups() {
       try {
         const response = await fetch(MIRROR_PATH);
@@ -463,6 +531,8 @@
           lastPlayedAt: null,
           lastSpokenAt: null,
           lastHeardAt: null,
+          spokenCount: 0,
+          listenedCount: 0,
           memoryHistory: [],
           memoryStreak: 0,
           memoryStage: 0,
@@ -472,6 +542,14 @@
       }
       if (!Array.isArray(stats[key].memoryHistory)) {
         stats[key].memoryHistory = [];
+      }
+      if (typeof stats[key].spokenCount !== 'number') {
+        stats[key].spokenCount = Array.isArray(stats[key].pronunciation)
+          ? stats[key].pronunciation.length
+          : 0;
+      }
+      if (typeof stats[key].listenedCount !== 'number') {
+        stats[key].listenedCount = 0;
       }
       if (typeof stats[key].memoryStreak !== 'number') {
         stats[key].memoryStreak = 0;
@@ -561,6 +639,40 @@
       return { seeded, mastered };
     }
 
+    function updatePronunciationStats(card, percent) {
+      const key = getFlashcardKey(card);
+      if (!key) return;
+      const stats = loadFlashcardStats();
+      const entry = ensureStatsEntry(stats, key);
+      const normalizedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+      entry.pronunciation.push(normalizedPercent);
+      while (entry.pronunciation.length > FLASHCARD_PRONUNCIATION_LIMIT) {
+        entry.pronunciation.shift();
+      }
+      entry.spokenCount += 1;
+      entry.lastSpokenAt = Date.now();
+      saveFlashcardStats(stats);
+    }
+
+    function updateHeardStats(card) {
+      const key = getFlashcardKey(card);
+      if (!key) return;
+      const stats = loadFlashcardStats();
+      const entry = ensureStatsEntry(stats, key);
+      entry.listenedCount += 1;
+      entry.lastHeardAt = Date.now();
+      saveFlashcardStats(stats);
+    }
+
+    function getPronuncia(card) {
+      const key = getFlashcardKey(card);
+      const stats = loadFlashcardStats();
+      const entry = key ? stats[key] : null;
+      if (!entry || !Array.isArray(entry.pronunciation) || !entry.pronunciation.length) return null;
+      const total = entry.pronunciation.reduce((acc, value) => acc + value, 0);
+      return Math.round(total / entry.pronunciation.length);
+    }
+
     function getMemoryBackground(entry) {
       if (isMemorySeeding(entry)) {
         return MEMORY_SEEDING_BACKGROUND;
@@ -597,6 +709,70 @@
       return `images/${encodedPath}`;
     }
 
+    function hasSupportedAudioExtension(fileName = '') {
+      const lower = fileName.toLowerCase();
+      return SUPPORTED_AUDIO_EXTENSIONS.some(ext => lower.endsWith(ext));
+    }
+
+    function buildAudioSrc(audioName = '') {
+      const trimmed = audioName.trim();
+      if (!trimmed || !hasSupportedAudioExtension(trimmed)) return '';
+      const sanitized = trimmed.replace(/^[/\\]+/, '');
+      const encodedPath = sanitized
+        .split('/')
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
+      return sanitized.toLowerCase().startsWith('voices/') ? encodedPath : `voices/${encodedPath}`;
+    }
+
+    function buildGoogleTtsUrl(text) {
+      const query = encodeURIComponent(text || '');
+      return `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=en&q=${query}`;
+    }
+
+    function playAudioElement(audio) {
+      return new Promise(resolve => {
+        if (!audio) {
+          resolve(false);
+          return;
+        }
+        const cleanup = () => {
+          audio.removeEventListener('ended', handleEnded);
+          audio.removeEventListener('error', handleError);
+        };
+        const handleEnded = () => {
+          cleanup();
+          resolve(true);
+        };
+        const handleError = () => {
+          cleanup();
+          resolve(false);
+        };
+        audio.addEventListener('ended', handleEnded);
+        audio.addEventListener('error', handleError);
+        const playResult = audio.play();
+        if (playResult && typeof playResult.then === 'function') {
+          playResult.catch(handleError);
+        }
+      });
+    }
+
+    async function playPronunciation(card) {
+      if (!card) return;
+      const text = card.nomeIngles || '';
+      const audioSrc = card.audioSrc || '';
+      updateHeardStats(card);
+      if (audioSrc) {
+        const audio = new Audio(audioSrc);
+        const played = await playAudioElement(audio);
+        if (played) return;
+      }
+      const ttsUrl = buildGoogleTtsUrl(text);
+      if (!ttsUrl || !text) return;
+      const ttsAudio = new Audio(ttsUrl);
+      await playAudioElement(ttsAudio);
+    }
+
     function normalizeFlashcardEntry(entry, source, levelMap) {
       if (!entry || typeof entry !== 'object') return null;
       const file = entry.file || entry.imagem;
@@ -604,6 +780,7 @@
       if (!file || !en) return null;
       const pt = entry.pt || entry.nomePortugues || '';
       const categoria = entry.categoria || entry.category || entry.tense || '';
+      const audio = entry.audio || '';
       const tense = entry.tense || '';
       const sentenceForm = entry.sentenceForm || entry.state || entry.estado || entry.form || '';
       const numericCategory = Number(categoria);
@@ -616,6 +793,8 @@
         nomePortugues: pt,
         nomeIngles: en,
         imageSrc: buildImageSrc(file),
+        audio,
+        audioSrc: buildAudioSrc(audio),
         day,
         tense,
         sentenceForm
@@ -688,6 +867,13 @@
       }
     }
 
+    function updateAccuracyLens(card) {
+      if (!memoryCard || !card) return;
+      const pronuncia = getPronuncia(card);
+      const color = getAccuracyColorRgb(pronuncia);
+      memoryCard.style.setProperty('--accuracy-color', color);
+    }
+
     function renderCard(card) {
       if (!card) return;
       const stats = loadFlashcardStats();
@@ -703,6 +889,7 @@
       img.alt = card.nomePortugues || 'Flashcard';
       memoryCircle.appendChild(img);
       memoryCard.style.backgroundImage = `url('${getMemoryBackground(entry)}')`;
+      updateAccuracyLens(card);
       renderStars(entry);
     }
 
@@ -769,6 +956,7 @@
         const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
         const wasCorrect = percent >= 80;
         const outcome = recordMemoryAttempt(currentCard, wasCorrect);
+        updatePronunciationStats(currentCard, percent);
         const stats = loadFlashcardStats();
         const key = getFlashcardKey(currentCard);
         const entry = key ? ensureStatsEntry(stats, key) : null;
@@ -776,13 +964,16 @@
         if (entry) {
           memoryCard.style.backgroundImage = `url('${getMemoryBackground(entry)}')`;
         }
+        updateAccuracyLens(currentCard);
         if (wasCorrect && outcome.seeded) {
           memoryCard.classList.add('memory-card--flash');
         }
+        await playPronunciation(currentCard);
+        const delay = wasCorrect && outcome.seeded ? 1500 : 0;
         window.setTimeout(() => {
           memoryCard.classList.remove('memory-card--flash');
           pickNextCard(day);
-        }, 1500);
+        }, delay);
       } finally {
         memoryPrompt.classList.remove('is-visible');
         isListening = false;

@@ -634,7 +634,7 @@
         Dia
         <select id="levelFilter"></select>
       </label>
-      <button class="btn btn-primary" id="openMemoryGame" type="button">Jogo da memória</button>
+      <button class="btn btn-primary" id="openMemoryGame" type="button">Jogar</button>
     </div>
   </header>
 
@@ -659,6 +659,14 @@
         <div class="stat stat--pronuncia" id="detailPronunciaCard">
           <h3>Pronúncia</h3>
           <span id="detailPronuncia">--</span>
+        </div>
+        <div class="stat stat--plain">
+          <h3>Speakings</h3>
+          <span id="detailSpeakings">--</span>
+        </div>
+        <div class="stat stat--plain">
+          <h3>Listenings</h3>
+          <span id="detailListenings">--</span>
         </div>
         <div class="stat stat--plain">
           <h3>Listening</h3>
@@ -746,7 +754,7 @@
 
   <script>
     const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
-    const FLASHCARD_PRONUNCIATION_LIMIT = 10;
+    const FLASHCARD_PRONUNCIATION_LIMIT = 6;
     const FLASHCARD_METRIC_LIMIT = 10;
     const FLASHCARD_TIME_LIMIT = 10;
     const MEMORY_HISTORY_LIMIT = 10;
@@ -769,6 +777,8 @@
     const levelFilter = document.getElementById('levelFilter');
     const detailPronuncia = document.getElementById('detailPronuncia');
     const detailPronunciaCard = document.getElementById('detailPronunciaCard');
+    const detailSpeakings = document.getElementById('detailSpeakings');
+    const detailListenings = document.getElementById('detailListenings');
     const detailListening = document.getElementById('detailListening');
     const detailReading = document.getElementById('detailReading');
     const detailAssociation = document.getElementById('detailAssociation');
@@ -1007,6 +1017,7 @@
           lastSpokenAt: null,
           lastHeardAt: null,
           spokenCount: 0,
+          listenedCount: 0,
           memoryHistory: [],
           memoryStreak: 0,
           memoryStage: 0,
@@ -1018,6 +1029,9 @@
         stats[key].spokenCount = Array.isArray(stats[key].pronunciation)
           ? stats[key].pronunciation.length
           : 0;
+      }
+      if (typeof stats[key].listenedCount !== 'number') {
+        stats[key].listenedCount = 0;
       }
       if (!Array.isArray(stats[key].listening)) {
         stats[key].listening = [];
@@ -1139,6 +1153,7 @@
       if (!key) return;
       const stats = loadFlashcardStats();
       const entry = ensureStatsEntry(stats, key);
+      entry.listenedCount += 1;
       entry.lastHeardAt = Date.now();
       saveFlashcardStats(stats);
     }
@@ -1185,6 +1200,14 @@
       if (typeof entry.spokenCount === 'number') return entry.spokenCount;
       if (!Array.isArray(entry.pronunciation)) return 0;
       return entry.pronunciation.length;
+    }
+
+    function getListeningCount(card) {
+      const key = getFlashcardKey(card);
+      const entry = key ? flashcardStats[key] : null;
+      if (!entry) return 0;
+      if (typeof entry.listenedCount === 'number') return entry.listenedCount;
+      return 0;
     }
 
     function formatSince(timestamp) {
@@ -1578,6 +1601,8 @@
       const stats = key ? ensureStatsEntry(flashcardStats, key) : null;
       const pronuncia = getPronuncia(card);
       detailPronuncia.textContent = pronuncia === null ? '--' : `${pronuncia}%`;
+      detailSpeakings.textContent = `${getSpokenCount(card)}`;
+      detailListenings.textContent = `${getListeningCount(card)}`;
       detailListening.textContent = formatMetric(stats, 'listening');
       detailReading.textContent = formatMetric(stats, 'reading');
       detailAssociation.textContent = formatMetric(stats, 'association');
@@ -1825,7 +1850,7 @@
         window.open(`memory-game.html?day=${encodeURIComponent(day)}`, '_blank', 'noopener,noreferrer');
         return;
       }
-      const url = `game.html?mode=${encodeURIComponent(mode)}&day=${encodeURIComponent(day)}`;
+      const url = `game.html?mode=${encodeURIComponent(mode)}&day=${encodeURIComponent(day)}&source=flashcards`;
       window.open(url, '_blank', 'noopener,noreferrer');
     }
 
