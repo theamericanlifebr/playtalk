@@ -793,6 +793,13 @@
     let cardLongPressTimer = null;
     let cardLongPressTriggered = false;
     let lastLongPressCardId = null;
+    let lastSeedingHoldCardId = null;
+    let cardSeedingHoldTimer = null;
+    let cardSeedingHoldInterval = null;
+    let cardSeedingHoldTriggered = false;
+    let detailSeedingHoldTimer = null;
+    let detailSeedingHoldInterval = null;
+    let detailSeedingHoldTriggered = false;
     const accuracyColorCache = new Map();
     let flashcardStats = loadFlashcardStats();
 
@@ -1096,6 +1103,84 @@
       if (diffHours < 24) return `${Math.max(1, diffHours)} horas restantes`;
       const diffDays = Math.ceil(diffHours / 24);
       return `${diffDays} dias restantes`;
+    }
+
+    function reduceSeedingHours(card, hours) {
+      if (!card) return false;
+      const key = getFlashcardKey(card);
+      if (!key) return false;
+      const stats = loadFlashcardStats();
+      const entry = ensureStatsEntry(stats, key);
+      if (!isMemorySeeding(entry)) return false;
+      const now = Date.now();
+      entry.memorySeedingUntil = Math.max(now, entry.memorySeedingUntil - hours * 60 * 60 * 1000);
+      syncMemoryState(entry);
+      saveFlashcardStats(stats);
+      if (selectedCardId === card.id) {
+        updateDetail(card);
+      }
+      return isMemorySeeding(entry);
+    }
+
+    function clearCardSeedingHold() {
+      if (cardSeedingHoldTimer) {
+        clearTimeout(cardSeedingHoldTimer);
+        cardSeedingHoldTimer = null;
+      }
+      if (cardSeedingHoldInterval) {
+        clearInterval(cardSeedingHoldInterval);
+        cardSeedingHoldInterval = null;
+      }
+    }
+
+    function startCardSeedingHold(card) {
+      if (!card) return;
+      const key = getFlashcardKey(card);
+      if (!key) return;
+      const entry = ensureStatsEntry(loadFlashcardStats(), key);
+      if (!isMemorySeeding(entry)) return;
+      cardSeedingHoldTriggered = false;
+      clearCardSeedingHold();
+      cardSeedingHoldTimer = window.setTimeout(() => {
+        cardSeedingHoldTriggered = true;
+        lastSeedingHoldCardId = card.id;
+        reduceSeedingHours(card, 1);
+        cardSeedingHoldInterval = window.setInterval(() => {
+          if (!reduceSeedingHours(card, 1)) {
+            clearCardSeedingHold();
+          }
+        }, 1000);
+      }, 10000);
+    }
+
+    function clearDetailSeedingHold() {
+      if (detailSeedingHoldTimer) {
+        clearTimeout(detailSeedingHoldTimer);
+        detailSeedingHoldTimer = null;
+      }
+      if (detailSeedingHoldInterval) {
+        clearInterval(detailSeedingHoldInterval);
+        detailSeedingHoldInterval = null;
+      }
+    }
+
+    function startDetailSeedingHold(card) {
+      if (!card) return;
+      const key = getFlashcardKey(card);
+      if (!key) return;
+      const entry = ensureStatsEntry(loadFlashcardStats(), key);
+      if (!isMemorySeeding(entry)) return;
+      detailSeedingHoldTriggered = false;
+      clearDetailSeedingHold();
+      detailSeedingHoldTimer = window.setTimeout(() => {
+        detailSeedingHoldTriggered = true;
+        reduceSeedingHours(card, 1);
+        detailSeedingHoldInterval = window.setInterval(() => {
+          if (!reduceSeedingHours(card, 1)) {
+            clearDetailSeedingHold();
+          }
+        }, 1000);
+      }, 10000);
     }
 
     function updatePronunciationStats(card, percent) {
@@ -1480,7 +1565,30 @@
             lastLongPressCardId = null;
             return;
           }
+          if (lastSeedingHoldCardId === card.id) {
+            lastSeedingHoldCardId = null;
+            return;
+          }
           playAudioForCard(card);
+        });
+        phraseButton.addEventListener('pointerdown', event => {
+          if (event.button && event.button !== 0) return;
+          startCardSeedingHold(card);
+        });
+        phraseButton.addEventListener('pointerup', () => {
+          clearCardSeedingHold();
+          if (cardSeedingHoldTriggered) {
+            lastSeedingHoldCardId = card.id;
+          }
+          cardSeedingHoldTriggered = false;
+        });
+        phraseButton.addEventListener('pointerleave', () => {
+          clearCardSeedingHold();
+          cardSeedingHoldTriggered = false;
+        });
+        phraseButton.addEventListener('pointercancel', () => {
+          clearCardSeedingHold();
+          cardSeedingHoldTriggered = false;
         });
         const intervalId = window.setInterval(() => {
           phraseIndex = (phraseIndex + 1) % phrases.length;
@@ -1795,7 +1903,30 @@
       }
       detailLongPressTriggered = false;
     });
-    detailPhrase.addEventListener('click', playAudio);
+    detailPhrase.addEventListener('pointerdown', event => {
+      if (event.button && event.button !== 0) return;
+      if (!selectedCardId) return;
+      const card = flashcards.find(item => item.id === selectedCardId);
+      startDetailSeedingHold(card);
+    });
+    detailPhrase.addEventListener('pointerup', () => {
+      clearDetailSeedingHold();
+    });
+    detailPhrase.addEventListener('pointerleave', () => {
+      clearDetailSeedingHold();
+      detailSeedingHoldTriggered = false;
+    });
+    detailPhrase.addEventListener('pointercancel', () => {
+      clearDetailSeedingHold();
+      detailSeedingHoldTriggered = false;
+    });
+    detailPhrase.addEventListener('click', () => {
+      if (detailSeedingHoldTriggered) {
+        detailSeedingHoldTriggered = false;
+        return;
+      }
+      playAudio();
+    });
     detailClose.addEventListener('click', closeDetailModal);
     detailModal.addEventListener('click', event => {
       if (event.target === detailModal) closeDetailModal();
