@@ -348,6 +348,10 @@
       overflow: hidden;
     }
 
+    .detail-panel.is-seeding {
+      background-image: url('images/seeding.png');
+    }
+
     .detail-panel--modal {
       width: min(960px, 90vw);
       max-height: 90vh;
@@ -422,6 +426,13 @@
       box-shadow: none;
     }
 
+    .flashcard__phrase.is-seeding,
+    .detail-phrase.is-seeding {
+      cursor: default;
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
     .detail-phrase::after {
       content: '';
       position: absolute;
@@ -449,6 +460,10 @@
       border-radius: 14px;
       padding: 12px;
       text-align: center;
+    }
+
+    .detail-panel.is-seeding .stat {
+      background: var(--panel) url('images/seeding.png') center/cover no-repeat;
     }
 
     .stat--plain {
@@ -1089,13 +1104,11 @@
     function formatRemainingSeeding(entry) {
       if (!entry || !entry.memorySeedingUntil) return '';
       const diffMs = entry.memorySeedingUntil - Date.now();
-      if (diffMs <= 0) return 'pronto';
-      const diffMinutes = Math.ceil(diffMs / 60000);
-      if (diffMinutes < 60) return `${diffMinutes} minutos restantes`;
-      const diffHours = Math.floor(diffMinutes / 60);
-      if (diffHours < 24) return `${Math.max(1, diffHours)} horas restantes`;
-      const diffDays = Math.ceil(diffHours / 24);
-      return `${diffDays} dias restantes`;
+      if (diffMs <= 0) return '0 dias 0 horas';
+      const totalHours = Math.max(1, Math.ceil(diffMs / 3600000));
+      const diffDays = Math.floor(totalHours / 24);
+      const diffHours = totalHours % 24;
+      return `${diffDays} dias ${diffHours} horas`;
     }
 
     function updatePronunciationStats(card, percent) {
@@ -1139,7 +1152,11 @@
       return average === null ? '--' : `${average}%`;
     }
 
-    function buildRotatingPhrases(card) {
+    function buildRotatingPhrases(card, statsEntry = null) {
+      if (statsEntry && isMemorySeeding(statsEntry)) {
+        const remaining = formatRemainingSeeding(statsEntry);
+        return ['SEEDING', `tempo restante do seeding: ${remaining}`];
+      }
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
       const phrases = [];
@@ -1449,6 +1466,7 @@
         if (statsEntry && syncMemoryState(statsEntry)) {
           saveFlashcardStats(flashcardStats);
         }
+        const isSeeding = Boolean(statsEntry && isMemorySeeding(statsEntry));
         let accuracyColor = getAccuracyColorRgb(getPronuncia(card));
         const cachedAccuracyColor = accuracyColorCache.get(card.id);
         if (cachedAccuracyColor) {
@@ -1471,18 +1489,20 @@
         const phraseButton = document.createElement('button');
         phraseButton.type = 'button';
         phraseButton.className = 'flashcard__phrase';
-        const phrases = buildRotatingPhrases(card);
         let phraseIndex = 0;
-        phraseButton.textContent = phrases[phraseIndex];
+        phraseButton.classList.toggle('is-seeding', isSeeding);
+        phraseButton.textContent = buildRotatingPhrases(card, statsEntry)[phraseIndex];
         phraseButton.addEventListener('click', event => {
           event.stopPropagation();
           if (lastLongPressCardId === card.id) {
             lastLongPressCardId = null;
             return;
           }
+          if (isSeeding) return;
           playAudioForCard(card);
         });
         const intervalId = window.setInterval(() => {
+          const phrases = buildRotatingPhrases(card, statsEntry);
           phraseIndex = (phraseIndex + 1) % phrases.length;
           phraseButton.textContent = phrases[phraseIndex];
         }, 3000);
@@ -1589,15 +1609,15 @@
       let accuracyColor = getAccuracyColorRgb(pronuncia);
       animateAccuracyColor(detailPanel, accuracyColor);
       animateAccuracyColor(detailPronunciaCard, accuracyColor);
-      if (stats && isMemorySeeding(stats)) {
-        detailPanel.style.backgroundImage = `url('${MEMORY_SEEDING_BACKGROUND}')`;
-      } else {
-        detailPanel.style.backgroundImage = '';
-      }
+      const isSeeding = Boolean(stats && isMemorySeeding(stats));
+      detailPanel.classList.toggle('is-seeding', isSeeding);
+      detailPanel.style.backgroundImage = isSeeding ? `url('${MEMORY_SEEDING_BACKGROUND}')` : '';
+      detailPhrase.classList.toggle('is-seeding', isSeeding);
+      detailPhrase.disabled = isSeeding;
 
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
-      const phrases = buildRotatingPhrases(card);
+      const phrases = buildRotatingPhrases(card, stats);
       detailPhrase.dataset.primary = portuguese;
       detailPhrase.dataset.secondary = english;
       detailPhrase.innerHTML = `<span>${phrases[0]}</span>`;
@@ -1608,8 +1628,9 @@
       }
       let phraseIndex = 0;
       detailPhraseInterval = window.setInterval(() => {
-        phraseIndex = (phraseIndex + 1) % phrases.length;
-        detailPhrase.innerHTML = `<span>${phrases[phraseIndex]}</span>`;
+        const currentPhrases = buildRotatingPhrases(card, stats);
+        phraseIndex = (phraseIndex + 1) % currentPhrases.length;
+        detailPhrase.innerHTML = `<span>${currentPhrases[phraseIndex]}</span>`;
       }, 3000);
     }
 
