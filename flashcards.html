@@ -299,36 +299,6 @@
       transition: background 0.2s ease;
     }
 
-    .flashcard__memory {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--muted);
-      margin-top: -4px;
-    }
-
-    .flashcard__seeding {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--primary);
-      text-transform: uppercase;
-    }
-
-    .flashcard__seeding img {
-      width: 44px;
-      height: 44px;
-      object-fit: contain;
-    }
-
-    .flashcard__seeding small {
-      font-size: inherit;
-      font-weight: 800;
-      color: var(--muted);
-      text-transform: none;
-    }
-
     .flashcard::after,
     .detail-panel::before {
       content: '';
@@ -1110,20 +1080,6 @@
       return MEMORY_BACKGROUND_IMAGES[stage] || MEMORY_BACKGROUND_IMAGES[0];
     }
 
-    function getMemoryHistorySummary(entry) {
-      if (!entry || !Array.isArray(entry.memoryHistory) || !entry.memoryHistory.length) {
-        return { total: 0, correct: 0 };
-      }
-      const correct = entry.memoryHistory.filter(Boolean).length;
-      return { total: entry.memoryHistory.length, correct };
-    }
-
-    function getMemoryLabel(entry) {
-      const { total, correct } = getMemoryHistorySummary(entry);
-      if (!total) return 'Memory --';
-      return `Memory ${correct}/${total}`;
-    }
-
     function getMemoryStreakValue(entry) {
       if (!entry) return 0;
       if (entry.memoryMastered) return MEMORY_STAR_COUNT;
@@ -1183,18 +1139,11 @@
       return average === null ? '--' : `${average}%`;
     }
 
-    function getSpeakingLabel(card) {
-      const pronuncia = getPronuncia(card);
-      const label = pronuncia === null ? '--' : pronuncia;
-      return `Speaking ${label}%`;
-    }
-
     function buildRotatingPhrases(card) {
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
       const phrases = [];
       if (english) phrases.push(english);
-      phrases.push(getSpeakingLabel(card));
       phrases.push(portuguese);
       return phrases;
     }
@@ -1539,27 +1488,6 @@
         }, 3000);
         phraseIntervals.push(intervalId);
         cardEl.appendChild(phraseButton);
-
-        const memoryInfo = document.createElement('div');
-        memoryInfo.className = 'flashcard__memory';
-        if (isMemorySeeding(statsEntry)) {
-          const seeding = document.createElement('div');
-          seeding.className = 'flashcard__seeding';
-          const seedingImage = document.createElement('img');
-          seedingImage.src = MEMORY_SEEDING_BACKGROUND;
-          seedingImage.alt = 'Seeding';
-          const seedingTitle = document.createElement('span');
-          seedingTitle.textContent = 'SEEDING';
-          const seedingTime = document.createElement('small');
-          seedingTime.textContent = formatRemainingSeeding(statsEntry);
-          seeding.appendChild(seedingImage);
-          seeding.appendChild(seedingTitle);
-          seeding.appendChild(seedingTime);
-          memoryInfo.appendChild(seeding);
-        } else {
-          memoryInfo.textContent = getMemoryLabel(statsEntry);
-        }
-        cardEl.appendChild(memoryInfo);
 
         const stars = document.createElement('div');
         stars.className = 'flashcard__stars';
