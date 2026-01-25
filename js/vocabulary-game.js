@@ -72,6 +72,7 @@
   const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
   const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
   const FLASHCARD_PRONUNCIATION_LIMIT = 10;
+  const FLASHCARD_METRIC_LIMIT = 10;
   const FLASHCARD_TIME_LIMIT = 10;
   const MEMORY_HISTORY_LIMIT = 10;
   const MEMORY_SEEDING_DAYS = [3, 7, 30];
@@ -84,6 +85,22 @@
   const PHASE_THREE_HINT_STORAGE_KEY = 'vocabulary-phase3-mic-hint';
   const LEVEL_TWO_UNLOCK_STORAGE_KEY = 'vocabulary-level2-unlock-at';
   const LEVEL_TWO_UNLOCK_HOUR = 6;
+  const MODE_PHASE_MAP = {
+    association: 2,
+    reading: 3,
+    listening: 5
+  };
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedMode = urlParams.get('mode');
+  const requestedPhaseRaw = Number.parseInt(urlParams.get('phase') || '', 10);
+  const requestedDayRaw = Number.parseInt(urlParams.get('day') || '', 10);
+  const modePhase = MODE_PHASE_MAP[requestedMode];
+  const requestedPhase = Number.isFinite(requestedPhaseRaw) ? requestedPhaseRaw : null;
+  const requestedDay = Number.isFinite(requestedDayRaw) ? requestedDayRaw : null;
+  const forcedPhase = Number.isFinite(requestedPhase)
+    ? requestedPhase
+    : (Number.isFinite(modePhase) ? modePhase : null);
+  const singlePhaseMode = Number.isFinite(forcedPhase) && forcedPhase >= 1 && forcedPhase <= 8;
 
   let images = [];
   let buildingImages = [];
@@ -313,6 +330,21 @@
     return buildVisualWrapper(entry, img, options);
   }
 
+  function createIconImage(entry, src, alt, className, options = {}) {
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = alt;
+    img.className = className;
+    return buildVisualWrapper(entry, img, options);
+  }
+
+  function createTextVisual(entry, text, className, options = {}) {
+    const textEl = document.createElement('div');
+    textEl.className = className;
+    textEl.textContent = text;
+    return buildVisualWrapper(entry, textEl, options);
+  }
+
   function scheduleButtonTextFit(button, minSize = 14) {
     if (!button) return;
     const resize = () => {
@@ -481,7 +513,7 @@
   function updatePhaseLabel() {
     if (phaseLabel) phaseLabel.textContent = `Fase ${phase}`;
     if (document.body) {
-      for (let i = 1; i <= 7; i += 1) {
+      for (let i = 1; i <= 8; i += 1) {
         document.body.classList.toggle(`phase-${i}`, phase === i);
       }
     }
@@ -899,6 +931,10 @@
     if (!stats[key]) {
       stats[key] = {
         pronunciation: [],
+        listening: [],
+        reading: [],
+        association: [],
+        meaning: [],
         durations: [],
         lastPlayedAt: null,
         lastSpokenAt: null,
@@ -909,6 +945,18 @@
         memorySeedingUntil: null,
         memoryMastered: false
       };
+    }
+    if (!Array.isArray(stats[key].listening)) {
+      stats[key].listening = [];
+    }
+    if (!Array.isArray(stats[key].reading)) {
+      stats[key].reading = [];
+    }
+    if (!Array.isArray(stats[key].association)) {
+      stats[key].association = [];
+    }
+    if (!Array.isArray(stats[key].meaning)) {
+      stats[key].meaning = [];
     }
     if (!Array.isArray(stats[key].memoryHistory)) {
       stats[key].memoryHistory = [];
@@ -976,6 +1024,17 @@
     if (!record) return;
     const normalizedDuration = Math.max(0, Number(durationMs) || 0);
     pushLimited(record.durations, normalizedDuration, FLASHCARD_TIME_LIMIT);
+    saveFlashcardStats(stats);
+  }
+
+  function recordFlashcardMetric(entry, metricKey, percent) {
+    const key = getFlashcardKey(entry);
+    if (!key || !metricKey) return;
+    const stats = readFlashcardStats();
+    const record = getFlashcardStatsEntry(stats, key);
+    if (!record || !Array.isArray(record[metricKey])) return;
+    const normalizedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    pushLimited(record[metricKey], normalizedPercent, FLASHCARD_METRIC_LIMIT);
     saveFlashcardStats(stats);
   }
 
@@ -1141,7 +1200,7 @@
   }
 
   function isStreakPhase(targetPhase) {
-    return targetPhase === 3 || targetPhase === 5 || targetPhase === 6 || targetPhase === 7;
+    return targetPhase === 3 || targetPhase === 5 || targetPhase === 6 || targetPhase === 7 || targetPhase === 8;
   }
 
   function awardStreakHeart() {
@@ -1172,7 +1231,7 @@
   function applyBoardSizing(targetPhase) {
     if (!board || !textContainer || !choiceRow) return;
     const shouldExpand = targetPhase === 4;
-    const isCompact = targetPhase === 1 || targetPhase === 3 || targetPhase === 5 || targetPhase === 6 || targetPhase === 7;
+    const isCompact = targetPhase === 1 || targetPhase === 3 || targetPhase === 5 || targetPhase === 6 || targetPhase === 7 || targetPhase === 8;
     board.classList.toggle('board--expanded', shouldExpand);
     board.classList.toggle('board--compact', isCompact);
     textContainer.classList.toggle('text-container--compact', isCompact);
@@ -1274,7 +1333,7 @@
   }
 
   function filterPool() {
-    if (phase === 7) {
+    if (phase === 8) {
       const numericLevel = Math.max(1, Number(level) || 1);
       pool = buildingImages.filter(entry => {
         const categoryValue = entry?.categoria ?? entry?.category ?? entry?.folder;
@@ -1346,7 +1405,7 @@
   }
 
   function persistProgressState() {
-    if (!gameStarted) return;
+    if (!gameStarted || singlePhaseMode) return;
     saveProgressStorage({
       level,
       phase,
@@ -1710,7 +1769,7 @@
       return;
     }
 
-    if (phase === 7 && message.length > 20) {
+    if (phase === 8 && message.length > 20) {
       const lines = splitPhaseSevenText(message);
       textContainer.innerHTML = '';
       textContainer.appendChild(document.createTextNode(lines[0] || ''));
@@ -1916,6 +1975,7 @@
     if (awaiting) return;
     awaiting = true;
     const isCorrect = card.dataset.correct === 'true';
+    let wasCorrect = isCorrect;
     let audio = isCorrect ? successAudio : errorAudio;
     highlightCorrectCard();
     if (!isCorrect) {
@@ -1931,14 +1991,18 @@
       if (autoCorrect) {
         applyCorrectOutcome();
         audio = successAudio;
+        wasCorrect = true;
         card.classList.remove('grid-card--wrong');
         card.classList.add('grid-card--correct');
       } else {
         registerErrorAndCheckReset();
         applyIncorrectOutcome();
         audio = errorAudio;
+        wasCorrect = false;
       }
     }
+
+    recordFlashcardMetric(currentItem, 'association', wasCorrect ? 100 : 0);
 
     audio && audio.play().catch(() => {});
     updateProgressBar();
@@ -1959,7 +2023,7 @@
 
   function updateRecognitionLanguage(targetPhase) {
     if (!recognition) return;
-    recognition.lang = targetPhase === 5 ? 'pt-BR' : 'en-US';
+    recognition.lang = 'en-US';
   }
 
   function showPhaseThreeCard(item) {
@@ -2027,51 +2091,83 @@
       }
     }
 
-    const expectedText = item.pt || item.en;
-    const buttonText = item.en || expectedText;
-    const imageWrapper = createEntryImage(item, 'board__image-single board__image-speech');
+    const expectedText = item.en;
+    const imageWrapper = createIconImage(
+      item,
+      'images/sound.png',
+      'Som',
+      'board__image-single board__image-speech board__image-icon'
+    );
     const img = imageWrapper.querySelector('img');
     img.setAttribute('aria-hidden', 'true');
-
-    let promptPlaying = false;
-    const speechBtn = document.createElement('button');
-    speechBtn.type = 'button';
-    speechBtn.className = 'phase-word-btn';
-    speechBtn.textContent = buttonText;
-    speechBtn.setAttribute('aria-label', `Toque e repita: ${expectedText}`);
+    let promptReady = false;
 
     const startListening = () => {
-      if (awaiting || promptPlaying) return;
-      promptPlaying = true;
-      Promise.resolve(playPronunciation(item))
-        .catch(() => {})
-        .finally(() => {
-          promptPlaying = false;
-          handleSpeechChallenge(expectedText, startListening, {
-            onListeningStart: () => img.classList.add('board__image-speech--listening'),
-            onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
-            progressTarget: imageWrapper,
-            evaluationTarget: img,
-            errorTextTarget: speechBtn,
-            errorText: expectedText,
-            defaultText: buttonText,
-            entry: item
-          });
-        });
+      if (awaiting || !promptReady) return;
+      handleSpeechChallenge(expectedText, startListening, {
+        onListeningStart: () => img.classList.add('board__image-speech--listening'),
+        onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
+        progressTarget: imageWrapper,
+        evaluationTarget: img,
+        entry: item
+      });
     };
 
     img.addEventListener('click', startListening);
     img.addEventListener('touchstart', startListening, { passive: true });
-    speechBtn.addEventListener('click', startListening);
 
     boardInner.appendChild(imageWrapper);
     choiceRow.innerHTML = '';
-    choiceRow.appendChild(speechBtn);
-    scheduleButtonTextFit(speechBtn, 18);
     showText('');
+    Promise.resolve(playPronunciation(item, { rate: 1, preservePitch: true }))
+      .catch(() => {})
+      .finally(() => {
+        promptReady = true;
+      });
   }
 
   function showPhaseSixCard(item) {
+    currentItem = item;
+    recordFlashcardPlayed(item);
+    clearBoard();
+    boardInner.classList.remove('board__inner--grid');
+    if (recognition && typeof recognition.stop === 'function') {
+      try {
+        recognition.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
+
+    const promptText = item.pt || item.en;
+    const expectedText = item.en;
+    const imageWrapper = createTextVisual(
+      item,
+      promptText,
+      'board__image-text board__image-speech'
+    );
+    const textEl = imageWrapper.querySelector('.board__image-text');
+
+    const startListening = () => {
+      if (awaiting) return;
+      handleSpeechChallenge(expectedText, startListening, {
+        onListeningStart: () => textEl.classList.add('board__image-speech--listening'),
+        onListeningEnd: () => textEl.classList.remove('board__image-speech--listening'),
+        progressTarget: imageWrapper,
+        evaluationTarget: textEl,
+        entry: item
+      });
+    };
+
+    textEl.addEventListener('click', startListening);
+    textEl.addEventListener('touchstart', startListening, { passive: true });
+
+    boardInner.appendChild(imageWrapper);
+    choiceRow.innerHTML = '';
+    showText('');
+  }
+
+  function showPhaseSevenCard(item) {
     currentItem = item;
     recordFlashcardPlayed(item);
     clearBoard();
@@ -2108,7 +2204,7 @@
     showText('');
   }
 
-  function showPhaseSevenCard(item) {
+  function showPhaseEightCard(item) {
     currentItem = item;
     recordFlashcardPlayed(item);
     clearBoard();
@@ -2248,10 +2344,20 @@
       if (evaluationTarget) {
         evaluationTarget.classList.remove('board__image-speech--evaluating');
       }
-      if (entry && (phase === 3 || phase === 6 || phase === 7)) {
+      if (entry && (phase === 3 || phase === 5 || phase === 6 || phase === 7 || phase === 8)) {
         recordFlashcardSpoken(entry, percent);
-        if (phase === 6) {
-          recordMemoryAttempt(entry, wasCorrect);
+      }
+      if (entry) {
+        if (phase === 3) {
+          recordFlashcardMetric(entry, 'reading', percent);
+        }
+        if (phase === 5 || phase === 6) {
+          recordFlashcardMetric(entry, 'listening', percent);
+        }
+        if (phase === 7 || phase === 8) {
+          recordFlashcardMetric(entry, 'meaning', percent);
+        }
+        if (phase === 7) {
           recordFlashcardDuration(entry, Date.now() - speechStartedAt);
         }
       }
@@ -2445,6 +2551,9 @@
         case 7:
           showPhaseSevenCard(item);
           break;
+        case 8:
+          showPhaseEightCard(item);
+          break;
         default:
           showPhaseOneCard(item);
       }
@@ -2517,7 +2626,8 @@
       4: { title: 'Fase 4', cta: 'Iniciar fase 4' },
       5: { title: 'Fase 5', cta: 'Iniciar fase 5' },
       6: { title: 'Fase 6', cta: 'Iniciar fase 6' },
-      7: { title: 'Fase 7', cta: 'Iniciar fase 7' }
+      7: { title: 'Fase 7', cta: 'Iniciar fase 7' },
+      8: { title: 'Fase 8', cta: 'Iniciar fase 8' }
     }[nextPhase] || {
       title: `Fase ${nextPhase}`,
       cta: 'Continuar'
@@ -2624,6 +2734,12 @@
     stopPhaseTrack();
     pauseLevelTimer();
     persistProgressState();
+    if (singlePhaseMode) {
+      awaiting = false;
+      resetProgress();
+      advanceCycle();
+      return;
+    }
     if (phase === 1 || phase === 2 || phase === 3 || phase === 4) {
       awaiting = false;
       completionGridShown = true;
@@ -2754,7 +2870,13 @@
   function handlePhaseComplete(options = {}) {
     const { skipIntroAudio = false } = options;
     stopPhaseTrack();
-    if (phase === 7) {
+    if (singlePhaseMode) {
+      dissolveEnvironment(() => {
+        startPhase(forcedPhase, { skipIntroAudio: true });
+      });
+      return;
+    }
+    if (phase === 8) {
       const completedLevel = level;
       const medalKey = currentMedalKey;
       const finalElapsedMs = getLevelElapsedMs();
@@ -2860,7 +2982,11 @@
     }
 
     loadAllImages().then(() => {
-      showPhaseTransition(1);
+      if (singlePhaseMode) {
+        showPhaseTransition(forcedPhase);
+      } else {
+        showPhaseTransition(1);
+      }
     });
   }
 
@@ -2895,8 +3021,13 @@
   }
 
   function init() {
-    const storedProgress = readProgressStorage();
-    const completionState = readCompletionStorage();
+    const storedProgress = singlePhaseMode ? null : readProgressStorage();
+    const completionState = singlePhaseMode ? null : readCompletionStorage();
+    if (Number.isFinite(requestedDay) && requestedDay > 0) {
+      level = requestedDay;
+      saveLevelToStorage();
+      updateLevelIndicators();
+    }
     if (!storedProgress || !storedProgress.level) {
       loadLevelFromStorage();
     }
