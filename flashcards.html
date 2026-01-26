@@ -121,6 +121,10 @@
       overflow: hidden;
     }
 
+    .flashcard.is-seeding {
+      background-image: url('images/seeding.png');
+    }
+
     @media (max-width: 900px) {
       .flashcard-grid {
         grid-template-columns: 1fr;
@@ -749,7 +753,9 @@
     const FLASHCARD_METRIC_LIMIT = 10;
     const FLASHCARD_TIME_LIMIT = 10;
     const MEMORY_HISTORY_LIMIT = 10;
-    const MEMORY_SEEDING_DAYS = [3, 3, 3];
+    const MEMORY_SEEDING_DAYS = [3, 7, 15, 30];
+    const MEMORY_SEEDING_HOLD_DELAY_MS = 10000;
+    const MEMORY_SEEDING_HOLD_DECREASE_HOURS = 2;
     const MEMORY_STAR_COUNT = 6;
     const MEMORY_BACKGROUND_IMAGES = {
       0: 'images/galaxy.png',
@@ -808,6 +814,8 @@
     let cardLongPressTimer = null;
     let cardLongPressTriggered = false;
     let lastLongPressCardId = null;
+    let cardSeedingHoldTimer = null;
+    let cardSeedingHoldInterval = null;
     const accuracyColorCache = new Map();
     let flashcardStats = loadFlashcardStats();
 
@@ -1069,7 +1077,7 @@
       if (entry.memorySeedingUntil && now >= entry.memorySeedingUntil) {
         entry.memorySeedingUntil = null;
         entry.memoryStreak = 0;
-        if (entry.memoryStage < 3) {
+        if (entry.memoryStage < 4) {
           entry.memoryStage += 1;
         }
         changed = true;
@@ -1474,6 +1482,7 @@
         }
         animateAccuracyColor(cardEl, accuracyColor);
         accuracyColorCache.set(card.id, accuracyColor);
+        cardEl.classList.toggle('is-seeding', isSeeding);
 
         const visual = createFlashcardVisual(card);
         visual.addEventListener('click', event => {
@@ -1498,7 +1507,7 @@
             lastLongPressCardId = null;
             return;
           }
-          if (isSeeding) return;
+          if (statsEntry && isMemorySeeding(statsEntry)) return;
           playAudioForCard(card);
         });
         const intervalId = window.setInterval(() => {
@@ -1527,6 +1536,40 @@
           cardLongPressTriggered = false;
           if (cardLongPressTimer) {
             clearTimeout(cardLongPressTimer);
+            cardLongPressTimer = null;
+          }
+          if (cardSeedingHoldTimer) {
+            clearTimeout(cardSeedingHoldTimer);
+            cardSeedingHoldTimer = null;
+          }
+          if (cardSeedingHoldInterval) {
+            clearInterval(cardSeedingHoldInterval);
+            cardSeedingHoldInterval = null;
+          }
+          const isCardSeeding = Boolean(statsEntry && isMemorySeeding(statsEntry));
+          if (isCardSeeding) {
+            cardSeedingHoldTimer = window.setTimeout(() => {
+              cardSeedingHoldInterval = window.setInterval(() => {
+                if (!statsEntry || !statsEntry.memorySeedingUntil) {
+                  clearInterval(cardSeedingHoldInterval);
+                  cardSeedingHoldInterval = null;
+                  return;
+                }
+                const now = Date.now();
+                const decreaseMs = MEMORY_SEEDING_HOLD_DECREASE_HOURS * 60 * 60 * 1000;
+                statsEntry.memorySeedingUntil = Math.max(now, statsEntry.memorySeedingUntil - decreaseMs);
+                const changed = syncMemoryState(statsEntry);
+                saveFlashcardStats(flashcardStats);
+                const stillSeeding = isMemorySeeding(statsEntry);
+                cardEl.classList.toggle('is-seeding', stillSeeding);
+                phraseButton.classList.toggle('is-seeding', stillSeeding);
+                if (changed && !stillSeeding) {
+                  clearInterval(cardSeedingHoldInterval);
+                  cardSeedingHoldInterval = null;
+                }
+              }, 1000);
+            }, MEMORY_SEEDING_HOLD_DELAY_MS);
+            return;
           }
           cardLongPressTimer = window.setTimeout(() => {
             cardLongPressTriggered = true;
@@ -1539,6 +1582,14 @@
             clearTimeout(cardLongPressTimer);
             cardLongPressTimer = null;
           }
+          if (cardSeedingHoldTimer) {
+            clearTimeout(cardSeedingHoldTimer);
+            cardSeedingHoldTimer = null;
+          }
+          if (cardSeedingHoldInterval) {
+            clearInterval(cardSeedingHoldInterval);
+            cardSeedingHoldInterval = null;
+          }
           cardLongPressTriggered = false;
         });
         cardEl.addEventListener('pointerleave', () => {
@@ -1546,12 +1597,28 @@
             clearTimeout(cardLongPressTimer);
             cardLongPressTimer = null;
           }
+          if (cardSeedingHoldTimer) {
+            clearTimeout(cardSeedingHoldTimer);
+            cardSeedingHoldTimer = null;
+          }
+          if (cardSeedingHoldInterval) {
+            clearInterval(cardSeedingHoldInterval);
+            cardSeedingHoldInterval = null;
+          }
           cardLongPressTriggered = false;
         });
         cardEl.addEventListener('pointercancel', () => {
           if (cardLongPressTimer) {
             clearTimeout(cardLongPressTimer);
             cardLongPressTimer = null;
+          }
+          if (cardSeedingHoldTimer) {
+            clearTimeout(cardSeedingHoldTimer);
+            cardSeedingHoldTimer = null;
+          }
+          if (cardSeedingHoldInterval) {
+            clearInterval(cardSeedingHoldInterval);
+            cardSeedingHoldInterval = null;
           }
           cardLongPressTriggered = false;
         });
@@ -1579,6 +1646,11 @@
 
     function openDetailForCard(card) {
       if (!card) return;
+      const key = getFlashcardKey(card);
+      const statsEntry = key ? ensureStatsEntry(flashcardStats, key) : null;
+      if (statsEntry && isMemorySeeding(statsEntry)) {
+        return;
+      }
       selectedCardId = card.id;
       audioClickCount = 0;
       renderCards();
