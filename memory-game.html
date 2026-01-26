@@ -300,6 +300,7 @@
     let mirrorGroups = [];
     let isListening = false;
     let memoryDeck = [];
+    let holdSeedingBackground = false;
 
     const TENSE_STYLES = {
       '': {
@@ -978,7 +979,21 @@
       img.src = card.imageSrc;
       img.alt = card.nomePortugues || 'Flashcard';
       memoryCircle.appendChild(img);
-      memoryCard.style.backgroundImage = `url('${getMemoryBackground(entry)}')`;
+      const nextBackground = getMemoryBackground(entry);
+      if (holdSeedingBackground) {
+        const applyBackground = () => {
+          memoryCard.style.backgroundImage = `url('${nextBackground}')`;
+          holdSeedingBackground = false;
+        };
+        if (img.complete) {
+          applyBackground();
+        } else {
+          img.addEventListener('load', applyBackground, { once: true });
+          img.addEventListener('error', applyBackground, { once: true });
+        }
+      } else {
+        memoryCard.style.backgroundImage = `url('${nextBackground}')`;
+      }
       updateAccuracyLens(card);
       renderStars(entry);
     }
@@ -1059,6 +1074,7 @@
           const dayCards = getDayCards(day);
           updateDeckForSeeding(day, dayCards, stats, [currentCard.id]);
           memoryCard.classList.add('memory-card--flash');
+          holdSeedingBackground = true;
         }
         await playPronunciation(currentCard);
         const delay = wasCorrect && outcome.seeded ? 1500 : 0;

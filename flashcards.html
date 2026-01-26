@@ -437,6 +437,21 @@
       opacity: 0.9;
     }
 
+    .seeding-timer {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .seeding-timer__icon {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
     .detail-phrase::after {
       content: '';
       position: absolute;
@@ -769,6 +784,11 @@
     const MEMORY_LENS_MASTERED_COLOR = '0, 0, 0';
     const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
     const MIRROR_PATH = 'data/mirror.json';
+    const SEEDING_TIMER_ICON = `
+      <svg class="seeding-timer__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 7a1 1 0 0 1 1 1v4.59l2.3 2.3a1 1 0 1 1-1.4 1.42l-2.6-2.6A1 1 0 0 1 11 13V8a1 1 0 0 1 1-1Zm0-5a9.5 9.5 0 1 1-9.5 9.5A9.5 9.5 0 0 1 12 2Zm0 2a7.5 7.5 0 1 0 7.5 7.5A7.5 7.5 0 0 0 12 4Z"/>
+      </svg>
+    `;
 
     const flashcardGrid = document.getElementById('flashcardGrid');
     const levelFilter = document.getElementById('levelFilter');
@@ -1163,14 +1183,31 @@
     function buildRotatingPhrases(card, statsEntry = null) {
       if (statsEntry && isMemorySeeding(statsEntry)) {
         const remaining = formatRemainingSeeding(statsEntry);
-        return ['SEEDING', `tempo restante do seeding: ${remaining}`];
+        return [{ type: 'seeding', text: remaining }];
       }
       const portuguese = card.nomePortugues || 'Flashcard';
       const english = card.nomeIngles || '';
       const phrases = [];
-      if (english) phrases.push(english);
-      phrases.push(portuguese);
+      if (english) phrases.push({ type: 'text', text: english });
+      phrases.push({ type: 'text', text: portuguese });
       return phrases;
+    }
+
+    function renderPhrase(target, phrase, options = {}) {
+      if (!target) return;
+      if (!phrase) {
+        target.textContent = '';
+        return;
+      }
+      if (phrase.type === 'seeding') {
+        target.innerHTML = `<span class="seeding-timer">${SEEDING_TIMER_ICON}<span>${phrase.text}</span></span>`;
+        return;
+      }
+      if (options.wrapSpan) {
+        target.innerHTML = `<span>${phrase.text}</span>`;
+        return;
+      }
+      target.textContent = phrase.text;
     }
 
     function getSpokenCount(card) {
@@ -1483,6 +1520,7 @@
         animateAccuracyColor(cardEl, accuracyColor);
         accuracyColorCache.set(card.id, accuracyColor);
         cardEl.classList.toggle('is-seeding', isSeeding);
+        cardEl.style.backgroundImage = `url('${getMemoryBackground(statsEntry)}')`;
 
         const visual = createFlashcardVisual(card);
         visual.addEventListener('click', event => {
@@ -1500,7 +1538,7 @@
         phraseButton.className = 'flashcard__phrase';
         let phraseIndex = 0;
         phraseButton.classList.toggle('is-seeding', isSeeding);
-        phraseButton.textContent = buildRotatingPhrases(card, statsEntry)[phraseIndex];
+        renderPhrase(phraseButton, buildRotatingPhrases(card, statsEntry)[phraseIndex]);
         phraseButton.addEventListener('click', event => {
           event.stopPropagation();
           if (lastLongPressCardId === card.id) {
@@ -1513,7 +1551,7 @@
         const intervalId = window.setInterval(() => {
           const phrases = buildRotatingPhrases(card, statsEntry);
           phraseIndex = (phraseIndex + 1) % phrases.length;
-          phraseButton.textContent = phrases[phraseIndex];
+          renderPhrase(phraseButton, phrases[phraseIndex]);
         }, 3000);
         phraseIntervals.push(intervalId);
         cardEl.appendChild(phraseButton);
@@ -1563,6 +1601,10 @@
                 const stillSeeding = isMemorySeeding(statsEntry);
                 cardEl.classList.toggle('is-seeding', stillSeeding);
                 phraseButton.classList.toggle('is-seeding', stillSeeding);
+                cardEl.style.backgroundImage = `url('${getMemoryBackground(statsEntry)}')`;
+                const phrases = buildRotatingPhrases(card, statsEntry);
+                phraseIndex = Math.min(phraseIndex, phrases.length - 1);
+                renderPhrase(phraseButton, phrases[phraseIndex]);
                 if (changed && !stillSeeding) {
                   clearInterval(cardSeedingHoldInterval);
                   cardSeedingHoldInterval = null;
@@ -1683,7 +1725,7 @@
       animateAccuracyColor(detailPronunciaCard, accuracyColor);
       const isSeeding = Boolean(stats && isMemorySeeding(stats));
       detailPanel.classList.toggle('is-seeding', isSeeding);
-      detailPanel.style.backgroundImage = isSeeding ? `url('${MEMORY_SEEDING_BACKGROUND}')` : '';
+      detailPanel.style.backgroundImage = `url('${getMemoryBackground(stats)}')`;
       detailPhrase.classList.toggle('is-seeding', isSeeding);
       detailPhrase.disabled = isSeeding;
 
@@ -1692,7 +1734,7 @@
       const phrases = buildRotatingPhrases(card, stats);
       detailPhrase.dataset.primary = portuguese;
       detailPhrase.dataset.secondary = english;
-      detailPhrase.innerHTML = `<span>${phrases[0]}</span>`;
+      renderPhrase(detailPhrase, phrases[0], { wrapSpan: true });
 
       if (detailPhraseInterval) {
         clearInterval(detailPhraseInterval);
@@ -1702,7 +1744,7 @@
       detailPhraseInterval = window.setInterval(() => {
         const currentPhrases = buildRotatingPhrases(card, stats);
         phraseIndex = (phraseIndex + 1) % currentPhrases.length;
-        detailPhrase.innerHTML = `<span>${currentPhrases[phraseIndex]}</span>`;
+        renderPhrase(detailPhrase, currentPhrases[phraseIndex], { wrapSpan: true });
       }, 3000);
     }
 
