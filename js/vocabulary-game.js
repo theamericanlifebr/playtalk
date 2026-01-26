@@ -75,7 +75,7 @@
   const FLASHCARD_METRIC_LIMIT = 10;
   const FLASHCARD_TIME_LIMIT = 10;
   const MEMORY_HISTORY_LIMIT = 10;
-  const MEMORY_SEEDING_DAYS = [3, 3, 3];
+  const MEMORY_SEEDING_DAYS = [3, 7, 15, 30];
   const AUDIO_RESOLVE_ENDPOINT = '/api/media/resolve';
   const successAudio = document.getElementById('audio-success');
   const errorAudio = document.getElementById('audio-error');
@@ -1058,7 +1058,7 @@
     if (record.memorySeedingUntil && now >= record.memorySeedingUntil) {
       record.memorySeedingUntil = null;
       record.memoryStreak = 0;
-      if (record.memoryStage < 3) {
+      if (record.memoryStage < 4) {
         record.memoryStage += 1;
       }
       changed = true;
@@ -1119,13 +1119,13 @@
       record.memoryStreak = 0;
     }
 
-    if (record.memoryStage <= 2 && record.memoryStreak >= 10) {
+    if (record.memoryStage <= 3 && record.memoryStreak >= 10) {
       const days = MEMORY_SEEDING_DAYS[record.memoryStage] || 3;
       record.memorySeedingUntil = now + days * 24 * 60 * 60 * 1000;
       record.memoryStreak = 0;
     }
 
-    if (record.memoryStage === 3 && record.memoryStreak >= 5) {
+    if (record.memoryStage === 4 && record.memoryStreak >= 5) {
       record.memoryMastered = true;
       record.memoryStage = 4;
       record.memoryStreak = 10;
