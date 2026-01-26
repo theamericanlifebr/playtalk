@@ -631,6 +631,39 @@
       margin: 0;
     }
 
+    .seed-stage-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      margin: 16px 0;
+    }
+
+    .seed-stage-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .seed-stage-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .seed-stage-option img {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -762,6 +795,17 @@
     </div>
   </div>
 
+  <div class="modal" id="seedStageModal" aria-hidden="true">
+    <div class="modal-card">
+      <h2>Selecionar selo</h2>
+      <p class="game-mode-note">Escolha o selo para o próximo seeding deste flashcard.</p>
+      <div class="seed-stage-grid" id="seedStageGrid"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="closeSeedStage" type="button">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
     const FLASHCARD_PRONUNCIATION_LIMIT = 6;
@@ -782,6 +826,13 @@
     const MEMORY_SEEDING_BACKGROUND = 'images/seeding.png';
     const MEMORY_LENS_SEEDED_COLOR = '28, 94, 50';
     const MEMORY_LENS_MASTERED_COLOR = '0, 0, 0';
+    const MEMORY_STAGE_OPTIONS = [
+      { label: 'Branco', stage: 0, image: 'images/galaxy.png' },
+      { label: 'Prata', stage: 1, image: 'images/gold.png' },
+      { label: 'Platina', stage: 2, image: 'images/diamond.png' },
+      { label: 'Ouro', stage: 3, image: 'images/mind.png' },
+      { label: 'Diamante', stage: 4, image: 'images/connect.png' }
+    ];
     const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
     const MIRROR_PATH = 'data/mirror.json';
     const SEEDING_TIMER_ICON = `
@@ -820,6 +871,9 @@
     const detailPanel = document.getElementById('detailPanel');
     const detailClose = document.getElementById('detailClose');
     const openMemoryGame = document.getElementById('openMemoryGame');
+    const seedStageModal = document.getElementById('seedStageModal');
+    const seedStageGrid = document.getElementById('seedStageGrid');
+    const closeSeedStage = document.getElementById('closeSeedStage');
 
     let flashcards = [];
     let selectedCardId = null;
@@ -836,6 +890,7 @@
     let lastLongPressCardId = null;
     let cardSeedingHoldTimer = null;
     let cardSeedingHoldInterval = null;
+    let stageTargetCard = null;
     const accuracyColorCache = new Map();
     let flashcardStats = loadFlashcardStats();
 
@@ -1126,6 +1181,7 @@
     function getMemoryStreakValue(entry) {
       if (!entry) return 0;
       if (entry.memoryMastered) return MEMORY_STAR_COUNT;
+      if (isMemorySeeding(entry)) return MEMORY_STAR_COUNT;
       return Math.max(0, Math.min(MEMORY_STAR_COUNT, Number(entry.memoryStreak) || 0));
     }
 
@@ -1792,6 +1848,11 @@
       setListeningState(card.id, true);
       try {
         const spoken = await listenForSpeech();
+        const normalizedSpoken = normalizeSpeechText(spoken);
+        if (normalizedSpoken === 'i want to see the gold' || normalizedSpoken === 'i like i like i like gold') {
+          openSeedStageModal(card);
+          return;
+        }
         const percent = Math.round(calculateSequenceMatchPercent(card.nomeIngles || '', spoken));
         updatePronunciationStats(card, percent);
         if (selectedCardId === card.id) {
@@ -1827,6 +1888,57 @@
       if (selectedCardId === card.id) {
         updateDetail(card);
       }
+    }
+
+    function openSeedStageModal(card) {
+      if (!card) return;
+      stageTargetCard = card;
+      seedStageModal.classList.add('is-open');
+      seedStageModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeSeedStageModal() {
+      seedStageModal.classList.remove('is-open');
+      seedStageModal.setAttribute('aria-hidden', 'true');
+      stageTargetCard = null;
+    }
+
+    function renderSeedStageOptions() {
+      if (!seedStageGrid) return;
+      seedStageGrid.innerHTML = '';
+      MEMORY_STAGE_OPTIONS.forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'seed-stage-option';
+        button.dataset.stage = String(option.stage);
+        const img = document.createElement('img');
+        img.src = option.image;
+        img.alt = option.label;
+        const text = document.createElement('span');
+        text.textContent = option.label;
+        button.appendChild(img);
+        button.appendChild(text);
+        seedStageGrid.appendChild(button);
+      });
+    }
+
+    function applySeedStageSelection(stage) {
+      if (!stageTargetCard) return;
+      const key = getFlashcardKey(stageTargetCard);
+      if (!key) return;
+      const stats = loadFlashcardStats();
+      const entry = ensureStatsEntry(stats, key);
+      entry.memoryStage = stage;
+      entry.memorySeedingUntil = null;
+      entry.memoryStreak = 0;
+      if (stage < 4) {
+        entry.memoryMastered = false;
+      }
+      saveFlashcardStats(stats);
+      if (selectedCardId === stageTargetCard.id) {
+        updateDetail(stageTargetCard);
+      }
+      renderCards();
     }
 
     function playAudio() {
@@ -1937,6 +2049,19 @@
     });
     editModal.addEventListener('click', event => {
       if (event.target === editModal) closeEditModal();
+    });
+    renderSeedStageOptions();
+    closeSeedStage.addEventListener('click', closeSeedStageModal);
+    seedStageModal.addEventListener('click', event => {
+      if (event.target === seedStageModal) closeSeedStageModal();
+    });
+    seedStageGrid.addEventListener('click', event => {
+      const button = event.target.closest('.seed-stage-option');
+      if (!button) return;
+      const stage = Number.parseInt(button.dataset.stage || '', 10);
+      if (!Number.isFinite(stage)) return;
+      applySeedStageSelection(stage);
+      closeSeedStageModal();
     });
     openMemoryGame.addEventListener('click', () => {
       if (gameModeModal) {
