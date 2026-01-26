@@ -63,7 +63,7 @@
     .memory-card {
       width: min(360px, 90vw);
       height: 520px;
-      background: rgba(255, 255, 255, 0.92) url('images/galaxy.png') center/cover no-repeat;
+      background: rgba(255, 255, 255, 0.92);
       border-radius: 24px;
       border: 1px solid var(--border);
       box-shadow: 0 20px 35px rgba(11, 31, 68, 0.18);
@@ -75,6 +75,21 @@
       position: relative;
       overflow: hidden;
       --accuracy-color: 76, 150, 220;
+    }
+
+    .memory-card__background {
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      z-index: 0;
+      transition: none;
+    }
+
+    .memory-card__background--fade {
+      opacity: 0;
     }
 
     .memory-card__overlay {
@@ -91,7 +106,7 @@
       z-index: 1;
     }
 
-    .memory-card > :not(.memory-card__overlay) {
+    .memory-card > :not(.memory-card__overlay):not(.memory-card__background) {
       position: relative;
       z-index: 2;
     }
@@ -229,10 +244,21 @@
       pointer-events: none;
     }
 
+    .memory-card--sliding {
+      animation: memory-slide 500ms ease;
+    }
+
     @keyframes flash {
       0% { opacity: 0; }
       30% { opacity: 1; }
       100% { opacity: 0; }
+    }
+
+    @keyframes memory-slide {
+      0% { transform: translateX(0); opacity: 1; }
+      45% { transform: translateX(-60px); opacity: 0; }
+      55% { transform: translateX(60px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
     }
 
     @keyframes spin {
@@ -248,6 +274,8 @@
 
   <main>
     <section class="memory-card" id="memoryCard" aria-live="polite">
+      <div class="memory-card__background" id="memoryCardBackground"></div>
+      <div class="memory-card__background memory-card__background--fade" id="memoryCardBackgroundFade"></div>
       <div class="memory-card__overlay" id="memoryAccuracy"></div>
       <div class="memory-card__visual" id="memoryVisual">
         <div class="image-ring image-ring--tense"></div>
@@ -286,8 +314,11 @@
     const MEMORY_EFFECT_SOUNDS = {
       star: 'gamesounds/star.mp3',
       starless: 'gamesounds/starless.mp3',
-      seeding: 'gamesounds/seeding.mp3'
+      seeding: 'gamesounds/seeding.mp3',
+      report: 'gamesounds/report.wav'
     };
+    const CARD_SLIDE_DURATION = 500;
+    const SEEDING_DISSOLVE_DURATION = 3000;
 
     const memoryCard = document.getElementById('memoryCard');
     const memoryCircle = document.getElementById('memoryCircle');
@@ -297,6 +328,8 @@
     const memoryLevelLabel = document.getElementById('memoryLevelLabel');
     const memoryLens = document.getElementById('memoryLens');
     const memoryVisual = document.getElementById('memoryVisual');
+    const memoryCardBackground = document.getElementById('memoryCardBackground');
+    const memoryCardBackgroundFade = document.getElementById('memoryCardBackgroundFade');
 
     let flashcards = [];
     let availableCards = [];
@@ -306,6 +339,7 @@
     let isListening = false;
     let memoryDeck = [];
     let holdSeedingBackground = false;
+    let backgroundTransitionTimer = null;
 
     const TENSE_STYLES = {
       '': {
@@ -1003,6 +1037,29 @@
       memoryCard.style.setProperty('--accuracy-color', color);
     }
 
+    function setMemoryBackground(url) {
+      if (!memoryCardBackground || !url) return;
+      memoryCardBackground.style.backgroundImage = `url('${url}')`;
+    }
+
+    function dissolveMemoryBackground(url, duration = SEEDING_DISSOLVE_DURATION) {
+      if (!memoryCardBackground || !memoryCardBackgroundFade || !url) return;
+      if (backgroundTransitionTimer) {
+        window.clearTimeout(backgroundTransitionTimer);
+      }
+      memoryCardBackgroundFade.style.transition = `opacity ${duration}ms ease`;
+      memoryCardBackgroundFade.style.backgroundImage = `url('${url}')`;
+      memoryCardBackgroundFade.style.opacity = '0';
+      window.requestAnimationFrame(() => {
+        memoryCardBackgroundFade.style.opacity = '1';
+      });
+      backgroundTransitionTimer = window.setTimeout(() => {
+        setMemoryBackground(url);
+        memoryCardBackgroundFade.style.opacity = '0';
+        backgroundTransitionTimer = null;
+      }, duration);
+    }
+
     function renderCard(card) {
       if (!card) return;
       const stats = loadFlashcardStats();
@@ -1020,7 +1077,7 @@
       const nextBackground = getMemoryBackground(entry);
       if (holdSeedingBackground) {
         const applyBackground = () => {
-          memoryCard.style.backgroundImage = `url('${nextBackground}')`;
+          setMemoryBackground(nextBackground);
           holdSeedingBackground = false;
         };
         if (img.complete) {
@@ -1030,13 +1087,36 @@
           img.addEventListener('error', applyBackground, { once: true });
         }
       } else {
-        memoryCard.style.backgroundImage = `url('${nextBackground}')`;
+        setMemoryBackground(nextBackground);
       }
       updateAccuracyLens(card);
       renderStars(entry);
     }
 
-    function pickNextCard(day) {
+    function transitionToCard(card, animate = false) {
+      if (!card) return;
+      if (!animate) {
+        currentCard = card;
+        renderCard(card);
+        return;
+      }
+      if (memoryCard.classList.contains('memory-card--sliding')) {
+        currentCard = card;
+        renderCard(card);
+        return;
+      }
+      playEffectSound(MEMORY_EFFECT_SOUNDS.report);
+      memoryCard.classList.add('memory-card--sliding');
+      window.setTimeout(() => {
+        currentCard = card;
+        renderCard(card);
+      }, CARD_SLIDE_DURATION / 2);
+      window.setTimeout(() => {
+        memoryCard.classList.remove('memory-card--sliding');
+      }, CARD_SLIDE_DURATION);
+    }
+
+    function pickNextCard(day, animate = false) {
       refreshAvailableCards(day);
       if (!availableCards.length) {
         currentCard = null;
@@ -1052,8 +1132,7 @@
           next = availableCards[Math.floor(Math.random() * availableCards.length)];
         }
       }
-      currentCard = next;
-      renderCard(currentCard);
+      transitionToCard(next, animate);
     }
 
     function setupSpeechRecognition() {
@@ -1107,19 +1186,21 @@
         const stats = loadFlashcardStats();
         const entry = key ? ensureStatsEntry(stats, key) : null;
         if (entry) {
-          memoryCard.style.backgroundImage = `url('${getMemoryBackground(entry)}')`;
+          setMemoryBackground(getMemoryBackground(entry));
         }
         updateAccuracyLens(currentCard);
         const gainedStar = wasCorrect && prevStreak < MEMORY_STAR_COUNT;
         if (gainedStar) {
-          playEffectSound(MEMORY_EFFECT_SOUNDS.star);
+          if (!outcome.seeded) {
+            playEffectSound(MEMORY_EFFECT_SOUNDS.star);
+          }
         }
         if (wasCorrect && outcome.seeded) {
           const dayCards = getDayCards(day);
           updateDeckForSeeding(day, dayCards, stats, [currentCard.id]);
-          memoryCard.classList.add('memory-card--flash');
           holdSeedingBackground = true;
           playEffectSound(MEMORY_EFFECT_SOUNDS.seeding);
+          dissolveMemoryBackground(MEMORY_SEEDING_BACKGROUND, SEEDING_DISSOLVE_DURATION);
         }
         if (!wasCorrect) {
           await animateStarLoss(prevStreak);
@@ -1127,10 +1208,9 @@
           renderStars(entry);
         }
         await playPronunciation(currentCard);
-        const delay = wasCorrect && outcome.seeded ? 1500 : 0;
+        const delay = wasCorrect && outcome.seeded ? SEEDING_DISSOLVE_DURATION : 0;
         window.setTimeout(() => {
-          memoryCard.classList.remove('memory-card--flash');
-          pickNextCard(day);
+          pickNextCard(day, true);
         }, delay);
       } finally {
         memoryPrompt.classList.remove('is-visible');
