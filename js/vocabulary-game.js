@@ -25,6 +25,8 @@
   const finalOverlay = document.getElementById('final-overlay');
   const finalTotalTimeEl = document.getElementById('final-total-time');
   const finalPronunciationEl = document.getElementById('final-pronunciation');
+  const finalRotatingLabel = document.getElementById('final-rotating-label');
+  const finalRotatingStat = document.getElementById('final-rotating-stat');
   const finalMemoryEl = document.getElementById('final-memory');
   const finalProgressBar = document.getElementById('final-progress-bar');
   const finalProgressFill = document.getElementById('final-progress-fill');
@@ -137,6 +139,8 @@
   let fileLevels = new Map();
   let rotationTimer = null;
   let rotationIndex = 0;
+  let finalStatsRotationTimer = null;
+  let finalStatsRotationIndex = 0;
   let gameStarted = false;
   let errorStreak = 0;
   let attemptCount = 0;
@@ -806,6 +810,113 @@
     if (!pronunciationSamples.length) return 0;
     const sum = pronunciationSamples.reduce((total, value) => total + value, 0);
     return sum / pronunciationSamples.length;
+  }
+
+  function normalizeCount(entry, key, fallbackKey) {
+    if (!entry) return 0;
+    if (typeof entry[key] === 'number') return entry[key];
+    if (fallbackKey && Array.isArray(entry[fallbackKey])) return entry[fallbackKey].length;
+    return 0;
+  }
+
+  function accumulateMetric(entry, key, totals, counts) {
+    if (!entry || !Array.isArray(entry[key])) return;
+    entry[key].forEach(value => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return;
+      totals[key] += numeric;
+      counts[key] += 1;
+    });
+  }
+
+  function formatAverage(total, count) {
+    if (!count) return '--';
+    return `${Math.round(total / count)}%`;
+  }
+
+  function getAggregateFlashcardStats() {
+    const stats = readFlashcardStats();
+    const entries = Object.values(stats || {});
+    const totals = {
+      listening: 0,
+      reading: 0,
+      association: 0,
+      meaning: 0
+    };
+    const counts = {
+      listening: 0,
+      reading: 0,
+      association: 0,
+      meaning: 0
+    };
+    let totalSpeakings = 0;
+    let totalListenings = 0;
+
+    entries.forEach(entry => {
+      totalSpeakings += normalizeCount(entry, 'spokenCount', 'pronunciation');
+      totalListenings += normalizeCount(entry, 'listenedCount');
+      accumulateMetric(entry, 'listening', totals, counts);
+      accumulateMetric(entry, 'reading', totals, counts);
+      accumulateMetric(entry, 'association', totals, counts);
+      accumulateMetric(entry, 'meaning', totals, counts);
+    });
+
+    return {
+      totalSpeakings,
+      totalListenings,
+      avgListening: formatAverage(totals.listening, counts.listening),
+      avgReading: formatAverage(totals.reading, counts.reading),
+      avgAssociation: formatAverage(totals.association, counts.association),
+      avgMeaning: formatAverage(totals.meaning, counts.meaning)
+    };
+  }
+
+  function stopFinalStatsRotation() {
+    if (finalStatsRotationTimer) {
+      clearInterval(finalStatsRotationTimer);
+      finalStatsRotationTimer = null;
+    }
+    finalStatsRotationIndex = 0;
+  }
+
+  function setRotatingStatContent(stat, animate = true) {
+    if (!finalPronunciationEl || !finalRotatingLabel || !finalRotatingStat) return;
+    if (!animate) {
+      finalPronunciationEl.textContent = stat.value;
+      finalRotatingLabel.textContent = stat.label;
+      return;
+    }
+
+    finalRotatingStat.classList.add('is-sliding');
+    window.setTimeout(() => {
+      finalPronunciationEl.textContent = stat.value;
+      finalRotatingLabel.textContent = stat.label;
+      finalRotatingStat.classList.remove('is-sliding');
+    }, 300);
+  }
+
+  function startFinalStatsRotation(pronunciationAverage) {
+    if (!finalPronunciationEl || !finalRotatingLabel || !finalRotatingStat) return;
+    stopFinalStatsRotation();
+    const aggregate = getAggregateFlashcardStats();
+    const stats = [
+      { label: 'Pronúncia', value: `${pronunciationAverage.toFixed(1)}%` },
+      { label: 'Total speakings', value: `${aggregate.totalSpeakings}` },
+      { label: 'Total listenings', value: `${aggregate.totalListenings}` },
+      { label: 'Média listening', value: `${aggregate.avgListening}` },
+      { label: 'Média reading', value: `${aggregate.avgReading}` },
+      { label: 'Média association', value: `${aggregate.avgAssociation}` },
+      { label: 'Média meaning', value: `${aggregate.avgMeaning}` }
+    ];
+
+    finalStatsRotationIndex = 0;
+    setRotatingStatContent(stats[0], false);
+
+    if (stats.length <= 1) return;
+    finalStatsRotationTimer = window.setInterval(() => {
+      finalStatsRotationIndex = (finalStatsRotationIndex + 1) % stats.length;
+      setRotatingStatContent(stats[finalStatsRotationIndex], true);
+    }, 5000);
   }
 
   function getSessionMemorySummary() {
@@ -2163,10 +2274,8 @@
     );
     const img = imageWrapper.querySelector('img');
     img.setAttribute('aria-hidden', 'true');
-    let promptReady = false;
-
     const startListening = () => {
-      if (awaiting || !promptReady) return;
+      if (awaiting) return;
       handleSpeechChallenge(expectedText, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
@@ -2182,11 +2291,7 @@
     boardInner.appendChild(imageWrapper);
     choiceRow.innerHTML = '';
     showText('');
-    Promise.resolve(playPronunciation(item, { rate: 1, preservePitch: true }))
-      .catch(() => {})
-      .finally(() => {
-        promptReady = true;
-      });
+    Promise.resolve(playPronunciation(item, { rate: 1, preservePitch: true })).catch(() => {});
   }
 
   function showPhaseSixCard(item) {
@@ -2975,6 +3080,7 @@
     if (finalPronunciationEl) {
       const pronunciationAverage = getPronunciationAverage();
       finalPronunciationEl.textContent = `${pronunciationAverage.toFixed(1)}%`;
+      startFinalStatsRotation(pronunciationAverage);
     }
     if (finalMemoryEl) {
       const { total, correct } = getSessionMemorySummary();
@@ -3009,13 +3115,20 @@
       }, 100);
     }
 
+    const shouldHideActions = completedLevel >= 98 && Boolean(postGameAudio);
+    if (finalOverlay) {
+      finalOverlay.classList.toggle('hide-actions', shouldHideActions);
+    }
+
     const finalize = () => {
+      stopFinalStatsRotation();
       if (progressTimer) {
         clearInterval(progressTimer);
       }
       if (finalOverlay) {
         finalOverlay.classList.remove('active');
         finalOverlay.setAttribute('aria-hidden', 'true');
+        finalOverlay.classList.remove('hide-actions');
       }
       updateProgress(100);
       showLevelCompleteOverlay(completedLevel);
