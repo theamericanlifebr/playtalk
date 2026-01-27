@@ -38,33 +38,31 @@
   <main id="fun-container" class="fun-layout" data-page-transition>
     <div id="menu">
       <div id="menu-modes">
-        <a class="menu-mode" data-mode="1" href="/#home">
-          <span class="mode-logo mode-logo--menu" data-mode="1" aria-hidden="true"></span>
-          <span class="menu-mode__label">Game</span>
-        </a>
-        <a class="menu-mode" data-mode="2" href="/memory">
-          <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
-          <span class="menu-mode__label">Memory</span>
-        </a>
-        <a class="menu-mode" data-mode="3" href="/listening">
-          <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
-          <span class="menu-mode__label">Listening</span>
-        </a>
-        <a class="menu-mode" data-mode="4" href="/reading">
-          <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
-          <span class="menu-mode__label">Reading</span>
-        </a>
-        <a class="menu-mode" data-mode="5" href="/connect">
+        <button class="menu-mode" data-game-mode="association" data-mode="5" type="button">
           <span class="mode-logo mode-logo--menu" data-mode="5" aria-hidden="true"></span>
           <span class="menu-mode__label">Connect</span>
-        </a>
-        <button type="button" class="menu-mode menu-mode--disabled" data-mode="6" disabled>
-          <span class="mode-logo mode-logo--menu" data-mode="6" aria-hidden="true"></span>
-          <span class="menu-mode__label">Em breve</span>
+        </button>
+        <button class="menu-mode" data-game-mode="listening" data-mode="3" type="button">
+          <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
+          <span class="menu-mode__label">Listening</span>
+        </button>
+        <button class="menu-mode" data-game-mode="reading" data-mode="4" type="button">
+          <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
+          <span class="menu-mode__label">Reading</span>
+        </button>
+        <button class="menu-mode" data-game-mode="memory" data-mode="2" type="button">
+          <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
+          <span class="menu-mode__label">Memory</span>
         </button>
       </div>
     </div>
   </main>
+  <div class="fun-game-overlay" id="fun-game-overlay" aria-hidden="true">
+    <div class="fun-game-shell">
+      <button class="fun-game-close" id="fun-game-close" type="button" aria-label="Fechar jogo">✕</button>
+      <iframe class="fun-game-frame" id="fun-game-frame" title="PlayTalk game" loading="lazy"></iframe>
+    </div>
+  </div>
   <script src="js/fun-page.js" defer></script>
   <footer class="page-footer">
     <nav id="main-nav">

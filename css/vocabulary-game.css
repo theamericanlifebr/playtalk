@@ -115,6 +115,10 @@
       transform: translateY(-25px);
     }
 
+    .vocabulary-game.phase-1 .board-wrapper {
+      transform: translateY(-50px);
+    }
+
     .vocabulary-game.from-flashcards .game-status,
     .vocabulary-game.from-flashcards .progress-footer,
     .vocabulary-game.from-flashcards .phase-audio-progress,
@@ -310,6 +314,8 @@
     .vocabulary-game.phase-2 .image-visual {
       border-radius: 50%;
       overflow: hidden;
+      width: calc(var(--image-visual-size, clamp(140px, 40vw, 220px)) + 30px);
+      height: var(--image-visual-size, clamp(140px, 40vw, 220px));
     }
 
     .vocabulary-game.phase-2 .grid-card {
@@ -324,13 +330,17 @@
     .vocabulary-game.phase-8 .image-visual {
       transform: scale(1);
       transform-origin: center;
-      --image-visual-size: clamp(168px, 48vw, 264px);
+      --image-visual-size: clamp(286px, 82vw, 450px);
     }
 
     .vocabulary-game.phase-8 .image-visual img {
-      border: 22px solid transparent;
+      border: 6px solid rgba(255, 255, 255, 0.7);
       border-radius: 50%;
       box-sizing: border-box;
+    }
+
+    .vocabulary-game.phase-8 .image-lens {
+      inset: 0;
     }
 
     .image-ring,
@@ -410,6 +420,12 @@
 
     .vocabulary-game.phase-6 .image-visual {
       --image-visual-size: clamp(170px, 50vw, 260px);
+    }
+
+    .vocabulary-game.phase-6 .board.board--compact {
+      width: min(420px, 100%);
+      max-width: 420px;
+      height: 420px;
     }
 
     @keyframes spin {
@@ -599,6 +615,28 @@
       font-size: 18.7px;
     }
 
+    .vocabulary-game.phase-6 .text-container {
+      font-size: 44px;
+      width: min(720px, 100%);
+    }
+
+    .vocabulary-game.phase-8 .game-main {
+      gap: 0;
+    }
+
+    .vocabulary-game.phase-8 .game-status--top,
+    .vocabulary-game.phase-8 .game-status--bottom {
+      margin: 0;
+    }
+
+    .vocabulary-game.phase-8 .board-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+
     .choice-row {
       display: flex;
       flex-direction: column;
@@ -701,7 +739,7 @@
       position: fixed;
       left: 0;
       right: 0;
-      bottom: 18px;
+      bottom: calc(var(--nav-height, 0px));
       display: flex;
       justify-content: center;
       pointer-events: none;
@@ -712,18 +750,18 @@
     }
 
     .progress-bar {
-      width: min(520px, 92%);
-      height: 12px;
-      background: rgba(11, 31, 68, 0.08);
-      border-radius: 999px;
+      width: 100%;
+      height: 10px;
+      background: transparent;
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: 0 0 0 1px rgba(11, 31, 68, 0.12);
+      box-shadow: none;
     }
 
     .progress-bar__fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #3a86d1, #4c96dc);
+      background: #22c55e;
       transition: width 0.25s ease;
     }
 
@@ -841,6 +879,10 @@
       justify-content: center;
     }
 
+    .final-overlay.hide-actions .final-overlay__actions {
+      display: none;
+    }
+
     .final-overlay__actions .btn-primary {
       display: inline-flex;
       align-items: center;
@@ -854,6 +896,26 @@
       align-items: center;
       gap: 6px;
       min-width: 160px;
+    }
+
+    .final-stat__content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .final-stat--rotating {
+      overflow: hidden;
+    }
+
+    .final-stat--rotating .final-stat__content {
+      transition: transform 0.6s ease, opacity 0.6s ease;
+    }
+
+    .final-stat--rotating.is-sliding .final-stat__content {
+      transform: translateY(12px);
+      opacity: 0;
     }
 
     .final-stat__icon {
