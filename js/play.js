@@ -141,6 +141,7 @@
           { percent: 85, color: [46, 204, 113] },
           { percent: 100, color: [47, 141, 255] }
         ];
+        const ACCURACY_EMPTY_SPEAKING_COLOR = '23, 44, 107';
         const ACCURACY_COLOR_TRANSITION_MS = 1000;
 
         function loadFlashcardStats() {
@@ -248,7 +249,13 @@
         }
 
         function getAccuracyColorRgb(accuracy) {
-          const percent = Math.max(0, Math.min(100, Number(accuracy) || 0));
+          if (accuracy === null || accuracy === undefined) {
+            return ACCURACY_EMPTY_SPEAKING_COLOR;
+          }
+          const percent = Math.max(0, Math.min(100, Number(accuracy)));
+          if (Number.isNaN(percent)) {
+            return ACCURACY_EMPTY_SPEAKING_COLOR;
+          }
           const upperIndex = ACCURACY_COLOR_STOPS.findIndex(stop => percent <= stop.percent);
           const lowerIndex = upperIndex <= 0 ? 0 : upperIndex - 1;
           const lowerStop = ACCURACY_COLOR_STOPS[lowerIndex];
@@ -707,9 +714,10 @@
           memoryStars.innerHTML = '';
           for (let i = 0; i < MEMORY_STAR_COUNT; i += 1) {
             const star = document.createElement('span');
-            const fillRatio = i < streak ? 1 : 0;
             star.className = 'memory-star';
-            star.style.setProperty('--fill', `${fillRatio * 100}%`);
+            if (i >= streak) {
+              star.classList.add('is-empty');
+            }
             star.textContent = '★';
             memoryStars.appendChild(star);
           }
@@ -971,7 +979,9 @@
 
         async function initialize() {
           const day = getDayFromQuery();
-          memoryLevelLabel.textContent = `Dia ${day}`;
+          if (memoryLevelLabel) {
+            memoryLevelLabel.textContent = `Dia ${day}`;
+          }
           setupSpeechRecognition();
           await loadMirrorGroups();
           await loadFlashcards();
