@@ -1,5 +1,9 @@
 (function () {
   const STORAGE_KEY = 'vocabulary-level';
+  const JOURNEY_STARTED_KEY = 'playtalk-journey-started';
+  const GAME_CONFIG = window.PLAYTALK_GAME_CONFIG || {};
+  const deferAutoStart = Boolean(GAME_CONFIG.deferAutoStart);
+  const gameRoot = document.querySelector('[data-game-root]') || document.body;
   const board = document.getElementById('board');
   const boardInner = document.getElementById('board-inner');
   const textContainer = document.getElementById('text-container');
@@ -513,9 +517,9 @@
 
   function updatePhaseLabel() {
     if (phaseLabel) phaseLabel.textContent = `Fase ${phase}`;
-    if (document.body) {
+    if (gameRoot) {
       for (let i = 1; i <= 8; i += 1) {
-        document.body.classList.toggle(`phase-${i}`, phase === i);
+        gameRoot.classList.toggle(`phase-${i}`, phase === i);
       }
     }
   }
@@ -1421,6 +1425,14 @@
     updateFinalMedal(currentMedalKey);
     pronunciationSamples = [];
     sessionMemoryHistory = [];
+  }
+
+  function markJourneyStarted() {
+    localStorage.setItem(JOURNEY_STARTED_KEY, 'true');
+  }
+
+  function clearJourneyStarted() {
+    localStorage.removeItem(JOURNEY_STARTED_KEY);
   }
 
   function updateProgressBar() {
@@ -3021,6 +3033,7 @@
     gameStarted = true;
     clearCompletionStorage();
     clearProgressStorage();
+    markJourneyStarted();
 
     if (startScreen) {
       startScreen.classList.add('start-screen--blank');
@@ -3039,6 +3052,87 @@
         showPhaseTransition(1);
       }
     });
+  }
+
+  function hasSavedJourneyState() {
+    const progressState = readProgressStorage();
+    const completionState = readCompletionStorage();
+    const hasProgress = Boolean(
+      progressState
+        && progressState.level
+        && progressState.phase
+        && Array.isArray(progressState.cycle)
+    );
+    const hasCompletion = Boolean(completionState && completionState.completedLevel);
+    return hasProgress || hasCompletion;
+  }
+
+  function resetJourneyState({ resetLevel = true } = {}) {
+    clearLevelUnlockTimer();
+    clearCompletionStorage();
+    clearProgressStorage();
+    clearJourneyStarted();
+    if (resetLevel) {
+      level = 1;
+      saveLevelToStorage();
+      updateLevelIndicators();
+    }
+    phase = 1;
+    updatePhaseLabel();
+    resetLevelState();
+    resetProgress();
+    clearBoard();
+    showText('');
+    hidePhaseElements();
+    if (levelComplete) levelComplete.classList.add('hidden');
+    if (phaseTransition) phaseTransition.classList.add('hidden');
+    if (progressCompleteOverlay) progressCompleteOverlay.setAttribute('aria-hidden', 'true');
+    if (finalOverlay) {
+      finalOverlay.classList.remove('active');
+      finalOverlay.setAttribute('aria-hidden', 'true');
+    }
+    completedLevelSnapshot = null;
+    awaiting = false;
+    gameStarted = false;
+  }
+
+  function resumeJourney() {
+    if (gameStarted) return;
+    if (!hasSavedJourneyState()) {
+      handleStartInteraction();
+      return;
+    }
+    markJourneyStarted();
+    gameStarted = true;
+    if (startScreen) {
+      startScreen.classList.add('start-screen--blank');
+      startScreen.classList.add('hidden');
+    }
+    if (rotationTimer) {
+      clearInterval(rotationTimer);
+      rotationTimer = null;
+    }
+    loadAllImages().then(() => {
+      const completionState = readCompletionStorage();
+      if (restoreProgressState()) {
+        showPhaseElements();
+        advanceCycle();
+        return;
+      }
+      if (completionState && completionState.completedLevel) {
+        completedLevelSnapshot = completionState.completedLevel;
+        showLevelCompleteOverlay(completionState.completedLevel);
+        return;
+      }
+      phase = 1;
+      updatePhaseLabel();
+      showPhaseTransition(1);
+    });
+  }
+
+  function startNewJourney() {
+    resetJourneyState({ resetLevel: true });
+    handleStartInteraction();
   }
 
   function setupMedalSkipShortcut() {
@@ -3074,8 +3168,9 @@
   function init() {
     const storedProgress = singlePhaseMode ? null : readProgressStorage();
     const completionState = singlePhaseMode ? null : readCompletionStorage();
+    const shouldAutoStart = !deferAutoStart || isFlashcardLaunch;
     if (isFlashcardLaunch) {
-      document.body.classList.add('from-flashcards');
+      gameRoot.classList.add('from-flashcards');
     }
     if (Number.isFinite(requestedDay) && requestedDay > 0) {
       level = requestedDay;
@@ -3088,54 +3183,61 @@
     updatePhaseLabel();
     setupSpeechRecognition();
     resetLevelState();
-    loadAllImages().then(() => {
-      if (isFlashcardLaunch) {
-        gameStarted = true;
-        if (startScreen) {
-          startScreen.classList.add('start-screen--blank');
-          startScreen.classList.add('hidden');
+    if (shouldAutoStart) {
+      loadAllImages().then(() => {
+        if (isFlashcardLaunch) {
+          gameStarted = true;
+          if (startScreen) {
+            startScreen.classList.add('start-screen--blank');
+            startScreen.classList.add('hidden');
+          }
+          if (rotationTimer) {
+            clearInterval(rotationTimer);
+            rotationTimer = null;
+          }
+          const phaseToStart = Number.isFinite(forcedPhase) ? forcedPhase : 1;
+          startPhase(phaseToStart, { skipIntroAudio: true });
+          return;
         }
-        if (rotationTimer) {
-          clearInterval(rotationTimer);
-          rotationTimer = null;
+        if (storedProgress && restoreProgressState()) {
+          gameStarted = true;
+          markJourneyStarted();
+          if (startScreen) {
+            startScreen.classList.add('start-screen--blank');
+            startScreen.classList.add('hidden');
+          }
+          if (rotationTimer) {
+            clearInterval(rotationTimer);
+            rotationTimer = null;
+          }
+          showPhaseElements();
+          advanceCycle();
+          return;
         }
-        const phaseToStart = Number.isFinite(forcedPhase) ? forcedPhase : 1;
-        startPhase(phaseToStart, { skipIntroAudio: true });
-        return;
-      }
-      if (storedProgress && restoreProgressState()) {
-        gameStarted = true;
-        if (startScreen) {
-          startScreen.classList.add('start-screen--blank');
-          startScreen.classList.add('hidden');
-        }
-        if (rotationTimer) {
-          clearInterval(rotationTimer);
-          rotationTimer = null;
-        }
-        showPhaseElements();
-        advanceCycle();
-        return;
-      }
 
-      if (completionState && completionState.completedLevel) {
-        gameStarted = true;
-        completedLevelSnapshot = completionState.completedLevel;
-        if (startScreen) {
-          startScreen.classList.add('start-screen--blank');
-          startScreen.classList.add('hidden');
+        if (completionState && completionState.completedLevel) {
+          gameStarted = true;
+          markJourneyStarted();
+          completedLevelSnapshot = completionState.completedLevel;
+          if (startScreen) {
+            startScreen.classList.add('start-screen--blank');
+            startScreen.classList.add('hidden');
+          }
+          showLevelCompleteOverlay(completionState.completedLevel);
         }
-        showLevelCompleteOverlay(completionState.completedLevel);
-      }
-    });
+      });
 
-    if (!storedProgress && !(completionState && completionState.completedLevel)) {
-      if (!isFlashcardLaunch) {
-        startRotatingText();
+      if (!storedProgress && !(completionState && completionState.completedLevel)) {
+        if (!isFlashcardLaunch) {
+          startRotatingText();
+        }
       }
+    } else if (startScreen) {
+      startScreen.classList.add('start-screen--blank');
+      startScreen.classList.add('hidden');
     }
 
-    if (startScreen && !isFlashcardLaunch) {
+    if (startScreen && !isFlashcardLaunch && shouldAutoStart) {
       startScreen.addEventListener('click', handleStartInteraction);
       startScreen.addEventListener('touchstart', handleStartInteraction, { passive: true });
       startScreen.addEventListener('pointerdown', handleStartInteraction);
@@ -3173,4 +3275,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', init);
+
+  window.playtalkGame = {
+    startNewJourney,
+    resumeJourney,
+    resetJourney: resetJourneyState,
+    hasSavedJourneyState
+  };
 })();
