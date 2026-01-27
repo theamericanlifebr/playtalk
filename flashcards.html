@@ -27,14 +27,51 @@
       padding: 0;
     }
 
+    html {
+      height: 100%;
+    }
+
     body {
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #ffffff url('backgrounds/background6.jpg') center/cover fixed no-repeat;
       color: var(--text);
       min-height: 100vh;
       font-weight: 700;
       -webkit-user-select: none;
       user-select: none;
+      margin: 0;
+    }
+
+    html::before,
+    body::before,
+    body::after {
+      content: '';
+      animation: slide 3s ease-in-out infinite alternate;
+      background-image: linear-gradient(-60deg, #6c3 50%, #09f 50%);
+      bottom: 0;
+      left: -50%;
+      opacity: 0.5;
+      position: fixed;
+      right: -50%;
+      top: 0;
+      z-index: -1;
+    }
+
+    body::before {
+      animation-direction: alternate-reverse;
+      animation-duration: 4s;
+    }
+
+    body::after {
+      animation-duration: 5s;
+    }
+
+    @keyframes slide {
+      0% {
+        transform: translateX(-25%);
+      }
+      100% {
+        transform: translateX(25%);
+      }
     }
 
     img {
@@ -730,7 +767,7 @@
           <span id="detailReading">--</span>
         </div>
         <div class="stat stat--plain">
-          <h3>Association</h3>
+          <h3>Connect</h3>
           <span id="detailAssociation">--</span>
         </div>
         <div class="stat stat--plain">
@@ -762,7 +799,7 @@
         <button class="btn btn-primary" type="button" data-game-mode="memory">Memory</button>
         <button class="btn btn-primary" type="button" data-game-mode="listening">Listening</button>
         <button class="btn btn-primary" type="button" data-game-mode="reading">Reading</button>
-        <button class="btn btn-primary" type="button" data-game-mode="association">Association</button>
+        <button class="btn btn-primary" type="button" data-game-mode="association">Connect</button>
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" id="closeGameMode" type="button">Cancelar</button>
