@@ -35,31 +35,141 @@
       </div>
     </div>
   </header>
-  <main id="fun-container" class="fun-layout" data-page-transition>
-    <div id="menu">
-      <div id="menu-modes">
-        <button class="menu-mode" data-game-mode="association" data-mode="5" type="button">
-          <span class="mode-logo mode-logo--menu" data-mode="5" aria-hidden="true"></span>
-          <span class="menu-mode__label">Connect</span>
+  <main id="fun-container" class="fun-layout flashcards-layout" data-page-transition>
+    <section class="flashcards-page">
+      <div class="flashcards-header">
+        <h1>Painel de Flashcards</h1>
+        <div class="header-controls">
+          <label class="control">
+            Dia
+            <select id="levelFilter"></select>
+          </label>
+          <button class="btn btn-primary" id="openMemoryGame" type="button">Jogar</button>
+        </div>
+      </div>
+
+      <div class="flashcards-main">
+        <section>
+          <div class="flashcard-grid" id="flashcardGrid"></div>
+          <p class="empty-state" id="emptyState" hidden>Nenhum flashcard disponível para este dia.</p>
+        </section>
+      </div>
+    </section>
+
+    <div class="detail-modal" id="detailModal" aria-hidden="true">
+      <div class="detail-panel detail-panel--modal" id="detailPanel">
+        <button class="detail-close" id="detailClose" type="button" aria-label="Fechar detalhes">
+          ✕
         </button>
-        <button class="menu-mode" data-game-mode="listening" data-mode="3" type="button">
-          <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
-          <span class="menu-mode__label">Listening</span>
-        </button>
-        <button class="menu-mode" data-game-mode="reading" data-mode="4" type="button">
-          <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
-          <span class="menu-mode__label">Reading</span>
-        </button>
-        <button class="menu-mode" data-game-mode="memory" data-mode="2" type="button">
-          <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
-          <span class="menu-mode__label">Memory</span>
-        </button>
+        <div class="detail-header">
+          <div class="detail-header__circle" id="detailImage"></div>
+          <button class="detail-phrase" id="detailPhrase" type="button">Selecione um flashcard</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat stat--pronuncia" id="detailPronunciaCard">
+            <h3>Pronúncia</h3>
+            <span id="detailPronuncia">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Speakings</h3>
+            <span id="detailSpeakings">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Listenings</h3>
+            <span id="detailListenings">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Listening</h3>
+            <span id="detailListening">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Reading</h3>
+            <span id="detailReading">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Connect</h3>
+            <span id="detailAssociation">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Meaning</h3>
+            <span id="detailMeaning">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Jogado há</h3>
+            <span id="detailJogado">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Falado há</h3>
+            <span id="detailFalado">--</span>
+          </div>
+          <div class="stat stat--plain">
+            <h3>Ouvido há</h3>
+            <span id="detailOuvido">--</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="fun-game-overlay" id="fun-game-overlay" aria-hidden="true">
-      <div class="fun-game-shell">
-        <button class="fun-game-close" id="fun-game-close" type="button" aria-label="Fechar jogo">✕</button>
-        <iframe class="fun-game-frame" id="fun-game-frame" title="PlayTalk game" loading="lazy"></iframe>
+
+    <div class="modal" id="gameModeModal" aria-hidden="true">
+      <div class="modal-card">
+        <h2>Escolha o modo do jogo</h2>
+        <p class="game-mode-note">Selecione como treinar este dia.</p>
+        <div class="game-mode-grid">
+          <button class="btn btn-primary" type="button" data-game-mode="memory">Memory</button>
+          <button class="btn btn-primary" type="button" data-game-mode="listening">Listening</button>
+          <button class="btn btn-primary" type="button" data-game-mode="reading">Reading</button>
+          <button class="btn btn-primary" type="button" data-game-mode="association">Connect</button>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="closeGameMode" type="button">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="editModal" aria-hidden="true">
+      <div class="modal-card">
+        <h2>Editar flashcard</h2>
+        <div class="modal-grid">
+          <label class="modal-field">
+            Imagem (URL)
+            <input type="text" id="editImage" placeholder="images/1/01-1767824952267.webp">
+          </label>
+          <label class="modal-field">
+            Frase em português
+            <input type="text" id="editPortuguese" placeholder="Eu estou feliz">
+          </label>
+          <label class="modal-field">
+            Frase em inglês
+            <input type="text" id="editEnglish" placeholder="I am happy">
+          </label>
+          <label class="modal-field">
+            Tempo verbal
+            <input type="text" id="editCategory" placeholder="Presente simples">
+          </label>
+          <label class="modal-field">
+            Estado
+            <select id="editState">
+              <option value="active">Ativa</option>
+              <option value="inactive">Desativada</option>
+            </select>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="cancelEdit" type="button">Cancelar</button>
+          <button class="btn btn-primary" id="saveEdit" type="button">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="seedStageModal" aria-hidden="true">
+      <div class="modal-card">
+        <h2>Selecionar selo</h2>
+        <p class="game-mode-note">Escolha o selo para o próximo seeding deste flashcard.</p>
+        <div class="seed-stage-grid" id="seedStageGrid"></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="closeSeedStage" type="button">Cancelar</button>
+        </div>
       </div>
     </div>
   </main>

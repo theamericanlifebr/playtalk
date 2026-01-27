@@ -35,10 +35,31 @@
       </div>
     </div>
   </header>
-  <main id="play-container" class="container-screen container-screen--play" data-page-transition>
-    <div class="empty-state">
-      <h1>Nada aqui</h1>
-    </div>
+  <main id="play-container" class="container-screen container-screen--play memory-game-layout" data-page-transition>
+    <section class="memory-game">
+      <div class="memory-game__header">
+        <h1>Jogo da memória</h1>
+        <span id="memoryLevelLabel">Dia --</span>
+      </div>
+      <div class="memory-game__main">
+        <section class="memory-card" id="memoryCard" aria-live="polite">
+          <div class="memory-card__background" id="memoryCardBackground"></div>
+          <div class="memory-card__background memory-card__background--fade" id="memoryCardBackgroundFade"></div>
+          <div class="memory-card__overlay" id="memoryAccuracy"></div>
+          <div class="memory-card__visual" id="memoryVisual">
+            <div class="image-ring image-ring--tense"></div>
+            <div class="image-ring image-ring--form"></div>
+            <div class="memory-card__circle" id="memoryCircle"></div>
+            <div class="image-lens image-lens--tense"></div>
+            <div class="image-lens image-lens--form"></div>
+            <div class="memory-card__lens" id="memoryLens"></div>
+          </div>
+          <div class="memory-card__prompt" id="memoryPrompt">Speak now</div>
+          <div class="memory-stars" id="memoryStars"></div>
+        </section>
+        <p class="memory-empty" id="memoryEmpty" hidden>Todos os cards estão em seeding.</p>
+      </div>
+    </section>
   </main>
   <footer class="page-footer">
     <nav id="main-nav">
