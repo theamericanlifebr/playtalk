@@ -751,15 +751,25 @@
     const parser = new DOMParser();
     const insertionAnchor = document.querySelector('footer.page-footer');
 
-    const resolvePathKey = (href) => {
+    const hashToPath = Object.entries(PAGE_MANIFEST).reduce((acc, [pathKey, manifest]) => {
+      if (manifest && manifest.hash) {
+        acc[manifest.hash] = pathKey;
+      }
+      return acc;
+    }, {});
+
+    const resolvePathKey = (href, { ignoreHash = false } = {}) => {
       const url = new URL(href, window.location.href);
+      if (!ignoreHash && url.hash && hashToPath[url.hash]) {
+        return hashToPath[url.hash];
+      }
       const path = url.pathname.replace(/\/+$/, '');
       const segments = path.split('/').filter(Boolean);
       const last = segments.length ? segments[segments.length - 1] : 'index.html';
       return last || 'index.html';
     };
 
-    const initialKey = resolvePathKey(window.location.href);
+    const initialKey = resolvePathKey(window.location.href, { ignoreHash: true });
     const initialMain = document.querySelector('main[data-page-transition]');
     if (initialMain) {
       pageCache.set(initialKey, {
@@ -920,6 +930,11 @@
     initialUrl.hash = initialManifest && initialManifest.hash ? initialManifest.hash : window.location.hash;
     history.replaceState({ path: currentKey }, '', initialUrl.href);
     setActiveNav(currentKey);
+
+    const initialHashTarget = hashToPath[window.location.hash];
+    if (initialHashTarget && initialHashTarget !== currentKey) {
+      showPage(initialHashTarget, { pushState: false });
+    }
 
     requestAnimationFrame(() => {
       body.classList.add('page-transition-ready');

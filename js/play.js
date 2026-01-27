@@ -4,8 +4,11 @@
   const initPlayPage = () => {
     if (initialized) return;
     initialized = true;
-    const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
+        const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
         const FLASHCARD_PRONUNCIATION_LIMIT = 6;
+        const FLASHCARD_METRIC_LIMIT = 10;
+        const PLAY_MODE_STORAGE_KEY = 'playtalk-play-mode';
+        const CONNECT_CHOICES = 4;
         const MEMORY_HISTORY_LIMIT = 10;
         const MEMORY_SEEDING_DAYS = [3, 7, 15, 30];
         const MEMORY_STAR_COUNT = 6;
@@ -32,6 +35,12 @@
         const CARD_SLIDE_DURATION = 500;
         const SEEDING_DISSOLVE_DURATION = 3000;
 
+        const playModeMenu = document.getElementById('playModeMenu');
+        const modeButtons = Array.from(document.querySelectorAll('[data-play-mode]'));
+        const memoryGame = document.getElementById('memoryGame');
+        const connectGame = document.getElementById('connectGame');
+        const connectGrid = document.getElementById('connectGrid');
+        const connectPrompt = document.getElementById('connectPrompt');
         const memoryCard = document.getElementById('memoryCard');
         const memoryCircle = document.getElementById('memoryCircle');
         const memoryStars = document.getElementById('memoryStars');
@@ -46,6 +55,7 @@
         let flashcards = [];
         let availableCards = [];
         let currentCard = null;
+        let currentMode = null;
         let recognition = null;
         let mirrorGroups = [];
         let isListening = false;
@@ -155,6 +165,7 @@
 
         function saveFlashcardStats(stats) {
           localStorage.setItem(FLASHCARD_STATS_STORAGE_KEY, JSON.stringify(stats));
+          document.dispatchEvent(new CustomEvent('playtalk:flashcard-update'));
         }
 
         function loadMemoryDeckState() {
@@ -306,6 +317,10 @@
           if (!stats[key]) {
             stats[key] = {
               pronunciation: [],
+              listening: [],
+              reading: [],
+              association: [],
+              meaning: [],
               durations: [],
               lastPlayedAt: null,
               lastSpokenAt: null,
@@ -330,6 +345,18 @@
           if (typeof stats[key].listenedCount !== 'number') {
             stats[key].listenedCount = 0;
           }
+          if (!Array.isArray(stats[key].listening)) {
+            stats[key].listening = [];
+          }
+          if (!Array.isArray(stats[key].reading)) {
+            stats[key].reading = [];
+          }
+          if (!Array.isArray(stats[key].association)) {
+            stats[key].association = [];
+          }
+          if (!Array.isArray(stats[key].meaning)) {
+            stats[key].meaning = [];
+          }
           if (typeof stats[key].memoryStreak !== 'number') {
             stats[key].memoryStreak = 0;
           }
@@ -343,6 +370,34 @@
             stats[key].memoryMastered = false;
           }
           return stats[key];
+        }
+
+        function pushLimited(list, value, limit) {
+          if (!Array.isArray(list)) return;
+          list.push(value);
+          while (list.length > limit) {
+            list.shift();
+          }
+        }
+
+        function markCardPlayed(card) {
+          const key = getFlashcardKey(card);
+          if (!key) return;
+          const stats = loadFlashcardStats();
+          const entry = ensureStatsEntry(stats, key);
+          entry.lastPlayedAt = Date.now();
+          saveFlashcardStats(stats);
+        }
+
+        function recordFlashcardMetric(card, metricKey, percent) {
+          const key = getFlashcardKey(card);
+          if (!key) return;
+          const stats = loadFlashcardStats();
+          const entry = ensureStatsEntry(stats, key);
+          const normalizedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+          pushLimited(entry[metricKey], normalizedPercent, FLASHCARD_METRIC_LIMIT);
+          entry.lastPlayedAt = Date.now();
+          saveFlashcardStats(stats);
         }
 
         function syncMemoryState(entry) {
@@ -619,6 +674,36 @@
           return getStoredDay();
         }
 
+        function getStoredMode() {
+          const stored = localStorage.getItem(PLAY_MODE_STORAGE_KEY);
+          return stored || 'memory';
+        }
+
+        function setStoredMode(mode) {
+          localStorage.setItem(PLAY_MODE_STORAGE_KEY, mode);
+        }
+
+        function setMode(mode) {
+          currentMode = mode;
+          setStoredMode(mode);
+          modeButtons.forEach(button => {
+            button.classList.toggle('is-active', button.dataset.playMode === mode);
+          });
+          if (memoryGame) {
+            memoryGame.hidden = mode === 'association';
+          }
+          if (connectGame) {
+            connectGame.hidden = mode !== 'association';
+          }
+          if (memoryStars) {
+            memoryStars.hidden = mode !== 'memory';
+          }
+          if (memoryPrompt && mode !== 'reading') {
+            memoryPrompt.textContent = 'Speak now';
+            hidePrompt();
+          }
+        }
+
         function getDayCards(day) {
           return flashcards.filter(card => card.day === day && card.imageSrc);
         }
@@ -793,8 +878,9 @@
           applyTenseStyles(memoryVisual, card);
           memoryCircle.innerHTML = '';
           const img = document.createElement('img');
-          img.src = card.imageSrc;
-          img.alt = card.nomePortugues || 'Flashcard';
+          const imageSrc = currentMode === 'listening' ? 'images/sound.png' : card.imageSrc;
+          img.src = imageSrc;
+          img.alt = currentMode === 'listening' ? 'Som' : (card.nomePortugues || 'Flashcard');
           memoryCircle.appendChild(img);
           const nextBackground = getMemoryBackground(entry);
           if (holdSeedingBackground) {
@@ -813,7 +899,20 @@
           }
           updateAccuracyLens(card);
           renderStars(entry);
-          scheduleIdlePrompt();
+          markCardPlayed(card);
+          if (currentMode === 'reading') {
+            memoryPrompt.textContent = card.nomeIngles || '';
+            showPrompt(memoryPrompt.textContent);
+          } else {
+            scheduleIdlePrompt();
+          }
+          if (currentMode === 'listening') {
+            showPrompt('Listen');
+            playPronunciation(card).finally(() => {
+              if (currentMode !== 'listening') return;
+              scheduleIdlePrompt('Speak now', { showNow: true });
+            });
+          }
         }
 
         function transitionToCard(card, animate = false) {
@@ -839,9 +938,43 @@
           }, CARD_SLIDE_DURATION);
         }
 
+        function getPlayableCards(day) {
+          const stats = loadFlashcardStats();
+          return getDayCards(day).filter(card => {
+            const key = getFlashcardKey(card);
+            const entry = key ? ensureStatsEntry(stats, key) : null;
+            return entry ? !isMemorySeeding(entry) : true;
+          });
+        }
+
         function pickNextCard(day, animate = false) {
-          refreshAvailableCards(day);
-          if (!availableCards.length) {
+          if (currentMode === 'association') {
+            renderConnectRound(day);
+            return;
+          }
+          if (currentMode === 'memory') {
+            refreshAvailableCards(day);
+            if (!availableCards.length) {
+              currentCard = null;
+              memoryCard.hidden = true;
+              memoryEmpty.hidden = false;
+              clearIdlePromptTimer();
+              hidePrompt();
+              return;
+            }
+            memoryEmpty.hidden = true;
+            memoryCard.hidden = false;
+            let next = availableCards[Math.floor(Math.random() * availableCards.length)];
+            if (currentCard && availableCards.length > 1) {
+              while (next.id === currentCard.id) {
+                next = availableCards[Math.floor(Math.random() * availableCards.length)];
+              }
+            }
+            transitionToCard(next, animate);
+            return;
+          }
+          const pool = getPlayableCards(day);
+          if (!pool.length) {
             currentCard = null;
             memoryCard.hidden = true;
             memoryEmpty.hidden = false;
@@ -851,13 +984,63 @@
           }
           memoryEmpty.hidden = true;
           memoryCard.hidden = false;
-          let next = availableCards[Math.floor(Math.random() * availableCards.length)];
-          if (currentCard && availableCards.length > 1) {
+          let next = pool[Math.floor(Math.random() * pool.length)];
+          if (currentCard && pool.length > 1) {
             while (next.id === currentCard.id) {
-              next = availableCards[Math.floor(Math.random() * availableCards.length)];
+              next = pool[Math.floor(Math.random() * pool.length)];
             }
           }
           transitionToCard(next, animate);
+        }
+
+        function renderConnectRound(day) {
+          if (!connectGrid || !connectPrompt) {
+            return;
+          }
+          const pool = getPlayableCards(day);
+          if (!pool.length) {
+            currentCard = null;
+            connectGrid.innerHTML = '';
+            connectPrompt.textContent = 'Nenhum flashcard disponível.';
+            return;
+          }
+          const stats = loadFlashcardStats();
+          const choices = pickRandomCards(pool, Math.min(CONNECT_CHOICES, pool.length), new Set(), stats);
+          if (!choices.length) {
+            currentCard = null;
+            connectGrid.innerHTML = '';
+            connectPrompt.textContent = 'Nenhum flashcard disponível.';
+            return;
+          }
+          const target = choices[Math.floor(Math.random() * choices.length)];
+          currentCard = target;
+          markCardPlayed(target);
+          connectPrompt.textContent = 'Ouça e toque na imagem certa.';
+          connectGrid.innerHTML = '';
+          choices.forEach(choice => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'connect-option';
+            button.dataset.cardId = choice.id;
+            const img = document.createElement('img');
+            img.src = choice.imageSrc;
+            img.alt = choice.nomePortugues || 'Flashcard';
+            const label = document.createElement('span');
+            label.textContent = choice.nomePortugues || 'Flashcard';
+            button.appendChild(img);
+            button.appendChild(label);
+            button.addEventListener('click', () => {
+              if (!currentCard) return;
+              const wasCorrect = choice.id === currentCard.id;
+              recordFlashcardMetric(currentCard, 'association', wasCorrect ? 100 : 0);
+              connectPrompt.textContent = wasCorrect ? 'Correto!' : 'Tente novamente.';
+              window.setTimeout(() => {
+                renderConnectRound(day);
+              }, 800);
+            });
+            connectGrid.appendChild(button);
+          });
+          playPronunciation(target);
         }
 
         function setupSpeechRecognition() {
@@ -910,10 +1093,14 @@
           memoryPrompt.classList.remove('is-visible');
         }
 
-        function scheduleIdlePrompt() {
+        function scheduleIdlePrompt(text = 'Speak now', { showNow = false } = {}) {
           clearIdlePromptTimer();
-          memoryPrompt.textContent = 'Speak now';
-          hidePrompt();
+          memoryPrompt.textContent = text;
+          if (showNow) {
+            memoryPrompt.classList.add('is-visible');
+          } else {
+            hidePrompt();
+          }
           idlePromptTimer = window.setTimeout(() => {
             if (isListening) return;
             showPrompt('Toque e Fale');
@@ -921,56 +1108,70 @@
         }
 
         async function handleSpeechAttempt(day) {
-          if (!currentCard || isListening) return;
+          if (!currentCard || isListening || currentMode === 'association') return;
           clearIdlePromptTimer();
           isListening = true;
-          const statsBefore = loadFlashcardStats();
-          const key = getFlashcardKey(currentCard);
-          const entryBefore = key ? ensureStatsEntry(statsBefore, key) : null;
-          const prevStreak = getMemoryStreak(entryBefore);
-          const shouldPreviewAudio = prevStreak === 0;
-          if (shouldPreviewAudio) {
-            showPrompt('Listen');
-            await playPronunciation(currentCard);
-          }
-          showPrompt('Speak now');
           try {
+            if (currentMode === 'memory') {
+              const statsBefore = loadFlashcardStats();
+              const key = getFlashcardKey(currentCard);
+              const entryBefore = key ? ensureStatsEntry(statsBefore, key) : null;
+              const prevStreak = getMemoryStreak(entryBefore);
+              const shouldPreviewAudio = prevStreak === 0;
+              if (shouldPreviewAudio) {
+                showPrompt('Listen');
+                await playPronunciation(currentCard);
+              }
+              showPrompt('Speak now');
+              const spoken = await listenForSpeech();
+              const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
+              const wasCorrect = percent >= 80;
+              const outcome = recordMemoryAttempt(currentCard, wasCorrect);
+              updatePronunciationStats(currentCard, percent);
+              const stats = loadFlashcardStats();
+              const entry = key ? ensureStatsEntry(stats, key) : null;
+              if (entry) {
+                setMemoryBackground(getMemoryBackground(entry));
+              }
+              updateAccuracyLens(currentCard);
+              const gainedStar = wasCorrect && prevStreak < MEMORY_STAR_COUNT;
+              if (gainedStar) {
+                if (!outcome.seeded) {
+                  playEffectSound(MEMORY_EFFECT_SOUNDS.star);
+                }
+              }
+              if (wasCorrect && outcome.seeded) {
+                const dayCards = getDayCards(day);
+                updateDeckForSeeding(day, dayCards, stats, [currentCard.id]);
+                holdSeedingBackground = true;
+                playEffectSound(MEMORY_EFFECT_SOUNDS.seeding);
+                dissolveMemoryBackground(MEMORY_SEEDING_BACKGROUND, SEEDING_DISSOLVE_DURATION);
+              }
+              if (!wasCorrect) {
+                await animateStarLoss(prevStreak);
+              } else {
+                renderStars(entry);
+              }
+              if (!shouldPreviewAudio) {
+                await playPronunciation(currentCard);
+              }
+              const delay = wasCorrect && outcome.seeded ? SEEDING_DISSOLVE_DURATION : 0;
+              window.setTimeout(() => {
+                pickNextCard(day, true);
+              }, delay);
+              return;
+            }
             const spoken = await listenForSpeech();
             const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
-            const wasCorrect = percent >= 80;
-            const outcome = recordMemoryAttempt(currentCard, wasCorrect);
             updatePronunciationStats(currentCard, percent);
-            const stats = loadFlashcardStats();
-            const entry = key ? ensureStatsEntry(stats, key) : null;
-            if (entry) {
-              setMemoryBackground(getMemoryBackground(entry));
+            if (currentMode === 'listening') {
+              recordFlashcardMetric(currentCard, 'listening', percent);
+            }
+            if (currentMode === 'reading') {
+              recordFlashcardMetric(currentCard, 'reading', percent);
             }
             updateAccuracyLens(currentCard);
-            const gainedStar = wasCorrect && prevStreak < MEMORY_STAR_COUNT;
-            if (gainedStar) {
-              if (!outcome.seeded) {
-                playEffectSound(MEMORY_EFFECT_SOUNDS.star);
-              }
-            }
-            if (wasCorrect && outcome.seeded) {
-              const dayCards = getDayCards(day);
-              updateDeckForSeeding(day, dayCards, stats, [currentCard.id]);
-              holdSeedingBackground = true;
-              playEffectSound(MEMORY_EFFECT_SOUNDS.seeding);
-              dissolveMemoryBackground(MEMORY_SEEDING_BACKGROUND, SEEDING_DISSOLVE_DURATION);
-            }
-            if (!wasCorrect) {
-              await animateStarLoss(prevStreak);
-            } else {
-              renderStars(entry);
-            }
-            if (!shouldPreviewAudio) {
-              await playPronunciation(currentCard);
-            }
-            const delay = wasCorrect && outcome.seeded ? SEEDING_DISSOLVE_DURATION : 0;
-            window.setTimeout(() => {
-              pickNextCard(day, true);
-            }, delay);
+            pickNextCard(day, true);
           } finally {
             hidePrompt();
             isListening = false;
@@ -985,10 +1186,36 @@
           setupSpeechRecognition();
           await loadMirrorGroups();
           await loadFlashcards();
-          refreshAvailableCards(day);
-          pickNextCard(day);
+          if (memoryCard) {
+            memoryCard.addEventListener('pointerdown', () => handleSpeechAttempt(day));
+          }
 
-          memoryCard.addEventListener('pointerdown', () => handleSpeechAttempt(day));
+          const storedMode = getStoredMode();
+          setMode(storedMode);
+
+          const startGame = (mode) => {
+            setMode(mode);
+            if (playModeMenu) {
+              playModeMenu.style.display = 'none';
+            }
+            if (currentMode === 'memory') {
+              refreshAvailableCards(day);
+            }
+            pickNextCard(day);
+          };
+
+          if (modeButtons.length) {
+            modeButtons.forEach(button => {
+              button.addEventListener('click', () => {
+                const mode = button.dataset.playMode;
+                if (mode) {
+                  startGame(mode);
+                }
+              });
+            });
+          } else {
+            startGame(storedMode);
+          }
         }
 
         initialize();

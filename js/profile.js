@@ -84,6 +84,16 @@
         }
 
         renderStats();
+
+        window.addEventListener('storage', event => {
+          if (event.key === STATS_STORAGE_KEY) {
+            renderStats();
+          }
+        });
+
+        document.addEventListener('playtalk:flashcard-update', () => {
+          renderStats();
+        });
   };
 
   if (typeof window !== 'undefined' && typeof window.registerPlaytalkPage === 'function') {

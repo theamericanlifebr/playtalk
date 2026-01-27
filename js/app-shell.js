@@ -68,7 +68,7 @@
     }));
   }
 
-  function showView(nextView, { skipAnimation = false } = {}) {
+  function showView(nextView) {
     if (!views.has(nextView) || nextView === currentView || animating) {
       return;
     }
@@ -76,39 +76,12 @@
     const incoming = views.get(nextView);
     const outgoing = views.get(currentView);
 
-    if (skipAnimation) {
-      if (outgoing) {
-        outgoing.classList.remove('view--active', 'view--enter-left', 'view--enter-right', 'view--exit-left', 'view--exit-right');
-      }
-      incoming.classList.add('view--active');
-      finalizeTransition(outgoing, incoming, '', '', nextView);
-      return;
-    }
-
-    const currentIndex = VIEW_ORDER.indexOf(currentView);
-    const nextIndex = VIEW_ORDER.indexOf(nextView);
-    const direction = nextIndex > currentIndex ? 'forward' : 'backward';
-    const enterClass = direction === 'forward' ? 'view--enter-right' : 'view--enter-left';
-    const exitClass = direction === 'forward' ? 'view--exit-left' : 'view--exit-right';
-
-    animating = true;
-
     if (outgoing) {
-      outgoing.classList.remove('view--enter-left', 'view--enter-right', 'view--exit-left', 'view--exit-right');
-      outgoing.classList.add(exitClass);
-      outgoing.addEventListener('animationend', () => {
-        finalizeTransition(outgoing, incoming, exitClass, enterClass, nextView);
-      }, { once: true });
-    } else {
-      finalizeTransition(outgoing, incoming, exitClass, enterClass, nextView);
+      outgoing.classList.remove('view--active', 'view--enter-left', 'view--enter-right', 'view--exit-left', 'view--exit-right');
     }
-
     incoming.classList.remove('view--enter-left', 'view--enter-right', 'view--exit-left', 'view--exit-right');
-    incoming.classList.add('view--active', enterClass);
-    incoming.addEventListener('animationend', () => {
-      incoming.classList.remove(enterClass);
-    }, { once: true });
-
+    incoming.classList.add('view--active');
+    finalizeTransition(outgoing, incoming, '', '', nextView);
   }
 
   function handleNav(event) {
@@ -149,7 +122,7 @@
   const initialView = initialHash && views.has(initialHash) ? initialHash : currentView;
 
   if (initialView !== currentView) {
-    showView(initialView, { skipAnimation: true });
+    showView(initialView);
   } else {
     document.dispatchEvent(new CustomEvent('playtalk:view-change', {
       detail: { view: currentView }

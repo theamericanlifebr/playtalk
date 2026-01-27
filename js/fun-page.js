@@ -1304,6 +1304,10 @@
           }
         });
 
+        document.addEventListener('playtalk:flashcard-update', () => {
+          refreshFlashcardsFromStorage();
+        });
+
         async function initializePage() {
           setupSpeechRecognition();
           await loadMirrorGroups();
