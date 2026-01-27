@@ -1172,15 +1172,19 @@
     async function handleSpeechAttempt(day) {
       if (!currentCard || isListening) return;
       isListening = true;
+      const statsBefore = loadFlashcardStats();
+      const key = getFlashcardKey(currentCard);
+      const entryBefore = key ? ensureStatsEntry(statsBefore, key) : null;
+      const prevStreak = getMemoryStreak(entryBefore);
+      const shouldPreviewAudio = prevStreak === 0;
+      if (shouldPreviewAudio) {
+        await playPronunciation(currentCard);
+      }
       memoryPrompt.classList.add('is-visible');
       try {
         const spoken = await listenForSpeech();
         const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
         const wasCorrect = percent >= 80;
-        const statsBefore = loadFlashcardStats();
-        const key = getFlashcardKey(currentCard);
-        const entryBefore = key ? ensureStatsEntry(statsBefore, key) : null;
-        const prevStreak = getMemoryStreak(entryBefore);
         const outcome = recordMemoryAttempt(currentCard, wasCorrect);
         updatePronunciationStats(currentCard, percent);
         const stats = loadFlashcardStats();
@@ -1207,7 +1211,9 @@
         } else {
           renderStars(entry);
         }
-        await playPronunciation(currentCard);
+        if (!shouldPreviewAudio) {
+          await playPronunciation(currentCard);
+        }
         const delay = wasCorrect && outcome.seeded ? SEEDING_DISSOLVE_DURATION : 0;
         window.setTimeout(() => {
           pickNextCard(day, true);
