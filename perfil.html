@@ -34,10 +34,41 @@
       </div>
     </div>
   </header>
-  <main id="profile-container" class="container-screen container-screen--profile" data-page-transition>
-    <div class="empty-state">
-      <h1>Nada aqui</h1>
-    </div>
+  <main id="profile-container" class="container-screen container-screen--profile profile-stats-layout" data-page-transition>
+    <section class="profile-stats">
+      <p class="profile-stats__description">
+        Acompanhe o total de speakings/listenings e as médias gerais de listening, reading, association e meaning.
+      </p>
+      <section class="profile-stats__grid" id="statsGrid">
+        <div class="profile-stat-card">
+          <span>Total de speakings</span>
+          <strong id="totalSpeakings">--</strong>
+        </div>
+        <div class="profile-stat-card">
+          <span>Total de listenings</span>
+          <strong id="totalListenings">--</strong>
+        </div>
+        <div class="profile-stat-card">
+          <span>Média listening</span>
+          <strong id="avgListening">--</strong>
+        </div>
+        <div class="profile-stat-card">
+          <span>Média reading</span>
+          <strong id="avgReading">--</strong>
+        </div>
+        <div class="profile-stat-card">
+          <span>Média association</span>
+          <strong id="avgAssociation">--</strong>
+        </div>
+        <div class="profile-stat-card">
+          <span>Média meaning</span>
+          <strong id="avgMeaning">--</strong>
+        </div>
+      </section>
+      <div class="profile-stats__empty" id="emptyState" hidden>
+        Ainda não há dados suficientes. Use os flashcards para gerar métricas.
+      </div>
+    </section>
   </main>
   <footer class="page-footer">
     <nav id="main-nav">
