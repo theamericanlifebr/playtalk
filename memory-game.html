@@ -202,9 +202,11 @@
     }
 
     .memory-card__prompt {
-      font-size: 20px;
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 30px;
       font-weight: 800;
-      color: #ffd644;
+      color: #ffffff;
+      text-shadow: 0 4px 12px rgba(11, 31, 68, 0.35);
       opacity: 0;
       transition: opacity 0.2s ease;
     }
@@ -340,6 +342,8 @@
     let memoryDeck = [];
     let holdSeedingBackground = false;
     let backgroundTransitionTimer = null;
+    let idlePromptTimer = null;
+    const PROMPT_IDLE_DELAY = 5000;
 
     const TENSE_STYLES = {
       '': {
@@ -1091,6 +1095,7 @@
       }
       updateAccuracyLens(card);
       renderStars(entry);
+      scheduleIdlePrompt();
     }
 
     function transitionToCard(card, animate = false) {
@@ -1122,6 +1127,8 @@
         currentCard = null;
         memoryCard.hidden = true;
         memoryEmpty.hidden = false;
+        clearIdlePromptTimer();
+        hidePrompt();
         return;
       }
       memoryEmpty.hidden = true;
@@ -1169,8 +1176,35 @@
       });
     }
 
+    function clearIdlePromptTimer() {
+      if (idlePromptTimer) {
+        window.clearTimeout(idlePromptTimer);
+        idlePromptTimer = null;
+      }
+    }
+
+    function showPrompt(text) {
+      memoryPrompt.textContent = text;
+      memoryPrompt.classList.add('is-visible');
+    }
+
+    function hidePrompt() {
+      memoryPrompt.classList.remove('is-visible');
+    }
+
+    function scheduleIdlePrompt() {
+      clearIdlePromptTimer();
+      memoryPrompt.textContent = 'Speak now';
+      hidePrompt();
+      idlePromptTimer = window.setTimeout(() => {
+        if (isListening) return;
+        showPrompt('Toque e Fale');
+      }, PROMPT_IDLE_DELAY);
+    }
+
     async function handleSpeechAttempt(day) {
       if (!currentCard || isListening) return;
+      clearIdlePromptTimer();
       isListening = true;
       const statsBefore = loadFlashcardStats();
       const key = getFlashcardKey(currentCard);
@@ -1178,9 +1212,10 @@
       const prevStreak = getMemoryStreak(entryBefore);
       const shouldPreviewAudio = prevStreak === 0;
       if (shouldPreviewAudio) {
+        showPrompt('Listen');
         await playPronunciation(currentCard);
       }
-      memoryPrompt.classList.add('is-visible');
+      showPrompt('Speak now');
       try {
         const spoken = await listenForSpeech();
         const percent = Math.round(calculateSequenceMatchPercent(currentCard.nomeIngles || '', spoken));
@@ -1219,7 +1254,7 @@
           pickNextCard(day, true);
         }, delay);
       } finally {
-        memoryPrompt.classList.remove('is-visible');
+        hidePrompt();
         isListening = false;
       }
     }
@@ -1233,8 +1268,7 @@
       refreshAvailableCards(day);
       pickNextCard(day);
 
-      memoryCircle.addEventListener('click', () => handleSpeechAttempt(day));
-      memoryCircle.addEventListener('touchstart', () => handleSpeechAttempt(day), { passive: true });
+      memoryCard.addEventListener('pointerdown', () => handleSpeechAttempt(day));
     }
 
     initialize();
