@@ -33,6 +33,13 @@
       color: var(--text);
       min-height: 100vh;
       font-weight: 700;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    img {
+      -webkit-user-drag: none;
+      user-drag: none;
     }
 
     header {
@@ -885,14 +892,17 @@
     let detailPhraseInterval = null;
     let detailPressTimer = null;
     let detailLongPressTriggered = false;
-    let cardLongPressTimer = null;
-    let cardLongPressTriggered = false;
-    let lastLongPressCardId = null;
     let cardSeedingHoldTimer = null;
     let cardSeedingHoldInterval = null;
     let stageTargetCard = null;
     const accuracyColorCache = new Map();
     let flashcardStats = loadFlashcardStats();
+
+    ['copy', 'cut', 'contextmenu', 'dragstart'].forEach(eventName => {
+      document.addEventListener(eventName, event => {
+        event.preventDefault();
+      });
+    });
 
     const TENSE_STYLES = {
       '': {
@@ -1581,10 +1591,6 @@
         const visual = createFlashcardVisual(card);
         visual.addEventListener('click', event => {
           event.stopPropagation();
-          if (lastLongPressCardId === card.id) {
-            lastLongPressCardId = null;
-            return;
-          }
           handlePronunciaForCard(card);
         });
         cardEl.appendChild(visual);
@@ -1597,10 +1603,6 @@
         renderPhrase(phraseButton, buildRotatingPhrases(card, statsEntry)[phraseIndex]);
         phraseButton.addEventListener('click', event => {
           event.stopPropagation();
-          if (lastLongPressCardId === card.id) {
-            lastLongPressCardId = null;
-            return;
-          }
           if (statsEntry && isMemorySeeding(statsEntry)) return;
           playAudioForCard(card);
         });
@@ -1627,11 +1629,6 @@
 
         cardEl.addEventListener('pointerdown', event => {
           if (event.button && event.button !== 0) return;
-          cardLongPressTriggered = false;
-          if (cardLongPressTimer) {
-            clearTimeout(cardLongPressTimer);
-            cardLongPressTimer = null;
-          }
           if (cardSeedingHoldTimer) {
             clearTimeout(cardSeedingHoldTimer);
             cardSeedingHoldTimer = null;
@@ -1669,17 +1666,8 @@
             }, MEMORY_SEEDING_HOLD_DELAY_MS);
             return;
           }
-          cardLongPressTimer = window.setTimeout(() => {
-            cardLongPressTriggered = true;
-            lastLongPressCardId = card.id;
-            openDetailForCard(card);
-          }, 500);
         });
         cardEl.addEventListener('pointerup', () => {
-          if (cardLongPressTimer) {
-            clearTimeout(cardLongPressTimer);
-            cardLongPressTimer = null;
-          }
           if (cardSeedingHoldTimer) {
             clearTimeout(cardSeedingHoldTimer);
             cardSeedingHoldTimer = null;
@@ -1688,13 +1676,8 @@
             clearInterval(cardSeedingHoldInterval);
             cardSeedingHoldInterval = null;
           }
-          cardLongPressTriggered = false;
         });
         cardEl.addEventListener('pointerleave', () => {
-          if (cardLongPressTimer) {
-            clearTimeout(cardLongPressTimer);
-            cardLongPressTimer = null;
-          }
           if (cardSeedingHoldTimer) {
             clearTimeout(cardSeedingHoldTimer);
             cardSeedingHoldTimer = null;
@@ -1703,13 +1686,8 @@
             clearInterval(cardSeedingHoldInterval);
             cardSeedingHoldInterval = null;
           }
-          cardLongPressTriggered = false;
         });
         cardEl.addEventListener('pointercancel', () => {
-          if (cardLongPressTimer) {
-            clearTimeout(cardLongPressTimer);
-            cardLongPressTimer = null;
-          }
           if (cardSeedingHoldTimer) {
             clearTimeout(cardSeedingHoldTimer);
             cardSeedingHoldTimer = null;
@@ -1718,7 +1696,10 @@
             clearInterval(cardSeedingHoldInterval);
             cardSeedingHoldInterval = null;
           }
-          cardLongPressTriggered = false;
+        });
+        cardEl.addEventListener('click', event => {
+          if (event.defaultPrevented) return;
+          openDetailForCard(card);
         });
 
         flashcardGrid.appendChild(cardEl);
