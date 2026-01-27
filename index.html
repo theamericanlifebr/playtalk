@@ -36,167 +36,34 @@
     </div>
     </header>
   <main id="home-main" class="home-layout" data-page-transition>
-      <div id="menu">
+    <div id="menu">
       <div id="menu-modes">
-        <button type="button" class="menu-mode" data-mode="1">
+        <a class="menu-mode" data-mode="1" href="/game">
           <span class="mode-logo mode-logo--menu" data-mode="1" aria-hidden="true"></span>
-          <span class="menu-mode__label">Vocabulary</span>
-        </button>
-        <button type="button" class="menu-mode" data-mode="2">
+          <span class="menu-mode__label">Game</span>
+        </a>
+        <a class="menu-mode" data-mode="2" href="/memory">
           <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
-          <span class="menu-mode__label">Meaning</span>
-        </button>
-        <button type="button" class="menu-mode" data-mode="3">
+          <span class="menu-mode__label">Memory</span>
+        </a>
+        <a class="menu-mode" data-mode="3" href="/listening">
           <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
           <span class="menu-mode__label">Listening</span>
-        </button>
-        <button type="button" class="menu-mode" data-mode="4">
+        </a>
+        <a class="menu-mode" data-mode="4" href="/reading">
           <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
           <span class="menu-mode__label">Reading</span>
-        </button>
-        <button type="button" class="menu-mode" data-mode="5">
+        </a>
+        <a class="menu-mode" data-mode="5" href="/connect">
           <span class="mode-logo mode-logo--menu" data-mode="5" aria-hidden="true"></span>
-          <span class="menu-mode__label">Translating</span>
-        </button>
-        <button type="button" class="menu-mode" data-mode="6">
+          <span class="menu-mode__label">Connect</span>
+        </a>
+        <button type="button" class="menu-mode menu-mode--disabled" data-mode="6" disabled>
           <span class="mode-logo mode-logo--menu" data-mode="6" aria-hidden="true"></span>
-          <span class="menu-mode__label">Thinking</span>
+          <span class="menu-mode__label">Em breve</span>
         </button>
       </div>
     </div>
-
-      <div id="visor">
-        <!-- conteúdo visual aqui -->
-        <div id="score"></div>
-        <div class="visor-stack">
-          <div id="level-instruction" class="level-instruction" role="status" aria-live="polite"></div>
-          <div id="mode-five-intro" class="mode-five-intro" aria-live="polite">
-            <p class="mode-five-intro__instruction"></p>
-            <p class="mode-five-intro__example mode-five-intro__example--pt"></p>
-            <p class="mode-five-intro__example mode-five-intro__example--en"></p>
-          </div>
-          <div class="mode-emblem">
-            <img id="mode-icon" alt="Mode Icon" style="display:none" />
-            <div id="level-finder-level" class="level-finder-level"></div>
-          </div>
-          <div class="phrase-stack">
-            <div id="texto-exibicao"></div>
-            <div id="pt-container">
-              <textarea id="pt" rows="1" readonly></textarea>
-            </div>
-            <div id="user-transcript" class="user-transcript" aria-live="polite"></div>
-          </div>
-        </div>
-      <div id="nivel-mensagem"></div>
-      <div id="timer"></div>
-      <div id="resultado"></div>
-      <div id="acertos"></div>
-      <div id="mode-buttons">
-        <button type="button" data-mode="1" class="mode-btn" aria-label="Modo 1">
-          <span class="mode-logo mode-logo--small" data-mode="1" aria-hidden="true"></span>
-        </button>
-        <button type="button" data-mode="2" class="mode-btn" aria-label="Modo 2">
-          <span class="mode-logo mode-logo--small" data-mode="2" aria-hidden="true"></span>
-        </button>
-        <button type="button" data-mode="3" class="mode-btn" aria-label="Modo 3">
-          <span class="mode-logo mode-logo--small" data-mode="3" aria-hidden="true"></span>
-        </button>
-        <button type="button" data-mode="4" class="mode-btn" aria-label="Modo 4">
-          <span class="mode-logo mode-logo--small" data-mode="4" aria-hidden="true"></span>
-        </button>
-        <button type="button" data-mode="5" class="mode-btn" aria-label="Modo 5">
-          <span class="mode-logo mode-logo--small" data-mode="5" aria-hidden="true"></span>
-        </button>
-        <button type="button" data-mode="6" class="mode-btn" aria-label="Modo 6">
-          <span class="mode-logo mode-logo--small" data-mode="6" aria-hidden="true"></span>
-        </button>
-      </div>
-    </div>
-
-    <section id="pre-game-screen" class="game-overlay container-screen container-screen--overlay hidden" aria-hidden="true">
-      <div class="game-overlay__panel" role="dialog" aria-labelledby="pre-game-title">
-        <div id="pre-game-logo" class="game-overlay__logo mode-logo mode-logo--overlay" data-mode="1" aria-hidden="true"></div>
-        <h2 id="pre-game-title" class="game-overlay__title">Modo de jogo</h2>
-        <div class="pre-game-level">
-          <div class="pre-game-level__selector">
-            <strong id="pre-game-level" class="pre-game-level__value">Nível 1</strong>
-          </div>
-        </div>
-        <div id="pre-game-options" class="pre-game-options">
-          <div class="pre-game-toggle">
-            <label class="toggle">
-              <input type="checkbox" id="pre-game-voice-toggle" />
-              <span>Ouvir inglês</span>
-            </label>
-          </div>
-          <div class="pre-game-toggle">
-            <label class="toggle">
-              <input type="checkbox" id="pre-game-language-toggle" />
-              <span>Mostrar frases em português</span>
-            </label>
-          </div>
-          <div class="pre-game-toggle">
-            <label class="toggle">
-              <input type="checkbox" id="pre-game-transcript-toggle" />
-              <span>Exibir o que falei</span>
-            </label>
-          </div>
-        </div>
-        <div class="game-overlay__actions">
-          <button id="pre-game-start" class="game-overlay__primary playtalk-cta playtalk-cta--wide" type="button">
-            <span class="playtalk-cta__inner">
-              <span>Jogar agora</span>
-            </span>
-          </button>
-          <button id="pre-game-level-finder" class="game-overlay__secondary playtalk-cta playtalk-cta--ghost playtalk-cta--wide" type="button">
-            <span class="playtalk-cta__inner">
-              <span>Level finder</span>
-            </span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section id="post-game-screen" class="game-overlay hidden" aria-hidden="true">
-      <div class="game-overlay__panel" role="dialog" aria-labelledby="post-game-title">
-        <h2 id="post-game-title" class="game-overlay__title game-overlay__title--hidden">Fim de jogo</h2>
-        <div class="post-game-medal-wrapper">
-          <img id="post-game-medal" class="game-overlay__medal" alt="Medalha da rodada">
-          <p id="post-game-medal-label" class="game-overlay__subtitle game-overlay__medal-label sr-only"></p>
-        </div>
-        <div class="post-game-metrics">
-          <div id="post-game-cpm" class="post-game-metric container-animado-score" aria-live="polite">
-            <div class="post-game-metric__values">
-              <span class="post-game-metric__icon post-game-metric__icon--lightning" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M11 2 3.5 13h6L8.5 22 20 8h-6l2-6Z"/></svg>
-              </span>
-              <span id="post-game-cpm-value" class="post-game-metric__value">0</span>
-            </div>
-            <p class="post-game-metric__caption">Caracteres por minuto</p>
-          </div>
-          <div id="post-game-balance" class="post-game-metric container-animado-score" aria-live="polite">
-            <div class="post-game-metric__values">
-              <span class="post-game-metric__icon post-game-metric__icon--coin" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3C7.03 3 3 5.686 3 9v6c0 3.314 4.03 6 9 6s9-2.686 9-6V9c0-3.314-4.03-6-9-6Zm0 2c3.86 0 7 1.57 7 3.5S15.86 12 12 12 5 10.43 5 8.5 8.14 5 12 5Zm7 6.758V15c0 1.93-3.14 3.5-7 3.5S5 16.93 5 15v-3.242C6.44 12.742 8.96 13.5 12 13.5s5.56-.758 7-1.742ZM11 7v1.5H9.5V11H11v1.5h2V11h1.5V8.5H13V7Z"/></svg>
-              </span>
-              <span id="post-game-balance-value" class="post-game-metric__value">0</span>
-            </div>
-            <p class="post-game-metric__caption">Saldo em pontos</p>
-          </div>
-          <div id="post-game-accuracy" class="post-game-metric container-animado-score" aria-live="polite">
-            <div class="post-game-metric__values">
-              <span class="post-game-metric__icon post-game-metric__icon--target" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2a1 1 0 0 1 1 1v1.25a8.5 8.5 0 0 1 7.75 7.75H22a1 1 0 0 1 0 2h-1.25A8.5 8.5 0 0 1 13 21.75V23a1 1 0 0 1-2 0v-1.25A8.5 8.5 0 0 1 3.25 14H2a1 1 0 1 1 0-2h1.25A8.5 8.5 0 0 1 11 4.25V3a1 1 0 0 1 1-1Zm0 5.5a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7Zm0 3a4 4 0 1 1-4 4 4.004 4.004 0 0 1 4-4Zm0 2a2 2 0 1 0 2 2 2.002 2.002 0 0 0-2-2Z"/></svg>
-              </span>
-              <span id="post-game-accuracy-value" class="post-game-metric__value">0</span>
-            </div>
-            <p class="post-game-metric__caption">Precisão geral</p>
-          </div>
-        </div>
-        <p id="post-game-level-status" class="game-overlay__subtitle"></p>
-        <dl class="post-game-stats" aria-live="polite"></dl>
-      </div>
-    </section>
   </main>
 
   <footer class="page-footer">
@@ -233,11 +100,6 @@
       </a>
     </nav>
   </footer>
-  <audio id="somAcerto" src="gamesounds/success.mp3"></audio>
-  <audio id="somErro" src="gamesounds/error.mp3"></audio>
-  <audio id="somLock" src="gamesounds/lock.wav"></audio>
-
-  <script src="js/kit-speech.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 </html>
