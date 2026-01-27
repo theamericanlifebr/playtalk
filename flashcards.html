@@ -1414,6 +1414,7 @@
       { percent: 85, color: [46, 204, 113] },
       { percent: 100, color: [47, 141, 255] }
     ];
+    const ACCURACY_EMPTY_SPEAKING_COLOR = '23, 44, 107';
     const ACCURACY_COLOR_TRANSITION_MS = 1200;
 
     function interpolateColor(start, end, ratio) {
@@ -1425,7 +1426,13 @@
     }
 
     function getAccuracyColorRgb(accuracy) {
-      const percent = Math.max(0, Math.min(100, Number(accuracy) || 0));
+      if (accuracy === null || accuracy === undefined) {
+        return ACCURACY_EMPTY_SPEAKING_COLOR;
+      }
+      const percent = Math.max(0, Math.min(100, Number(accuracy)));
+      if (Number.isNaN(percent)) {
+        return ACCURACY_EMPTY_SPEAKING_COLOR;
+      }
       const upperIndex = ACCURACY_COLOR_STOPS.findIndex(stop => percent <= stop.percent);
       const lowerIndex = upperIndex <= 0 ? 0 : upperIndex - 1;
       const lowerStop = ACCURACY_COLOR_STOPS[lowerIndex];
@@ -2128,6 +2135,23 @@
           openGameMode(mode);
         }
       });
+    });
+
+    function refreshFlashcardsFromStorage() {
+      flashcardStats = loadFlashcardStats();
+      renderCards();
+      if (detailModal.classList.contains('is-open') && selectedCardId) {
+        const card = flashcards.find(item => item.id === selectedCardId);
+        if (card) {
+          updateDetail(card);
+        }
+      }
+    }
+
+    window.addEventListener('storage', event => {
+      if (event.key === FLASHCARD_STATS_STORAGE_KEY) {
+        refreshFlashcardsFromStorage();
+      }
     });
 
     async function initializePage() {

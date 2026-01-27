@@ -8493,7 +8493,7 @@ body.page-fun #fun-container.flashcards-layout {
   font-size: 26px;
   font-weight: 800;
   text-align: center;
-  color: #0b1f44;
+  color: #ffffff;
 }
 
 .page-play .memory-stars {
@@ -8510,7 +8510,7 @@ body.page-fun #fun-container.flashcards-layout {
 }
 
 .page-play .memory-star.is-empty {
-  opacity: 0.2;
+  opacity: 0.4;
 }
 
 .page-play .memory-star.is-animate {
