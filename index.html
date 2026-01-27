@@ -11,10 +11,12 @@
   <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/vocabulary-game.css">
   <script src="js/mode-logos.js" defer></script>
   <script src="js/settings.js"></script>
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/home-journey.js" defer></script>
 </head>
   <body class="page-home" data-lens-context="game">
     <header class="site-header" id="global-header">
@@ -36,34 +38,134 @@
     </div>
     </header>
   <main id="home-main" class="home-layout" data-page-transition>
-    <div id="menu">
-      <div id="menu-modes">
-        <a class="menu-mode" data-mode="1" href="/game">
-          <span class="mode-logo mode-logo--menu" data-mode="1" aria-hidden="true"></span>
-          <span class="menu-mode__label">Game</span>
-        </a>
-        <a class="menu-mode" data-mode="2" href="/memory">
-          <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
-          <span class="menu-mode__label">Memory</span>
-        </a>
-        <a class="menu-mode" data-mode="3" href="/listening">
-          <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
-          <span class="menu-mode__label">Listening</span>
-        </a>
-        <a class="menu-mode" data-mode="4" href="/reading">
-          <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
-          <span class="menu-mode__label">Reading</span>
-        </a>
-        <a class="menu-mode" data-mode="5" href="/connect">
-          <span class="mode-logo mode-logo--menu" data-mode="5" aria-hidden="true"></span>
-          <span class="menu-mode__label">Connect</span>
-        </a>
-        <button type="button" class="menu-mode menu-mode--disabled" data-mode="6" disabled>
-          <span class="mode-logo mode-logo--menu" data-mode="6" aria-hidden="true"></span>
-          <span class="menu-mode__label">Em breve</span>
-        </button>
+    <section class="journey-panel" id="journey-panel">
+      <h1 class="journey-title">Fluency Journey</h1>
+      <button class="journey-button" id="journey-start-btn" type="button">Iniciar Jornada</button>
+      <button class="journey-button journey-button--secondary is-hidden" id="journey-reset-btn" type="button">
+        Começar do zero
+      </button>
+    </section>
+
+    <section class="vocabulary-game home-game is-hidden" id="home-game" data-game-root aria-hidden="true">
+      <div class="game-main">
+        <div class="game-status game-status--top" aria-label="Medalha atual">
+          <div class="game-medal" aria-live="polite">
+            <img id="game-medal-icon" src="medalhas/diamante.png" alt="Medalha diamante">
+          </div>
+        </div>
+        <div class="board-wrapper">
+          <div class="board" id="board">
+            <div class="board__inner" id="board-inner"></div>
+          </div>
+        </div>
+        <div class="game-status game-status--bottom" aria-label="Vidas restantes">
+          <div class="game-hearts">
+            <span class="game-heart" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+              </svg>
+            </span>
+            <span class="game-heart" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+              </svg>
+            </span>
+            <span class="game-heart" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+              </svg>
+            </span>
+            <span class="game-heart" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+              </svg>
+            </span>
+            <span class="game-heart" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M12 21s-6.7-4.35-9.33-7.92C-0.28 9.16 1.54 4.5 5.7 4.5c2.02 0 3.5 1.18 4.3 2.5.8-1.32 2.28-2.5 4.3-2.5 4.16 0 5.98 4.66 3.03 8.58C18.7 16.65 12 21 12 21z"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="text-container" id="text-container" aria-live="polite"></div>
+        <div class="choice-row" id="choice-row"></div>
       </div>
-    </div>
+
+      <div class="progress-footer">
+        <div class="progress-bar" aria-label="Progresso do dia">
+          <div class="progress-bar__fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <section class="start-screen" id="start-screen">
+        <img src="SVG/logo.png" alt="PlayTalk" class="start-screen__logo">
+        <div class="start-screen__text" id="rotating-text">Fluência Fácil</div>
+      </section>
+
+      <section class="game-overlay hidden" id="phase-transition">
+        <div class="overlay-card">
+          <h1 id="phase-transition-title">Fase 2</h1>
+          <div class="overlay-actions">
+            <button class="btn-orange" id="phase-transition-btn">Iniciar fase 2</button>
+          </div>
+          <p class="phase-audio-skip is-hidden" id="phase-audio-skip">pular para o jogo</p>
+          <div class="phase-audio-progress" id="phase-audio-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="phase-audio-progress__fill" id="phase-audio-progress-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="game-overlay hidden" id="level-complete">
+        <div class="overlay-card">
+          <h1>Pronto para o próximo dia?</h1>
+          <p id="level-complete-text"></p>
+          <p class="level-complete__countdown" id="level-countdown"></p>
+          <div class="overlay-actions">
+            <button class="btn-primary" id="next-level-btn">Ir para o próximo</button>
+            <button class="btn-primary" id="replay-level-btn">Jogar novamente</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="full-green-overlay" id="progress-complete-overlay" aria-hidden="true"></div>
+      <div class="final-overlay" id="final-overlay" aria-hidden="true">
+        <div class="final-overlay__medal">
+          <img id="final-medal-image" src="medalhas/diamante.png" alt="Medalha diamante">
+          <span id="final-medal-label">Diamante</span>
+        </div>
+        <div class="final-overlay__stats">
+          <div class="final-stat">
+            <img class="final-stat__icon" src="SVG/speed.svg" alt="Ícone de tempo">
+            <div class="final-stat__value" id="final-total-time">00:00</div>
+            <div class="final-stat__label">Tempo</div>
+          </div>
+          <div class="final-stat">
+            <img class="final-stat__icon" src="SVG/speed.svg" alt="Ícone de pronúncia">
+            <div class="final-stat__value" id="final-pronunciation">0%</div>
+            <div class="final-stat__label">Pronúncia</div>
+          </div>
+          <div class="final-stat">
+            <img class="final-stat__icon" src="SVG/speed.svg" alt="Ícone de memória">
+            <div class="final-stat__value" id="final-memory">--</div>
+            <div class="final-stat__label">Memory</div>
+          </div>
+        </div>
+        <div class="final-overlay__actions">
+          <a class="btn-primary" href="flashcards.html">FlashCards</a>
+          <a class="btn-primary" href="medalhas">Meus selos</a>
+        </div>
+        <div class="final-overlay__bar" id="final-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+          <div class="final-overlay__fill" id="final-progress-fill"></div>
+        </div>
+      </div>
+
+      <button type="button" class="game-pause" id="game-pause-btn" aria-label="Pausar e voltar ao menu">⏸</button>
+
+      <audio id="audio-success" src="gamesounds/success.mp3" preload="auto"></audio>
+      <audio id="audio-error" src="gamesounds/error.mp3" preload="auto"></audio>
+      <audio id="audio-conclusao" src="gamesounds/conclusao.mp3" preload="auto"></audio>
+      <audio id="audio-mic" src="gamesounds/mic.mp3" preload="auto"></audio>
+    </section>
   </main>
 
   <footer class="page-footer">
@@ -101,5 +203,6 @@
     </nav>
   </footer>
   <script src="js/main.js" defer></script>
+  <script src="js/vocabulary-game.js" defer></script>
 </body>
 </html>

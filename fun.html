@@ -11,6 +11,7 @@
   <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/mode-logos.js" defer></script>
   <script src="js/settings.js"></script>
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
@@ -35,8 +36,33 @@
     </div>
   </header>
   <main id="fun-container" class="fun-layout" data-page-transition>
-    <div class="empty-state">
-      <h1>Nada aqui</h1>
+    <div id="menu">
+      <div id="menu-modes">
+        <a class="menu-mode" data-mode="1" href="/#home">
+          <span class="mode-logo mode-logo--menu" data-mode="1" aria-hidden="true"></span>
+          <span class="menu-mode__label">Game</span>
+        </a>
+        <a class="menu-mode" data-mode="2" href="/memory">
+          <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
+          <span class="menu-mode__label">Memory</span>
+        </a>
+        <a class="menu-mode" data-mode="3" href="/listening">
+          <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
+          <span class="menu-mode__label">Listening</span>
+        </a>
+        <a class="menu-mode" data-mode="4" href="/reading">
+          <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
+          <span class="menu-mode__label">Reading</span>
+        </a>
+        <a class="menu-mode" data-mode="5" href="/connect">
+          <span class="mode-logo mode-logo--menu" data-mode="5" aria-hidden="true"></span>
+          <span class="menu-mode__label">Connect</span>
+        </a>
+        <button type="button" class="menu-mode menu-mode--disabled" data-mode="6" disabled>
+          <span class="mode-logo mode-logo--menu" data-mode="6" aria-hidden="true"></span>
+          <span class="menu-mode__label">Em breve</span>
+        </button>
+      </div>
     </div>
   </main>
   <script src="js/fun-page.js" defer></script>

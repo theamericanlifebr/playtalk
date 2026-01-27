@@ -342,6 +342,76 @@ body.page-inplay .container-screen {
   padding: calc(var(--header-height) + var(--content-offset)) clamp(16px, 3vw, 32px)
     calc(var(--nav-height) + clamp(16px, 3vw, 32px));
   box-sizing: border-box;
+  position: relative;
+}
+
+.journey-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.journey-title {
+  font-size: clamp(32px, 6vw, 52px);
+  font-weight: 800;
+  color: #0b1f44;
+  margin: 0;
+}
+
+.journey-button {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #ffffff;
+  background: #2f6fff;
+  box-shadow: 0 12px 24px rgba(47, 111, 255, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.journey-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(47, 111, 255, 0.35);
+}
+
+.journey-button--secondary {
+  background: transparent;
+  color: #2f6fff;
+  box-shadow: none;
+  padding: 0;
+  font-size: 16px;
+}
+
+.home-game {
+  width: 100%;
+}
+
+#home-game.vocabulary-game {
+  min-height: calc(100vh - var(--header-height) - var(--nav-height));
+}
+
+.home-game.is-hidden,
+.journey-panel.is-hidden {
+  display: none;
+}
+
+.game-pause {
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--nav-height) + 16px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 1200;
 }
 
 body.page-play #play-container {
