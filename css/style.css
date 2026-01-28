@@ -8333,8 +8333,9 @@ body.page-fun #fun-container.flashcards-layout {
   font-weight: 700;
 }
 
-.page-play .memory-game__main {
+.page-play .memory-game {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 32px 16px 48px;
@@ -8528,14 +8529,12 @@ body.page-fun #fun-container.flashcards-layout {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 24px;
+  background: transparent;
+  border: none;
+  padding: 12px 16px 24px;
   max-width: 520px;
   margin: 0 auto 24px;
   text-align: center;
-  box-shadow: 0 16px 28px rgba(11, 31, 68, 0.18);
 }
 
 .page-play .play-mode-menu h2 {
@@ -8544,36 +8543,58 @@ body.page-fun #fun-container.flashcards-layout {
   color: #0b1f44;
 }
 
-.page-play .play-mode-menu p {
-  margin: 0;
-  color: var(--muted);
-  font-weight: 600;
-}
-
 .page-play .play-mode-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  justify-items: center;
+  gap: 16px;
 }
 
 .page-play .play-mode-button {
   border: none;
-  border-radius: 14px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #4c96dc, #0b1f44);
-  color: #fff;
-  font-weight: 700;
+  border-radius: 20px;
+  width: 125px;
+  height: 125px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0b1f44;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 12px 24px rgba(11, 31, 68, 0.18);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .page-play .play-mode-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 20px rgba(11, 31, 68, 0.22);
+  box-shadow: 0 16px 26px rgba(11, 31, 68, 0.24);
 }
 
 .page-play .play-mode-button.is-active {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 16px 22px rgba(11, 31, 68, 0.26);
+  box-shadow: 0 0 0 3px rgba(76, 150, 220, 0.6), 0 18px 28px rgba(11, 31, 68, 0.28);
+}
+
+.page-play .play-mode-button__icon {
+  width: 68px;
+  height: 68px;
+}
+
+.page-play .memory-card--dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.page-play .memory-card--dismissed {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.page-play .memory-card--dismissed-left {
+  transform: translateX(-160px);
+}
+
+.page-play .memory-card--dismissed-right {
+  transform: translateX(160px);
 }
 
 .page-play .connect-game {
