@@ -102,6 +102,49 @@
     .controls button:hover { box-shadow: 0 10px 30px rgba(63, 140, 255, 0.22); }
     .controls button:active { transform: translateY(1px); }
 
+    .paste-panel {
+      display: none;
+      margin-top: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+      gap: 12px;
+      flex-direction: column;
+    }
+
+    .paste-panel.is-open { display: flex; }
+
+    .paste-panel textarea {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      background: #0f1526;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .paste-panel__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .paste-panel__actions button {
+      border: 1px solid var(--border);
+      background: var(--accent-soft);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     main { margin-top: 20px; }
 
     .image-grid {
@@ -399,6 +442,7 @@
       <button id="new-grid-btn">Nova grade</button>
       <button id="upload-btn">Upload de imagens</button>
       <button id="refresh-server-btn">Atualizar servidor</button>
+      <button id="paste-text-btn" type="button">Colar texto</button>
       <div class="controls__level-filter">
         <label for="source-select">Fonte</label>
         <select id="source-select">
@@ -414,6 +458,13 @@
         <select id="level-filter"></select>
       </div>
       <span class="hint">Dê dois toques para editar textos/imagens. Clique para ouvir ou adicionar um áudio.</span>
+    </div>
+    <div class="paste-panel" id="paste-panel" aria-hidden="true">
+      <label for="paste-textarea" class="hint">Cole o texto abaixo (uma linha por campo: português, inglês, folder).</label>
+      <textarea id="paste-textarea" placeholder="Português&#10;Inglês&#10;Folder&#10;Português&#10;Inglês&#10;Folder"></textarea>
+      <div class="paste-panel__actions">
+        <button id="paste-apply-btn" type="button">Preencher campos</button>
+      </div>
     </div>
 
     <main>
@@ -458,6 +509,10 @@
     const changeImageInput = document.getElementById('change-image-input');
     const audioUploadInput = document.getElementById('audio-upload-input');
     const newGridBtn = document.getElementById('new-grid-btn');
+    const pasteTextBtn = document.getElementById('paste-text-btn');
+    const pastePanel = document.getElementById('paste-panel');
+    const pasteTextarea = document.getElementById('paste-textarea');
+    const pasteApplyBtn = document.getElementById('paste-apply-btn');
     const uploadBtn = document.getElementById('upload-btn');
     const refreshServerBtn = document.getElementById('refresh-server-btn');
     const sourceSelect = document.getElementById('source-select');
@@ -530,6 +585,28 @@
       tense: '',
       sentenceForm: ''
     });
+
+    const applyPastedLines = (lines = []) => {
+      const fields = ['pt', 'en', 'folder'];
+      let lineIndex = 0;
+
+      for (let i = 0; i < levels.length && lineIndex < lines.length; i += 1) {
+        const current = levels[i] || defaultLevel();
+        const updated = { ...current };
+
+        fields.forEach((field) => {
+          if (lineIndex >= lines.length) return;
+          if (!updated[field]) {
+            updated[field] = lines[lineIndex];
+            lineIndex += 1;
+          }
+        });
+
+        levels[i] = updated;
+      }
+
+      return lineIndex;
+    };
 
     const TENSE_OPTIONS = [
       { value: '', label: 'Vazio (Presente simples)' },
@@ -1269,6 +1346,27 @@
 
     levelFilter.addEventListener('change', (event) => {
       selectedLevelFilter = event.target.value;
+      renderGrid();
+    });
+
+    pasteTextBtn.addEventListener('click', () => {
+      const isOpen = pastePanel.classList.toggle('is-open');
+      pastePanel.setAttribute('aria-hidden', String(!isOpen));
+      pasteTextBtn.textContent = isOpen ? 'Fechar colar texto' : 'Colar texto';
+      if (isOpen) {
+        pasteTextarea.focus();
+      }
+    });
+
+    pasteApplyBtn.addEventListener('click', () => {
+      const lines = pasteTextarea.value
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+      if (!lines.length) return;
+      applyPastedLines(lines);
+      pasteTextarea.value = '';
+      saveState();
       renderGrid();
     });
 
