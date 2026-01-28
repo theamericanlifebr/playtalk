@@ -183,6 +183,208 @@
     "nomeIngles": "She is drinking",
     "categoria": ".",
     "audio": "09-1767742995529.mp3"
+  },
+
+  
+  {
+    "imagem": "i-build-1769571279363.webp",
+    "nomePortugues": "Eu construo",
+    "nomeIngles": "I build.",
+    "categoria": "1",
+    "audio": "i-build-1769571892684.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-carry-a-bag-1769571279403.webp",
+    "nomePortugues": "Eu carrego uma bolsa",
+    "nomeIngles": "I carry a bag",
+    "categoria": "1",
+    "audio": "i-carry-1769571898972.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-clean-1769571279442.webp",
+    "nomePortugues": "Eu limpo",
+    "nomeIngles": "I clean",
+    "categoria": "1",
+    "audio": "i-clean-1769571902440.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-close-door-1769571279478.webp",
+    "nomePortugues": "Eu fecho a porta",
+    "nomeIngles": "I close the door",
+    "categoria": "1",
+    "audio": "i-close-1769571905036.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-cook-1769571279518.webp",
+    "nomePortugues": "Eu cozinho",
+    "nomeIngles": "I cook",
+    "categoria": "1",
+    "audio": "i-cook-1769571906530.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-drink-tea-1769571279593.webp",
+    "nomePortugues": "Eu bebo chá",
+    "nomeIngles": "I drink tea",
+    "categoria": "1",
+    "audio": "i-drink-tea-1769571908529.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-drink-water-1769571279632.webp",
+    "nomePortugues": "Eu bebo água",
+    "nomeIngles": "I drink water",
+    "categoria": "1",
+    "audio": "i-drink-water-1769571911042.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-eat-pizza-1769571279671.webp",
+    "nomePortugues": "Eu como pizza",
+    "nomeIngles": "I eat pizza",
+    "categoria": "1",
+    "audio": "i-eat-pizza-1769571913321.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-launch-1769571279711.webp",
+    "nomePortugues": "Eu como",
+    "nomeIngles": "I eat",
+    "categoria": "1",
+    "audio": "i-eat-1769571914901.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-like-music-1769571279749.webp",
+    "nomePortugues": "Eu gosto de música",
+    "nomeIngles": "I like music",
+    "categoria": "1",
+    "audio": "i-like-music-1769571916863.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-love-you-1769571279787.webp",
+    "nomePortugues": "Eu amo você",
+    "nomeIngles": "I love you",
+    "categoria": "1",
+    "audio": "i-love-you-1769571922319.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-open-the-door-1769571279825.webp",
+    "nomePortugues": "Eu abro a porta",
+    "nomeIngles": "I open the door",
+    "categoria": "1",
+    "audio": "i-open-1769571925384.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-play-soccer-1769571279867.webp",
+    "nomePortugues": "Eu jogo futebol",
+    "nomeIngles": "I play soccer",
+    "categoria": "1",
+    "audio": "i-play-soccer-1769571929411.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-ride-a-bike-1769571279906.webp",
+    "nomePortugues": "Eu ando de bicicleta",
+    "nomeIngles": "I walk bycicle",
+    "categoria": "1",
+    "audio": "i-ride-a-bycicle-1769571933372.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-talk-1769571279944.webp",
+    "nomePortugues": "Eu falo",
+    "nomeIngles": "I talk",
+    "categoria": "1",
+    "audio": "i-talk-1769571936910.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-think-1769571279984.webp",
+    "nomePortugues": "Eu penso",
+    "nomeIngles": "I think",
+    "categoria": "1",
+    "audio": "i-think-1769571939676.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-tidy-1769571280028.webp",
+    "nomePortugues": "I tidy up",
+    "nomeIngles": "Eu arrumo",
+    "categoria": "1",
+    "audio": "i-tidy-up-1769571942611.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-use-the-phone-1769571280067.webp",
+    "nomePortugues": "Eu uso o celular",
+    "nomeIngles": "I use the phone",
+    "categoria": "1",
+    "audio": "i-use-the-phone-1769571946939.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-walk-1769571280107.webp",
+    "nomePortugues": "Eu ando",
+    "nomeIngles": "I walk",
+    "categoria": "1",
+    "audio": "i-walk-1769571949700.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-want-water-1769571280146.webp",
+    "nomePortugues": "Eu quero água",
+    "nomeIngles": "I want water",
+    "categoria": "1",
+    "audio": "i-want-water-1769571952510.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-wash-my-hands-1769571280186.webp",
+    "nomePortugues": "Eu lavo minhas mãos",
+    "nomeIngles": "I wash my hands",
+    "categoria": "1",
+    "audio": "i-wash-my-hands-1769571955130.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-write-1769571280225.webp",
+    "nomePortugues": "Eu escrevo",
+    "nomeIngles": "I write",
+    "categoria": "1",
+    "audio": "i-write-1769571957363.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
   }
+
+  
 
 ]
