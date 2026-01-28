@@ -528,6 +528,583 @@
     "audio": "i-am-ready-1769616187045.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
+  },
+
+    {
+    "imagem": "01-1767824952267.webp",
+    "nomePortugues": "Eu estava feliz",
+    "nomeIngles": "I was happy",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-was-happy-1769625063614.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
+    "nomePortugues": "Eu estava cansado",
+    "nomeIngles": "I was tired",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-was-tired-1769625072790.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
+    "nomePortugues": "Eu precisei de ajuda",
+    "nomeIngles": "I needed help",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-needed-help-1769625080504.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
+    "nomePortugues": "Eu precisei de um táxi",
+    "nomeIngles": "I needed a taxi",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-needed-a-taxi-1769625094692.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
+    "nomePortugues": "Eu bebi água",
+    "nomeIngles": "I drank water",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-drank-water-1769625099588.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
+    "nomePortugues": "Eu precisei de dinheiro",
+    "nomeIngles": "I needed money",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-needed-money-1769625107262.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
+    "nomePortugues": "Eu bebi café",
+    "nomeIngles": "I drank coffee",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-drank-coffee-1769625110541.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
+    "nomePortugues": "Eu achei que sim",
+    "nomeIngles": "I thought so",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-thought-so-1769625113342.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
+    "nomePortugues": "Eu queria comida",
+    "nomeIngles": "I wanted food",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-wanted-food-1769625123684.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
+    "nomePortugues": "Eu pratiquei esportes",
+    "nomeIngles": "I did sports",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-did-sports-1769625136294.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
+    "nomePortugues": "Eu fiz o meu melhor",
+    "nomeIngles": "I did my best",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-did-my-best-1769625140469.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
+    "nomePortugues": "Eu trabalhei",
+    "nomeIngles": "I worked",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-worked-1769625161453.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
+    "nomePortugues": "Eu li",
+    "nomeIngles": "I read",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-read-1769625170408.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
+    "nomePortugues": "Eu gostei de suco",
+    "nomeIngles": "I liked juice",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-liked-juice-1769625198408.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
+    "nomePortugues": "Eu descansei",
+    "nomeIngles": "I rested",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-rested-1769625203386.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
+    "nomePortugues": "Eu gostei de cachorros",
+    "nomeIngles": "I liked dogs",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-liked-dogs-1769625209673.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
+    "nomePortugues": "Eu dirigi",
+    "nomeIngles": "I drove",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_03_11_14-quadro030-1767685182978.webp",
+    "nomePortugues": "Estes eram livros",
+    "nomeIngles": "These were books",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "this-were-books-1769625234126.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_02_44_22-quadro029-1767685183046.webp",
+    "nomePortugues": "Ela amou o bebê",
+    "nomeIngles": "She loved the baby",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "she-loves-the-baby-1769625313980.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_02_22_17-quadro028-1767685183092.webp",
+    "nomePortugues": "Ele jogou futebol",
+    "nomeIngles": "He played soccer",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "he-played-soccer-1769625287774.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_50_14-quadro027-1767685183145.webp",
+    "nomePortugues": "Isto era comida",
+    "nomeIngles": "This was food",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "this-was-food-1769625299199.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_27_21-quadro026-1767685183191.webp",
+    "nomePortugues": "Ele usou o laptop",
+    "nomeIngles": "He used the laptop",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "he-use-the-laptop-1769625305150.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_03_17-quadro025-1767685183240.webp",
+    "nomePortugues": "Ele leu",
+    "nomeIngles": "He read",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "he-read-1769625336059.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_00_47_10-quadro024-1767685183283.webp",
+    "nomePortugues": "Ela disse oi",
+    "nomeIngles": "She said hi",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "she-said-hi-1769625340232.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_00_30_03-quadro023-1767685183324.webp",
+    "nomePortugues": "Eles estavam felizes",
+    "nomeIngles": "They were happy",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "they-were-happy-1769625348065.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_00_06_10-quadro022-1767685183367.webp",
+    "nomePortugues": "Ela bebeu",
+    "nomeIngles": "She drank",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "she-drank-1769625355503.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-build-1769571279363.webp",
+    "nomePortugues": "Eu construí",
+    "nomeIngles": "I built",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-built-1769625362643.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-carry-a-bag-1769571279403.webp",
+    "nomePortugues": "Eu carreguei uma bolsa",
+    "nomeIngles": "I carried the bag",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-carried-the-bag-1769625374758.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-clean-1769571279442.webp",
+    "nomePortugues": "Eu limpei",
+    "nomeIngles": "I cleaned",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-cleaned-1769625389573.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-close-door-1769571279478.webp",
+    "nomePortugues": "Eu fechei a porta",
+    "nomeIngles": "I closed the door",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-opened-the-door-1769625401171.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-cook-1769571279518.webp",
+    "nomePortugues": "Eu cozinhei",
+    "nomeIngles": "I cooked",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-cooked-1769625423479.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-drink-tea-1769571279593.webp",
+    "nomePortugues": "Eu bebi chá",
+    "nomeIngles": "I drank tea",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-drank-tea-1769625431274.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-drink-water-1769571279632.webp",
+    "nomePortugues": "Eu bebi água",
+    "nomeIngles": "I drank water",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-drank-water-1769625433342.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-eat-pizza-1769571279671.webp",
+    "nomePortugues": "Eu comi pizza",
+    "nomeIngles": "I ate pizza",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-launch-1769571279711.webp",
+    "nomePortugues": "Eu comi",
+    "nomeIngles": "I ate",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-ate-1769625464655.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-like-music-1769571279749.webp",
+    "nomePortugues": "Eu gostei de música",
+    "nomeIngles": "I liked music",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-liked-music-1769625473199.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-love-you-1769571279787.webp",
+    "nomePortugues": "Eu te amei",
+    "nomeIngles": "I loved you",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-loved-you-1769625483813.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-open-the-door-1769571279825.webp",
+    "nomePortugues": "Eu abri a porta",
+    "nomeIngles": "I opened the door",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-opened-the-door-1769625497284.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-play-soccer-1769571279867.webp",
+    "nomePortugues": "Eu joguei futebol",
+    "nomeIngles": "I played soccer",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-played-soccer-1769625507917.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-ride-a-bike-1769571279906.webp",
+    "nomePortugues": "Eu andei de bicicleta",
+    "nomeIngles": "I rode a bicycle",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-rode-a-bycicle-1769625516558.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-talk-1769571279944.webp",
+    "nomePortugues": "Eu falei",
+    "nomeIngles": "I talked",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-talked-1769625530064.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-think-1769571279984.webp",
+    "nomePortugues": "Eu pensei",
+    "nomeIngles": "I thought",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-thought-1769625535374.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-tidy-1769571280028.webp",
+    "nomePortugues": "Eu arrumei",
+    "nomeIngles": "I tidied up",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-tidied-up-1769625568884.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-use-the-phone-1769571280067.webp",
+    "nomePortugues": "Eu usei o celular",
+    "nomeIngles": "I used the phone",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-use-the-phone-1769625578162.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-walk-1769571280107.webp",
+    "nomePortugues": "Eu andei",
+    "nomeIngles": "I walked",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-walked-1769625596529.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-want-water-1769571280146.webp",
+    "nomePortugues": "Eu quis água",
+    "nomeIngles": "I wanted water",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-wanted-water-1769625604792.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-wash-my-hands-1769571280186.webp",
+    "nomePortugues": "Eu lavei minhas mãos",
+    "nomeIngles": "I washed my hands",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-wash-my-hands-1769625615199.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-write-1769571280225.webp",
+    "nomePortugues": "Eu escrevi",
+    "nomeIngles": "I wrote",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-wrote-1769625621278.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-agree-1769615362209.webp",
+    "nomePortugues": "Eu concordei",
+    "nomeIngles": "I agreed",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-agreed-1769625628388.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-am-sorry-1769615362274.webp",
+    "nomePortugues": "Eu senti muito",
+    "nomeIngles": "I was sorry",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-was-sorry-1769625641269.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-am-tired-1769615362366.webp",
+    "nomePortugues": "Eu estava cansado",
+    "nomeIngles": "I was tired",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-was-tired-1769625650876.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-disagree-1769615362408.webp",
+    "nomePortugues": "Eu discordei",
+    "nomeIngles": "I disagreed",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-disagreed-1769625653661.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-feel-good-1769615362446.webp",
+    "nomePortugues": "Eu me senti bem",
+    "nomeIngles": "I felt good",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-felt-good-1769625663404.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-forgot-1769615362484.webp",
+    "nomePortugues": "Eu esqueci",
+    "nomeIngles": "I forgot",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-forgot-1769625668687.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-a-question-1769615362520.webp",
+    "nomePortugues": "Eu tinha uma pergunta",
+    "nomeIngles": "I had a question",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-had-a-question-1769625684113.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-time-1769615362557.webp",
+    "nomePortugues": "Eu tive tempo",
+    "nomeIngles": "I had time",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "eu-tinha-tempo-1769625730728.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-hear-you-1769615362594.webp",
+    "nomePortugues": "Eu te ouvi",
+    "nomeIngles": "I heard you",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-heard-you-1769625748832.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-live-here-1769615362631.webp",
+    "nomePortugues": "Eu morei aqui",
+    "nomeIngles": "I lived here",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-lived-here-1769625757645.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-remember-1769615362670.webp",
+    "nomePortugues": "Eu lembrei",
+    "nomeIngles": "I remembered",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-remembered-1769625762999.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-see-the-car-1769615362707.webp",
+    "nomePortugues": "Eu vi o carro",
+    "nomeIngles": "I saw the car",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-saw-the-car-1769625780517.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-trust-you-1769615362742.webp",
+    "nomePortugues": "Eu confiei em você",
+    "nomeIngles": "I trusted you",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-trusted-you-1769625788277.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-understand-1769615362782.webp",
+    "nomePortugues": "Eu entendi",
+    "nomeIngles": "I understood",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-understood-1769625796059.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-work-here-1769615362819.webp",
+    "nomePortugues": "Eu trabalhei aqui",
+    "nomeIngles": "I worked here",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-worked-here-1769625810510.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-m-ready-1769615362857.webp",
+    "nomePortugues": "Eu estava pronto",
+    "nomeIngles": "I was ready",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-was-ready-1769625818167.mp3",
+    "tense": "past-simple",
+    "sentenceForm": ""
   }
 
   
