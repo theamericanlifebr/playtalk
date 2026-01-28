@@ -988,6 +988,7 @@
           if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
+            recognition.continuous = false;
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
           }
@@ -1015,9 +1016,19 @@
           }
           return new Promise(resolve => {
             let resolved = false;
+            const stopRecognition = () => {
+              if (recognition && typeof recognition.stop === 'function') {
+                try {
+                  recognition.stop();
+                } catch (error) {
+                  // ignore
+                }
+              }
+            };
             const finalize = (value) => {
               if (resolved) return;
               resolved = true;
+              stopRecognition();
               resolve(value);
             };
             recognition.onresult = event => {
