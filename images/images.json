@@ -1105,6 +1105,277 @@
     "audio": "i-was-ready-1769625818167.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
+  },
+
+   {
+    "imagem": "01-1767824952267.webp",
+    "nomePortugues": "Eu estou feliz?",
+    "nomeIngles": "Am I happy?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "am-i-happy-1769638354377.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
+    "nomePortugues": "Eu estou cansado?",
+    "nomeIngles": "Am I tired?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "am-i-tired-1769638356126.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
+    "nomePortugues": "Eu preciso de ajuda?",
+    "nomeIngles": "Do I need help?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-need-help-1769638363139.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
+    "nomePortugues": "Eu preciso de um táxi?",
+    "nomeIngles": "Do I need a taxi?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-need-a-taxi-1769638365489.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
+    "nomePortugues": "Eu bebo água?",
+    "nomeIngles": "Do I drink water?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-drink-water-1769638367857.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
+    "nomePortugues": "Eu preciso de dinheiro?",
+    "nomeIngles": "Do I need money?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-need-money-1769638370506.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
+    "nomePortugues": "Eu bebo café?",
+    "nomeIngles": "Do I drink coffee?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-drink-coffee-1769638372790.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
+    "nomePortugues": "Eu acho que sim?",
+    "nomeIngles": "Do I think so?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-think-so-1769638486589.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
+    "nomePortugues": "Eu quero comida?",
+    "nomeIngles": "Do I want food?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-want-food-1769638492016.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
+    "nomePortugues": "Eu pratico esportes?",
+    "nomeIngles": "Do I do sports?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-do-sports-1769638496879.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
+    "nomePortugues": "Eu faço meu melhor?",
+    "nomeIngles": "Do I do my best?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-do-my-best-1769638514702.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
+    "nomePortugues": "Eu trabalho?",
+    "nomeIngles": "Do I work?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-work-1769638517479.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
+    "nomePortugues": "Eu leio?",
+    "nomeIngles": "Do I read?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-read-1769638520639.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
+    "nomePortugues": "Eu gosto de suco?",
+    "nomeIngles": "Do I like juice?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
+    "nomePortugues": "Eu descanso?",
+    "nomeIngles": "Do I rest?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
+    "nomePortugues": "Eu gosto de cachorros?",
+    "nomeIngles": "Do I like dogs?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-like-dogs-1769638725747.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
+    "nomePortugues": "Eu dirijo?",
+    "nomeIngles": "Do I drive?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-drive-1769638729687.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "sequ-ncia-02-00_03_11_14-quadro030-1767685182978.webp",
+    "nomePortugues": "Isto são livros?",
+    "nomeIngles": "Are these books?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "are-this-books-1769638732975.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "sequ-ncia-02-00_02_44_22-quadro029-1767685183046.webp",
+    "nomePortugues": "Ela ama o bebê?",
+    "nomeIngles": "Does she love the baby?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "does-she-love-the-baby-1769638742548.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "sequ-ncia-02-00_02_22_17-quadro028-1767685183092.webp",
+    "nomePortugues": "Ele joga futebol?",
+    "nomeIngles": "Does he play soccer?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "does-he-play-soccer-1769638747298.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_50_14-quadro027-1767685183145.webp",
+    "nomePortugues": "Isto é comida?",
+    "nomeIngles": "Is this food?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "this-is-food-1769638751702.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_27_21-quadro026-1767685183191.webp",
+    "nomePortugues": "Ele está usando o laptop?",
+    "nomeIngles": "Is he using the laptop?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "is-he-using-the-laptop-1769638755702.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_03_17-quadro025-1767685183240.webp",
+    "nomePortugues": "Ele está lendo?",
+    "nomeIngles": "Is he reading?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "is-he-reading-1769638758328.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "sequ-ncia-02-00_00_47_10-quadro024-1767685183283.webp",
+    "nomePortugues": "Ela diz oi?",
+    "nomeIngles": "Does she say hi?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "does-she-say-hi-1769638761790.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "sequ-ncia-02-00_00_30_03-quadro023-1767685183324.webp",
+    "nomePortugues": "Eles estão felizes?",
+    "nomeIngles": "Are they happy?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "are-they-happy-1769638764892.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "i-build-1769571279363.webp",
+    "nomePortugues": "Eu construo?",
+    "nomeIngles": "Do I build?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-build-1769639138190.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "i-carry-a-bag-1769571279403.webp",
+    "nomePortugues": "Eu carrego uma bolsa?",
+    "nomeIngles": "Do I carry a bag?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-carry-a-bag-1769639141393.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "i-clean-1769571279442.webp",
+    "nomePortugues": "Eu limpo?",
+    "nomeIngles": "Do I clean?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-clean-1769639145135.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "i-close-door-1769571279478.webp",
+    "nomePortugues": "Eu fecho a porta?",
+    "nomeIngles": "Do I close the door?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-close-the-door-1769639148689.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
+  },
+  {
+    "imagem": "i-drink-tea-1769571279593.webp",
+    "nomePortugues": "Eu bebo chá?",
+    "nomeIngles": "Do I drink tea?",
+    "categoria": "(Só escrever = Nível Ask)",
+    "audio": "do-i-drink-tea-1769639157169.mp3",
+    "tense": "present-simple",
+    "sentenceForm": "question"
   }
 
   
