@@ -492,6 +492,7 @@
       <button id="export-json-btn">Exportar JSON</button>
       <button id="export-images-btn">Exportar imagens</button>
       <button id="export-audio-btn">Exportar áudios</button>
+      <button id="remove-audio-btn">Remover MP3</button>
       <div class="controls__level-filter">
         <label for="level-filter">Nível</label>
         <select id="level-filter"></select>
@@ -558,6 +559,7 @@
     const exportJsonBtn = document.getElementById('export-json-btn');
     const exportImagesBtn = document.getElementById('export-images-btn');
     const exportAudioBtn = document.getElementById('export-audio-btn');
+    const removeAudioBtn = document.getElementById('remove-audio-btn');
     const imageModal = document.getElementById('image-modal');
     const moveSelect = document.getElementById('move-select');
     const moveBtn = document.getElementById('copy-image-btn');
@@ -797,6 +799,18 @@
         if (!levels[index]) return;
         levels[index] = updater(levels[index]);
       });
+    };
+
+    const clearAudioForIndexes = (indexes) => {
+      if (!indexes.length) return;
+      updateLevelsForIndexes(indexes, (current) => ({
+        ...current,
+        audioFile: '',
+        audioDataUrl: '',
+        audioFormat: ''
+      }));
+      saveState();
+      renderGrid();
     };
 
     const loadState = () => {
@@ -1600,6 +1614,16 @@
 
       const blob = await zip.generateAsync({ type: 'blob' });
       downloadBlob(blob, 'levels-audios.zip');
+    });
+
+    removeAudioBtn.addEventListener('click', () => {
+      const targets = Array.from(selectedIndexes);
+      if (!targets.length) {
+        alert('Selecione pelo menos uma música para remover o áudio.');
+        return;
+      }
+      if (!confirm(`Remover o áudio de ${targets.length} item(ns) selecionado(s)?`)) return;
+      clearAudioForIndexes(targets);
     });
 
     const refreshFromServer = async ({ refreshLevels = false } = {}) => {
