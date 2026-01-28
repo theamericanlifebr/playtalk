@@ -2209,6 +2209,7 @@
     if (SpeechRecognition) {
       recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
+      recognition.continuous = false;
       recognition.interimResults = false;
     }
   }
@@ -2459,6 +2460,13 @@
     const onResult = async (spoken) => {
       if (resolved) return;
       resolved = true;
+      if (recognition && typeof recognition.stop === 'function') {
+        try {
+          recognition.stop();
+        } catch (error) {
+          // ignore
+        }
+      }
       const { success, percent } = isSpokenCorrect(expected, spoken, options);
       const entry = options.entry || currentItem;
 
