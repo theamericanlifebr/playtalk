@@ -134,6 +134,7 @@
 
   let awaiting = false;
   let recognition = null;
+  let micPermissionPromise = null;
   let loadPromise = null;
   let buildingLoadPromise = null;
   let fileLevels = new Map();
@@ -1834,8 +1835,24 @@
     return source[Math.floor(Math.random() * source.length)];
   }
 
+  function primeMicrophonePermission() {
+    if (micPermissionPromise) return micPermissionPromise;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      micPermissionPromise = Promise.resolve(false);
+      return micPermissionPromise;
+    }
+    micPermissionPromise = navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      })
+      .catch(() => false);
+    return micPermissionPromise;
+  }
+
   function requestMicrophoneAccess() {
-    return new Promise(resolve => {
+    const primePromise = primeMicrophonePermission();
+    const recognitionPromise = new Promise(resolve => {
       if (!recognition) {
         resolve(false);
         return;
@@ -1876,6 +1893,7 @@
         finalize();
       }
     });
+    return Promise.all([primePromise, recognitionPromise]).then(() => true);
   }
 
   function showMicActivationPrompt() {
@@ -2539,6 +2557,7 @@
       }, getAdvanceDelay(0));
     };
 
+    primeMicrophonePermission();
     if (recognition) {
       recognition.onresult = (event) => {
         const text = Array.from(event.results)
@@ -2548,7 +2567,20 @@
       };
       recognition.onerror = () => onResult('');
       recognition.onend = () => onResult('');
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (error) {
+        if (error && error.name === 'InvalidStateError') {
+          try {
+            recognition.stop();
+            recognition.start();
+          } catch (restartError) {
+            onResult('');
+          }
+        } else {
+          onResult('');
+        }
+      }
     } else {
       const typed = window.prompt('Diga o nome em inglês:') || '';
       onResult(typed);
