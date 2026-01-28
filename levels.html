@@ -422,6 +422,41 @@
       font-weight: 600;
     }
 
+    .controls__select-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #0f1526;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .controls__select-all input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .image-card.is-selected {
+      border-color: rgba(63, 140, 255, 0.65);
+      box-shadow: 0 0 0 2px rgba(63, 140, 255, 0.25);
+    }
+
+    .selection-checkbox {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      z-index: 2;
+    }
+
     .empty-state { margin-top: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 12px; padding: 18px; display: none; }
   </style>
 </head>
@@ -443,6 +478,10 @@
       <button id="upload-btn">Upload de imagens</button>
       <button id="refresh-server-btn">Atualizar servidor</button>
       <button id="paste-text-btn" type="button">Colar texto</button>
+      <label class="controls__select-all" for="select-all">
+        <input type="checkbox" id="select-all" />
+        Selecionar tudo
+      </label>
       <div class="controls__level-filter">
         <label for="source-select">Fonte</label>
         <select id="source-select">
@@ -525,6 +564,7 @@
     const removeBtn = document.getElementById('remove-image-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const levelFilter = document.getElementById('level-filter');
+    const selectAllCheckbox = document.getElementById('select-all');
 
     let levels = [];
     let imageCache = new Map();
@@ -534,6 +574,8 @@
     let pendingAudioIndex = null;
     let activeAudioPlayback = null;
     let activeSource = 'images';
+    let visibleLevelIndexes = [];
+    const selectedIndexes = new Set();
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'image/svg+xml'];
     const allowedAudioTypes = ['audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/opus', 'audio/webm', 'audio/wav'];
@@ -723,6 +765,40 @@
       }
     };
 
+    const getVisibleIndexes = () => visibleLevelIndexes.slice();
+
+    const updateSelectAllState = () => {
+      const visibleIndexes = getVisibleIndexes();
+      if (!selectAllCheckbox) return;
+      if (!visibleIndexes.length) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+        return;
+      }
+      const selectedVisible = visibleIndexes.filter(index => selectedIndexes.has(index));
+      selectAllCheckbox.checked = selectedVisible.length === visibleIndexes.length;
+      selectAllCheckbox.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visibleIndexes.length;
+    };
+
+    const resetSelection = () => {
+      selectedIndexes.clear();
+      updateSelectAllState();
+    };
+
+    const getTargetIndexes = (originIndex) => {
+      if (selectedIndexes.has(originIndex) && selectedIndexes.size > 0) {
+        return Array.from(selectedIndexes);
+      }
+      return [originIndex];
+    };
+
+    const updateLevelsForIndexes = (indexes, updater) => {
+      indexes.forEach((index) => {
+        if (!levels[index]) return;
+        levels[index] = updater(levels[index]);
+      });
+    };
+
     const loadState = () => {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -838,7 +914,12 @@
         button.addEventListener('dblclick', () => {
           const value = prompt(`Digite o ${field.label} do nível ${levelNumber}`, level[field.key] || '');
           if (value === null) return;
-          levels[index][field.key] = value.trim();
+          const trimmed = value.trim();
+          const targets = getTargetIndexes(index);
+          updateLevelsForIndexes(targets, (current) => ({
+            ...current,
+            [field.key]: trimmed
+          }));
           saveState();
           renderGrid();
         });
@@ -861,7 +942,11 @@
       });
       tenseSelect.value = level.tense || '';
       tenseSelect.addEventListener('change', (event) => {
-        levels[index] = { ...levels[index], tense: event.target.value };
+        const targets = getTargetIndexes(index);
+        updateLevelsForIndexes(targets, (current) => ({
+          ...current,
+          tense: event.target.value
+        }));
         saveState();
         renderGrid();
       });
@@ -878,7 +963,11 @@
       });
       formSelect.value = level.sentenceForm || '';
       formSelect.addEventListener('change', (event) => {
-        levels[index] = { ...levels[index], sentenceForm: event.target.value };
+        const targets = getTargetIndexes(index);
+        updateLevelsForIndexes(targets, (current) => ({
+          ...current,
+          sentenceForm: event.target.value
+        }));
         saveState();
         renderGrid();
       });
@@ -999,6 +1088,7 @@
       grid.innerHTML = '';
       const fragment = document.createDocumentFragment();
       let renderedCount = 0;
+      visibleLevelIndexes = [];
 
       levels.forEach((level, index) => {
         const levelNumber = resolveLevelNumber(level, index);
@@ -1006,6 +1096,27 @@
 
         const card = document.createElement('div');
         card.className = 'image-card';
+        if (selectedIndexes.has(index)) {
+          card.classList.add('is-selected');
+        }
+
+        const selectionCheckbox = document.createElement('input');
+        selectionCheckbox.type = 'checkbox';
+        selectionCheckbox.className = 'selection-checkbox';
+        selectionCheckbox.checked = selectedIndexes.has(index);
+        selectionCheckbox.addEventListener('click', (event) => {
+          event.stopPropagation();
+        });
+        selectionCheckbox.addEventListener('change', (event) => {
+          if (event.target.checked) {
+            selectedIndexes.add(index);
+          } else {
+            selectedIndexes.delete(index);
+          }
+          updateSelectAllState();
+          renderGrid();
+        });
+        card.appendChild(selectionCheckbox);
 
         const badge = document.createElement('div');
         badge.className = 'level-badge';
@@ -1073,10 +1184,12 @@
         renderSelectors(level, index, card);
         fragment.appendChild(card);
         renderedCount += 1;
+        visibleLevelIndexes.push(index);
       });
 
       grid.appendChild(fragment);
       emptyState.style.display = renderedCount > 0 ? 'none' : 'block';
+      updateSelectAllState();
     };
 
     const sanitizeFileName = (name, extension) => {
@@ -1374,6 +1487,7 @@
       if (!confirm('Criar uma nova grade vazia? Isso substitui sua edição local.')) return;
       levels = [];
       selectedLevelFilter = 'all';
+      resetSelection();
       buildLevelFilter();
       saveState();
       renderGrid();
@@ -1492,6 +1606,7 @@
       toggleLoading(true);
       levels = await fetchDefaults(activeSource, { refreshServer: refreshLevels });
       selectedLevelFilter = 'all';
+      resetSelection();
       buildLevelFilter();
       saveState();
       renderGrid();
@@ -1506,11 +1621,23 @@
         return;
       }
       activeSource = nextSource;
+      resetSelection();
       await refreshFromServer();
     });
 
     refreshServerBtn.addEventListener('click', async () => {
       await refreshFromServer({ refreshLevels: true });
+    });
+
+    selectAllCheckbox.addEventListener('change', (event) => {
+      const visibleIndexes = getVisibleIndexes();
+      if (!visibleIndexes.length) return;
+      if (event.target.checked) {
+        visibleIndexes.forEach(index => selectedIndexes.add(index));
+      } else {
+        visibleIndexes.forEach(index => selectedIndexes.delete(index));
+      }
+      renderGrid();
     });
 
     const init = async () => {
