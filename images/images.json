@@ -383,6 +383,151 @@
     "audio": "i-write-1769571957363.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
+  },
+
+   {
+    "imagem": "i-agree-1769615362209.webp",
+    "nomePortugues": "Eu concordo",
+    "nomeIngles": "I agree",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-agree-1769616127167.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-am-sorry-1769615362274.webp",
+    "nomePortugues": "Eu sinto muito",
+    "nomeIngles": "I am sorry",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-am-sorry-1769616139680.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-am-tired-1769615362366.webp",
+    "nomePortugues": "Eu estou cansado",
+    "nomeIngles": "I am tired",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-am-tired-1769616141877.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-disagree-1769615362408.webp",
+    "nomePortugues": "Eu discordo",
+    "nomeIngles": "I disagree",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-disagree-1769616145435.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-feel-good-1769615362446.webp",
+    "nomePortugues": "Eu me sinto bem",
+    "nomeIngles": "I feel good",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-feel-good-1769616150591.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-forgot-1769615362484.webp",
+    "nomePortugues": "Eu esqueci",
+    "nomeIngles": "I forgot",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-forgot-1769616153591.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-a-question-1769615362520.webp",
+    "nomePortugues": "Eu tenho uma pergunta",
+    "nomeIngles": "I have a question",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-have-a-question-1769616155314.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-time-1769615362557.webp",
+    "nomePortugues": "Eu tenho tempo",
+    "nomeIngles": "I have time",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-have-time-1769616158933.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-hear-you-1769615362594.webp",
+    "nomePortugues": "Eu te escuto",
+    "nomeIngles": "I hear you",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-hear-you-1769616160894.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-live-here-1769615362631.webp",
+    "nomePortugues": "Eu moro aqui",
+    "nomeIngles": "I live here",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-live-here-1769616163696.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-remember-1769615362670.webp",
+    "nomePortugues": "Eu lembro",
+    "nomeIngles": "I remember",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-remember-1769616166525.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-see-the-car-1769615362707.webp",
+    "nomePortugues": "Eu vejo o carro",
+    "nomeIngles": "I see the car",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-see-the-car-1769616169967.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-trust-you-1769615362742.webp",
+    "nomePortugues": "Eu confio em você",
+    "nomeIngles": "I trust you",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-trust-you-1769616172093.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-understand-1769615362782.webp",
+    "nomePortugues": "Eu entendo",
+    "nomeIngles": "I understand",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-understand-1769616175573.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-work-here-1769615362819.webp",
+    "nomePortugues": "Eu trabalho aqui",
+    "nomeIngles": "I work here",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-work-here-1769616179998.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-m-ready-1769615362857.webp",
+    "nomePortugues": "Eu estou pronto",
+    "nomeIngles": "I'm ready",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-am-ready-1769616187045.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
   }
 
   
