@@ -59,6 +59,7 @@
         let recognition = null;
         let mirrorGroups = [];
         let isListening = false;
+        let micPermissionPromise = null;
         let memoryDeck = [];
         let holdSeedingBackground = false;
         let backgroundTransitionTimer = null;
@@ -1053,6 +1054,21 @@
           }
         }
 
+        function ensureMicrophoneAccess() {
+          if (micPermissionPromise) return micPermissionPromise;
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            micPermissionPromise = Promise.resolve(false);
+            return micPermissionPromise;
+          }
+          micPermissionPromise = navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+              stream.getTracks().forEach(track => track.stop());
+              return true;
+            })
+            .catch(() => false);
+          return micPermissionPromise;
+        }
+
         function listenForSpeech() {
           if (!recognition) {
             const typed = window.prompt('Diga a frase em inglês:') || '';
@@ -1073,7 +1089,20 @@
             };
             recognition.onerror = () => finalize('');
             recognition.onend = () => finalize('');
-            recognition.start();
+            try {
+              recognition.start();
+            } catch (error) {
+              if (error && error.name === 'InvalidStateError') {
+                try {
+                  recognition.stop();
+                  recognition.start();
+                } catch (restartError) {
+                  finalize('');
+                }
+              } else {
+                finalize('');
+              }
+            }
           });
         }
 
@@ -1112,6 +1141,7 @@
           clearIdlePromptTimer();
           isListening = true;
           try {
+            await ensureMicrophoneAccess();
             if (currentMode === 'memory') {
               const statsBefore = loadFlashcardStats();
               const key = getFlashcardKey(currentCard);
