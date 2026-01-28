@@ -34,6 +34,9 @@
         };
         const CARD_SLIDE_DURATION = 500;
         const SEEDING_DISSOLVE_DURATION = 3000;
+        const CARD_SNOOZE_DAYS = 10;
+        const SWIPE_DISMISS_DISTANCE = 80;
+        const SWIPE_ACTIVATION_DISTANCE = 16;
 
         const playModeMenu = document.getElementById('playModeMenu');
         const modeButtons = Array.from(document.querySelectorAll('[data-play-mode]'));
@@ -64,6 +67,11 @@
         let holdSeedingBackground = false;
         let backgroundTransitionTimer = null;
         let idlePromptTimer = null;
+        let swipePointerId = null;
+        let swipeStartX = 0;
+        let swipeStartY = 0;
+        let swipeDeltaX = 0;
+        let isSwiping = false;
         const PROMPT_IDLE_DELAY = 5000;
 
         const TENSE_STYLES = {
@@ -332,7 +340,8 @@
               memoryStreak: 0,
               memoryStage: 0,
               memorySeedingUntil: null,
-              memoryMastered: false
+              memoryMastered: false,
+              snoozedUntil: null
             };
           }
           if (!Array.isArray(stats[key].memoryHistory)) {
@@ -369,6 +378,9 @@
           }
           if (typeof stats[key].memoryMastered !== 'boolean') {
             stats[key].memoryMastered = false;
+          }
+          if (typeof stats[key].snoozedUntil !== 'number') {
+            stats[key].snoozedUntil = null;
           }
           return stats[key];
         }
@@ -420,8 +432,31 @@
           return changed;
         }
 
+        function syncSnoozedState(entry) {
+          if (!entry) return false;
+          const now = Date.now();
+          if (entry.snoozedUntil && now >= entry.snoozedUntil) {
+            entry.snoozedUntil = null;
+            return true;
+          }
+          return false;
+        }
+
         function isMemorySeeding(entry) {
           return Boolean(entry?.memorySeedingUntil && Date.now() < entry.memorySeedingUntil);
+        }
+
+        function isCardSnoozed(entry) {
+          return Boolean(entry?.snoozedUntil && Date.now() < entry.snoozedUntil);
+        }
+
+        function snoozeCard(card, days = CARD_SNOOZE_DAYS) {
+          const key = getFlashcardKey(card);
+          if (!key) return;
+          const stats = loadFlashcardStats();
+          const entry = ensureStatsEntry(stats, key);
+          entry.snoozedUntil = Date.now() + days * 24 * 60 * 60 * 1000;
+          saveFlashcardStats(stats);
         }
 
         function recordMemoryAttempt(card, wasCorrect) {
@@ -724,7 +759,7 @@
             if (!stats) return true;
             const key = getFlashcardKey(card);
             const entry = key ? ensureStatsEntry(stats, key) : null;
-            return entry ? !isMemorySeeding(entry) : true;
+            return entry ? !isMemorySeeding(entry) && !isCardSnoozed(entry) : true;
           });
           return shuffleArray(candidates).slice(0, count);
         }
@@ -773,6 +808,9 @@
             if (entry && syncMemoryState(entry)) {
               changed = true;
             }
+            if (entry && syncSnoozedState(entry)) {
+              changed = true;
+            }
             if (entry && isMemorySeeding(entry)) {
               seededIds.push(id);
             }
@@ -787,7 +825,7 @@
             .filter(card => card && (() => {
               const key = getFlashcardKey(card);
               const entry = key ? ensureStatsEntry(stats, key) : null;
-              return entry ? !isMemorySeeding(entry) : true;
+              return entry ? !isMemorySeeding(entry) && !isCardSnoozed(entry) : true;
             })());
           if (changed) saveFlashcardStats(stats);
         }
@@ -941,11 +979,20 @@
 
         function getPlayableCards(day) {
           const stats = loadFlashcardStats();
-          return getDayCards(day).filter(card => {
+          let changed = false;
+          const playable = getDayCards(day).filter(card => {
             const key = getFlashcardKey(card);
             const entry = key ? ensureStatsEntry(stats, key) : null;
-            return entry ? !isMemorySeeding(entry) : true;
+            if (entry && syncSnoozedState(entry)) {
+              changed = true;
+            }
+            if (entry && syncMemoryState(entry)) {
+              changed = true;
+            }
+            return entry ? !isMemorySeeding(entry) && !isCardSnoozed(entry) : true;
           });
+          if (changed) saveFlashcardStats(stats);
+          return playable;
         }
 
         function pickNextCard(day, animate = false) {
@@ -1228,7 +1275,62 @@
           await loadMirrorGroups();
           await loadFlashcards();
           if (memoryCard) {
-            memoryCard.addEventListener('pointerdown', () => handleSpeechAttempt(day));
+            memoryCard.addEventListener('pointerdown', event => {
+              if (swipePointerId !== null) return;
+              swipePointerId = event.pointerId;
+              swipeStartX = event.clientX;
+              swipeStartY = event.clientY;
+              swipeDeltaX = 0;
+              isSwiping = false;
+              memoryCard.classList.remove('memory-card--dismissed', 'memory-card--dismissed-left', 'memory-card--dismissed-right');
+              memoryCard.setPointerCapture(event.pointerId);
+            });
+            memoryCard.addEventListener('pointermove', event => {
+              if (swipePointerId !== event.pointerId) return;
+              swipeDeltaX = event.clientX - swipeStartX;
+              const deltaY = event.clientY - swipeStartY;
+              if (!isSwiping) {
+                if (Math.abs(swipeDeltaX) < SWIPE_ACTIVATION_DISTANCE || Math.abs(swipeDeltaX) < Math.abs(deltaY)) {
+                  return;
+                }
+                isSwiping = true;
+                memoryCard.classList.add('memory-card--dragging');
+              }
+              if (isSwiping) {
+                memoryCard.style.transform = `translateX(${swipeDeltaX}px)`;
+              }
+            });
+            memoryCard.addEventListener('pointerup', event => {
+              if (swipePointerId !== event.pointerId) return;
+              memoryCard.releasePointerCapture(event.pointerId);
+              memoryCard.classList.remove('memory-card--dragging');
+              const shouldDismiss = isSwiping && Math.abs(swipeDeltaX) >= SWIPE_DISMISS_DISTANCE;
+              if (shouldDismiss && currentCard) {
+                const directionClass = swipeDeltaX < 0 ? 'memory-card--dismissed-left' : 'memory-card--dismissed-right';
+                memoryCard.classList.add('memory-card--dismissed', directionClass);
+                snoozeCard(currentCard);
+                window.setTimeout(() => {
+                  memoryCard.style.transform = '';
+                  memoryCard.classList.remove('memory-card--dismissed', 'memory-card--dismissed-left', 'memory-card--dismissed-right');
+                  if (currentMode === 'memory') {
+                    refreshAvailableCards(day);
+                  }
+                  pickNextCard(day, true);
+                }, 300);
+              } else {
+                memoryCard.style.transform = '';
+                handleSpeechAttempt(day);
+              }
+              swipePointerId = null;
+              isSwiping = false;
+            });
+            memoryCard.addEventListener('pointercancel', event => {
+              if (swipePointerId !== event.pointerId) return;
+              memoryCard.style.transform = '';
+              memoryCard.classList.remove('memory-card--dragging');
+              swipePointerId = null;
+              isSwiping = false;
+            });
           }
 
           const storedMode = getStoredMode();
