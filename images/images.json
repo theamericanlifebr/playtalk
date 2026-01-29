@@ -1376,6 +1376,583 @@
     "audio": "do-i-drink-tea-1769639157169.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
+  },
+
+    {
+    "imagem": "01-1767824952267.webp",
+    "nomePortugues": "Eu estarei feliz",
+    "nomeIngles": "I will be happy",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-be-happy-1769726623396.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
+    "nomePortugues": "Eu estarei cansado",
+    "nomeIngles": "I will be tired",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-be-tired-1769726895529.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
+    "nomePortugues": "Eu precisarei de ajuda",
+    "nomeIngles": "I will need help",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-need-help-1769726902448.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
+    "nomePortugues": "Eu precisarei de um táxi",
+    "nomeIngles": "I will need a taxi",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-need-a-taxi-1769726905712.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
+    "nomePortugues": "Eu beberei água",
+    "nomeIngles": "I will drink water",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-drink-water-1769726911341.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
+    "nomePortugues": "Eu precisarei de dinheiro",
+    "nomeIngles": "I will need money",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-need-money-1769726916301.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
+    "nomePortugues": "Eu beberei café",
+    "nomeIngles": "I will drink coffee",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-drink-coffee-1769726920861.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
+    "nomePortugues": "Eu acharei que sim",
+    "nomeIngles": "I will think so",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-think-so-1769726931598.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
+    "nomePortugues": "Eu quererei comida",
+    "nomeIngles": "I will want food",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-want-food-1769726938959.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
+    "nomePortugues": "Eu praticarei esportes",
+    "nomeIngles": "I will do sports",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-do-sports-1769726942783.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
+    "nomePortugues": "Eu farei o meu melhor",
+    "nomeIngles": "I will do my best",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-do-my-best-1769726947634.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
+    "nomePortugues": "Eu trabalharei",
+    "nomeIngles": "I will work",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-work-1769726951539.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
+    "nomePortugues": "Eu lerei",
+    "nomeIngles": "I will read",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-read-1769726956887.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
+    "nomePortugues": "Eu gostarei de suco",
+    "nomeIngles": "I will like juice",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-like-juice-1769726962657.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
+    "nomePortugues": "Eu descansarei",
+    "nomeIngles": "I will rest",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-rest-1769726965835.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
+    "nomePortugues": "Eu gostarei de cachorros",
+    "nomeIngles": "I will like dogs",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-like-dogs-1769726970636.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
+    "nomePortugues": "Eu dirigirei",
+    "nomeIngles": "I will drive",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-drive-1769726974308.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_03_11_14-quadro030-1767685182978.webp",
+    "nomePortugues": "Estes serão livros",
+    "nomeIngles": "These will be books",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "this-will-be-books-1769726979107.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_02_44_22-quadro029-1767685183046.webp",
+    "nomePortugues": "Ela amará o bebê",
+    "nomeIngles": "She will love the baby",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "she-will-love-the-baby-1769726988418.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_02_22_17-quadro028-1767685183092.webp",
+    "nomePortugues": "Ele jogará futebol",
+    "nomeIngles": "He will play soccer",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "he-will-play-soccer-1769726993268.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_50_14-quadro027-1767685183145.webp",
+    "nomePortugues": "Isto será comida",
+    "nomeIngles": "This will be food",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "this-wil-be-food-1769726998513.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_27_21-quadro026-1767685183191.webp",
+    "nomePortugues": "Ele usará o laptop",
+    "nomeIngles": "He will use the laptop",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "he-will-use-the-laptop-1769727002686.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_01_03_17-quadro025-1767685183240.webp",
+    "nomePortugues": "Ele lerá",
+    "nomeIngles": "He will read",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "he-will-read-1769727007753.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_00_47_10-quadro024-1767685183283.webp",
+    "nomePortugues": "Ela dirá oi",
+    "nomeIngles": "She will say hi",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "she-will-say-hi-1769727016070.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_00_30_03-quadro023-1767685183324.webp",
+    "nomePortugues": "Eles estarão felizes",
+    "nomeIngles": "They will be happy",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "they-will-be-happy-1769727012510.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "sequ-ncia-02-00_00_06_10-quadro022-1767685183367.webp",
+    "nomePortugues": "Ela beberá",
+    "nomeIngles": "She will drink",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "she-will-drink-1769727020599.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-build-1769571279363.webp",
+    "nomePortugues": "Eu construirei",
+    "nomeIngles": "I will build",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-build-1769727024223.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-carry-a-bag-1769571279403.webp",
+    "nomePortugues": "Eu carregarei uma bolsa",
+    "nomeIngles": "I will carry a bag",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-carry-a-bag-1769727027573.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-clean-1769571279442.webp",
+    "nomePortugues": "Eu limparei",
+    "nomeIngles": "I will clean",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-clean-1769727031374.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-close-door-1769571279478.webp",
+    "nomePortugues": "Eu fecharei a porta",
+    "nomeIngles": "I will close the door",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-close-the-door-1769727035371.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-cook-1769571279518.webp",
+    "nomePortugues": "Eu cozinharei",
+    "nomeIngles": "I will cook",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-cook-1769727039059.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-drink-tea-1769571279593.webp",
+    "nomePortugues": "Eu beberei chá",
+    "nomeIngles": "I will drink tea",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-drink-tea-1769727041999.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-drink-water-1769571279632.webp",
+    "nomePortugues": "Eu beberei água",
+    "nomeIngles": "I will drink water",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-drink-water-1769727074806.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-eat-pizza-1769571279671.webp",
+    "nomePortugues": "Eu comerei pizza",
+    "nomeIngles": "I will eat pizza",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-eat-pizza-1769727078902.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-launch-1769571279711.webp",
+    "nomePortugues": "Eu comerei",
+    "nomeIngles": "I will eat",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-eat-1769727081880.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-like-music-1769571279749.webp",
+    "nomePortugues": "Eu gostarei de música",
+    "nomeIngles": "I will like music",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-like-music-1769727088716.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-love-you-1769571279787.webp",
+    "nomePortugues": "Eu te amarei",
+    "nomeIngles": "I will love you",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-love-you-1769727092991.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-open-the-door-1769571279825.webp",
+    "nomePortugues": "Eu abrirei a porta",
+    "nomeIngles": "I will open the door",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-open-the-door-1769727096919.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-play-soccer-1769571279867.webp",
+    "nomePortugues": "Eu jogarei futebol",
+    "nomeIngles": "I will play soccer",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-play-soccer-1769727100206.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-ride-a-bike-1769571279906.webp",
+    "nomePortugues": "Eu andarei de bicicleta",
+    "nomeIngles": "I will ride a bicycle",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-ride-a-bycicle-1769727105359.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-talk-1769571279944.webp",
+    "nomePortugues": "Eu falarei",
+    "nomeIngles": "I will talk",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-talk-1769727112157.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-think-1769571279984.webp",
+    "nomePortugues": "Eu pensarei",
+    "nomeIngles": "I will think",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-think-1769727116473.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-tidy-1769571280028.webp",
+    "nomePortugues": "Eu arrumarei",
+    "nomeIngles": "I will tidy up",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-tidy-up-1769727122427.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-use-the-phone-1769571280067.webp",
+    "nomePortugues": "Eu usarei o celular",
+    "nomeIngles": "I will use the phone",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-use-the-phone--1769727127362.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-walk-1769571280107.webp",
+    "nomePortugues": "Eu andarei",
+    "nomeIngles": "I will walk",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-walk-1769727131702.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-want-water-1769571280146.webp",
+    "nomePortugues": "Eu quererei água",
+    "nomeIngles": "I will want water",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-want-water-1769727144030.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-wash-my-hands-1769571280186.webp",
+    "nomePortugues": "Eu lavarei minhas mãos",
+    "nomeIngles": "I will wash my hands",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-wash-my-hands-1769727147776.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-write-1769571280225.webp",
+    "nomePortugues": "Eu escreverei",
+    "nomeIngles": "I will write",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-write-1769727151875.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-agree-1769615362209.webp",
+    "nomePortugues": "Eu concordarei",
+    "nomeIngles": "I will agree",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-agree-1769727155724.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-am-sorry-1769615362274.webp",
+    "nomePortugues": "Eu sentirei muito",
+    "nomeIngles": "I will be sorry",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-be-sorry-1769727159901.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-am-tired-1769615362366.webp",
+    "nomePortugues": "Eu estarei cansado",
+    "nomeIngles": "I will be tired",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-be-tired-1769727164342.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-disagree-1769615362408.webp",
+    "nomePortugues": "Eu discordarei",
+    "nomeIngles": "I will disagree",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-disagree-1769727168337.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-feel-good-1769615362446.webp",
+    "nomePortugues": "Eu me sentirei bem",
+    "nomeIngles": "I will feel good",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-feel-good-1769727171687.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-forgot-1769615362484.webp",
+    "nomePortugues": "Eu esquecerei",
+    "nomeIngles": "I will forget",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-forget-1769727180820.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-a-question-1769615362520.webp",
+    "nomePortugues": "Eu terei uma pergunta",
+    "nomeIngles": "I will have a question",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-have-a-question-1769727186819.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-have-time-1769615362557.webp",
+    "nomePortugues": "Eu terei tempo",
+    "nomeIngles": "I will have time",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-have-time-1769727191284.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-hear-you-1769615362594.webp",
+    "nomePortugues": "Eu te ouvirei",
+    "nomeIngles": "I will hear you",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-hear-you-1769727195982.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-live-here-1769615362631.webp",
+    "nomePortugues": "Eu morarei aqui",
+    "nomeIngles": "I will live here",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-live-here-1769727199359.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-remember-1769615362670.webp",
+    "nomePortugues": "Eu lembrarei",
+    "nomeIngles": "I will remember",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-remember-1769727203630.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-see-the-car-1769615362707.webp",
+    "nomePortugues": "Eu verei o carro",
+    "nomeIngles": "I will see the car",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-see-the-car-1769727207225.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-trust-you-1769615362742.webp",
+    "nomePortugues": "Eu confiarei em você",
+    "nomeIngles": "I will trust you",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-trust-you-1769727211161.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-understand-1769615362782.webp",
+    "nomePortugues": "Eu entenderei",
+    "nomeIngles": "I will understand",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-understand-1769727219152.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-work-here-1769615362819.webp",
+    "nomePortugues": "Eu trabalharei aqui",
+    "nomeIngles": "I will work here",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-work-here-1769727228104.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-m-ready-1769615362857.webp",
+    "nomePortugues": "Eu estarei pronto",
+    "nomeIngles": "I will be ready",
+    "categoria": "(Só escrever = Nível 1)",
+    "audio": "i-will-be-ready-1769727224049.mp3",
+    "tense": "future-simple",
+    "sentenceForm": ""
   }
 
   
