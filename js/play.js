@@ -16,14 +16,12 @@
         const MEMORY_DECK_INITIAL = 6;
         const MEMORY_DECK_ADD = 2;
         const MEMORY_DECK_MAX = 24;
-        const MEMORY_BACKGROUND_IMAGES = {
-          0: 'images/galaxy.png',
-          1: 'images/gold.png',
-          2: 'images/diamond.png',
-          3: 'images/mind.png',
-          4: 'images/connect.png'
+        const FLASHCARD_FORM_BACKGROUNDS = {
+          question: 'images/pergunta.png',
+          imperative: 'images/imperativo.png',
+          negative: 'images/negativo.png',
+          positive: 'images/positivo.png'
         };
-        const MEMORY_SEEDING_BACKGROUND = 'images/seeding.png';
         const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
         const MIRROR_PATH = 'data/mirror.json';
         const MEMORY_EFFECT_SOUNDS = {
@@ -33,7 +31,6 @@
           report: 'gamesounds/report.wav'
         };
         const CARD_SLIDE_DURATION = 500;
-        const SEEDING_DISSOLVE_DURATION = 3000;
         const CARD_SNOOZE_DAYS = 10;
         const SWIPE_DISMISS_DISTANCE = 80;
         const SWIPE_ACTIVATION_DISTANCE = 16;
@@ -53,7 +50,6 @@
         const memoryLens = document.getElementById('memoryLens');
         const memoryVisual = document.getElementById('memoryVisual');
         const memoryCardBackground = document.getElementById('memoryCardBackground');
-        const memoryCardBackgroundFade = document.getElementById('memoryCardBackgroundFade');
 
         let flashcards = [];
         let availableCards = [];
@@ -64,8 +60,6 @@
         let isListening = false;
         let micPermissionPromise = null;
         let memoryDeck = [];
-        let holdSeedingBackground = false;
-        let backgroundTransitionTimer = null;
         let idlePromptTimer = null;
         let swipePointerId = null;
         let swipeStartX = 0;
@@ -543,12 +537,18 @@
           return Math.round(total / entry.pronunciation.length);
         }
 
-        function getMemoryBackground(entry) {
-          if (isMemorySeeding(entry)) {
-            return MEMORY_SEEDING_BACKGROUND;
-          }
-          const stage = entry?.memoryStage ?? 0;
-          return MEMORY_BACKGROUND_IMAGES[stage] || MEMORY_BACKGROUND_IMAGES[0];
+        function normalizeSentenceForm(value) {
+          const normalized = String(value || '').trim().toLowerCase();
+          if (['question', 'pergunta', 'interrogative'].includes(normalized)) return 'question';
+          if (['imperative', 'imperativo'].includes(normalized)) return 'imperative';
+          if (['negative', 'negativo', 'negation'].includes(normalized)) return 'negative';
+          if (['affirmative', 'positive', 'positivo', 'afirmativa'].includes(normalized)) return 'positive';
+          return 'positive';
+        }
+
+        function getFlashcardBackground(card) {
+          const form = normalizeSentenceForm(card?.sentenceForm);
+          return FLASHCARD_FORM_BACKGROUNDS[form] || FLASHCARD_FORM_BACKGROUNDS.positive;
         }
 
         function getMemoryStreak(entry) {
@@ -888,24 +888,6 @@
           memoryCardBackground.style.backgroundImage = `url('${url}')`;
         }
 
-        function dissolveMemoryBackground(url, duration = SEEDING_DISSOLVE_DURATION) {
-          if (!memoryCardBackground || !memoryCardBackgroundFade || !url) return;
-          if (backgroundTransitionTimer) {
-            window.clearTimeout(backgroundTransitionTimer);
-          }
-          memoryCardBackgroundFade.style.transition = `opacity ${duration}ms ease`;
-          memoryCardBackgroundFade.style.backgroundImage = `url('${url}')`;
-          memoryCardBackgroundFade.style.opacity = '0';
-          window.requestAnimationFrame(() => {
-            memoryCardBackgroundFade.style.opacity = '1';
-          });
-          backgroundTransitionTimer = window.setTimeout(() => {
-            setMemoryBackground(url);
-            memoryCardBackgroundFade.style.opacity = '0';
-            backgroundTransitionTimer = null;
-          }, duration);
-        }
-
         function renderCard(card) {
           if (!card) return;
           const stats = loadFlashcardStats();
@@ -921,21 +903,7 @@
           img.src = imageSrc;
           img.alt = currentMode === 'listening' ? 'Som' : (card.nomePortugues || 'Flashcard');
           memoryCircle.appendChild(img);
-          const nextBackground = getMemoryBackground(entry);
-          if (holdSeedingBackground) {
-            const applyBackground = () => {
-              setMemoryBackground(nextBackground);
-              holdSeedingBackground = false;
-            };
-            if (img.complete) {
-              applyBackground();
-            } else {
-              img.addEventListener('load', applyBackground, { once: true });
-              img.addEventListener('error', applyBackground, { once: true });
-            }
-          } else {
-            setMemoryBackground(nextBackground);
-          }
+          setMemoryBackground(getFlashcardBackground(card));
           updateAccuracyLens(card);
           renderStars(entry);
           markCardPlayed(card);
@@ -1218,9 +1186,7 @@
               updatePronunciationStats(currentCard, percent);
               const stats = loadFlashcardStats();
               const entry = key ? ensureStatsEntry(stats, key) : null;
-              if (entry) {
-                setMemoryBackground(getMemoryBackground(entry));
-              }
+              setMemoryBackground(getFlashcardBackground(currentCard));
               updateAccuracyLens(currentCard);
               const gainedStar = wasCorrect && prevStreak < MEMORY_STAR_COUNT;
               if (gainedStar) {
@@ -1231,9 +1197,7 @@
               if (wasCorrect && outcome.seeded) {
                 const dayCards = getDayCards(day);
                 updateDeckForSeeding(day, dayCards, stats, [currentCard.id]);
-                holdSeedingBackground = true;
                 playEffectSound(MEMORY_EFFECT_SOUNDS.seeding);
-                dissolveMemoryBackground(MEMORY_SEEDING_BACKGROUND, SEEDING_DISSOLVE_DURATION);
               }
               if (!wasCorrect) {
                 await animateStarLoss(prevStreak);
@@ -1243,10 +1207,7 @@
               if (!shouldPreviewAudio) {
                 await playPronunciation(currentCard);
               }
-              const delay = wasCorrect && outcome.seeded ? SEEDING_DISSOLVE_DURATION : 0;
-              window.setTimeout(() => {
-                pickNextCard(day, true);
-              }, delay);
+              pickNextCard(day, true);
               return;
             }
             const spoken = await listenForSpeech();
