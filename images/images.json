@@ -1,196 +1,191 @@
 [
-
   {
     "imagem": "01-1767824952267.webp",
     "nomePortugues": "Eu estou feliz",
     "nomeIngles": "I am happy",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "01-1767826971689.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
     "nomePortugues": "Eu estou cansado",
     "nomeIngles": "I am tired",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "02-1767826975361.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
     "nomePortugues": "Eu preciso de ajuda",
     "nomeIngles": "I need help",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "03-1767826977951.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
     "nomePortugues": "Eu previso de um taxi",
     "nomeIngles": "I need a taxi",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "04-1767826980789.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
     "nomePortugues": "Eu bebo água",
     "nomeIngles": "I drink water",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "06-1767826984850.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
     "nomePortugues": "Eu preciso de dinheiro",
     "nomeIngles": "I need money",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "05-1767826982612.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
     "nomePortugues": "Eu bebo café",
     "nomeIngles": "I drink coffee",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "07-1767826986432.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
     "nomePortugues": "Eu acho que sim",
     "nomeIngles": "I think so",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "13-1767827286544.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
     "nomePortugues": "Eu quero comida",
     "nomeIngles": "I want food",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "10-1767827236670.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
     "nomePortugues": "Eu pratico esportes",
     "nomeIngles": "I do sports",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "15-1767827346628.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
     "nomePortugues": "Eu faço meu melhor",
     "nomeIngles": "I do my best",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "mybest.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
     "nomePortugues": "Eu trabalho",
     "nomeIngles": "I work",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "work-1767827549832.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
     "nomePortugues": "Eu leio",
     "nomeIngles": "I read",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "iread-1767827444028.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
     "nomePortugues": "Eu gosto de suco",
     "nomeIngles": "I like juice",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "11-1767827247485.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
     "nomePortugues": "Eu descanso",
     "nomeIngles": "I rest",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "irest-1767827491938.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
     "nomePortugues": "Eu gosto de cachrros",
     "nomeIngles": "I like dogs",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "ilikedogs-1767827489560.mp3"
   },
   {
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
     "nomePortugues": "Eu dirijo",
     "nomeIngles": "I drive",
-    "categoria": "Presente simples",
+    "categoria": "Present Simple",
     "audio": "idrive-1767827497206.mp3"
   },
-
-  
   {
     "imagem": "sequ-ncia-02-00_03_11_14-quadro030-1767685182978.webp",
     "nomePortugues": "Isto são livros",
     "nomeIngles": "These are books",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "01-1767742955934.mp3"
   },
   {
     "imagem": "sequ-ncia-02-00_02_44_22-quadro029-1767685183046.webp",
     "nomePortugues": "Ela ama o bebê",
     "nomeIngles": "She loves the baby",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "02-1767742960153.mp3"
   },
   {
     "imagem": "sequ-ncia-02-00_02_22_17-quadro028-1767685183092.webp",
     "nomePortugues": "Ele joga bola",
     "nomeIngles": "He plays soccer",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "03-1767742963886.mp3"
   },
   {
     "imagem": "sequ-ncia-02-00_01_50_14-quadro027-1767685183145.webp",
     "nomePortugues": "Isto é comida",
     "nomeIngles": "This is food",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "04-1767742968105.mp3"
   },
   {
     "imagem": "sequ-ncia-02-00_01_27_21-quadro026-1767685183191.webp",
     "nomePortugues": "Ele está usando o laptop",
     "nomeIngles": "He is using the laptop",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "05-1767742974323.mp3"
   },
   {
     "imagem": "sequ-ncia-02-00_01_03_17-quadro025-1767685183240.webp",
     "nomePortugues": "Ele está lendo",
     "nomeIngles": "He is reading",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "06-1767742977449.mp3"
   },
   {
     "imagem": "sequ-ncia-02-00_00_47_10-quadro024-1767685183283.webp",
     "nomePortugues": "Ela diz oi",
     "nomeIngles": "She says hi",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "07-1767742980187.mp3"
   },
   {
     "imagem": "sequ-ncia-02-00_00_30_03-quadro023-1767685183324.webp",
     "nomePortugues": "Eles estão felizes",
     "nomeIngles": "They are happy",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "08-1767742982896.mp3"
   },
   {
     "imagem": "sequ-ncia-02-00_00_06_10-quadro022-1767685183367.webp",
     "nomePortugues": "Ela está bebendo",
     "nomeIngles": "She is drinking",
-    "categoria": ".",
+    "categoria": "Present Simple",
     "audio": "09-1767742995529.mp3"
   },
-
-  
   {
     "imagem": "i-build-1769571279363.webp",
     "nomePortugues": "Eu construo",
     "nomeIngles": "I build.",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-build-1769571892684.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -199,7 +194,7 @@
     "imagem": "i-carry-a-bag-1769571279403.webp",
     "nomePortugues": "Eu carrego uma bolsa",
     "nomeIngles": "I carry a bag",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-carry-1769571898972.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -208,7 +203,7 @@
     "imagem": "i-clean-1769571279442.webp",
     "nomePortugues": "Eu limpo",
     "nomeIngles": "I clean",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-clean-1769571902440.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -217,7 +212,7 @@
     "imagem": "i-close-door-1769571279478.webp",
     "nomePortugues": "Eu fecho a porta",
     "nomeIngles": "I close the door",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-close-1769571905036.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -226,7 +221,7 @@
     "imagem": "i-cook-1769571279518.webp",
     "nomePortugues": "Eu cozinho",
     "nomeIngles": "I cook",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-cook-1769571906530.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -235,7 +230,7 @@
     "imagem": "i-drink-tea-1769571279593.webp",
     "nomePortugues": "Eu bebo chá",
     "nomeIngles": "I drink tea",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-drink-tea-1769571908529.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -244,7 +239,7 @@
     "imagem": "i-drink-water-1769571279632.webp",
     "nomePortugues": "Eu bebo água",
     "nomeIngles": "I drink water",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-drink-water-1769571911042.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -253,7 +248,7 @@
     "imagem": "i-eat-pizza-1769571279671.webp",
     "nomePortugues": "Eu como pizza",
     "nomeIngles": "I eat pizza",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-eat-pizza-1769571913321.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -262,7 +257,7 @@
     "imagem": "i-have-launch-1769571279711.webp",
     "nomePortugues": "Eu como",
     "nomeIngles": "I eat",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-eat-1769571914901.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -271,7 +266,7 @@
     "imagem": "i-like-music-1769571279749.webp",
     "nomePortugues": "Eu gosto de música",
     "nomeIngles": "I like music",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-like-music-1769571916863.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -280,7 +275,7 @@
     "imagem": "i-love-you-1769571279787.webp",
     "nomePortugues": "Eu amo você",
     "nomeIngles": "I love you",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-love-you-1769571922319.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -289,7 +284,7 @@
     "imagem": "i-open-the-door-1769571279825.webp",
     "nomePortugues": "Eu abro a porta",
     "nomeIngles": "I open the door",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-open-1769571925384.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -298,7 +293,7 @@
     "imagem": "i-play-soccer-1769571279867.webp",
     "nomePortugues": "Eu jogo futebol",
     "nomeIngles": "I play soccer",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-play-soccer-1769571929411.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -307,7 +302,7 @@
     "imagem": "i-ride-a-bike-1769571279906.webp",
     "nomePortugues": "Eu ando de bicicleta",
     "nomeIngles": "I walk bycicle",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-ride-a-bycicle-1769571933372.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -316,7 +311,7 @@
     "imagem": "i-talk-1769571279944.webp",
     "nomePortugues": "Eu falo",
     "nomeIngles": "I talk",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-talk-1769571936910.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -325,7 +320,7 @@
     "imagem": "i-think-1769571279984.webp",
     "nomePortugues": "Eu penso",
     "nomeIngles": "I think",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-think-1769571939676.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -334,7 +329,7 @@
     "imagem": "i-tidy-1769571280028.webp",
     "nomePortugues": "I tidy up",
     "nomeIngles": "Eu arrumo",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-tidy-up-1769571942611.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -343,7 +338,7 @@
     "imagem": "i-use-the-phone-1769571280067.webp",
     "nomePortugues": "Eu uso o celular",
     "nomeIngles": "I use the phone",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-use-the-phone-1769571946939.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -352,7 +347,7 @@
     "imagem": "i-walk-1769571280107.webp",
     "nomePortugues": "Eu ando",
     "nomeIngles": "I walk",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-walk-1769571949700.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -361,7 +356,7 @@
     "imagem": "i-want-water-1769571280146.webp",
     "nomePortugues": "Eu quero água",
     "nomeIngles": "I want water",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-want-water-1769571952510.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -370,7 +365,7 @@
     "imagem": "i-wash-my-hands-1769571280186.webp",
     "nomePortugues": "Eu lavo minhas mãos",
     "nomeIngles": "I wash my hands",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-wash-my-hands-1769571955130.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -379,17 +374,16 @@
     "imagem": "i-write-1769571280225.webp",
     "nomePortugues": "Eu escrevo",
     "nomeIngles": "I write",
-    "categoria": "1",
+    "categoria": "Present Simple",
     "audio": "i-write-1769571957363.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
   },
-
-   {
+  {
     "imagem": "i-agree-1769615362209.webp",
     "nomePortugues": "Eu concordo",
     "nomeIngles": "I agree",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-agree-1769616127167.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -398,7 +392,7 @@
     "imagem": "i-am-sorry-1769615362274.webp",
     "nomePortugues": "Eu sinto muito",
     "nomeIngles": "I am sorry",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-am-sorry-1769616139680.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -407,7 +401,7 @@
     "imagem": "i-am-tired-1769615362366.webp",
     "nomePortugues": "Eu estou cansado",
     "nomeIngles": "I am tired",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-am-tired-1769616141877.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -416,7 +410,7 @@
     "imagem": "i-disagree-1769615362408.webp",
     "nomePortugues": "Eu discordo",
     "nomeIngles": "I disagree",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-disagree-1769616145435.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -425,7 +419,7 @@
     "imagem": "i-feel-good-1769615362446.webp",
     "nomePortugues": "Eu me sinto bem",
     "nomeIngles": "I feel good",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-feel-good-1769616150591.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -434,7 +428,7 @@
     "imagem": "i-forgot-1769615362484.webp",
     "nomePortugues": "Eu esqueci",
     "nomeIngles": "I forgot",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-forgot-1769616153591.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -443,7 +437,7 @@
     "imagem": "i-have-a-question-1769615362520.webp",
     "nomePortugues": "Eu tenho uma pergunta",
     "nomeIngles": "I have a question",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-have-a-question-1769616155314.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -452,7 +446,7 @@
     "imagem": "i-have-time-1769615362557.webp",
     "nomePortugues": "Eu tenho tempo",
     "nomeIngles": "I have time",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-have-time-1769616158933.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -461,7 +455,7 @@
     "imagem": "i-hear-you-1769615362594.webp",
     "nomePortugues": "Eu te escuto",
     "nomeIngles": "I hear you",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-hear-you-1769616160894.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -470,7 +464,7 @@
     "imagem": "i-live-here-1769615362631.webp",
     "nomePortugues": "Eu moro aqui",
     "nomeIngles": "I live here",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-live-here-1769616163696.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -479,7 +473,7 @@
     "imagem": "i-remember-1769615362670.webp",
     "nomePortugues": "Eu lembro",
     "nomeIngles": "I remember",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-remember-1769616166525.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -488,7 +482,7 @@
     "imagem": "i-see-the-car-1769615362707.webp",
     "nomePortugues": "Eu vejo o carro",
     "nomeIngles": "I see the car",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-see-the-car-1769616169967.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -497,7 +491,7 @@
     "imagem": "i-trust-you-1769615362742.webp",
     "nomePortugues": "Eu confio em você",
     "nomeIngles": "I trust you",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-trust-you-1769616172093.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -506,7 +500,7 @@
     "imagem": "i-understand-1769615362782.webp",
     "nomePortugues": "Eu entendo",
     "nomeIngles": "I understand",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-understand-1769616175573.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -515,7 +509,7 @@
     "imagem": "i-work-here-1769615362819.webp",
     "nomePortugues": "Eu trabalho aqui",
     "nomeIngles": "I work here",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-work-here-1769616179998.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
@@ -524,17 +518,16 @@
     "imagem": "i-m-ready-1769615362857.webp",
     "nomePortugues": "Eu estou pronto",
     "nomeIngles": "I'm ready",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Present Simple",
     "audio": "i-am-ready-1769616187045.mp3",
     "tense": "present-simple",
     "sentenceForm": ""
   },
-
-    {
+  {
     "imagem": "01-1767824952267.webp",
     "nomePortugues": "Eu estava feliz",
     "nomeIngles": "I was happy",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-was-happy-1769625063614.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -543,7 +536,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
     "nomePortugues": "Eu estava cansado",
     "nomeIngles": "I was tired",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-was-tired-1769625072790.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -552,7 +545,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
     "nomePortugues": "Eu precisei de ajuda",
     "nomeIngles": "I needed help",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-needed-help-1769625080504.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -561,7 +554,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
     "nomePortugues": "Eu precisei de um táxi",
     "nomeIngles": "I needed a taxi",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-needed-a-taxi-1769625094692.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -570,7 +563,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
     "nomePortugues": "Eu bebi água",
     "nomeIngles": "I drank water",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-drank-water-1769625099588.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -579,7 +572,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
     "nomePortugues": "Eu precisei de dinheiro",
     "nomeIngles": "I needed money",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-needed-money-1769625107262.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -588,7 +581,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
     "nomePortugues": "Eu bebi café",
     "nomeIngles": "I drank coffee",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-drank-coffee-1769625110541.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -597,7 +590,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
     "nomePortugues": "Eu achei que sim",
     "nomeIngles": "I thought so",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-thought-so-1769625113342.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -606,7 +599,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
     "nomePortugues": "Eu queria comida",
     "nomeIngles": "I wanted food",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-wanted-food-1769625123684.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -615,7 +608,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
     "nomePortugues": "Eu pratiquei esportes",
     "nomeIngles": "I did sports",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-did-sports-1769625136294.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -624,7 +617,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
     "nomePortugues": "Eu fiz o meu melhor",
     "nomeIngles": "I did my best",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-did-my-best-1769625140469.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -633,7 +626,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
     "nomePortugues": "Eu trabalhei",
     "nomeIngles": "I worked",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-worked-1769625161453.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -642,7 +635,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
     "nomePortugues": "Eu li",
     "nomeIngles": "I read",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-read-1769625170408.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -651,7 +644,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
     "nomePortugues": "Eu gostei de suco",
     "nomeIngles": "I liked juice",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-liked-juice-1769625198408.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -660,7 +653,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
     "nomePortugues": "Eu descansei",
     "nomeIngles": "I rested",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-rested-1769625203386.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -669,7 +662,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
     "nomePortugues": "Eu gostei de cachorros",
     "nomeIngles": "I liked dogs",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-liked-dogs-1769625209673.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -678,7 +671,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
     "nomePortugues": "Eu dirigi",
     "nomeIngles": "I drove",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -687,7 +680,7 @@
     "imagem": "sequ-ncia-02-00_03_11_14-quadro030-1767685182978.webp",
     "nomePortugues": "Estes eram livros",
     "nomeIngles": "These were books",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "this-were-books-1769625234126.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -696,7 +689,7 @@
     "imagem": "sequ-ncia-02-00_02_44_22-quadro029-1767685183046.webp",
     "nomePortugues": "Ela amou o bebê",
     "nomeIngles": "She loved the baby",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "she-loves-the-baby-1769625313980.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -705,7 +698,7 @@
     "imagem": "sequ-ncia-02-00_02_22_17-quadro028-1767685183092.webp",
     "nomePortugues": "Ele jogou futebol",
     "nomeIngles": "He played soccer",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "he-played-soccer-1769625287774.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -714,7 +707,7 @@
     "imagem": "sequ-ncia-02-00_01_50_14-quadro027-1767685183145.webp",
     "nomePortugues": "Isto era comida",
     "nomeIngles": "This was food",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "this-was-food-1769625299199.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -723,7 +716,7 @@
     "imagem": "sequ-ncia-02-00_01_27_21-quadro026-1767685183191.webp",
     "nomePortugues": "Ele usou o laptop",
     "nomeIngles": "He used the laptop",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "he-use-the-laptop-1769625305150.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -732,7 +725,7 @@
     "imagem": "sequ-ncia-02-00_01_03_17-quadro025-1767685183240.webp",
     "nomePortugues": "Ele leu",
     "nomeIngles": "He read",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "he-read-1769625336059.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -741,7 +734,7 @@
     "imagem": "sequ-ncia-02-00_00_47_10-quadro024-1767685183283.webp",
     "nomePortugues": "Ela disse oi",
     "nomeIngles": "She said hi",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "she-said-hi-1769625340232.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -750,7 +743,7 @@
     "imagem": "sequ-ncia-02-00_00_30_03-quadro023-1767685183324.webp",
     "nomePortugues": "Eles estavam felizes",
     "nomeIngles": "They were happy",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "they-were-happy-1769625348065.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -759,7 +752,7 @@
     "imagem": "sequ-ncia-02-00_00_06_10-quadro022-1767685183367.webp",
     "nomePortugues": "Ela bebeu",
     "nomeIngles": "She drank",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "she-drank-1769625355503.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -768,7 +761,7 @@
     "imagem": "i-build-1769571279363.webp",
     "nomePortugues": "Eu construí",
     "nomeIngles": "I built",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-built-1769625362643.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -777,7 +770,7 @@
     "imagem": "i-carry-a-bag-1769571279403.webp",
     "nomePortugues": "Eu carreguei uma bolsa",
     "nomeIngles": "I carried the bag",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-carried-the-bag-1769625374758.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -786,7 +779,7 @@
     "imagem": "i-clean-1769571279442.webp",
     "nomePortugues": "Eu limpei",
     "nomeIngles": "I cleaned",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-cleaned-1769625389573.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -795,7 +788,7 @@
     "imagem": "i-close-door-1769571279478.webp",
     "nomePortugues": "Eu fechei a porta",
     "nomeIngles": "I closed the door",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-opened-the-door-1769625401171.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -804,7 +797,7 @@
     "imagem": "i-cook-1769571279518.webp",
     "nomePortugues": "Eu cozinhei",
     "nomeIngles": "I cooked",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-cooked-1769625423479.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -813,7 +806,7 @@
     "imagem": "i-drink-tea-1769571279593.webp",
     "nomePortugues": "Eu bebi chá",
     "nomeIngles": "I drank tea",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-drank-tea-1769625431274.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -822,7 +815,7 @@
     "imagem": "i-drink-water-1769571279632.webp",
     "nomePortugues": "Eu bebi água",
     "nomeIngles": "I drank water",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-drank-water-1769625433342.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -831,7 +824,7 @@
     "imagem": "i-eat-pizza-1769571279671.webp",
     "nomePortugues": "Eu comi pizza",
     "nomeIngles": "I ate pizza",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -840,7 +833,7 @@
     "imagem": "i-have-launch-1769571279711.webp",
     "nomePortugues": "Eu comi",
     "nomeIngles": "I ate",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-ate-1769625464655.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -849,7 +842,7 @@
     "imagem": "i-like-music-1769571279749.webp",
     "nomePortugues": "Eu gostei de música",
     "nomeIngles": "I liked music",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-liked-music-1769625473199.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -858,7 +851,7 @@
     "imagem": "i-love-you-1769571279787.webp",
     "nomePortugues": "Eu te amei",
     "nomeIngles": "I loved you",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-loved-you-1769625483813.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -867,7 +860,7 @@
     "imagem": "i-open-the-door-1769571279825.webp",
     "nomePortugues": "Eu abri a porta",
     "nomeIngles": "I opened the door",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-opened-the-door-1769625497284.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -876,7 +869,7 @@
     "imagem": "i-play-soccer-1769571279867.webp",
     "nomePortugues": "Eu joguei futebol",
     "nomeIngles": "I played soccer",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-played-soccer-1769625507917.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -885,7 +878,7 @@
     "imagem": "i-ride-a-bike-1769571279906.webp",
     "nomePortugues": "Eu andei de bicicleta",
     "nomeIngles": "I rode a bicycle",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-rode-a-bycicle-1769625516558.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -894,7 +887,7 @@
     "imagem": "i-talk-1769571279944.webp",
     "nomePortugues": "Eu falei",
     "nomeIngles": "I talked",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-talked-1769625530064.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -903,7 +896,7 @@
     "imagem": "i-think-1769571279984.webp",
     "nomePortugues": "Eu pensei",
     "nomeIngles": "I thought",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-thought-1769625535374.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -912,7 +905,7 @@
     "imagem": "i-tidy-1769571280028.webp",
     "nomePortugues": "Eu arrumei",
     "nomeIngles": "I tidied up",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-tidied-up-1769625568884.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -921,7 +914,7 @@
     "imagem": "i-use-the-phone-1769571280067.webp",
     "nomePortugues": "Eu usei o celular",
     "nomeIngles": "I used the phone",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-use-the-phone-1769625578162.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -930,7 +923,7 @@
     "imagem": "i-walk-1769571280107.webp",
     "nomePortugues": "Eu andei",
     "nomeIngles": "I walked",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-walked-1769625596529.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -939,7 +932,7 @@
     "imagem": "i-want-water-1769571280146.webp",
     "nomePortugues": "Eu quis água",
     "nomeIngles": "I wanted water",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-wanted-water-1769625604792.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -948,7 +941,7 @@
     "imagem": "i-wash-my-hands-1769571280186.webp",
     "nomePortugues": "Eu lavei minhas mãos",
     "nomeIngles": "I washed my hands",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-wash-my-hands-1769625615199.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -957,7 +950,7 @@
     "imagem": "i-write-1769571280225.webp",
     "nomePortugues": "Eu escrevi",
     "nomeIngles": "I wrote",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-wrote-1769625621278.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -966,7 +959,7 @@
     "imagem": "i-agree-1769615362209.webp",
     "nomePortugues": "Eu concordei",
     "nomeIngles": "I agreed",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-agreed-1769625628388.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -975,7 +968,7 @@
     "imagem": "i-am-sorry-1769615362274.webp",
     "nomePortugues": "Eu senti muito",
     "nomeIngles": "I was sorry",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-was-sorry-1769625641269.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -984,7 +977,7 @@
     "imagem": "i-am-tired-1769615362366.webp",
     "nomePortugues": "Eu estava cansado",
     "nomeIngles": "I was tired",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-was-tired-1769625650876.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -993,7 +986,7 @@
     "imagem": "i-disagree-1769615362408.webp",
     "nomePortugues": "Eu discordei",
     "nomeIngles": "I disagreed",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-disagreed-1769625653661.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1002,7 +995,7 @@
     "imagem": "i-feel-good-1769615362446.webp",
     "nomePortugues": "Eu me senti bem",
     "nomeIngles": "I felt good",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-felt-good-1769625663404.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1011,7 +1004,7 @@
     "imagem": "i-forgot-1769615362484.webp",
     "nomePortugues": "Eu esqueci",
     "nomeIngles": "I forgot",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-forgot-1769625668687.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1020,7 +1013,7 @@
     "imagem": "i-have-a-question-1769615362520.webp",
     "nomePortugues": "Eu tinha uma pergunta",
     "nomeIngles": "I had a question",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-had-a-question-1769625684113.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1029,7 +1022,7 @@
     "imagem": "i-have-time-1769615362557.webp",
     "nomePortugues": "Eu tive tempo",
     "nomeIngles": "I had time",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "eu-tinha-tempo-1769625730728.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1038,7 +1031,7 @@
     "imagem": "i-hear-you-1769615362594.webp",
     "nomePortugues": "Eu te ouvi",
     "nomeIngles": "I heard you",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-heard-you-1769625748832.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1047,7 +1040,7 @@
     "imagem": "i-live-here-1769615362631.webp",
     "nomePortugues": "Eu morei aqui",
     "nomeIngles": "I lived here",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-lived-here-1769625757645.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1056,7 +1049,7 @@
     "imagem": "i-remember-1769615362670.webp",
     "nomePortugues": "Eu lembrei",
     "nomeIngles": "I remembered",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-remembered-1769625762999.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1065,7 +1058,7 @@
     "imagem": "i-see-the-car-1769615362707.webp",
     "nomePortugues": "Eu vi o carro",
     "nomeIngles": "I saw the car",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-saw-the-car-1769625780517.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1074,7 +1067,7 @@
     "imagem": "i-trust-you-1769615362742.webp",
     "nomePortugues": "Eu confiei em você",
     "nomeIngles": "I trusted you",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-trusted-you-1769625788277.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1083,7 +1076,7 @@
     "imagem": "i-understand-1769615362782.webp",
     "nomePortugues": "Eu entendi",
     "nomeIngles": "I understood",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-understood-1769625796059.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1092,7 +1085,7 @@
     "imagem": "i-work-here-1769615362819.webp",
     "nomePortugues": "Eu trabalhei aqui",
     "nomeIngles": "I worked here",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-worked-here-1769625810510.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
@@ -1101,17 +1094,16 @@
     "imagem": "i-m-ready-1769615362857.webp",
     "nomePortugues": "Eu estava pronto",
     "nomeIngles": "I was ready",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Past Simple",
     "audio": "i-was-ready-1769625818167.mp3",
     "tense": "past-simple",
     "sentenceForm": ""
   },
-
-   {
+  {
     "imagem": "01-1767824952267.webp",
     "nomePortugues": "Eu estou feliz?",
     "nomeIngles": "Am I happy?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "am-i-happy-1769638354377.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1120,7 +1112,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
     "nomePortugues": "Eu estou cansado?",
     "nomeIngles": "Am I tired?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "am-i-tired-1769638356126.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1129,7 +1121,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
     "nomePortugues": "Eu preciso de ajuda?",
     "nomeIngles": "Do I need help?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-need-help-1769638363139.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1138,7 +1130,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
     "nomePortugues": "Eu preciso de um táxi?",
     "nomeIngles": "Do I need a taxi?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-need-a-taxi-1769638365489.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1147,7 +1139,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
     "nomePortugues": "Eu bebo água?",
     "nomeIngles": "Do I drink water?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-drink-water-1769638367857.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1156,7 +1148,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
     "nomePortugues": "Eu preciso de dinheiro?",
     "nomeIngles": "Do I need money?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-need-money-1769638370506.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1165,7 +1157,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
     "nomePortugues": "Eu bebo café?",
     "nomeIngles": "Do I drink coffee?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-drink-coffee-1769638372790.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1174,7 +1166,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
     "nomePortugues": "Eu acho que sim?",
     "nomeIngles": "Do I think so?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-think-so-1769638486589.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1183,7 +1175,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
     "nomePortugues": "Eu quero comida?",
     "nomeIngles": "Do I want food?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-want-food-1769638492016.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1192,7 +1184,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
     "nomePortugues": "Eu pratico esportes?",
     "nomeIngles": "Do I do sports?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-do-sports-1769638496879.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1201,7 +1193,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
     "nomePortugues": "Eu faço meu melhor?",
     "nomeIngles": "Do I do my best?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-do-my-best-1769638514702.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1210,7 +1202,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
     "nomePortugues": "Eu trabalho?",
     "nomeIngles": "Do I work?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-work-1769638517479.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1219,7 +1211,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
     "nomePortugues": "Eu leio?",
     "nomeIngles": "Do I read?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-read-1769638520639.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1228,7 +1220,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
     "nomePortugues": "Eu gosto de suco?",
     "nomeIngles": "Do I like juice?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1237,7 +1229,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
     "nomePortugues": "Eu descanso?",
     "nomeIngles": "Do I rest?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1246,7 +1238,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
     "nomePortugues": "Eu gosto de cachorros?",
     "nomeIngles": "Do I like dogs?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-like-dogs-1769638725747.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1255,7 +1247,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
     "nomePortugues": "Eu dirijo?",
     "nomeIngles": "Do I drive?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-drive-1769638729687.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1264,7 +1256,7 @@
     "imagem": "sequ-ncia-02-00_03_11_14-quadro030-1767685182978.webp",
     "nomePortugues": "Isto são livros?",
     "nomeIngles": "Are these books?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "are-this-books-1769638732975.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1273,7 +1265,7 @@
     "imagem": "sequ-ncia-02-00_02_44_22-quadro029-1767685183046.webp",
     "nomePortugues": "Ela ama o bebê?",
     "nomeIngles": "Does she love the baby?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "does-she-love-the-baby-1769638742548.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1282,7 +1274,7 @@
     "imagem": "sequ-ncia-02-00_02_22_17-quadro028-1767685183092.webp",
     "nomePortugues": "Ele joga futebol?",
     "nomeIngles": "Does he play soccer?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "does-he-play-soccer-1769638747298.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1291,7 +1283,7 @@
     "imagem": "sequ-ncia-02-00_01_50_14-quadro027-1767685183145.webp",
     "nomePortugues": "Isto é comida?",
     "nomeIngles": "Is this food?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "this-is-food-1769638751702.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1300,7 +1292,7 @@
     "imagem": "sequ-ncia-02-00_01_27_21-quadro026-1767685183191.webp",
     "nomePortugues": "Ele está usando o laptop?",
     "nomeIngles": "Is he using the laptop?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "is-he-using-the-laptop-1769638755702.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1309,7 +1301,7 @@
     "imagem": "sequ-ncia-02-00_01_03_17-quadro025-1767685183240.webp",
     "nomePortugues": "Ele está lendo?",
     "nomeIngles": "Is he reading?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "is-he-reading-1769638758328.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1318,7 +1310,7 @@
     "imagem": "sequ-ncia-02-00_00_47_10-quadro024-1767685183283.webp",
     "nomePortugues": "Ela diz oi?",
     "nomeIngles": "Does she say hi?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "does-she-say-hi-1769638761790.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1327,7 +1319,7 @@
     "imagem": "sequ-ncia-02-00_00_30_03-quadro023-1767685183324.webp",
     "nomePortugues": "Eles estão felizes?",
     "nomeIngles": "Are they happy?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "are-they-happy-1769638764892.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1336,7 +1328,7 @@
     "imagem": "i-build-1769571279363.webp",
     "nomePortugues": "Eu construo?",
     "nomeIngles": "Do I build?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-build-1769639138190.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1345,7 +1337,7 @@
     "imagem": "i-carry-a-bag-1769571279403.webp",
     "nomePortugues": "Eu carrego uma bolsa?",
     "nomeIngles": "Do I carry a bag?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-carry-a-bag-1769639141393.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1354,7 +1346,7 @@
     "imagem": "i-clean-1769571279442.webp",
     "nomePortugues": "Eu limpo?",
     "nomeIngles": "Do I clean?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-clean-1769639145135.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1363,7 +1355,7 @@
     "imagem": "i-close-door-1769571279478.webp",
     "nomePortugues": "Eu fecho a porta?",
     "nomeIngles": "Do I close the door?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-close-the-door-1769639148689.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
@@ -1372,17 +1364,16 @@
     "imagem": "i-drink-tea-1769571279593.webp",
     "nomePortugues": "Eu bebo chá?",
     "nomeIngles": "Do I drink tea?",
-    "categoria": "(Só escrever = Nível Ask)",
+    "categoria": "Present Simple",
     "audio": "do-i-drink-tea-1769639157169.mp3",
     "tense": "present-simple",
     "sentenceForm": "question"
   },
-
-    {
+  {
     "imagem": "01-1767824952267.webp",
     "nomePortugues": "Eu estarei feliz",
     "nomeIngles": "I will be happy",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-be-happy-1769726623396.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1391,7 +1382,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_05-quadro011---copia-1767824952340.webp",
     "nomePortugues": "Eu estarei cansado",
     "nomeIngles": "I will be tired",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-be-tired-1769726895529.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1400,7 +1391,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_08-quadro012-1767824952387.webp",
     "nomePortugues": "Eu precisarei de ajuda",
     "nomeIngles": "I will need help",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-need-help-1769726902448.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1409,7 +1400,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_15-quadro013-1767824952433.webp",
     "nomePortugues": "Eu precisarei de um táxi",
     "nomeIngles": "I will need a taxi",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-need-a-taxi-1769726905712.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1418,7 +1409,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_00_22-quadro010---copia-1767824952474.webp",
     "nomePortugues": "Eu beberei água",
     "nomeIngles": "I will drink water",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-drink-water-1769726911341.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1427,7 +1418,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_14-quadro014-1767824952520.webp",
     "nomePortugues": "Eu precisarei de dinheiro",
     "nomeIngles": "I will need money",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-need-money-1769726916301.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1436,7 +1427,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_01_16-quadro009---copia-1767824952561.webp",
     "nomePortugues": "Eu beberei café",
     "nomeIngles": "I will drink coffee",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-drink-coffee-1769726920861.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1445,7 +1436,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
     "nomePortugues": "Eu acharei que sim",
     "nomeIngles": "I will think so",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-think-so-1769726931598.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1454,7 +1445,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_19-quadro007-1767824952802.webp",
     "nomePortugues": "Eu quererei comida",
     "nomeIngles": "I will want food",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-want-food-1769726938959.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1463,7 +1454,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro017-1767824952847.webp",
     "nomePortugues": "Eu praticarei esportes",
     "nomeIngles": "I will do sports",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-do-sports-1769726942783.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1472,7 +1463,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro018-1767824952894.webp",
     "nomePortugues": "Eu farei o meu melhor",
     "nomeIngles": "I will do my best",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-do-my-best-1769726947634.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1481,7 +1472,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
     "nomePortugues": "Eu trabalharei",
     "nomeIngles": "I will work",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-work-1769726951539.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1490,7 +1481,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_11-quadro020-1767824952984.webp",
     "nomePortugues": "Eu lerei",
     "nomeIngles": "I will read",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-read-1769726956887.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1499,7 +1490,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_13-quadro006-1767824953074.webp",
     "nomePortugues": "Eu gostarei de suco",
     "nomeIngles": "I will like juice",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-like-juice-1769726962657.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1508,7 +1499,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_03_22-quadro023-1767824953211.webp",
     "nomePortugues": "Eu descansarei",
     "nomeIngles": "I will rest",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-rest-1769726965835.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1517,7 +1508,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_01-quadro005-1767824953256.webp",
     "nomePortugues": "Eu gostarei de cachorros",
     "nomeIngles": "I will like dogs",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-like-dogs-1769726970636.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1526,7 +1517,7 @@
     "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_04_08-quadro004-1767824953302.webp",
     "nomePortugues": "Eu dirigirei",
     "nomeIngles": "I will drive",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-drive-1769726974308.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1535,7 +1526,7 @@
     "imagem": "sequ-ncia-02-00_03_11_14-quadro030-1767685182978.webp",
     "nomePortugues": "Estes serão livros",
     "nomeIngles": "These will be books",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "this-will-be-books-1769726979107.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1544,7 +1535,7 @@
     "imagem": "sequ-ncia-02-00_02_44_22-quadro029-1767685183046.webp",
     "nomePortugues": "Ela amará o bebê",
     "nomeIngles": "She will love the baby",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "she-will-love-the-baby-1769726988418.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1553,7 +1544,7 @@
     "imagem": "sequ-ncia-02-00_02_22_17-quadro028-1767685183092.webp",
     "nomePortugues": "Ele jogará futebol",
     "nomeIngles": "He will play soccer",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "he-will-play-soccer-1769726993268.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1562,7 +1553,7 @@
     "imagem": "sequ-ncia-02-00_01_50_14-quadro027-1767685183145.webp",
     "nomePortugues": "Isto será comida",
     "nomeIngles": "This will be food",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "this-wil-be-food-1769726998513.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1571,7 +1562,7 @@
     "imagem": "sequ-ncia-02-00_01_27_21-quadro026-1767685183191.webp",
     "nomePortugues": "Ele usará o laptop",
     "nomeIngles": "He will use the laptop",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "he-will-use-the-laptop-1769727002686.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1580,7 +1571,7 @@
     "imagem": "sequ-ncia-02-00_01_03_17-quadro025-1767685183240.webp",
     "nomePortugues": "Ele lerá",
     "nomeIngles": "He will read",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "he-will-read-1769727007753.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1589,7 +1580,7 @@
     "imagem": "sequ-ncia-02-00_00_47_10-quadro024-1767685183283.webp",
     "nomePortugues": "Ela dirá oi",
     "nomeIngles": "She will say hi",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "she-will-say-hi-1769727016070.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1598,7 +1589,7 @@
     "imagem": "sequ-ncia-02-00_00_30_03-quadro023-1767685183324.webp",
     "nomePortugues": "Eles estarão felizes",
     "nomeIngles": "They will be happy",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "they-will-be-happy-1769727012510.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1607,7 +1598,7 @@
     "imagem": "sequ-ncia-02-00_00_06_10-quadro022-1767685183367.webp",
     "nomePortugues": "Ela beberá",
     "nomeIngles": "She will drink",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "she-will-drink-1769727020599.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1616,7 +1607,7 @@
     "imagem": "i-build-1769571279363.webp",
     "nomePortugues": "Eu construirei",
     "nomeIngles": "I will build",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-build-1769727024223.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1625,7 +1616,7 @@
     "imagem": "i-carry-a-bag-1769571279403.webp",
     "nomePortugues": "Eu carregarei uma bolsa",
     "nomeIngles": "I will carry a bag",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-carry-a-bag-1769727027573.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1634,7 +1625,7 @@
     "imagem": "i-clean-1769571279442.webp",
     "nomePortugues": "Eu limparei",
     "nomeIngles": "I will clean",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-clean-1769727031374.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1643,7 +1634,7 @@
     "imagem": "i-close-door-1769571279478.webp",
     "nomePortugues": "Eu fecharei a porta",
     "nomeIngles": "I will close the door",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-close-the-door-1769727035371.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1652,7 +1643,7 @@
     "imagem": "i-cook-1769571279518.webp",
     "nomePortugues": "Eu cozinharei",
     "nomeIngles": "I will cook",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-cook-1769727039059.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1661,7 +1652,7 @@
     "imagem": "i-drink-tea-1769571279593.webp",
     "nomePortugues": "Eu beberei chá",
     "nomeIngles": "I will drink tea",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-drink-tea-1769727041999.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1670,7 +1661,7 @@
     "imagem": "i-drink-water-1769571279632.webp",
     "nomePortugues": "Eu beberei água",
     "nomeIngles": "I will drink water",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-drink-water-1769727074806.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1679,7 +1670,7 @@
     "imagem": "i-eat-pizza-1769571279671.webp",
     "nomePortugues": "Eu comerei pizza",
     "nomeIngles": "I will eat pizza",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-eat-pizza-1769727078902.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1688,7 +1679,7 @@
     "imagem": "i-have-launch-1769571279711.webp",
     "nomePortugues": "Eu comerei",
     "nomeIngles": "I will eat",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-eat-1769727081880.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1697,7 +1688,7 @@
     "imagem": "i-like-music-1769571279749.webp",
     "nomePortugues": "Eu gostarei de música",
     "nomeIngles": "I will like music",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-like-music-1769727088716.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1706,7 +1697,7 @@
     "imagem": "i-love-you-1769571279787.webp",
     "nomePortugues": "Eu te amarei",
     "nomeIngles": "I will love you",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-love-you-1769727092991.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1715,7 +1706,7 @@
     "imagem": "i-open-the-door-1769571279825.webp",
     "nomePortugues": "Eu abrirei a porta",
     "nomeIngles": "I will open the door",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-open-the-door-1769727096919.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1724,7 +1715,7 @@
     "imagem": "i-play-soccer-1769571279867.webp",
     "nomePortugues": "Eu jogarei futebol",
     "nomeIngles": "I will play soccer",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-play-soccer-1769727100206.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1733,7 +1724,7 @@
     "imagem": "i-ride-a-bike-1769571279906.webp",
     "nomePortugues": "Eu andarei de bicicleta",
     "nomeIngles": "I will ride a bicycle",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-ride-a-bycicle-1769727105359.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1742,7 +1733,7 @@
     "imagem": "i-talk-1769571279944.webp",
     "nomePortugues": "Eu falarei",
     "nomeIngles": "I will talk",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-talk-1769727112157.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1751,7 +1742,7 @@
     "imagem": "i-think-1769571279984.webp",
     "nomePortugues": "Eu pensarei",
     "nomeIngles": "I will think",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-think-1769727116473.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1760,7 +1751,7 @@
     "imagem": "i-tidy-1769571280028.webp",
     "nomePortugues": "Eu arrumarei",
     "nomeIngles": "I will tidy up",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-tidy-up-1769727122427.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1769,7 +1760,7 @@
     "imagem": "i-use-the-phone-1769571280067.webp",
     "nomePortugues": "Eu usarei o celular",
     "nomeIngles": "I will use the phone",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-use-the-phone--1769727127362.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1778,7 +1769,7 @@
     "imagem": "i-walk-1769571280107.webp",
     "nomePortugues": "Eu andarei",
     "nomeIngles": "I will walk",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-walk-1769727131702.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1787,7 +1778,7 @@
     "imagem": "i-want-water-1769571280146.webp",
     "nomePortugues": "Eu quererei água",
     "nomeIngles": "I will want water",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-want-water-1769727144030.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1796,7 +1787,7 @@
     "imagem": "i-wash-my-hands-1769571280186.webp",
     "nomePortugues": "Eu lavarei minhas mãos",
     "nomeIngles": "I will wash my hands",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-wash-my-hands-1769727147776.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1805,7 +1796,7 @@
     "imagem": "i-write-1769571280225.webp",
     "nomePortugues": "Eu escreverei",
     "nomeIngles": "I will write",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-write-1769727151875.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1814,7 +1805,7 @@
     "imagem": "i-agree-1769615362209.webp",
     "nomePortugues": "Eu concordarei",
     "nomeIngles": "I will agree",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-agree-1769727155724.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1823,7 +1814,7 @@
     "imagem": "i-am-sorry-1769615362274.webp",
     "nomePortugues": "Eu sentirei muito",
     "nomeIngles": "I will be sorry",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-be-sorry-1769727159901.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1832,7 +1823,7 @@
     "imagem": "i-am-tired-1769615362366.webp",
     "nomePortugues": "Eu estarei cansado",
     "nomeIngles": "I will be tired",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-be-tired-1769727164342.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1841,7 +1832,7 @@
     "imagem": "i-disagree-1769615362408.webp",
     "nomePortugues": "Eu discordarei",
     "nomeIngles": "I will disagree",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-disagree-1769727168337.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1850,7 +1841,7 @@
     "imagem": "i-feel-good-1769615362446.webp",
     "nomePortugues": "Eu me sentirei bem",
     "nomeIngles": "I will feel good",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-feel-good-1769727171687.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1859,7 +1850,7 @@
     "imagem": "i-forgot-1769615362484.webp",
     "nomePortugues": "Eu esquecerei",
     "nomeIngles": "I will forget",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-forget-1769727180820.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1868,7 +1859,7 @@
     "imagem": "i-have-a-question-1769615362520.webp",
     "nomePortugues": "Eu terei uma pergunta",
     "nomeIngles": "I will have a question",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-have-a-question-1769727186819.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1877,7 +1868,7 @@
     "imagem": "i-have-time-1769615362557.webp",
     "nomePortugues": "Eu terei tempo",
     "nomeIngles": "I will have time",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-have-time-1769727191284.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1886,7 +1877,7 @@
     "imagem": "i-hear-you-1769615362594.webp",
     "nomePortugues": "Eu te ouvirei",
     "nomeIngles": "I will hear you",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-hear-you-1769727195982.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1895,7 +1886,7 @@
     "imagem": "i-live-here-1769615362631.webp",
     "nomePortugues": "Eu morarei aqui",
     "nomeIngles": "I will live here",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-live-here-1769727199359.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1904,7 +1895,7 @@
     "imagem": "i-remember-1769615362670.webp",
     "nomePortugues": "Eu lembrarei",
     "nomeIngles": "I will remember",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-remember-1769727203630.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1913,7 +1904,7 @@
     "imagem": "i-see-the-car-1769615362707.webp",
     "nomePortugues": "Eu verei o carro",
     "nomeIngles": "I will see the car",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-see-the-car-1769727207225.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1922,7 +1913,7 @@
     "imagem": "i-trust-you-1769615362742.webp",
     "nomePortugues": "Eu confiarei em você",
     "nomeIngles": "I will trust you",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-trust-you-1769727211161.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1931,7 +1922,7 @@
     "imagem": "i-understand-1769615362782.webp",
     "nomePortugues": "Eu entenderei",
     "nomeIngles": "I will understand",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-understand-1769727219152.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1940,7 +1931,7 @@
     "imagem": "i-work-here-1769615362819.webp",
     "nomePortugues": "Eu trabalharei aqui",
     "nomeIngles": "I will work here",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-work-here-1769727228104.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
@@ -1949,12 +1940,9 @@
     "imagem": "i-m-ready-1769615362857.webp",
     "nomePortugues": "Eu estarei pronto",
     "nomeIngles": "I will be ready",
-    "categoria": "(Só escrever = Nível 1)",
+    "categoria": "Future Simple (will)",
     "audio": "i-will-be-ready-1769727224049.mp3",
     "tense": "future-simple",
     "sentenceForm": ""
   }
-
-  
-
 ]

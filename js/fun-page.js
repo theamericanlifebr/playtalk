@@ -13,14 +13,12 @@
         const MEMORY_SEEDING_HOLD_DELAY_MS = 10000;
         const MEMORY_SEEDING_HOLD_DECREASE_HOURS = 2;
         const MEMORY_STAR_COUNT = 6;
-        const MEMORY_BACKGROUND_IMAGES = {
-          0: 'images/galaxy.png',
-          1: 'images/gold.png',
-          2: 'images/diamond.png',
-          3: 'images/mind.png',
-          4: 'images/connect.png'
+        const FLASHCARD_FORM_BACKGROUNDS = {
+          question: 'images/pergunta.png',
+          imperative: 'images/imperativo.png',
+          negative: 'images/negativo.png',
+          positive: 'images/positivo.png'
         };
-        const MEMORY_SEEDING_BACKGROUND = 'images/seeding.png';
         const MEMORY_LENS_SEEDED_COLOR = '28, 94, 50';
         const MEMORY_LENS_MASTERED_COLOR = '0, 0, 0';
         const MEMORY_STAGE_OPTIONS = [
@@ -156,21 +154,6 @@
           },
           'conditional-would': {
             lens: 'linear-gradient(40deg, rgba(90, 150, 255, 0.75) 0%, rgba(90, 150, 255, 0) 60%)'
-          }
-        };
-
-        const SENTENCE_FORM_STYLES = {
-          affirmative: {
-            lens: 'linear-gradient(to top, rgba(41, 214, 123, 0.75) 0%, rgba(41, 214, 123, 0) 60%)'
-          },
-          negative: {
-            lens: 'linear-gradient(to top, rgba(255, 77, 79, 0.75) 0%, rgba(255, 77, 79, 0) 60%)'
-          },
-          question: {
-            lens: 'linear-gradient(to top, rgba(246, 178, 94, 0.75) 0%, rgba(246, 178, 94, 0) 60%)'
-          },
-          imperative: {
-            lens: 'linear-gradient(to top, rgba(246, 196, 83, 0.75) 0%, rgba(246, 196, 83, 0) 60%)'
           }
         };
 
@@ -371,12 +354,18 @@
           return Boolean(entry?.memorySeedingUntil && Date.now() < entry.memorySeedingUntil);
         }
 
-        function getMemoryBackground(entry) {
-          if (isMemorySeeding(entry)) {
-            return MEMORY_SEEDING_BACKGROUND;
-          }
-          const stage = entry?.memoryStage ?? 0;
-          return MEMORY_BACKGROUND_IMAGES[stage] || MEMORY_BACKGROUND_IMAGES[0];
+        function normalizeSentenceForm(value) {
+          const normalized = String(value || '').trim().toLowerCase();
+          if (['question', 'pergunta', 'interrogative'].includes(normalized)) return 'question';
+          if (['imperative', 'imperativo'].includes(normalized)) return 'imperative';
+          if (['negative', 'negativo', 'negation'].includes(normalized)) return 'negative';
+          if (['affirmative', 'positive', 'positivo', 'afirmativa'].includes(normalized)) return 'positive';
+          return 'positive';
+        }
+
+        function getFlashcardBackground(card) {
+          const form = normalizeSentenceForm(card?.sentenceForm);
+          return FLASHCARD_FORM_BACKGROUNDS[form] || FLASHCARD_FORM_BACKGROUNDS.positive;
         }
 
         function getMemoryStreakValue(entry) {
@@ -644,17 +633,12 @@
         function applyTenseStyles(wrapper, card) {
           if (!wrapper || !card) return;
           const tenseStyle = TENSE_STYLES[card.tense] || {};
-          const formStyle = SENTENCE_FORM_STYLES[card.sentenceForm] || {};
           wrapper.style.setProperty('--tense-ring', tenseStyle.ring || 'none');
           wrapper.style.setProperty('--tense-animation', tenseStyle.animation || 'none');
           wrapper.style.setProperty('--tense-glow', tenseStyle.glow || 'none');
           wrapper.style.setProperty('--tense-filter', tenseStyle.filter || 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25))');
           wrapper.style.setProperty('--tense-mask', tenseStyle.mask || 'none');
           wrapper.style.setProperty('--tense-lens', tenseStyle.lens || 'none');
-          wrapper.style.setProperty('--form-ring', formStyle.ring || 'none');
-          wrapper.style.setProperty('--form-animation', formStyle.animation || 'none');
-          wrapper.style.setProperty('--form-glow', formStyle.glow || 'none');
-          wrapper.style.setProperty('--form-lens', formStyle.lens || 'none');
         }
 
         function createFlashcardVisual(card, options = {}) {
@@ -664,12 +648,8 @@
 
           const tenseRing = document.createElement('div');
           tenseRing.className = 'image-ring image-ring--tense';
-          const formRing = document.createElement('div');
-          formRing.className = 'image-ring image-ring--form';
           const tenseLens = document.createElement('div');
           tenseLens.className = 'image-lens image-lens--tense';
-          const formLens = document.createElement('div');
-          formLens.className = 'image-lens image-lens--form';
 
           const circle = document.createElement('div');
           circle.className = 'flashcard__circle';
@@ -684,10 +664,8 @@
           }
 
           visual.appendChild(tenseRing);
-          visual.appendChild(formRing);
           visual.appendChild(circle);
           visual.appendChild(tenseLens);
-          visual.appendChild(formLens);
           return visual;
         }
 
@@ -784,7 +762,7 @@
             animateAccuracyColor(cardEl, accuracyColor);
             accuracyColorCache.set(card.id, accuracyColor);
             cardEl.classList.toggle('is-seeding', isSeeding);
-            cardEl.style.backgroundImage = `url('${getMemoryBackground(statsEntry)}')`;
+            cardEl.style.backgroundImage = `url('${getFlashcardBackground(card)}')`;
 
             const visual = createFlashcardVisual(card);
             visual.addEventListener('click', event => {
@@ -852,7 +830,7 @@
                     const stillSeeding = isMemorySeeding(statsEntry);
                     cardEl.classList.toggle('is-seeding', stillSeeding);
                     phraseButton.classList.toggle('is-seeding', stillSeeding);
-                    cardEl.style.backgroundImage = `url('${getMemoryBackground(statsEntry)}')`;
+                    cardEl.style.backgroundImage = `url('${getFlashcardBackground(card)}')`;
                     const phrases = buildRotatingPhrases(card, statsEntry);
                     phraseIndex = Math.min(phraseIndex, phrases.length - 1);
                     renderPhrase(phraseButton, phrases[phraseIndex]);
@@ -960,7 +938,7 @@
           animateAccuracyColor(detailPronunciaCard, accuracyColor);
           const isSeeding = Boolean(stats && isMemorySeeding(stats));
           detailPanel.classList.toggle('is-seeding', isSeeding);
-          detailPanel.style.backgroundImage = `url('${getMemoryBackground(stats)}')`;
+          detailPanel.style.backgroundImage = `url('${getFlashcardBackground(card)}')`;
           detailPhrase.classList.toggle('is-seeding', isSeeding);
           detailPhrase.disabled = isSeeding;
 
