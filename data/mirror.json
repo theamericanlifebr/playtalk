@@ -8,5 +8,6 @@
   "write": ["right"],
   "live": ["leave"],
   "bycicle": ["bike"],
+  "liked": ["like it", "like"] 
   "they are": ["they're", "they are", "theyre"]
 }
