@@ -68,7 +68,7 @@
     prata: 'bronze',
     bronze: 'bronze'
   };
-  const LEVELS_ROOT = 'levels';
+  const LEVELS_ROOT = 'Levels';
   const MIRROR_PATH = 'data/mirror.json';
   const AUDIO_LEVELS_PATH = 'data/audiosniveis.json';
   const PHASE_TRACKS_PATH = 'data/trilhas.json';
@@ -1501,13 +1501,7 @@
     const blockLabel = `Bloco ${block}`;
     const dayLabel = `Dia ${dayNumber}`;
     return [
-      `${LEVELS_ROOT}/${blockLabel}/${dayLabel}/fase${phaseNumber}.json`,
-      `${LEVELS_ROOT}/${blockLabel}/${dayLabel}/Fase ${phaseNumber}.json`,
-      `${LEVELS_ROOT}/${blockLabel}/${dayLabel}/phase${phaseNumber}.json`,
-      `${LEVELS_ROOT}/${dayLabel}/fase${phaseNumber}.json`,
-      `${LEVELS_ROOT}/${dayLabel}/phase${phaseNumber}.json`,
-      `${LEVELS_ROOT}/day-${dayNumber}/phase-${phaseNumber}.json`,
-      `${LEVELS_ROOT}/day${dayNumber}/phase${phaseNumber}.json`
+      `${LEVELS_ROOT}/${blockLabel}/${dayLabel}/fase${phaseNumber}.json`
     ];
   }
 
