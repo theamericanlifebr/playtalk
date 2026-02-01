@@ -1,0 +1,73 @@
+[
+  {
+    "imagem": "01-1767824952267.webp",
+    "nomePortugues": "Eu estou feliz",
+    "nomeIngles": "I am happy",
+    "categoria": "Present Simple",
+    "audio": "01-1767826971689.mp3"
+  },
+
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_06-quadro016-1767824952759.webp",
+    "nomePortugues": "Eu acho que sim",
+    "nomeIngles": "I think so",
+    "categoria": "Present Simple",
+    "audio": "13-1767827286544.mp3"
+  },
+ 
+  {
+    "imagem": "gemini_generated_image_tdt1ptdt1ptdt1pt-00_00_02_20-quadro019-1767824952941.webp",
+    "nomePortugues": "Eu trabalho",
+    "nomeIngles": "I work",
+    "categoria": "Present Simple",
+    "audio": "work-1767827549832.mp3"
+  },
+
+  {
+    "imagem": "i-clean-1769571279442.webp",
+    "nomePortugues": "Eu limpo",
+    "nomeIngles": "I clean",
+    "categoria": "Present Simple",
+    "audio": "i-clean-1769571902440.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-close-door-1769571279478.webp",
+    "nomePortugues": "Eu fecho a porta",
+    "nomeIngles": "I close the door",
+    "categoria": "Present Simple",
+    "audio": "i-close-1769571905036.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+
+  {
+    "imagem": "i-like-music-1769571279749.webp",
+    "nomePortugues": "Eu gosto de música",
+    "nomeIngles": "I like music",
+    "categoria": "Present Simple",
+    "audio": "i-like-music-1769571916863.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-love-you-1769571279787.webp",
+    "nomePortugues": "Eu amo você",
+    "nomeIngles": "I love you",
+    "categoria": "Present Simple",
+    "audio": "i-love-you-1769571922319.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  },
+  {
+    "imagem": "i-open-the-door-1769571279825.webp",
+    "nomePortugues": "Eu abro a porta",
+    "nomeIngles": "I open the door",
+    "categoria": "Present Simple",
+    "audio": "i-open-1769571925384.mp3",
+    "tense": "present-simple",
+    "sentenceForm": ""
+  }
+
+]
