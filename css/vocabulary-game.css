@@ -605,6 +605,23 @@
       text-justify: inter-word;
     }
 
+    .text-container--writing {
+      font-size: 24px;
+      font-weight: 800;
+      transition: opacity 0.25s ease;
+    }
+
+    .text-container--writing-feedback {
+      background: #22c55e;
+      color: #fff;
+      border-radius: 12px;
+      padding: 8px 12px;
+    }
+
+    .text-container--writing-dissolve {
+      opacity: 0;
+    }
+
     .text-container--compact {
       width: auto;
       margin-top: 6px;
@@ -647,6 +664,66 @@
       transition: opacity 0.5s ease;
       width: min(450px, 100%);
       transform: translateY(-20px);
+    }
+
+    .choice-row.choice-row--writing {
+      width: min(840px, 100%);
+      transform: translateY(0);
+      gap: 12px;
+    }
+
+    .writing-toolbar {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .writing-undo {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-weight: 800;
+      background: #f1f5f9;
+      color: #0f172a;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .writing-undo:hover {
+      transform: translateY(-1px);
+    }
+
+    .writing-hub {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .writing-chip {
+      border: 1px solid #d1d5db;
+      background: #eee;
+      color: #1f2937;
+      font-weight: 800;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      text-transform: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .writing-chip:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+    }
+
+    .writing-chip:disabled,
+    .writing-chip--selected {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
     }
 
     .vocabulary-game.phase-1 .choice-row {
