@@ -44,6 +44,7 @@
   const PHASE_FOUR_GREEN_MS = 1000;
   const PHASE_FOUR_DISSOLVE_MS = 1000;
   const AUDIO_SKIP_TAP_COUNT = 5;
+  const MAX_PHASE = 10;
   const MEDAL_STORAGE_KEY = 'vocabulary-medals';
   const PROGRESS_STORAGE_KEY = 'vocabulary-progress';
   const COMPLETION_STORAGE_KEY = 'vocabulary-last-complete';
@@ -67,9 +68,22 @@
     prata: 'bronze',
     bronze: 'bronze'
   };
+  const LEVELS_ROOT = 'levels';
   const MIRROR_PATH = 'data/mirror.json';
   const AUDIO_LEVELS_PATH = 'data/audiosniveis.json';
   const PHASE_TRACKS_PATH = 'data/trilhas.json';
+  const WRITING_POOLS_PATHS = {
+    micro: 'writing/micro_words.json',
+    verbs: 'writing/verbs.json',
+    nouns: 'writing/nouns.json',
+    adjectives: 'writing/adjectives_adverbs.json'
+  };
+  const WRITING_HUB_COUNTS = {
+    micro: 8,
+    verbs: 5,
+    nouns: 4,
+    adjectives: 3
+  };
   const PHASE_TRACK_VOLUME = 0.25;
   const PHASE_TRACK_FADEOUT_MS = 2000;
   const ACCURACY_RING_ANIMATION_MS = 1000;
@@ -94,7 +108,8 @@
   const MODE_PHASE_MAP = {
     association: 2,
     reading: 3,
-    listening: 5
+    listening: 5,
+    writing: 9
   };
   const urlParams = new URLSearchParams(window.location.search);
   const requestedMode = urlParams.get('mode');
@@ -106,11 +121,12 @@
   const forcedPhase = Number.isFinite(requestedPhase)
     ? requestedPhase
     : (Number.isFinite(modePhase) ? modePhase : null);
-  const singlePhaseMode = Number.isFinite(forcedPhase) && forcedPhase >= 1 && forcedPhase <= 8;
+  const singlePhaseMode = Number.isFinite(forcedPhase) && forcedPhase >= 1 && forcedPhase <= MAX_PHASE;
   const isFlashcardLaunch = urlParams.get('source') === 'flashcards';
 
-  let images = [];
-  let buildingImages = [];
+  let dayPhaseEntries = new Map();
+  let dayPhaseSequence = [];
+  let dayEntries = [];
   let level = 1;
   let phase = 1;
   let pool = [];
@@ -131,13 +147,16 @@
   let currentPhaseTrack = null;
   let phaseTrackFadeFrame = null;
   const resolvedAudioCache = new Map();
+  let writingState = null;
+  let writingCleanup = null;
 
   let awaiting = false;
   let recognition = null;
   let micPermissionPromise = null;
   let loadPromise = null;
-  let buildingLoadPromise = null;
-  let fileLevels = new Map();
+  let writingPoolsPromise = null;
+  let writingPools = null;
+  let levelCache = new Map();
   let rotationTimer = null;
   let rotationIndex = 0;
   let finalStatsRotationTimer = null;
@@ -242,12 +261,12 @@
   function normalizeImageEntry(entry) {
     if (!entry || typeof entry !== 'object') return null;
 
-    const file = entry.file || entry.imagem;
-    const en = entry.en || entry.nomeIngles;
-    const pt = entry.pt || entry.nomePortugues;
-    const audio = typeof entry.audio === 'string' ? entry.audio : '';
-
-    if (!file || !en) return null;
+    const file = entry.file || entry.imagem || entry.targetImage || entry.image || '';
+    const en = entry.en || entry.nomeIngles || entry.targetSentence || entry.sentence || '';
+    const pt = entry.pt || entry.nomePortugues || entry.frase || '';
+    const audio = typeof entry.audio === 'string'
+      ? entry.audio
+      : (typeof entry.targetAudioMp3 === 'string' ? entry.targetAudioMp3 : '');
 
     return {
       ...entry,
@@ -258,16 +277,39 @@
     };
   }
 
+  function getEntrySentence(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    return String(
+      entry.targetSentence
+        || entry.sentence
+        || entry.frase
+        || entry.en
+        || entry.nomeIngles
+        || ''
+    ).trim();
+  }
+
+  function getEntryImageName(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    return String(entry.targetImage || entry.image || entry.imagem || entry.file || '').trim();
+  }
+
+  function getEntryAudioName(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    return String(entry.targetAudioMp3 || entry.audioMp3 || entry.audio || '').trim();
+  }
+
   function hasSupportedAudioExtension(fileName = '') {
     const lower = fileName.toLowerCase();
     return SUPPORTED_ENTRY_AUDIO_EXTENSIONS.some(ext => lower.endsWith(ext));
   }
 
-  function buildAudioSrc(entry) {
-    const audioName = typeof entry?.audio === 'string' ? entry.audio.trim() : '';
-    if (!audioName || !hasSupportedAudioExtension(audioName)) return '';
+  function buildAudioSrcFromName(audioName = '') {
+    const trimmed = typeof audioName === 'string' ? audioName.trim() : '';
+    if (!trimmed || !hasSupportedAudioExtension(trimmed)) return '';
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
 
-    const sanitized = audioName.replace(/^[/\\]+/, '');
+    const sanitized = trimmed.replace(/^[/\\]+/, '');
     const hasVoicesPrefix = sanitized.toLowerCase().startsWith('voices/');
     const encodedPath = sanitized
       .split('/')
@@ -275,6 +317,27 @@
       .join('/');
 
     return hasVoicesPrefix ? encodedPath : `voices/${encodedPath}`;
+  }
+
+  function buildAudioSrc(entry) {
+    const audioName = typeof entry?.audio === 'string' ? entry.audio.trim() : '';
+    return buildAudioSrcFromName(audioName);
+  }
+
+  function buildImageSrcFromName(fileName = '') {
+    const trimmed = typeof fileName === 'string' ? fileName.trim() : '';
+    if (!trimmed) return '';
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    const sanitized = trimmed.replace(/^[/\\]+/, '');
+    const lower = sanitized.toLowerCase();
+    const encodedPath = sanitized
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
+    if (lower.startsWith('images/') || lower.startsWith('imagens/')) {
+      return encodedPath;
+    }
+    return `images/${encodedPath}`;
   }
 
   function isWebpFile(fileName) {
@@ -523,10 +586,21 @@
   function updatePhaseLabel() {
     if (phaseLabel) phaseLabel.textContent = `Fase ${phase}`;
     if (gameRoot) {
-      for (let i = 1; i <= 8; i += 1) {
+      for (let i = 1; i <= MAX_PHASE; i += 1) {
         gameRoot.classList.toggle(`phase-${i}`, phase === i);
       }
     }
+  }
+
+  function getFirstPhaseForDay() {
+    return dayPhaseSequence.length ? dayPhaseSequence[0] : null;
+  }
+
+  function getNextPhaseForDay(currentPhase) {
+    if (!dayPhaseSequence.length) return null;
+    const index = dayPhaseSequence.indexOf(currentPhase);
+    if (index === -1) return dayPhaseSequence[0];
+    return dayPhaseSequence[index + 1] || null;
   }
 
   function readMedalStorage() {
@@ -1037,7 +1111,7 @@
 
   function getFlashcardKey(entry) {
     if (!entry || typeof entry !== 'object') return '';
-    const text = entry.en || entry.nomeIngles || '';
+    const text = entry.targetSentence || entry.sentence || entry.en || entry.nomeIngles || '';
     const normalizedText = normalizeSpeechText(text);
     if (normalizedText) return normalizedText;
     return String(entry.file || entry.imagem || '').trim().toLowerCase();
@@ -1348,7 +1422,13 @@
   }
 
   function isStreakPhase(targetPhase) {
-    return targetPhase === 3 || targetPhase === 5 || targetPhase === 6 || targetPhase === 7 || targetPhase === 8;
+    return targetPhase === 3
+      || targetPhase === 5
+      || targetPhase === 6
+      || targetPhase === 7
+      || targetPhase === 8
+      || targetPhase === 9
+      || targetPhase === 10;
   }
 
   function awardStreakHeart() {
@@ -1379,7 +1459,12 @@
   function applyBoardSizing(targetPhase) {
     if (!board || !textContainer || !choiceRow) return;
     const shouldExpand = targetPhase === 4;
-    const isCompact = targetPhase === 1 || targetPhase === 3 || targetPhase === 5 || targetPhase === 6 || targetPhase === 7 || targetPhase === 8;
+    const isCompact = targetPhase === 1
+      || targetPhase === 3
+      || targetPhase === 5
+      || targetPhase === 6
+      || targetPhase === 7
+      || targetPhase === 8;
     board.classList.toggle('board--expanded', shouldExpand);
     board.classList.toggle('board--compact', isCompact);
     textContainer.classList.toggle('text-container--compact', isCompact);
@@ -1411,92 +1496,126 @@
     return [line1, line2].filter(Boolean);
   }
 
-  async function loadStandardImages() {
-    if (loadPromise) return loadPromise;
-    const imagesPromise = fetch('images/images.json').then(response => (
-      response.ok ? response.json() : []
-    ));
-    const levelsPromise = fetch('/api/image-levels').then(response => (
-      response.ok ? response.json() : {}
-    ));
-
-    loadPromise = Promise.all([imagesPromise, levelsPromise])
-      .then(([data, levelResponse]) => {
-        images = Array.isArray(data)
-          ? data.map(normalizeImageEntry).filter(Boolean)
-          : [];
-
-        const levelEntries = levelResponse && typeof levelResponse === 'object'
-          ? levelResponse.levels || {}
-          : {};
-
-        fileLevels = new Map(
-          Object.entries(levelEntries).map(([fileName, value]) => [fileName, Number(value)])
-        );
-
-        filterPool();
-        resetProgress();
-      })
-      .catch(() => {
-        images = [];
-        pool = [];
-        fileLevels = new Map();
-      });
-    return loadPromise;
+  function buildLevelPhasePaths(dayNumber, phaseNumber) {
+    const block = Math.max(1, Math.ceil(dayNumber / 10));
+    const blockLabel = `Bloco ${block}`;
+    const dayLabel = `Dia ${dayNumber}`;
+    return [
+      `${LEVELS_ROOT}/${blockLabel}/${dayLabel}/fase${phaseNumber}.json`,
+      `${LEVELS_ROOT}/${blockLabel}/${dayLabel}/Fase ${phaseNumber}.json`,
+      `${LEVELS_ROOT}/${blockLabel}/${dayLabel}/phase${phaseNumber}.json`,
+      `${LEVELS_ROOT}/${dayLabel}/fase${phaseNumber}.json`,
+      `${LEVELS_ROOT}/${dayLabel}/phase${phaseNumber}.json`,
+      `${LEVELS_ROOT}/day-${dayNumber}/phase-${phaseNumber}.json`,
+      `${LEVELS_ROOT}/day${dayNumber}/phase${phaseNumber}.json`
+    ];
   }
 
-  async function loadBuildingImages() {
-    if (buildingLoadPromise) return buildingLoadPromise;
-    buildingLoadPromise = fetch('images/building.json')
+  function normalizePhaseEntries(entries, phaseNumber) {
+    if (!Array.isArray(entries)) return [];
+    return entries
+      .map(normalizeImageEntry)
+      .filter(entry => {
+        if (!entry) return false;
+        if (phaseNumber >= 9) {
+          return Boolean(getEntrySentence(entry));
+        }
+        return Boolean(entry.file && entry.en);
+      });
+  }
+
+  async function fetchLevelPhaseEntries(dayNumber, phaseNumber) {
+    const candidates = buildLevelPhasePaths(dayNumber, phaseNumber);
+    for (const path of candidates) {
+      try {
+        const response = await fetch(encodeURI(path));
+        if (!response.ok) continue;
+        const data = await response.json();
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.items)) return data.items;
+        if (data && Array.isArray(data.entries)) return data.entries;
+        if (data && Array.isArray(data.phrases)) return data.phrases;
+        return [];
+      } catch (error) {
+        // ignore and keep trying
+      }
+    }
+    return null;
+  }
+
+  async function loadDayLevels(dayNumber) {
+    if (levelCache.has(dayNumber)) {
+      const cached = levelCache.get(dayNumber);
+      dayPhaseEntries = new Map(cached.entries);
+      dayPhaseSequence = cached.sequence.slice();
+      dayEntries = cached.allEntries.slice();
+      return;
+    }
+
+    const entries = new Map();
+    const sequence = [];
+    const allEntries = [];
+
+    for (let phaseNumber = 1; phaseNumber <= MAX_PHASE; phaseNumber += 1) {
+      const raw = await fetchLevelPhaseEntries(dayNumber, phaseNumber);
+      if (!raw) continue;
+      const normalized = normalizePhaseEntries(raw, phaseNumber);
+      if (!normalized.length) continue;
+      entries.set(phaseNumber, normalized);
+      sequence.push(phaseNumber);
+      allEntries.push(...normalized);
+    }
+
+    dayPhaseEntries = entries;
+    dayPhaseSequence = sequence;
+    dayEntries = allEntries;
+    levelCache.set(dayNumber, {
+      entries: new Map(entries),
+      sequence: sequence.slice(),
+      allEntries: allEntries.slice()
+    });
+  }
+
+  function loadWritingPools() {
+    if (writingPools) return Promise.resolve(writingPools);
+    if (writingPoolsPromise) return writingPoolsPromise;
+    const load = (path) => fetch(path)
       .then(response => (response.ok ? response.json() : []))
-      .then(data => {
-        buildingImages = Array.isArray(data)
-          ? data.map(normalizeImageEntry).filter(Boolean)
-          : [];
+      .catch(() => []);
+    writingPoolsPromise = Promise.all([
+      load(WRITING_POOLS_PATHS.micro),
+      load(WRITING_POOLS_PATHS.verbs),
+      load(WRITING_POOLS_PATHS.nouns),
+      load(WRITING_POOLS_PATHS.adjectives)
+    ])
+      .then(([micro, verbs, nouns, adjectives]) => {
+        writingPools = {
+          micro: Array.isArray(micro) ? micro : [],
+          verbs: Array.isArray(verbs) ? verbs : [],
+          nouns: Array.isArray(nouns) ? nouns : [],
+          adjectives: Array.isArray(adjectives) ? adjectives : []
+        };
+        return writingPools;
       })
       .catch(() => {
-        buildingImages = [];
+        writingPools = { micro: [], verbs: [], nouns: [], adjectives: [] };
+        return writingPools;
       });
-
-    return buildingLoadPromise;
+    return writingPoolsPromise;
   }
 
-  function loadAllImages() {
-    return Promise.all([loadStandardImages(), loadBuildingImages(), loadMirrorGroups()]);
+  function loadJourneyData(dayNumber = level) {
+    return Promise.all([loadDayLevels(dayNumber), loadWritingPools(), loadMirrorGroups()]);
   }
 
   function buildImageSrc(entry) {
     const fileName = entry?.file;
-    if (!fileName) return '';
-    const encodedPath = fileName
-      .split('/')
-      .map(segment => encodeURIComponent(segment))
-      .join('/');
-    return `images/${encodedPath}`;
-  }
-
-  function getItemLevel(entry) {
-    const levelValue = fileLevels.get(entry?.file);
-    return Number.isFinite(levelValue) ? levelValue : 0;
+    return buildImageSrcFromName(fileName);
   }
 
   function filterPool() {
-    if (phase === 8) {
-      const numericLevel = Math.max(1, Number(level) || 1);
-      pool = buildingImages.filter(entry => {
-        const categoryValue = entry?.categoria ?? entry?.category ?? entry?.folder;
-        const categoryNumber = Number(categoryValue);
-        if (categoryNumber === 1) return numericLevel === 1;
-        if (categoryNumber === 2) return numericLevel === 2;
-        return true;
-      });
-      pool = filterSeedingEntries(pool);
-      return;
-    }
-
-    const numericLevel = Math.max(1, Number(level) || 1);
-    pool = images.filter(item => getItemLevel(item) === numericLevel);
-    pool = filterSeedingEntries(pool);
+    const phaseEntries = dayPhaseEntries.get(phase) || [];
+    pool = filterSeedingEntries(phaseEntries);
   }
 
   function shuffle(list) {
@@ -1522,7 +1641,10 @@
     phaseFourResolved = 0;
 
     if (!cycle.length) {
-      showText('Nenhuma imagem disponível para este dia.');
+      const message = dayPhaseSequence.length
+        ? 'Nenhuma frase disponível para esta fase.'
+        : 'Estamos criando essa aula.';
+      showText(message);
     }
 
     updateProgressBar();
@@ -1575,7 +1697,7 @@
       totalErrors,
       medalKey: currentMedalKey,
       heartsRemaining,
-      cycle: cycle.map(item => item.file),
+      cycle: cycle.map(item => getEntryStorageKey(item)),
       levelElapsedMs: getLevelElapsedMs(),
       phaseFour: phase === 4 ? {
         batchStart: phaseFourBatchStart,
@@ -1584,12 +1706,17 @@
     });
   }
 
+  function getEntryStorageKey(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    return entry.file || getEntrySentence(entry) || entry.en || entry.nomeIngles || '';
+  }
+
   function buildCycleFromFiles(files) {
     if (!Array.isArray(files) || !files.length) return [];
     const knownEntries = new Map(
-      [...pool, ...images, ...buildingImages]
-        .filter(entry => entry && entry.file)
-        .map(entry => [entry.file, entry])
+      [...pool, ...dayEntries]
+        .filter(entry => entry)
+        .map(entry => [getEntryStorageKey(entry), entry])
     );
 
     return files
@@ -1605,6 +1732,9 @@
 
     level = stored.level;
     phase = stored.phase;
+    if (dayPhaseSequence.length && !dayPhaseSequence.includes(phase)) {
+      phase = dayPhaseSequence[0];
+    }
     index = Math.max(0, Number(stored.index) || 0);
     score = Math.max(0, Number(stored.score) || 0);
     errorStreak = Math.max(0, Number(stored.errorStreak) || 0);
@@ -1830,7 +1960,7 @@
   }
 
   function getRandomPromptItem() {
-    const source = pool.length ? pool : images;
+    const source = pool.length ? pool : dayEntries;
     if (!source.length) return null;
     return source[Math.floor(Math.random() * source.length)];
   }
@@ -1994,9 +2124,24 @@
     }, IMAGE_DISSOLVE_MS);
   }
 
+  function clearWritingState() {
+    if (typeof writingCleanup === 'function') {
+      writingCleanup();
+    }
+    writingCleanup = null;
+    writingState = null;
+    if (textContainer) {
+      textContainer.classList.remove(
+        'text-container--writing',
+        'text-container--writing-feedback',
+        'text-container--writing-dissolve'
+      );
+    }
+  }
+
   function startRotatingText() {
     if (!rotatingText) return;
-    const phrases = ['Fluência Fácil', 'Inglês em 200 dias', 'Toque para começar'];
+    const phrases = ['Jornada PlayTalk', 'Inglês em 200 dias', 'Toque para começar'];
     rotatingText.classList.remove('is-fading');
 
     const fadeAndSwap = () => {
@@ -2014,6 +2159,7 @@
   }
 
   function clearBoard() {
+    clearWritingState();
     if (boardInner) boardInner.innerHTML = '';
     if (choiceRow) choiceRow.innerHTML = '';
   }
@@ -2441,6 +2587,370 @@
     showText('');
   }
 
+  function normalizeWritingWord(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9'-]/gi, '')
+      .trim();
+  }
+
+  function tokenizeWritingSentence(sentence) {
+    return String(sentence || '')
+      .split(/\s+/)
+      .map(token => ({
+        original: token,
+        normalized: normalizeWritingWord(token)
+      }))
+      .filter(token => token.normalized);
+  }
+
+  function normalizeWritingSentence(sentence) {
+    return tokenizeWritingSentence(sentence).map(token => token.normalized);
+  }
+
+  function pickUniqueWords(poolList, count, exclude = new Set()) {
+    const candidates = Array.isArray(poolList) ? poolList : [];
+    const normalizedCandidates = candidates
+      .map(word => ({
+        original: String(word || '').trim(),
+        normalized: normalizeWritingWord(word)
+      }))
+      .filter(entry => entry.normalized && !exclude.has(entry.normalized));
+    const shuffled = shuffle(normalizedCandidates);
+    const result = [];
+    const used = new Set();
+    for (const entry of shuffled) {
+      if (result.length >= count) break;
+      if (used.has(entry.normalized)) continue;
+      used.add(entry.normalized);
+      result.push(entry);
+    }
+    return result;
+  }
+
+  function buildWritingHub(targetSentence, pools) {
+    const tokens = tokenizeWritingSentence(targetSentence);
+    const displayLookup = tokens.reduce((acc, token) => {
+      if (!acc[token.normalized]) {
+        const cleaned = token.original.replace(/[^a-z0-9'-]/gi, '').trim();
+        acc[token.normalized] = cleaned || token.normalized;
+      }
+      return acc;
+    }, {});
+    const targetCounts = tokens.reduce((acc, token) => {
+      acc[token.normalized] = (acc[token.normalized] || 0) + 1;
+      return acc;
+    }, {});
+    const microSet = new Set((pools.micro || []).map(normalizeWritingWord));
+    const verbsSet = new Set((pools.verbs || []).map(normalizeWritingWord));
+    const nounsSet = new Set((pools.nouns || []).map(normalizeWritingWord));
+    const adjectivesSet = new Set((pools.adjectives || []).map(normalizeWritingWord));
+
+    const baseChips = [
+      ...pickUniqueWords(pools.micro, WRITING_HUB_COUNTS.micro)
+        .map(entry => ({ ...entry, category: 'micro' })),
+      ...pickUniqueWords(pools.verbs, WRITING_HUB_COUNTS.verbs)
+        .map(entry => ({ ...entry, category: 'verbs' })),
+      ...pickUniqueWords(pools.nouns, WRITING_HUB_COUNTS.nouns)
+        .map(entry => ({ ...entry, category: 'nouns' })),
+      ...pickUniqueWords(pools.adjectives, WRITING_HUB_COUNTS.adjectives)
+        .map(entry => ({ ...entry, category: 'adjectives' }))
+    ].map(entry => ({
+      word: entry.original,
+      normalized: entry.normalized,
+      category: entry.category || 'distractor',
+      isTarget: false
+    }));
+
+    const hub = baseChips.slice(0, 20);
+    hub.forEach(chip => {
+      if (targetCounts[chip.normalized]) {
+        chip.isTarget = true;
+      }
+    });
+
+    const resolveCategory = (word) => {
+      if (microSet.has(word)) return 'micro';
+      if (verbsSet.has(word)) return 'verbs';
+      if (nounsSet.has(word)) return 'nouns';
+      if (adjectivesSet.has(word)) return 'adjectives';
+      return 'custom';
+    };
+
+    const ensureTargetWord = (word) => {
+      const category = resolveCategory(word);
+      const replacement = {
+        word: displayLookup[word] || word,
+        normalized: word,
+        category,
+        isTarget: true
+      };
+      const candidates = hub
+        .map((chip, idx) => ({ chip, idx }))
+        .filter(({ chip }) => !chip.isTarget && (chip.category === category || category === 'custom'));
+      const fallback = hub
+        .map((chip, idx) => ({ chip, idx }))
+        .filter(({ chip }) => !chip.isTarget);
+      const targetList = candidates.length ? candidates : fallback;
+      if (!targetList.length) {
+        if (hub.length < 20) {
+          hub.push(replacement);
+        }
+        return;
+      }
+      const pick = targetList[Math.floor(Math.random() * targetList.length)];
+      hub[pick.idx] = replacement;
+    };
+
+    Object.entries(targetCounts).forEach(([word, count]) => {
+      for (let i = 0; i < count; i += 1) {
+        const existingCount = hub.filter(chip => chip.normalized === word).length;
+        if (existingCount >= count) break;
+        ensureTargetWord(word);
+      }
+    });
+
+    tokens.forEach(token => {
+      const occurrences = hub.filter(chip => chip.normalized === token.normalized).length;
+      if (occurrences < targetCounts[token.normalized]) {
+        ensureTargetWord(token.normalized);
+      }
+    });
+    if (hub.length < 20) {
+      const combinedPool = [
+        ...(pools.micro || []),
+        ...(pools.verbs || []),
+        ...(pools.nouns || []),
+        ...(pools.adjectives || [])
+      ];
+      const available = shuffle(combinedPool);
+      const existing = new Set(hub.map(chip => chip.normalized));
+      for (const word of available) {
+        if (hub.length >= 20) break;
+        const normalized = normalizeWritingWord(word);
+        if (!normalized || existing.has(normalized)) continue;
+        existing.add(normalized);
+        hub.push({
+          word: String(word).trim(),
+          normalized,
+          category: 'distractor',
+          isTarget: false
+        });
+      }
+    }
+
+    return shuffle(hub).slice(0, 20);
+  }
+
+  function updateWritingSentence(text, options = {}) {
+    if (!textContainer) return;
+    const { highlight = false } = options;
+    textContainer.classList.add('text-container--writing');
+    textContainer.classList.toggle('text-container--writing-feedback', highlight);
+    textContainer.classList.add('text-container--writing-dissolve');
+    window.setTimeout(() => {
+      textContainer.textContent = text;
+      textContainer.classList.remove('text-container--writing-dissolve');
+      textContainer.classList.toggle('active', true);
+    }, 250);
+  }
+
+  function showWritingPhase(item, options = {}) {
+    currentItem = item;
+    recordFlashcardPlayed(item);
+    clearBoard();
+    boardInner.classList.remove('board__inner--grid');
+    if (recognition && typeof recognition.stop === 'function') {
+      try {
+        recognition.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
+
+    const targetSentence = getEntrySentence(item);
+    if (!targetSentence) {
+      showText('Estamos criando essa aula');
+      return;
+    }
+
+    writingState = {
+      targetSentence,
+      selectedWords: [],
+      chips: []
+    };
+
+    const renderPrompt = () => {
+      if (options.mode === 'image') {
+        const imageName = getEntryImageName(item);
+        if (imageName) {
+          const imageWrapper = createEntryImage(
+            { ...item, file: imageName },
+            'board__image-single board__image-single--phase-one'
+          );
+          boardInner.appendChild(imageWrapper);
+        }
+      }
+      if (options.mode === 'audio') {
+        const audioName = getEntryAudioName(item);
+        if (audioName) {
+          const audioSrc = buildAudioSrcFromName(audioName);
+          if (audioSrc) {
+            const audio = new Audio(audioSrc);
+            audio.play().catch(() => {});
+          } else {
+            getAudioElementFromName(audioName).then((audio) => {
+              if (audio) {
+                audio.play().catch(() => {});
+              }
+            });
+          }
+          const icon = createIconImage(
+            item,
+            'images/sound.png',
+            'Som',
+            'board__image-single board__image-icon'
+          );
+          const button = icon.querySelector('img')?.closest('button') || icon;
+          if (button) {
+            button.addEventListener('click', () => {
+              const retrySrc = buildAudioSrcFromName(audioName);
+              if (retrySrc) {
+                const retry = new Audio(retrySrc);
+                retry.play().catch(() => {});
+                return;
+              }
+              getAudioElementFromName(audioName).then((audio) => {
+                if (audio) {
+                  audio.currentTime = 0;
+                  audio.play().catch(() => {});
+                }
+              });
+            });
+          }
+          boardInner.appendChild(icon);
+        }
+      }
+    };
+
+    renderPrompt();
+
+    const pools = writingPools || { micro: [], verbs: [], nouns: [], adjectives: [] };
+    const chips = buildWritingHub(targetSentence, pools);
+    writingState.chips = chips;
+
+    const hub = document.createElement('div');
+    hub.className = 'writing-hub';
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'writing-toolbar';
+    const undoButton = document.createElement('button');
+    undoButton.type = 'button';
+    undoButton.className = 'writing-undo';
+    undoButton.textContent = 'Desfazer';
+    toolbar.appendChild(undoButton);
+
+    const chipElements = chips.map((chip, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'writing-chip';
+      button.textContent = chip.word;
+      button.dataset.index = String(index);
+      button.addEventListener('click', () => {
+        if (button.disabled || awaiting) return;
+        writingState.selectedWords.push({ chipIndex: index, word: chip.word, normalized: chip.normalized });
+        button.disabled = true;
+        button.classList.add('writing-chip--selected');
+        updateWritingSentence(writingState.selectedWords.map(entry => entry.word).join(' '));
+      });
+      hub.appendChild(button);
+      return button;
+    });
+
+    const resetSelection = () => {
+      writingState.selectedWords = [];
+      chipElements.forEach(chipEl => {
+        chipEl.disabled = false;
+        chipEl.classList.remove('writing-chip--selected');
+      });
+      updateWritingSentence('');
+    };
+
+    const handleUndo = () => {
+      if (awaiting || !writingState.selectedWords.length) return;
+      const last = writingState.selectedWords.pop();
+      const chipEl = chipElements[last.chipIndex];
+      if (chipEl) {
+        chipEl.disabled = false;
+        chipEl.classList.remove('writing-chip--selected');
+      }
+      updateWritingSentence(writingState.selectedWords.map(entry => entry.word).join(' '));
+    };
+
+    undoButton.addEventListener('click', handleUndo);
+
+    const submitAttempt = () => {
+      if (awaiting) return;
+      awaiting = true;
+      const selected = writingState.selectedWords.map(entry => entry.word).join(' ');
+      const selectedTokens = normalizeWritingSentence(selected);
+      const targetTokens = normalizeWritingSentence(targetSentence);
+      const isCorrect = selectedTokens.length === targetTokens.length
+        && selectedTokens.every((word, idx) => word === targetTokens[idx]);
+
+      if (isCorrect) {
+        applyCorrectOutcome();
+        updateProgressBar();
+        window.setTimeout(() => {
+          awaiting = false;
+          advanceCycle();
+        }, getAdvanceDelay(600));
+        return;
+      }
+
+      updateWritingSentence(targetSentence, { highlight: true });
+      window.setTimeout(() => {
+        textContainer.classList.remove('text-container--writing-feedback');
+        resetSelection();
+        awaiting = false;
+      }, 400);
+    };
+
+    if (textContainer) {
+      textContainer.addEventListener('click', submitAttempt);
+      textContainer.addEventListener('pointerdown', submitAttempt);
+    }
+
+    if (choiceRow) {
+      choiceRow.innerHTML = '';
+      choiceRow.classList.add('choice-row--writing');
+      choiceRow.appendChild(toolbar);
+      choiceRow.appendChild(hub);
+    }
+    updateWritingSentence('');
+
+    writingCleanup = () => {
+      if (textContainer) {
+        textContainer.removeEventListener('click', submitAttempt);
+        textContainer.removeEventListener('pointerdown', submitAttempt);
+      }
+      undoButton.removeEventListener('click', handleUndo);
+      if (choiceRow) {
+        choiceRow.classList.remove('choice-row--writing');
+      }
+    };
+  }
+
+  function showPhaseNineCard(item) {
+    showWritingPhase(item, { mode: 'audio' });
+  }
+
+  function showPhaseTenCard(item) {
+    showWritingPhase(item, { mode: 'image' });
+  }
+
   function handleSpeechChallenge(expected, handler, options = {}) {
     if (awaiting) return;
     awaiting = true;
@@ -2762,6 +3272,12 @@
         case 8:
           showPhaseEightCard(item);
           break;
+        case 9:
+          showPhaseNineCard(item);
+          break;
+        case 10:
+          showPhaseTenCard(item);
+          break;
         default:
           showPhaseOneCard(item);
       }
@@ -2769,7 +3285,7 @@
   }
 
   function buildCompletionGridItems(target) {
-    const basePool = images.length ? images : pool;
+    const basePool = dayEntries.length ? dayEntries : pool;
     const fallbackPool = basePool.filter(entry => entry && entry.file && entry.file !== target.file);
     const randomOptions = shuffle(fallbackPool).slice(0, 3);
 
@@ -2835,7 +3351,9 @@
       5: { title: 'Fase 5', cta: 'Iniciar fase 5' },
       6: { title: 'Fase 6', cta: 'Iniciar fase 6' },
       7: { title: 'Fase 7', cta: 'Iniciar fase 7' },
-      8: { title: 'Fase 8', cta: 'Iniciar fase 8' }
+      8: { title: 'Fase 8', cta: 'Iniciar fase 8' },
+      9: { title: 'Fase 9', cta: 'Iniciar fase 9' },
+      10: { title: 'Fase 10', cta: 'Iniciar fase 10' }
     }[nextPhase] || {
       title: `Fase ${nextPhase}`,
       cta: 'Continuar'
@@ -2948,6 +3466,12 @@
       advanceCycle();
       return;
     }
+    const nextPhase = getNextPhaseForDay(phase);
+    if (!nextPhase) {
+      awaiting = false;
+      handlePhaseComplete();
+      return;
+    }
     if (phase === 1 || phase === 2 || phase === 3 || phase === 4) {
       awaiting = false;
       completionGridShown = true;
@@ -2955,13 +3479,13 @@
       showText('');
       if (choiceRow) choiceRow.innerHTML = '';
       hidePhaseElements();
-      showPhaseTransition(phase + 1);
+      showPhaseTransition(nextPhase);
       return;
     }
 
     if (phase >= 5) {
       awaiting = false;
-      handlePhaseComplete();
+      handlePhaseComplete({ nextPhase });
       return;
     }
 
@@ -2980,7 +3504,7 @@
     showCompletionGrid(currentItem);
     setTimeout(() => {
       awaiting = false;
-      handlePhaseComplete();
+      handlePhaseComplete({ nextPhase });
     }, 1500);
   }
 
@@ -2995,22 +3519,30 @@
 
   async function startPhase(nextPhase, options = {}) {
     const { skipIntroAudio = false } = options;
-    phase = nextPhase;
+    const fallbackPhase = getFirstPhaseForDay();
+    if (!fallbackPhase) {
+      phase = nextPhase;
+      updatePhaseLabel();
+      clearBoard();
+      showText('Estamos criando essa aula.');
+      return;
+    }
+    phase = dayPhaseSequence.includes(nextPhase) ? nextPhase : fallbackPhase;
     updatePhaseLabel();
-    updateRecognitionLanguage(nextPhase);
-    applyBoardSizing(nextPhase);
+    updateRecognitionLanguage(phase);
+    applyBoardSizing(phase);
     stopMicPromptLoop();
-    if (nextPhase === 1) {
+    if (phase === 1) {
       resetLevelState();
     }
     filterPool();
     resetProgress();
     preparePhaseIntro();
     if (!skipIntroAudio) {
-      await playPhaseIntro(nextPhase);
+      await playPhaseIntro(phase);
     }
-    await playPhaseTrack(nextPhase);
-    if (nextPhase === 1) {
+    await playPhaseTrack(phase);
+    if (phase === 1) {
       startLevelTimer();
     } else {
       resumePausedLevelTimer();
@@ -3076,7 +3608,7 @@
   }
 
   function handlePhaseComplete(options = {}) {
-    const { skipIntroAudio = false } = options;
+    const { skipIntroAudio = false, nextPhase = getNextPhaseForDay(phase) } = options;
     stopPhaseTrack();
     if (singlePhaseMode) {
       dissolveEnvironment(() => {
@@ -3084,7 +3616,7 @@
       });
       return;
     }
-    if (phase === 8) {
+    if (!nextPhase) {
       const completedLevel = level;
       const medalKey = currentMedalKey;
       const finalElapsedMs = getLevelElapsedMs();
@@ -3105,7 +3637,7 @@
     }
 
     dissolveEnvironment(() => {
-      startPhase(phase + 1, { skipIntroAudio });
+      startPhase(nextPhase, { skipIntroAudio });
     });
   }
 
@@ -3181,6 +3713,29 @@
     }
   }
 
+  function startDayJourney() {
+    const firstPhase = getFirstPhaseForDay();
+    if (!firstPhase) {
+      if (phaseTransition) {
+        phaseTransition.classList.add('hidden');
+        phaseTransition.setAttribute('aria-hidden', 'true');
+      }
+      if (progressCompleteOverlay) {
+        progressCompleteOverlay.setAttribute('aria-hidden', 'true');
+      }
+      showPhaseElements();
+      clearBoard();
+      showText('Estamos criando essa aula.');
+      return;
+    }
+    const phaseToStart = singlePhaseMode
+      ? (dayPhaseSequence.includes(forcedPhase) ? forcedPhase : firstPhase)
+      : firstPhase;
+    phase = phaseToStart;
+    updatePhaseLabel();
+    showPhaseTransition(phaseToStart);
+  }
+
   function handleStartInteraction() {
     if (gameStarted) return;
     gameStarted = true;
@@ -3198,12 +3753,8 @@
       rotationTimer = null;
     }
 
-    loadAllImages().then(() => {
-      if (singlePhaseMode) {
-        showPhaseTransition(forcedPhase);
-      } else {
-        showPhaseTransition(1);
-      }
+    loadJourneyData(level).then(() => {
+      startDayJourney();
     });
   }
 
@@ -3225,6 +3776,10 @@
     clearCompletionStorage();
     clearProgressStorage();
     clearJourneyStarted();
+    dayPhaseEntries = new Map();
+    dayPhaseSequence = [];
+    dayEntries = [];
+    levelCache = new Map();
     if (resetLevel) {
       level = 1;
       saveLevelToStorage();
@@ -3255,6 +3810,11 @@
       handleStartInteraction();
       return;
     }
+    const storedProgress = readProgressStorage();
+    if (storedProgress && storedProgress.level) {
+      level = storedProgress.level;
+      updateLevelIndicators();
+    }
     markJourneyStarted();
     gameStarted = true;
     if (startScreen) {
@@ -3265,7 +3825,7 @@
       clearInterval(rotationTimer);
       rotationTimer = null;
     }
-    loadAllImages().then(() => {
+    loadJourneyData(level).then(() => {
       const completionState = readCompletionStorage();
       if (restoreProgressState()) {
         showPhaseElements();
@@ -3277,9 +3837,9 @@
         showLevelCompleteOverlay(completionState.completedLevel);
         return;
       }
-      phase = 1;
+      phase = getFirstPhaseForDay() || 1;
       updatePhaseLabel();
-      showPhaseTransition(1);
+      startDayJourney();
     });
   }
 
@@ -3330,6 +3890,10 @@
       saveLevelToStorage();
       updateLevelIndicators();
     }
+    if (storedProgress && storedProgress.level) {
+      level = storedProgress.level;
+      updateLevelIndicators();
+    }
     if (!storedProgress || !storedProgress.level) {
       loadLevelFromStorage();
     }
@@ -3337,7 +3901,7 @@
     setupSpeechRecognition();
     resetLevelState();
     if (shouldAutoStart) {
-      loadAllImages().then(() => {
+      loadJourneyData(level).then(() => {
         if (isFlashcardLaunch) {
           gameStarted = true;
           if (startScreen) {
@@ -3348,7 +3912,9 @@
             clearInterval(rotationTimer);
             rotationTimer = null;
           }
-          const phaseToStart = Number.isFinite(forcedPhase) ? forcedPhase : 1;
+          const phaseToStart = Number.isFinite(forcedPhase)
+            ? forcedPhase
+            : (getFirstPhaseForDay() || 1);
           startPhase(phaseToStart, { skipIntroAudio: true });
           return;
         }
@@ -3406,9 +3972,11 @@
       clearCompletionStorage();
       clearProgressStorage();
       levelComplete.classList.add('hidden');
-      phase = 1;
-      updatePhaseLabel();
-      showPhaseTransition(1);
+      loadJourneyData(level).then(() => {
+        phase = getFirstPhaseForDay() || 1;
+        updatePhaseLabel();
+        startDayJourney();
+      });
     });
 
     if (replayLevelBtn) {
@@ -3420,9 +3988,11 @@
         if (Number.isFinite(completedLevelSnapshot)) {
           level = completedLevelSnapshot;
         }
-        phase = 1;
-        updatePhaseLabel();
-        showPhaseTransition(1);
+        loadJourneyData(level).then(() => {
+          phase = getFirstPhaseForDay() || 1;
+          updatePhaseLabel();
+          startDayJourney();
+        });
       });
     }
   }
