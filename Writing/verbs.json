@@ -1,0 +1,26 @@
+{
+  "type": "verbs",
+  "description": "Verbos — pool de teste",
+  "words": [
+    "love",
+    "like",
+    "want",
+    "need",
+    "see",
+    "go",
+    "get",
+    "make",
+    "say",
+    "come",
+    "take",
+    "give",
+    "know",
+    "think",
+    "feel",
+    "use",
+    "try",
+    "help",
+    "work",
+    "play"
+  ]
+}

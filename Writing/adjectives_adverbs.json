@@ -1,0 +1,26 @@
+{
+  "type": "adjectives_adverbs",
+  "description": "Adjetivos + advérbios — pool de teste",
+  "words": [
+    "good",
+    "bad",
+    "big",
+    "small",
+    "new",
+    "old",
+    "fast",
+    "slow",
+    "happy",
+    "sad",
+    "tired",
+    "ready",
+    "free",
+    "busy",
+    "together",
+    "really",
+    "very",
+    "always",
+    "now",
+    "here"
+  ]
+}

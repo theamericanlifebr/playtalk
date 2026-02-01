@@ -1,0 +1,26 @@
+{
+  "type": "micro_words",
+  "description": "Micropalavras (artigos, pronomes, preposições, conectores) — pool de teste",
+  "words": [
+    "we",
+    "them",
+    "you",
+    "they",
+    "us",
+    "the",
+    "to",
+    "with",
+    "a",
+    "an",
+    "i",
+    "me",
+    "my",
+    "your",
+    "our",
+    "in",
+    "on",
+    "at",
+    "for",
+    "and"
+  ]
+}
