@@ -79,11 +79,20 @@
     adjectives: 'writing/adjectives_adverbs.json'
   };
   const WRITING_HUB_COUNTS = {
-    micro: 8,
-    verbs: 5,
-    nouns: 4,
-    adjectives: 3
+    micro: 6,
+    verbs: 4,
+    nouns: 3,
+    adjectives: 2
   };
+  const WRITING_HUB_LIMIT = 15;
+  const WRITING_COLOR_CLASSES = [
+    'writing-chip--red',
+    'writing-chip--blue',
+    'writing-chip--purple',
+    'writing-chip--gold',
+    'writing-chip--gremio',
+    'writing-chip--orange'
+  ];
   const PHASE_TRACK_VOLUME = 0.25;
   const PHASE_TRACK_FADEOUT_MS = 2000;
   const ACCURACY_RING_ANIMATION_MS = 1000;
@@ -285,6 +294,16 @@
         || entry.frase
         || entry.en
         || entry.nomeIngles
+        || ''
+    ).trim();
+  }
+
+  function getEntryPortugueseSentence(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    return String(
+      entry.pt
+        || entry.nomePortugues
+        || entry.frase
         || ''
     ).trim();
   }
@@ -1418,6 +1437,10 @@
     const remaining = Math.min(Math.max(heartsRemaining, 0), total);
     heartNodes.forEach((node, idx) => {
       node.classList.toggle('game-heart--lost', idx >= total || idx >= remaining);
+      const icon = node.querySelector('img');
+      if (icon) {
+        icon.src = getMedalImage(currentMedalKey);
+      }
     });
   }
 
@@ -2626,6 +2649,7 @@
 
   function buildWritingHub(targetSentence, pools) {
     const tokens = tokenizeWritingSentence(targetSentence);
+    const limit = WRITING_HUB_LIMIT;
     const displayLookup = tokens.reduce((acc, token) => {
       if (!acc[token.normalized]) {
         const cleaned = token.original.replace(/[^a-z0-9'-]/gi, '').trim();
@@ -2658,7 +2682,7 @@
       isTarget: false
     }));
 
-    const hub = baseChips.slice(0, 20);
+    const hub = baseChips.slice(0, limit);
     hub.forEach(chip => {
       if (targetCounts[chip.normalized]) {
         chip.isTarget = true;
@@ -2689,7 +2713,7 @@
         .filter(({ chip }) => !chip.isTarget);
       const targetList = candidates.length ? candidates : fallback;
       if (!targetList.length) {
-        if (hub.length < 20) {
+        if (hub.length < limit) {
           hub.push(replacement);
         }
         return;
@@ -2712,7 +2736,7 @@
         ensureTargetWord(token.normalized);
       }
     });
-    if (hub.length < 20) {
+    if (hub.length < limit) {
       const combinedPool = [
         ...(pools.micro || []),
         ...(pools.verbs || []),
@@ -2722,7 +2746,7 @@
       const available = shuffle(combinedPool);
       const existing = new Set(hub.map(chip => chip.normalized));
       for (const word of available) {
-        if (hub.length >= 20) break;
+        if (hub.length >= limit) break;
         const normalized = normalizeWritingWord(word);
         if (!normalized || existing.has(normalized)) continue;
         existing.add(normalized);
@@ -2735,7 +2759,7 @@
       }
     }
 
-    return shuffle(hub).slice(0, 20);
+    return shuffle(hub).slice(0, limit);
   }
 
   function updateWritingSentence(text, options = {}) {
@@ -2749,6 +2773,40 @@
       textContainer.classList.remove('text-container--writing-dissolve');
       textContainer.classList.toggle('active', true);
     }, 250);
+  }
+
+  function setWritingPrompt(text) {
+    if (!textContainer) return;
+    textContainer.classList.add('text-container--writing');
+    textContainer.classList.remove('text-container--writing-feedback');
+    textContainer.textContent = text;
+    textContainer.classList.toggle('active', Boolean(text));
+  }
+
+  function renderWritingDisplay(words, options = {}) {
+    if (!writingState?.displayEl) return;
+    const { highlight = false } = options;
+    const displayEl = writingState.displayEl;
+    displayEl.innerHTML = '';
+    words.forEach((entry) => {
+      const chip = document.createElement('span');
+      chip.className = `writing-chip writing-chip--display ${entry.colorClass || ''}`.trim();
+      chip.textContent = entry.word;
+      displayEl.appendChild(chip);
+    });
+    displayEl.classList.toggle('writing-display--highlight', highlight);
+  }
+
+  function buildWritingDisplayEntriesFromSentence(sentence) {
+    if (!writingState) return [];
+    const tokens = tokenizeWritingSentence(sentence);
+    return tokens.map((token, index) => {
+      const match = writingState.chips.find(chip => chip.normalized === token.normalized);
+      return {
+        word: token.original || token.normalized,
+        colorClass: match?.colorClass || WRITING_COLOR_CLASSES[index % WRITING_COLOR_CLASSES.length]
+      };
+    });
   }
 
   function showWritingPhase(item, options = {}) {
@@ -2775,7 +2833,8 @@
       targetSentence,
       targetTokens,
       selectedWords: [],
-      chips: []
+      chips: [],
+      displayEl: null
     };
 
     const renderPrompt = () => {
@@ -2807,19 +2866,29 @@
       }
     };
 
+    boardInner.classList.add('board__inner--writing');
     renderPrompt();
 
     const pools = writingPools || { micro: [], verbs: [], nouns: [], adjectives: [] };
     const chips = buildWritingHub(targetSentence, pools);
+    const colorClasses = shuffle(WRITING_COLOR_CLASSES.slice());
+    chips.forEach((chip, index) => {
+      chip.colorClass = colorClasses[index % colorClasses.length];
+    });
     writingState.chips = chips;
 
     const hub = document.createElement('div');
     hub.className = 'writing-hub';
 
+    const display = document.createElement('div');
+    display.className = 'writing-display';
+    boardInner.appendChild(display);
+    writingState.displayEl = display;
+
     const chipElements = chips.map((chip, index) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'writing-chip';
+      button.className = `writing-chip ${chip.colorClass}`;
       button.textContent = chip.word;
       button.dataset.index = String(index);
       button.addEventListener('click', () => {
@@ -2832,7 +2901,7 @@
           registerErrorAndCheckReset();
           updateProgressBar();
           errorAudio && errorAudio.play().catch(() => {});
-          updateWritingSentence(targetSentence, { highlight: true });
+          renderWritingDisplay(buildWritingDisplayEntriesFromSentence(targetSentence), { highlight: true });
           window.setTimeout(() => {
             textContainer.classList.remove('text-container--writing-feedback');
             resetSelection();
@@ -2841,10 +2910,15 @@
           return;
         }
 
-        writingState.selectedWords.push({ chipIndex: index, word: chip.word, normalized: chip.normalized });
+        writingState.selectedWords.push({
+          chipIndex: index,
+          word: chip.word,
+          normalized: chip.normalized,
+          colorClass: chip.colorClass
+        });
         button.disabled = true;
         button.classList.add('writing-chip--selected');
-        updateWritingSentence(writingState.selectedWords.map(entry => entry.word).join(' '));
+        renderWritingDisplay(writingState.selectedWords, { highlight: false });
 
         if (writingState.selectedWords.length === writingState.targetTokens.length) {
           awaiting = true;
@@ -2866,7 +2940,7 @@
         chipEl.disabled = false;
         chipEl.classList.remove('writing-chip--selected');
       });
-      updateWritingSentence('');
+      renderWritingDisplay([]);
     };
 
     if (choiceRow) {
@@ -2874,13 +2948,20 @@
       choiceRow.classList.add('choice-row--writing');
       choiceRow.appendChild(hub);
     }
-    updateWritingSentence('');
+    renderWritingDisplay([]);
 
     writingCleanup = () => {
       if (choiceRow) {
         choiceRow.classList.remove('choice-row--writing');
       }
+      boardInner.classList.remove('board__inner--writing');
     };
+
+    if (phase === 9) {
+      setWritingPrompt(getEntryPortugueseSentence(item));
+    } else {
+      setWritingPrompt('');
+    }
   }
 
   function showPhaseNineCard(item) {

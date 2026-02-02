@@ -141,10 +141,10 @@
       transition: opacity 0.5s ease;
     }
 
-    .game-heart svg {
+    .game-heart img {
       width: 100%;
       height: 100%;
-      fill: #e74c3c;
+      object-fit: contain;
     }
 
     .game-heart--lost {
@@ -161,6 +161,10 @@
       background: transparent;
       border: none;
       box-shadow: none;
+    }
+
+    .vocabulary-game .game-medal {
+      display: none;
     }
 
     .game-medal img {
@@ -634,6 +638,11 @@
       order: 2;
     }
 
+    .vocabulary-game.phase-9 .board {
+      height: 150px;
+      max-height: 150px;
+    }
+
     .vocabulary-game.phase-9 .text-container,
     .vocabulary-game.phase-10 .text-container {
       order: 3;
@@ -701,7 +710,11 @@
         gap: 6px;
       }
 
-      .vocabulary-game.phase-9 .board,
+      .vocabulary-game.phase-9 .board {
+        width: min(360px, 95vw);
+        height: 150px;
+      }
+
       .vocabulary-game.phase-10 .board {
         width: min(360px, 95vw);
         height: min(360px, 95vw);
@@ -774,13 +787,13 @@
     }
 
     .writing-chip {
-      border: 1px solid #d1d5db;
+      border: none;
       background: #eee;
-      color: #1f2937;
+      color: #fff;
       font-weight: 800;
-      height: 30px;
+      height: 34px;
       padding: 0 12px;
-      border-radius: 999px;
+      border-radius: 0;
       cursor: pointer;
       text-transform: none;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -796,6 +809,58 @@
       opacity: 0.55;
       cursor: default;
       box-shadow: none;
+    }
+
+    .writing-chip--display {
+      cursor: default;
+      opacity: 1;
+      height: 36px;
+      padding: 0 14px;
+    }
+
+    .writing-chip--red {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .writing-chip--blue {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .writing-chip--purple {
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    }
+
+    .writing-chip--gold {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .writing-chip--gremio {
+      background: linear-gradient(135deg, #00a0e4, #0b4da8);
+    }
+
+    .writing-chip--orange {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+    }
+
+    .board__inner--writing {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .writing-display {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .writing-display--highlight {
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
     }
 
     .vocabulary-game.phase-1 .choice-row {
