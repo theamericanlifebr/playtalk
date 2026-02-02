@@ -414,6 +414,10 @@
       --ring-width: 15px;
     }
 
+    .vocabulary-game.phase-1 .image-ring--tense {
+      --ring-width: 22px;
+    }
+
     .image-ring--form {
       display: none;
     }
@@ -775,6 +779,12 @@
       will-change: transform, opacity;
     }
 
+    .vocabulary-game.phase-7 .text-container.text-container--phase-eight-animate {
+      animation: phaseEightTextGrow 8000ms linear forwards;
+      transform-origin: center;
+      will-change: transform, opacity;
+    }
+
     .vocabulary-game.phase-6 .text-container {
       font-size: 44px;
       width: min(720px, 100%);
@@ -974,6 +984,18 @@
       }
     }
 
+    @keyframes phaseTenRowGap {
+      0% {
+        column-gap: 10px;
+      }
+      50% {
+        column-gap: 20px;
+      }
+      100% {
+        column-gap: 10px;
+      }
+    }
+
     .board__inner--writing {
       display: flex;
       flex-direction: column;
@@ -1075,14 +1097,33 @@
       --writing-chip-radius: 11px;
     }
 
-    .vocabulary-game.phase-9 .writing-hub,
-    .vocabulary-game.phase-10 .writing-hub {
+    .vocabulary-game.phase-9 .writing-hub {
       display: grid;
       grid-template-columns: repeat(4, max-content);
       gap: 8px;
       width: min(640px, 100%);
       justify-content: center;
     }
+
+    .vocabulary-game.phase-10 .writing-hub {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: min(640px, 100%);
+      justify-content: center;
+    }
+
+    .vocabulary-game.phase-10 .writing-hub__row {
+      display: flex;
+      justify-content: center;
+      column-gap: 10px;
+      animation: phaseTenRowGap 1500ms ease-in-out infinite;
+    }
+
+    .vocabulary-game.phase-10 .writing-hub__row--2 { animation-duration: 1700ms; }
+    .vocabulary-game.phase-10 .writing-hub__row--3 { animation-duration: 1800ms; }
+    .vocabulary-game.phase-10 .writing-hub__row--4 { animation-duration: 2100ms; }
 
     .vocabulary-game.phase-9 .writing-chip,
     .vocabulary-game.phase-10 .writing-chip,
