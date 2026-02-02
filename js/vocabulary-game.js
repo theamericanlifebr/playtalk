@@ -84,7 +84,10 @@
     nouns: 3,
     adjectives: 2
   };
-  const WRITING_HUB_LIMIT = 20;
+  const WRITING_HUB_LIMIT = 16;
+  const WRITING_HUB_ROWS = 4;
+  const WRITING_HUB_COLS = 4;
+  const WRITING_HUB_MAX_ROW_CHARS = 20;
   const WRITING_COLOR_CLASSES = [
     'writing-chip--red',
     'writing-chip--blue',
@@ -2790,7 +2793,8 @@
       }
     }
 
-    return shuffle(hub).slice(0, limit);
+    const shuffledHub = shuffle(hub).slice(0, limit);
+    return arrangeWritingHubRows(shuffledHub) || shuffledHub;
   }
 
   function updateWritingSentence(text, options = {}) {
@@ -2804,6 +2808,38 @@
       textContainer.classList.remove('text-container--writing-dissolve');
       textContainer.classList.toggle('active', true);
     }, 250);
+  }
+
+  function arrangeWritingHubRows(chips, options = {}) {
+    const {
+      rows = WRITING_HUB_ROWS,
+      cols = WRITING_HUB_COLS,
+      maxChars = WRITING_HUB_MAX_ROW_CHARS
+    } = options;
+    if (chips.length !== rows * cols) return null;
+    const shuffled = shuffle([...chips]);
+    const sorted = shuffled.sort((a, b) => (b.word || '').length - (a.word || '').length);
+    const rowData = Array.from({ length: rows }, () => ({ items: [], total: 0 }));
+
+    const place = (index) => {
+      if (index >= sorted.length) return true;
+      const chip = sorted[index];
+      const length = (chip.word || '').length;
+      const rowOrder = shuffle([...rowData]);
+      for (const row of rowOrder) {
+        if (row.items.length >= cols) continue;
+        if (row.total + length > maxChars) continue;
+        row.items.push(chip);
+        row.total += length;
+        if (place(index + 1)) return true;
+        row.items.pop();
+        row.total -= length;
+      }
+      return false;
+    };
+
+    if (!place(0)) return null;
+    return rowData.flatMap(row => row.items);
   }
 
   function setWritingPrompt(text) {
