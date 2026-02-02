@@ -138,6 +138,26 @@
   const singlePhaseMode = Number.isFinite(forcedPhase) && forcedPhase >= 1 && forcedPhase <= MAX_PHASE;
   const isFlashcardLaunch = urlParams.get('source') === 'flashcards';
 
+  function playSuccessAudio() {
+    if (!successAudio) return;
+    if (phase === 10) {
+      const layeredAudio = new Audio(successAudio.src);
+      layeredAudio.volume = successAudio.volume || 1;
+      layeredAudio.play().catch(() => {});
+      return;
+    }
+    successAudio.play().catch(() => {});
+  }
+
+  function playFeedbackAudio(audio) {
+    if (!audio) return;
+    if (audio === successAudio) {
+      playSuccessAudio();
+      return;
+    }
+    audio.play().catch(() => {});
+  }
+
   let dayPhaseEntries = new Map();
   let dayPhaseSequence = [];
   let dayEntries = [];
@@ -2120,6 +2140,7 @@
       return;
     }
 
+    const shouldAnimateText = phase === 7 || phase === 8;
     if (phase === 8 && message.length > 20) {
       const lines = splitPhaseSevenText(message);
       textContainer.innerHTML = '';
@@ -2135,7 +2156,7 @@
     }
 
     textContainer.classList.toggle('active', true);
-    if (phase === 8) {
+    if (shouldAnimateText) {
       textContainer.classList.remove('text-container--phase-eight-animate');
       void textContainer.offsetWidth;
       textContainer.classList.add('text-container--phase-eight-animate');
@@ -2348,7 +2369,7 @@
 
     updateProgressBar();
     playPronunciation(currentItem);
-    audio && audio.play().catch(() => {});
+    playFeedbackAudio(audio);
     setTimeout(() => {
       awaiting = false;
       advanceCycle();
@@ -2438,7 +2459,7 @@
 
     recordFlashcardMetric(currentItem, 'association', wasCorrect ? 100 : 0);
 
-    audio && audio.play().catch(() => {});
+    playFeedbackAudio(audio);
     updateProgressBar();
     setTimeout(() => {
       awaiting = false;
@@ -2631,7 +2652,7 @@
 
     boardInner.appendChild(imageWrapper);
     choiceRow.innerHTML = '';
-    showText('');
+    showText(item.pt || item.en);
   }
 
   function showPhaseEightCard(item) {
@@ -2671,17 +2692,8 @@
     img.addEventListener('click', startListening);
     img.addEventListener('touchstart', startListening, { passive: true });
 
-    const speechBtn = document.createElement('button');
-    speechBtn.type = 'button';
-    speechBtn.className = 'phase-word-btn';
-    speechBtn.textContent = promptText;
-    speechBtn.setAttribute('aria-label', `Toque e repita em inglês: ${promptText}`);
-    speechBtn.addEventListener('click', startListening);
-
     boardInner.appendChild(imageWrapper);
     choiceRow.innerHTML = '';
-    choiceRow.appendChild(speechBtn);
-    scheduleButtonTextFit(speechBtn, 18);
     showText(promptText);
     schedulePhaseEightTimeout();
   }
@@ -3031,6 +3043,16 @@
 
     const hub = document.createElement('div');
     hub.className = 'writing-hub';
+    const hubRows = [];
+    if (phase === 10) {
+      const rowCount = Math.ceil(chips.length / WRITING_HUB_COLS);
+      for (let i = 0; i < rowCount; i += 1) {
+        const row = document.createElement('div');
+        row.className = `writing-hub__row writing-hub__row--${(i % 4) + 1}`;
+        hub.appendChild(row);
+        hubRows.push(row);
+      }
+    }
 
     const display = document.createElement('div');
     display.className = 'writing-display';
@@ -3073,7 +3095,7 @@
           normalized: chip.normalized,
           colorClass: chip.colorClass
         });
-        successAudio && successAudio.play().catch(() => {});
+        playSuccessAudio();
         button.disabled = true;
         button.classList.add('writing-chip--selected');
         renderWritingDisplay(writingState.selectedWords, { highlight: false });
@@ -3091,7 +3113,8 @@
           }, getAdvanceDelay(600));
         }
       });
-      hub.appendChild(button);
+      const targetRow = hubRows.length ? hubRows[Math.floor(index / WRITING_HUB_COLS)] : hub;
+      targetRow.appendChild(button);
       return button;
     });
 
@@ -3369,7 +3392,7 @@
           phaseFourExpectedIndex += 1;
           phaseFourResolved += 1;
           applyCorrectOutcome();
-          successAudio && successAudio.play().catch(() => {});
+          playSuccessAudio();
           updateProgressBar();
 
           window.setTimeout(() => {
