@@ -2803,30 +2803,6 @@
               }
             });
           }
-          const icon = createIconImage(
-            item,
-            'images/sound.png',
-            'Som',
-            'board__image-single board__image-icon'
-          );
-          const button = icon.querySelector('img')?.closest('button') || icon;
-          if (button) {
-            button.addEventListener('click', () => {
-              const retrySrc = buildAudioSrcFromName(audioName);
-              if (retrySrc) {
-                const retry = new Audio(retrySrc);
-                retry.play().catch(() => {});
-                return;
-              }
-              getAudioElementFromName(audioName).then((audio) => {
-                if (audio) {
-                  audio.currentTime = 0;
-                  audio.play().catch(() => {});
-                }
-              });
-            });
-          }
-          boardInner.appendChild(icon);
         }
       }
     };
