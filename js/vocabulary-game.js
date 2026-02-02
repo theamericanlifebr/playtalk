@@ -2770,8 +2770,10 @@
       return;
     }
 
+    const targetTokens = normalizeWritingSentence(targetSentence);
     writingState = {
       targetSentence,
+      targetTokens,
       selectedWords: [],
       chips: []
     };
@@ -2838,14 +2840,6 @@
     const hub = document.createElement('div');
     hub.className = 'writing-hub';
 
-    const toolbar = document.createElement('div');
-    toolbar.className = 'writing-toolbar';
-    const undoButton = document.createElement('button');
-    undoButton.type = 'button';
-    undoButton.className = 'writing-undo';
-    undoButton.textContent = 'Desfazer';
-    toolbar.appendChild(undoButton);
-
     const chipElements = chips.map((chip, index) => {
       const button = document.createElement('button');
       button.type = 'button';
@@ -2854,10 +2848,37 @@
       button.dataset.index = String(index);
       button.addEventListener('click', () => {
         if (button.disabled || awaiting) return;
+        const nextPosition = writingState.selectedWords.length;
+        const expectedWord = writingState.targetTokens[nextPosition];
+        const selectedWord = chip.normalized;
+        if (expectedWord !== selectedWord) {
+          awaiting = true;
+          registerErrorAndCheckReset();
+          updateProgressBar();
+          errorAudio && errorAudio.play().catch(() => {});
+          updateWritingSentence(targetSentence, { highlight: true });
+          window.setTimeout(() => {
+            textContainer.classList.remove('text-container--writing-feedback');
+            resetSelection();
+            awaiting = false;
+          }, 400);
+          return;
+        }
+
         writingState.selectedWords.push({ chipIndex: index, word: chip.word, normalized: chip.normalized });
         button.disabled = true;
         button.classList.add('writing-chip--selected');
         updateWritingSentence(writingState.selectedWords.map(entry => entry.word).join(' '));
+
+        if (writingState.selectedWords.length === writingState.targetTokens.length) {
+          awaiting = true;
+          applyCorrectOutcome();
+          updateProgressBar();
+          window.setTimeout(() => {
+            awaiting = false;
+            advanceCycle();
+          }, getAdvanceDelay(600));
+        }
       });
       hub.appendChild(button);
       return button;
@@ -2872,65 +2893,14 @@
       updateWritingSentence('');
     };
 
-    const handleUndo = () => {
-      if (awaiting || !writingState.selectedWords.length) return;
-      const last = writingState.selectedWords.pop();
-      const chipEl = chipElements[last.chipIndex];
-      if (chipEl) {
-        chipEl.disabled = false;
-        chipEl.classList.remove('writing-chip--selected');
-      }
-      updateWritingSentence(writingState.selectedWords.map(entry => entry.word).join(' '));
-    };
-
-    undoButton.addEventListener('click', handleUndo);
-
-    const submitAttempt = () => {
-      if (awaiting) return;
-      awaiting = true;
-      const selected = writingState.selectedWords.map(entry => entry.word).join(' ');
-      const selectedTokens = normalizeWritingSentence(selected);
-      const targetTokens = normalizeWritingSentence(targetSentence);
-      const isCorrect = selectedTokens.length === targetTokens.length
-        && selectedTokens.every((word, idx) => word === targetTokens[idx]);
-
-      if (isCorrect) {
-        applyCorrectOutcome();
-        updateProgressBar();
-        window.setTimeout(() => {
-          awaiting = false;
-          advanceCycle();
-        }, getAdvanceDelay(600));
-        return;
-      }
-
-      updateWritingSentence(targetSentence, { highlight: true });
-      window.setTimeout(() => {
-        textContainer.classList.remove('text-container--writing-feedback');
-        resetSelection();
-        awaiting = false;
-      }, 400);
-    };
-
-    if (textContainer) {
-      textContainer.addEventListener('click', submitAttempt);
-      textContainer.addEventListener('pointerdown', submitAttempt);
-    }
-
     if (choiceRow) {
       choiceRow.innerHTML = '';
       choiceRow.classList.add('choice-row--writing');
-      choiceRow.appendChild(toolbar);
       choiceRow.appendChild(hub);
     }
     updateWritingSentence('');
 
     writingCleanup = () => {
-      if (textContainer) {
-        textContainer.removeEventListener('click', submitAttempt);
-        textContainer.removeEventListener('pointerdown', submitAttempt);
-      }
-      undoButton.removeEventListener('click', handleUndo);
       if (choiceRow) {
         choiceRow.classList.remove('choice-row--writing');
       }
