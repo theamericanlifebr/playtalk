@@ -15,7 +15,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: url('backgrounds/background6.jpg') center/cover no-repeat fixed;
+      background: #f7f8fa;
       color: var(--text);
       min-height: 100vh;
       display: flex;
@@ -109,6 +109,7 @@
 
     .game-status--bottom {
       margin-top: 0;
+      min-height: 64px;
     }
 
     .vocabulary-game.from-flashcards .game-status,
@@ -122,6 +123,8 @@
       display: flex;
       gap: 4px;
       align-items: center;
+      justify-content: center;
+      width: 100%;
     }
 
     .game-heart {
@@ -977,18 +980,19 @@
 
     .vocabulary-game.phase-9,
     .vocabulary-game.phase-10 {
-      --writing-chip-font-size: 19px;
-      --writing-chip-height: 42px;
-      --writing-chip-padding: 16px;
-      --writing-chip-radius: 14px;
+      --writing-chip-font-size: 15px;
+      --writing-chip-height: 34px;
+      --writing-chip-padding: 13px;
+      --writing-chip-radius: 11px;
     }
 
     .vocabulary-game.phase-9 .writing-hub,
     .vocabulary-game.phase-10 .writing-hub {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(4, max-content);
       gap: 8px;
       width: min(640px, 100%);
+      justify-content: center;
     }
 
     .vocabulary-game.phase-9 .writing-chip,
@@ -999,6 +1003,8 @@
       height: var(--writing-chip-height);
       padding: 0 var(--writing-chip-padding);
       border-radius: var(--writing-chip-radius);
+      width: max-content;
+      justify-self: center;
     }
 
     .vocabulary-game.phase-9 .writing-chip:disabled,
@@ -1097,14 +1103,14 @@
     .final-overlay {
       position: fixed;
       inset: 0;
-      background: url('backgrounds/background6.jpg') center/cover no-repeat fixed;
+      background: #f7f8fa;
       z-index: 25;
       display: none;
       align-items: center;
       justify-content: center;
       flex-direction: column;
       gap: 24px;
-      color: #fff;
+      color: var(--text);
       text-align: center;
       overflow: hidden;
     }
@@ -1117,7 +1123,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: rgba(7, 19, 40, 0.6);
+      background: transparent;
       z-index: 0;
     }
 
@@ -1163,7 +1169,7 @@
     .final-overlay__medal span {
       font-size: 22px;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
       text-transform: capitalize;
     }
 
