@@ -9,7 +9,6 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
   const journeyButton = document.getElementById('journey-start-btn');
   const journeyReset = document.getElementById('journey-reset-btn');
   const gamePanel = document.getElementById('home-game');
-  const pauseButton = document.getElementById('game-pause-btn');
 
   const safeParse = (key) => {
     try {
@@ -95,10 +94,6 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
 
   if (journeyReset) {
     journeyReset.addEventListener('click', resetJourney);
-  }
-
-  if (pauseButton) {
-    pauseButton.addEventListener('click', showHome);
   }
 
   window.addEventListener('DOMContentLoaded', () => {

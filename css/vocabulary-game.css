@@ -112,6 +112,22 @@
       min-height: 64px;
     }
 
+    .vocabulary-game.phase-1 .game-status--bottom {
+      transform: translateY(25px);
+    }
+
+    .vocabulary-game.phase-5 .game-status--bottom {
+      transform: translateY(90px);
+    }
+
+    .vocabulary-game.phase-8 .game-status--bottom {
+      transform: translateY(100px);
+    }
+
+    .vocabulary-game.phase-10 .game-status--bottom {
+      transform: translateY(-20px);
+    }
+
     .vocabulary-game.from-flashcards .game-status,
     .vocabulary-game.from-flashcards .progress-footer,
     .vocabulary-game.from-flashcards .phase-audio-progress,
@@ -177,6 +193,26 @@
       padding: 30px 16px 60px;
       position: relative;
       gap: 0;
+    }
+
+    .vocabulary-game.phase-2 .game-main {
+      transform: translateY(90px);
+    }
+
+    .vocabulary-game.phase-3 .game-main {
+      transform: translateY(60px);
+    }
+
+    .vocabulary-game.phase-4 .game-main {
+      transform: translateY(50px);
+    }
+
+    .vocabulary-game.phase-7 .game-main {
+      transform: translateY(70px);
+    }
+
+    .vocabulary-game.phase-9 .game-main {
+      transform: translateY(100px);
     }
 
     .board-wrapper {
@@ -336,7 +372,7 @@
     }
 
     .vocabulary-game.phase-5 .image-visual {
-      transform: scale(0.97);
+      transform: scale(1.15);
       transform-origin: center;
     }
 
@@ -469,6 +505,11 @@
       opacity: 1;
     }
 
+    .vocabulary-game.phase-1 .board__image-single--phase-one {
+      transform: scale(1.15);
+      transform-origin: center;
+    }
+
     .board__image-speech {
       opacity: 0.6;
       cursor: pointer;
@@ -492,9 +533,12 @@
       --ring-width: 17px;
     }
 
-    .vocabulary-game.phase-8 .board {
+    .vocabulary-game.phase-8 .board,
+    .vocabulary-game.phase-9 .board,
+    .vocabulary-game.phase-10 .board {
       background: transparent;
       border: none;
+      box-shadow: none;
     }
 
     .vocabulary-game.phase-2 .image-ring--tense {
@@ -647,11 +691,19 @@
 
     .vocabulary-game.phase-9 .text-container,
     .vocabulary-game.phase-10 .text-container {
-      color: #fff;
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       font-weight: 700;
-      text-shadow: 0 2px 4px rgba(60, 60, 60, 0.6);
       font-size: 26px;
+    }
+
+    .vocabulary-game.phase-9 .text-container {
+      color: #3b82f6;
+      text-shadow: none;
+    }
+
+    .vocabulary-game.phase-10 .text-container {
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(60, 60, 60, 0.6);
     }
 
     .vocabulary-game.phase-9 .game-main,
@@ -691,6 +743,10 @@
       order: 5;
     }
 
+    .vocabulary-game.phase-10 .choice-row {
+      transform: translateY(-20px);
+    }
+
     .text-container--writing-feedback {
       background: #22c55e;
       color: #fff;
@@ -710,6 +766,13 @@
 
     .vocabulary-game.phase-8 .text-container {
       font-size: 18.7px;
+      margin-top: 20px;
+    }
+
+    .vocabulary-game.phase-8 .text-container.text-container--phase-eight-animate {
+      animation: phaseEightTextGrow 8000ms linear forwards;
+      transform-origin: center;
+      will-change: transform, opacity;
     }
 
     .vocabulary-game.phase-6 .text-container {
@@ -732,6 +795,7 @@
       align-items: center;
       justify-content: center;
       margin: 0;
+      margin-top: 100px;
     }
 
     .vocabulary-game.phase-10 .board {
@@ -842,7 +906,10 @@
       border-radius: 12px;
       cursor: pointer;
       text-transform: none;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.5s ease, opacity 0.5s ease;
     }
 
     .writing-chip:hover:not(:disabled) {
@@ -888,6 +955,23 @@
 
     .writing-chip--orange {
       background: linear-gradient(135deg, #f97316, #ea580c);
+    }
+
+    @keyframes phaseEightTextGrow {
+      0% {
+        opacity: 0;
+        transform: scale(1);
+      }
+      12.5% {
+        opacity: 1;
+      }
+      87.5% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: scale(2);
+      }
     }
 
     .board__inner--writing {
@@ -976,6 +1060,11 @@
       padding: 15.3px 23.8px;
       min-width: 239.7px;
       box-shadow: 0 6.8px 20.4px rgba(76, 150, 220, 0.3);
+      margin-top: 60px;
+    }
+
+    .vocabulary-game.phase-5 .phase-word-btn {
+      margin-top: 70px;
     }
 
     .vocabulary-game.phase-9,
