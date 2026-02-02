@@ -196,31 +196,7 @@ body {
   font-family: var(--app-font-family, 'Open Sans', sans-serif);
   color: var(--app-text-color, #ffffff);
   position: relative;
-  background: transparent;
-}
-
-html::before,
-body::before,
-body::after {
-  content: '';
-  animation: slide 3s ease-in-out infinite alternate;
-  background-image: linear-gradient(-60deg, #6c3 50%, #09f 50%);
-  bottom: 0;
-  left: -50%;
-  opacity: 0.5;
-  position: fixed;
-  right: -50%;
-  top: 0;
-  z-index: -1;
-}
-
-body::before {
-  animation-direction: alternate-reverse;
-  animation-duration: 4s;
-}
-
-body::after {
-  animation-duration: 5s;
+  background: #ffffff;
 }
 
 body.has-custom-text-color {
@@ -229,15 +205,6 @@ body.has-custom-text-color {
 
 body.has-custom-text-color * {
   color: inherit !important;
-}
-
-@keyframes slide {
-  0% {
-    transform: translateX(-25%);
-  }
-  100% {
-    transform: translateX(25%);
-  }
 }
 
 .lens-overlay {
