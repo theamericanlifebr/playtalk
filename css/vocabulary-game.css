@@ -611,6 +611,46 @@
       transition: opacity 0.25s ease;
     }
 
+    .vocabulary-game.phase-9 .text-container,
+    .vocabulary-game.phase-10 .text-container {
+      color: #fff;
+      font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(60, 60, 60, 0.6);
+    }
+
+    .vocabulary-game.phase-9 .game-main,
+    .vocabulary-game.phase-10 .game-main {
+      align-items: center;
+    }
+
+    .vocabulary-game.phase-9 .game-status--top,
+    .vocabulary-game.phase-10 .game-status--top {
+      order: 1;
+    }
+
+    .vocabulary-game.phase-9 .board-wrapper,
+    .vocabulary-game.phase-10 .board-wrapper {
+      order: 2;
+    }
+
+    .vocabulary-game.phase-9 .text-container,
+    .vocabulary-game.phase-10 .text-container {
+      order: 3;
+      margin-top: 6px;
+    }
+
+    .vocabulary-game.phase-9 .game-status--bottom,
+    .vocabulary-game.phase-10 .game-status--bottom {
+      order: 4;
+      margin-top: 4px;
+    }
+
+    .vocabulary-game.phase-9 .choice-row,
+    .vocabulary-game.phase-10 .choice-row {
+      order: 5;
+    }
+
     .text-container--writing-feedback {
       background: #22c55e;
       color: #fff;
@@ -652,6 +692,38 @@
       align-items: center;
       justify-content: center;
       margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .vocabulary-game.phase-9 .game-main,
+      .vocabulary-game.phase-10 .game-main {
+        padding: 18px 12px 70px;
+        gap: 6px;
+      }
+
+      .vocabulary-game.phase-9 .board,
+      .vocabulary-game.phase-10 .board {
+        width: min(360px, 95vw);
+        height: min(360px, 95vw);
+      }
+
+      .vocabulary-game.phase-9 .game-medal img,
+      .vocabulary-game.phase-10 .game-medal img {
+        width: calc(54px * 1.3);
+        height: calc(54px * 1.3);
+      }
+
+      .vocabulary-game.phase-9 .game-heart,
+      .vocabulary-game.phase-10 .game-heart {
+        width: 28px;
+        height: 28px;
+      }
+
+      .vocabulary-game.phase-9 .text-container,
+      .vocabulary-game.phase-10 .text-container {
+        font-size: 20px;
+        min-height: 40px;
+      }
     }
 
     .choice-row {
