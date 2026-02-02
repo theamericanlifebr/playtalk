@@ -101,6 +101,8 @@
   const ACCURACY_RING_ANIMATION_MS = 1000;
   const ACCURACY_RING_RESET_MS = 1000;
   const STREAK_HEART_TARGET = 8;
+  const PHASE_EIGHT_TEXT_ANIMATION_MS = 8000;
+  const WRITING_COLOR_CYCLE_MS = 3000;
   const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
   const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
   const FLASHCARD_PRONUNCIATION_LIMIT = 6;
@@ -161,6 +163,7 @@
   const resolvedAudioCache = new Map();
   let writingState = null;
   let writingCleanup = null;
+  let writingColorTimer = null;
 
   let awaiting = false;
   let recognition = null;
@@ -187,6 +190,7 @@
   let mirrorGroups = [];
   let pronunciationSamples = [];
   let micPromptTimer = null;
+  let phaseEightTimeout = null;
   let levelUnlockTimer = null;
   const ROTATION_FADE_MS = 400;
   const SUPPORTED_ENTRY_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
@@ -1459,6 +1463,10 @@
 
   function awardStreakHeart() {
     const total = getHeartsTotal(currentMedalKey);
+    if (currentMedalKey === 'diamante' && heartsRemaining >= total) {
+      updateHeartsDisplay();
+      return;
+    }
     if (heartsRemaining < total) {
       heartsRemaining += 1;
     } else {
@@ -2107,6 +2115,7 @@
     if (!message) {
       textContainer.textContent = '';
       textContainer.classList.remove('text-container--split');
+      textContainer.classList.remove('text-container--phase-eight-animate');
       textContainer.classList.toggle('active', false);
       return;
     }
@@ -2126,6 +2135,13 @@
     }
 
     textContainer.classList.toggle('active', true);
+    if (phase === 8) {
+      textContainer.classList.remove('text-container--phase-eight-animate');
+      void textContainer.offsetWidth;
+      textContainer.classList.add('text-container--phase-eight-animate');
+    } else {
+      textContainer.classList.remove('text-container--phase-eight-animate');
+    }
   }
 
   function renderWithDissolve(renderer) {
@@ -2144,7 +2160,66 @@
     }, IMAGE_DISSOLVE_MS);
   }
 
+  function clearPhaseEightTimeout() {
+    if (phaseEightTimeout) {
+      window.clearTimeout(phaseEightTimeout);
+      phaseEightTimeout = null;
+    }
+  }
+
+  function schedulePhaseEightTimeout() {
+    clearPhaseEightTimeout();
+    phaseEightTimeout = window.setTimeout(() => {
+      if (phase !== 8 || awaiting) return;
+      registerErrorAndCheckReset();
+      applyIncorrectOutcome();
+      updateProgressBar();
+      advanceCycle();
+    }, PHASE_EIGHT_TEXT_ANIMATION_MS);
+  }
+
+  function clearWritingColorCycle() {
+    if (writingColorTimer) {
+      window.clearInterval(writingColorTimer);
+      writingColorTimer = null;
+    }
+  }
+
+  function getNextWritingColorClass(currentClass) {
+    const index = WRITING_COLOR_CLASSES.indexOf(currentClass);
+    if (index === -1) return WRITING_COLOR_CLASSES[0];
+    return WRITING_COLOR_CLASSES[(index + 1) % WRITING_COLOR_CLASSES.length];
+  }
+
+  function rotateWritingChipColors() {
+    if (!writingState) return;
+    writingState.chips.forEach((chip, idx) => {
+      const nextClass = getNextWritingColorClass(chip.colorClass);
+      chip.colorClass = nextClass;
+      const button = choiceRow && choiceRow.querySelector(`.writing-chip[data-index="${idx}"]`);
+      if (button) {
+        WRITING_COLOR_CLASSES.forEach(colorClass => button.classList.remove(colorClass));
+        button.classList.add(nextClass);
+      }
+    });
+    if (writingState.selectedWords.length) {
+      writingState.selectedWords = writingState.selectedWords.map(entry => ({
+        ...entry,
+        colorClass: writingState.chips[entry.chipIndex]?.colorClass || entry.colorClass
+      }));
+      renderWritingDisplay(writingState.selectedWords, { highlight: false });
+    }
+  }
+
+  function startWritingColorCycle() {
+    clearWritingColorCycle();
+    writingColorTimer = window.setInterval(() => {
+      rotateWritingChipColors();
+    }, WRITING_COLOR_CYCLE_MS);
+  }
+
   function clearWritingState() {
+    clearWritingColorCycle();
     if (typeof writingCleanup === 'function') {
       writingCleanup();
     }
@@ -2179,6 +2254,7 @@
   }
 
   function clearBoard() {
+    clearPhaseEightTimeout();
     clearWritingState();
     if (boardInner) boardInner.innerHTML = '';
     if (choiceRow) choiceRow.innerHTML = '';
@@ -2579,6 +2655,7 @@
 
     const startListening = () => {
       if (awaiting) return;
+      clearPhaseEightTimeout();
       handleSpeechChallenge(expected, startListening, {
         onListeningStart: () => img.classList.add('board__image-speech--listening'),
         onListeningEnd: () => img.classList.remove('board__image-speech--listening'),
@@ -2605,7 +2682,8 @@
     choiceRow.innerHTML = '';
     choiceRow.appendChild(speechBtn);
     scheduleButtonTextFit(speechBtn, 18);
-    showText('');
+    showText(promptText);
+    schedulePhaseEightTimeout();
   }
 
   function normalizeWritingWord(value) {
@@ -3043,6 +3121,7 @@
 
     if (phase === 9) {
       setWritingPrompt(getEntryPortugueseSentence(item));
+      startWritingColorCycle();
     } else {
       setWritingPrompt('');
     }
