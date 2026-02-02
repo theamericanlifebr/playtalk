@@ -84,7 +84,7 @@
     nouns: 3,
     adjectives: 2
   };
-  const WRITING_HUB_LIMIT = 15;
+  const WRITING_HUB_LIMIT = 20;
   const WRITING_COLOR_CLASSES = [
     'writing-chip--red',
     'writing-chip--blue',
@@ -2497,6 +2497,7 @@
       'board__image-text board__image-speech'
     );
     const textEl = imageWrapper.querySelector('.board__image-text');
+    applyBalancedText(textEl, promptText);
 
     const startListening = () => {
       if (awaiting) return;
@@ -2625,6 +2626,36 @@
 
   function normalizeWritingSentence(sentence) {
     return tokenizeWritingSentence(sentence).map(token => token.normalized);
+  }
+
+  function splitBalancedText(text) {
+    const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+    if (words.length <= 1) {
+      return [text, ''];
+    }
+    let bestSplit = 1;
+    let smallestDiff = Infinity;
+    for (let i = 1; i < words.length; i += 1) {
+      const first = words.slice(0, i).join(' ');
+      const second = words.slice(i).join(' ');
+      const diff = Math.abs(first.length - second.length);
+      if (diff < smallestDiff) {
+        smallestDiff = diff;
+        bestSplit = i;
+      }
+    }
+    return [words.slice(0, bestSplit).join(' '), words.slice(bestSplit).join(' ')];
+  }
+
+  function applyBalancedText(element, text) {
+    if (!element) return;
+    const [first, second] = splitBalancedText(text);
+    element.innerHTML = '';
+    element.appendChild(document.createTextNode(first));
+    if (second) {
+      element.appendChild(document.createElement('br'));
+      element.appendChild(document.createTextNode(second));
+    }
   }
 
   function pickUniqueWords(poolList, count, exclude = new Set()) {
@@ -2797,14 +2828,17 @@
     displayEl.classList.toggle('writing-display--highlight', highlight);
   }
 
-  function buildWritingDisplayEntriesFromSentence(sentence) {
+  function buildWritingDisplayEntriesFromSentence(sentence, options = {}) {
     if (!writingState) return [];
     const tokens = tokenizeWritingSentence(sentence);
+    const { overrideColorClass } = options;
     return tokens.map((token, index) => {
       const match = writingState.chips.find(chip => chip.normalized === token.normalized);
       return {
         word: token.original || token.normalized,
-        colorClass: match?.colorClass || WRITING_COLOR_CLASSES[index % WRITING_COLOR_CLASSES.length]
+        colorClass: overrideColorClass
+          || match?.colorClass
+          || WRITING_COLOR_CLASSES[index % WRITING_COLOR_CLASSES.length]
       };
     });
   }
@@ -2834,8 +2868,28 @@
       targetTokens,
       selectedWords: [],
       chips: [],
-      displayEl: null
+      displayEl: null,
+      playPromptAudio: null
     };
+
+    if (options.mode === 'audio') {
+      const audioName = getEntryAudioName(item);
+      if (audioName) {
+        const audioSrc = buildAudioSrcFromName(audioName);
+        writingState.playPromptAudio = () => {
+          if (audioSrc) {
+            const audio = new Audio(audioSrc);
+            audio.play().catch(() => {});
+            return;
+          }
+          getAudioElementFromName(audioName).then((audio) => {
+            if (audio) {
+              audio.play().catch(() => {});
+            }
+          });
+        };
+      }
+    }
 
     const renderPrompt = () => {
       if (options.mode === 'image') {
@@ -2846,22 +2900,6 @@
             'board__image-single board__image-single--phase-one'
           );
           boardInner.appendChild(imageWrapper);
-        }
-      }
-      if (options.mode === 'audio') {
-        const audioName = getEntryAudioName(item);
-        if (audioName) {
-          const audioSrc = buildAudioSrcFromName(audioName);
-          if (audioSrc) {
-            const audio = new Audio(audioSrc);
-            audio.play().catch(() => {});
-          } else {
-            getAudioElementFromName(audioName).then((audio) => {
-              if (audio) {
-                audio.play().catch(() => {});
-              }
-            });
-          }
         }
       }
     };
@@ -2893,6 +2931,7 @@
       button.dataset.index = String(index);
       button.addEventListener('click', () => {
         if (button.disabled || awaiting) return;
+        hub.classList.remove('writing-hub--error');
         const nextPosition = writingState.selectedWords.length;
         const expectedWord = writingState.targetTokens[nextPosition];
         const selectedWord = chip.normalized;
@@ -2901,12 +2940,16 @@
           registerErrorAndCheckReset();
           updateProgressBar();
           errorAudio && errorAudio.play().catch(() => {});
-          renderWritingDisplay(buildWritingDisplayEntriesFromSentence(targetSentence), { highlight: true });
+          hub.classList.add('writing-hub--error');
+          renderWritingDisplay(
+            buildWritingDisplayEntriesFromSentence(targetSentence, { overrideColorClass: 'writing-chip--correct' }),
+            { highlight: true }
+          );
           window.setTimeout(() => {
             textContainer.classList.remove('text-container--writing-feedback');
             resetSelection();
             awaiting = false;
-          }, 400);
+          }, 1000);
           return;
         }
 
@@ -2916,12 +2959,16 @@
           normalized: chip.normalized,
           colorClass: chip.colorClass
         });
+        successAudio && successAudio.play().catch(() => {});
         button.disabled = true;
         button.classList.add('writing-chip--selected');
         renderWritingDisplay(writingState.selectedWords, { highlight: false });
 
         if (writingState.selectedWords.length === writingState.targetTokens.length) {
           awaiting = true;
+          if (typeof writingState.playPromptAudio === 'function') {
+            writingState.playPromptAudio();
+          }
           applyCorrectOutcome();
           updateProgressBar();
           window.setTimeout(() => {
@@ -2940,6 +2987,7 @@
         chipEl.disabled = false;
         chipEl.classList.remove('writing-chip--selected');
       });
+      hub.classList.remove('writing-hub--error');
       renderWritingDisplay([]);
     };
 

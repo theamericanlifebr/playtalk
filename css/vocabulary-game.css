@@ -104,19 +104,11 @@
     }
 
     .game-status--top {
-      margin-bottom: 10px;
+      margin-bottom: 0;
     }
 
     .game-status--bottom {
-      margin-top: 10px;
-    }
-
-    .vocabulary-game.phase-1 .game-status--bottom {
-      transform: translateY(-25px);
-    }
-
-    .vocabulary-game.phase-1 .board-wrapper {
-      transform: translateY(-50px);
+      margin-top: 0;
     }
 
     .vocabulary-game.from-flashcards .game-status,
@@ -164,7 +156,7 @@
     }
 
     .vocabulary-game .game-medal {
-      display: none;
+      display: flex;
     }
 
     .game-medal img {
@@ -178,10 +170,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 32px 16px 90px;
+      justify-content: flex-start;
+      padding: 30px 16px 60px;
       position: relative;
-      gap: 8px;
+      gap: 0;
     }
 
     .board-wrapper {
@@ -326,6 +318,20 @@
       aspect-ratio: 1 / 1;
     }
 
+    .vocabulary-game.phase-2 .board__inner--grid {
+      gap: 4px;
+      padding: 6px;
+    }
+
+    .vocabulary-game.phase-2 .grid-card {
+      padding: 6px;
+    }
+
+    .vocabulary-game.phase-2 .grid-card .image-visual {
+      transform: scale(1.15);
+      transform-origin: center;
+    }
+
     .vocabulary-game.phase-5 .image-visual {
       transform: scale(0.97);
       transform-origin: center;
@@ -338,13 +344,11 @@
     }
 
     .vocabulary-game.phase-8 .image-visual img {
-      border: 6px solid rgba(255, 255, 255, 0.7);
-      border-radius: 50%;
-      box-sizing: border-box;
+      border: none;
     }
 
     .vocabulary-game.phase-8 .image-lens {
-      inset: 0;
+      display: none;
     }
 
     .image-ring,
@@ -432,6 +436,16 @@
       height: 420px;
     }
 
+    .vocabulary-game.phase-6 .image-ring,
+    .vocabulary-game.phase-6 .image-lens {
+      display: none;
+    }
+
+    .vocabulary-game.phase-6 .board__image-text {
+      font-size: clamp(28px, 8vw, 48px);
+      line-height: 1.15;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -473,6 +487,19 @@
 
     .vocabulary-game.phase-8 .image-ring--accuracy {
       --ring-width: 17px;
+    }
+
+    .vocabulary-game.phase-8 .board {
+      background: transparent;
+      border: none;
+    }
+
+    .vocabulary-game.phase-2 .image-ring--tense {
+      --ring-width: 9px;
+    }
+
+    .vocabulary-game.phase-4 .image-ring--tense {
+      --ring-width: 7px;
     }
 
     .board__mic-prompt {
@@ -591,7 +618,7 @@
     .hidden-phase { opacity: 0; pointer-events: none; }
 
     .text-container {
-      margin-top: 8px;
+      margin-top: 0;
       width: min(480px, 100%);
       min-height: 48px;
       text-align: center;
@@ -621,6 +648,7 @@
       font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       font-weight: 700;
       text-shadow: 0 2px 4px rgba(60, 60, 60, 0.6);
+      font-size: 26px;
     }
 
     .vocabulary-game.phase-9 .game-main,
@@ -646,13 +674,13 @@
     .vocabulary-game.phase-9 .text-container,
     .vocabulary-game.phase-10 .text-container {
       order: 3;
-      margin-top: 6px;
+      margin-top: 0;
     }
 
     .vocabulary-game.phase-9 .game-status--bottom,
     .vocabulary-game.phase-10 .game-status--bottom {
       order: 4;
-      margin-top: 4px;
+      margin-top: 0;
     }
 
     .vocabulary-game.phase-9 .choice-row,
@@ -703,6 +731,21 @@
       margin: 0;
     }
 
+    .vocabulary-game.phase-10 .board {
+      height: auto;
+      width: min(520px, 95vw);
+      max-width: 520px;
+    }
+
+    .vocabulary-game.phase-10 .image-visual {
+      --image-visual-size: clamp(220px, 65vw, 360px);
+    }
+
+    .vocabulary-game.phase-10 .board__inner--writing {
+      gap: 10px;
+      padding: 10px 12px 16px;
+    }
+
     @media (max-width: 768px) {
       .vocabulary-game.phase-9 .game-main,
       .vocabulary-game.phase-10 .game-main {
@@ -734,7 +777,7 @@
 
       .vocabulary-game.phase-9 .text-container,
       .vocabulary-game.phase-10 .text-container {
-        font-size: 20px;
+        font-size: 22px;
         min-height: 40px;
       }
     }
@@ -745,10 +788,10 @@
       gap: 8px;
       justify-content: center;
       align-items: center;
-      margin-top: 8px;
+      margin-top: 0;
       transition: opacity 0.5s ease;
       width: min(450px, 100%);
-      transform: translateY(-20px);
+      transform: none;
     }
 
     .choice-row.choice-row--writing {
@@ -793,7 +836,7 @@
       font-weight: 800;
       height: 34px;
       padding: 0 12px;
-      border-radius: 0;
+      border-radius: 12px;
       cursor: pointer;
       text-transform: none;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -806,7 +849,6 @@
 
     .writing-chip:disabled,
     .writing-chip--selected {
-      opacity: 0.55;
       cursor: default;
       box-shadow: none;
     }
@@ -814,8 +856,11 @@
     .writing-chip--display {
       cursor: default;
       opacity: 1;
-      height: 36px;
-      padding: 0 14px;
+    }
+
+    .writing-chip--correct {
+      background: #22c55e;
+      color: #fff;
     }
 
     .writing-chip--red {
@@ -864,7 +909,7 @@
     }
 
     .vocabulary-game.phase-1 .choice-row {
-      transform: translateY(-60px);
+      transform: none;
     }
 
     .choice-row--compact {
@@ -928,6 +973,49 @@
       padding: 15.3px 23.8px;
       min-width: 239.7px;
       box-shadow: 0 6.8px 20.4px rgba(76, 150, 220, 0.3);
+    }
+
+    .vocabulary-game.phase-9,
+    .vocabulary-game.phase-10 {
+      --writing-chip-font-size: 19px;
+      --writing-chip-height: 42px;
+      --writing-chip-padding: 16px;
+      --writing-chip-radius: 14px;
+    }
+
+    .vocabulary-game.phase-9 .writing-hub,
+    .vocabulary-game.phase-10 .writing-hub {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      width: min(640px, 100%);
+    }
+
+    .vocabulary-game.phase-9 .writing-chip,
+    .vocabulary-game.phase-10 .writing-chip,
+    .vocabulary-game.phase-9 .writing-chip--display,
+    .vocabulary-game.phase-10 .writing-chip--display {
+      font-size: var(--writing-chip-font-size);
+      height: var(--writing-chip-height);
+      padding: 0 var(--writing-chip-padding);
+      border-radius: var(--writing-chip-radius);
+    }
+
+    .vocabulary-game.phase-9 .writing-chip:disabled,
+    .vocabulary-game.phase-10 .writing-chip:disabled {
+      opacity: 1;
+    }
+
+    .vocabulary-game.phase-9 .writing-chip--selected,
+    .vocabulary-game.phase-10 .writing-chip--selected {
+      background: #22c55e;
+      color: #fff;
+    }
+
+    .vocabulary-game.phase-9 .writing-hub--error .writing-chip,
+    .vocabulary-game.phase-10 .writing-hub--error .writing-chip {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
     }
 
     .phase-word-btn:hover { transform: translateY(-1px); }
