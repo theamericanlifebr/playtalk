@@ -10,6 +10,9 @@
     gameFont: 'Open Sans',
     appTextColor: '',
     gamePhraseColor: '#ffffff',
+    musicEnabled: true,
+    gameBackgroundType: '',
+    gameBackgroundData: '',
     modeIconColor: '#0b1f44',
     modeIconOpacity: 1,
     buttonColor: '#3b82f6',
@@ -79,6 +82,9 @@
         value.gamePhraseColor || value.phraseColor,
         DEFAULT_SETTINGS.gamePhraseColor
       );
+      normalized.musicEnabled = typeof value.musicEnabled === 'boolean' ? value.musicEnabled : DEFAULT_SETTINGS.musicEnabled;
+      normalized.gameBackgroundType = typeof value.gameBackgroundType === 'string' ? value.gameBackgroundType : '';
+      normalized.gameBackgroundData = typeof value.gameBackgroundData === 'string' ? value.gameBackgroundData : '';
       normalized.lensColor = normalizeHexColor(value.lensColor, '');
       normalized.lensColors = normalizeLensPalette(value.lensColors);
       normalized.lensOpacityStrong = normalizeOpacity(value.lensOpacityStrong, DEFAULT_SETTINGS.lensOpacityStrong);
@@ -272,6 +278,70 @@
     doc.style.setProperty('--phrase-color', normalized);
   }
 
+  function applyAudioEnabled(enabled) {
+    const audioEnabled = enabled !== false;
+    const doc = document.documentElement;
+    if (!doc) return;
+    doc.dataset.audioEnabled = audioEnabled ? 'true' : 'false';
+    document.querySelectorAll('audio').forEach((audio) => {
+      audio.muted = !audioEnabled;
+      if (!audioEnabled) {
+        audio.pause();
+      }
+    });
+  }
+
+  function ensureGameBackgroundContainer() {
+    let container = document.getElementById('game-background');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'game-background';
+      container.className = 'game-background';
+      document.body && document.body.prepend(container);
+    }
+    return container;
+  }
+
+  function applyGameBackground({ gameBackgroundType, gameBackgroundData } = {}) {
+    const body = document.body;
+    if (!body || body.dataset.lensContext !== 'game') {
+      if (body) {
+        body.classList.remove('has-game-background');
+      }
+      const existing = document.getElementById('game-background');
+      if (existing) {
+        existing.innerHTML = '';
+        existing.style.removeProperty('background-image');
+      }
+      return;
+    }
+    const type = typeof gameBackgroundType === 'string' ? gameBackgroundType : '';
+    const data = typeof gameBackgroundData === 'string' ? gameBackgroundData : '';
+    const hasBackground = Boolean(type && data);
+    body.classList.toggle('has-game-background', hasBackground);
+
+    const container = ensureGameBackgroundContainer();
+    container.innerHTML = '';
+    if (!hasBackground) {
+      container.style.removeProperty('background-image');
+      return;
+    }
+    if (type === 'image') {
+      container.style.backgroundImage = `url('${data}')`;
+      return;
+    }
+    if (type === 'video') {
+      const video = document.createElement('video');
+      video.className = 'game-background__video';
+      video.src = data;
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      container.appendChild(video);
+    }
+  }
+
   function applyContextLensColors(lensColors = {}, fallbackColor = '') {
     const doc = document.documentElement;
     if (!doc || !lensColors || typeof lensColors !== 'object') return;
@@ -303,6 +373,8 @@
     applyGameFont(settings.gameFont);
     applyAppTextColor(settings.appTextColor);
     applyGamePhraseColor(settings.gamePhraseColor, settings.theme);
+    applyAudioEnabled(settings.musicEnabled);
+    applyGameBackground(settings);
     applyModeIconColor(settings.modeIconColor);
     applyModeIconOpacity(settings.modeIconOpacity);
     applyButtonColor(settings.buttonColor);
@@ -335,6 +407,8 @@
     applyAppFont,
     applyGameFont,
     applyLensColor,
+    applyAudioEnabled,
+    applyGameBackground,
     applyModeIconColor,
     applyModeIconOpacity,
     applyButtonColor,

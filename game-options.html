@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-  <title>PlayTalk | Inplay</title>
+  <title>Opções de Jogo | PlayTalk App</title>
   <meta
     name="description"
-    content="PlayTalk, o app da fluência, transforma desafios de vocabulário, listening e speaking em uma jornada gamificada para dominar o inglês."
+    content="Defina fontes, cores, trilhas e o background do jogo para personalizar a sua jornada nas fases."
   >
   <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
@@ -16,8 +16,8 @@
   <script src="js/lens.js"></script>
   <script src="js/auth.js"></script>
 </head>
-<body class="page-inplay" data-lens-context="game">
-    <header class="site-header" id="global-header">
+<body class="page-game-options" data-lens-context="menus">
+  <header class="site-header" id="global-header">
     <div class="site-header__profile">
       <div class="site-header__avatar-container" id="header-avatar-container">
         <div class="site-header__avatar-ring">
@@ -34,47 +34,57 @@
         <span class="site-header__level" id="header-level">Nível 1</span>
       </div>
     </div>
-    </header>
-  <main id="home-main" class="container-screen container-screen--home" data-page-transition>
-    <div id="menu">
-      <div id="menu-modes">
-        <a class="menu-mode" data-mode="1" href="/game">
-          <span class="mode-logo mode-logo--menu" data-mode="1" aria-hidden="true"></span>
-          <span class="menu-mode__label">Game</span>
-        </a>
-        <a class="menu-mode" data-mode="2" href="/memory">
-          <span class="mode-logo mode-logo--menu" data-mode="2" aria-hidden="true"></span>
-          <span class="menu-mode__label">Memory</span>
-        </a>
-        <a class="menu-mode" data-mode="3" href="/listening">
-          <span class="mode-logo mode-logo--menu" data-mode="3" aria-hidden="true"></span>
-          <span class="menu-mode__label">Listening</span>
-        </a>
-        <a class="menu-mode" data-mode="4" href="/reading">
-          <span class="mode-logo mode-logo--menu" data-mode="4" aria-hidden="true"></span>
-          <span class="menu-mode__label">Reading</span>
-        </a>
-        <a class="menu-mode" data-mode="5" href="/connect">
-          <span class="mode-logo mode-logo--menu" data-mode="5" aria-hidden="true"></span>
-          <span class="menu-mode__label">Connect</span>
-        </a>
-        <button type="button" class="menu-mode menu-mode--disabled" data-mode="6" disabled>
-          <span class="mode-logo mode-logo--menu" data-mode="6" aria-hidden="true"></span>
-          <span class="menu-mode__label">Em breve</span>
-        </button>
+  </header>
+
+  <main class="container-screen game-options-layout" data-page-transition>
+    <section class="game-options-card">
+      <header class="game-options-card__header">
+        <h1>Opções do jogo</h1>
+        <p>Fontes, trilhas e background para as 10 fases da jornada PlayTalk.</p>
+      </header>
+
+      <div class="game-options-grid">
+        <label class="game-options-field">
+          <span>Estilo de fonte</span>
+          <select id="gameFontSelect" class="game-options-select"></select>
+          <small>Fontes são tudo que aparece escrito durante as 10 fases.</small>
+        </label>
+
+        <label class="game-options-field">
+          <span>Cor de fonte</span>
+          <input id="gameFontColor" class="game-options-color" type="color" aria-label="Selecionar cor da fonte">
+        </label>
+
+        <label class="game-options-field game-options-toggle">
+          <span>Trilhas sonoras nas fases</span>
+          <input id="gameMusicToggle" type="checkbox">
+          <span class="game-options-toggle__label">Ativar músicas durante o jogo</span>
+        </label>
+
+        <div class="game-options-field">
+          <span>Background do jogo</span>
+          <input
+            id="gameBackgroundUpload"
+            class="game-options-upload"
+            type="file"
+            accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
+          >
+          <small>Faça upload de JPG, PNG ou MP4 para o background do jogo e das fases.</small>
+          <div id="gameBackgroundPreview" class="game-options-preview" aria-live="polite"></div>
+          <div class="game-options-actions">
+            <button id="gameBackgroundClear" class="btn btn-ghost" type="button">Remover background</button>
+          </div>
+          <p id="gameOptionsStatus" class="game-options-status" role="status"></p>
+        </div>
       </div>
-    </div>
+    </section>
   </main>
+
+  <script src="js/game-options.js" defer></script>
 
   <footer class="page-footer">
     <nav id="main-nav">
-      <a
-        href="#home"
-        id="home-link"
-        class="nav-item active"
-        aria-label="Inplay"
-        data-nav-index="0"
-      >
+      <a href="#home" class="nav-item" aria-label="Inplay" data-nav-index="0">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
         </span>
@@ -92,7 +102,7 @@
         </span>
         <span class="sr-only">Estatísticas</span>
       </a>
-      <a href="#game-options" class="nav-item" aria-label="Opções do jogo" data-nav-index="3">
+      <a href="#game-options" class="nav-item active" aria-label="Opções do jogo" data-nav-index="3">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false">
             <path d="M7 10h10a4 4 0 0 1 0 8H7a4 4 0 0 1 0-8Zm-2 4a4 4 0 0 1 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -109,6 +119,5 @@
       </a>
     </nav>
   </footer>
-  <script src="js/main.js" defer></script>
 </body>
 </html>

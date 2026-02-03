@@ -741,6 +741,7 @@
       'index.html': { hash: '#home', scripts: ['js/main.js'], classes: ['page-home'] },
       'fun.html': { hash: '#fun', scripts: ['js/fun-page.js'], classes: ['page-fun'] },
       'play.html': { hash: '#play', scripts: ['js/play.js'], classes: ['page-play'] },
+      'game-options.html': { hash: '#game-options', scripts: ['js/game-options.js'], classes: ['page-game-options'] },
       'ranking.html': { hash: '#ranking', scripts: ['js/ranking.js'], classes: ['page-ranking'] },
       'perfil.html': { hash: '#perfil', scripts: ['js/profile.js'], classes: ['page-profile'] }
     };
