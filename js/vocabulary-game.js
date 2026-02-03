@@ -38,6 +38,8 @@
   const phaseAudioProgress = document.getElementById('phase-audio-progress');
   const phaseAudioProgressFill = document.getElementById('phase-audio-progress-fill');
   const phaseAudioSkip = document.getElementById('phase-audio-skip');
+  const deviceSelectOverlay = document.getElementById('device-select');
+  const deviceSelectButtons = Array.from(document.querySelectorAll('[data-device-option]'));
   const PHASE_DISSOLVE_MS = 500;
   const IMAGE_DISSOLVE_MS = 500;
   const PHASE_FOUR_BATCH_SIZE = 6;
@@ -104,6 +106,7 @@
   const PHASE_EIGHT_TEXT_ANIMATION_MS = 8000;
   const WRITING_COLOR_CYCLE_MS = 3000;
   const AUDIO_LISTENED_STORAGE_KEY = 'playtalk-phase-audio-listened';
+  const DEVICE_STORAGE_KEY = 'playtalk-device-selection';
   const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
   const FLASHCARD_PRONUNCIATION_LIMIT = 6;
   const FLASHCARD_METRIC_LIMIT = 10;
@@ -160,6 +163,7 @@
 
   let dayPhaseEntries = new Map();
   let dayPhaseSequence = [];
+  let baseDayPhaseSequence = [];
   let dayEntries = [];
   let level = 1;
   let phase = 1;
@@ -642,11 +646,69 @@
     return dayPhaseSequence.length ? dayPhaseSequence[0] : null;
   }
 
+  function normalizeDeviceSelection(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'iphone' || normalized === 'ios') return 'iphone';
+    if (normalized === 'android') return 'android';
+    if (normalized === 'windows') return 'windows';
+    return null;
+  }
+
+  function getDeviceSelection() {
+    const stored = localStorage.getItem(DEVICE_STORAGE_KEY);
+    return normalizeDeviceSelection(stored);
+  }
+
+  function setDeviceSelection(value) {
+    const normalized = normalizeDeviceSelection(value);
+    if (!normalized) return null;
+    localStorage.setItem(DEVICE_STORAGE_KEY, normalized);
+    return normalized;
+  }
+
+  function buildDevicePhaseSequence(sequence) {
+    if (!Array.isArray(sequence) || !sequence.length) return [];
+    const device = getDeviceSelection();
+    if (device !== 'iphone') return sequence.slice();
+    const desired = [1, 2, 9, 4, 10];
+    const filtered = desired.filter(phaseNumber => sequence.includes(phaseNumber));
+    return filtered.length ? filtered : sequence.slice();
+  }
+
+  function applyDevicePhaseSequence() {
+    dayPhaseSequence = buildDevicePhaseSequence(baseDayPhaseSequence);
+  }
+
   function getNextPhaseForDay(currentPhase) {
     if (!dayPhaseSequence.length) return null;
     const index = dayPhaseSequence.indexOf(currentPhase);
     if (index === -1) return dayPhaseSequence[0];
     return dayPhaseSequence[index + 1] || null;
+  }
+
+  function ensureDeviceSelection() {
+    const selected = getDeviceSelection();
+    if (selected) {
+      applyDevicePhaseSequence();
+      return Promise.resolve(selected);
+    }
+    if (!deviceSelectOverlay || !deviceSelectButtons.length) {
+      return Promise.resolve(null);
+    }
+    deviceSelectOverlay.classList.remove('hidden');
+    deviceSelectOverlay.setAttribute('aria-hidden', 'false');
+    return new Promise(resolve => {
+      const handleSelect = (event) => {
+        const value = normalizeDeviceSelection(event.currentTarget?.dataset?.deviceOption);
+        const storedValue = setDeviceSelection(value);
+        applyDevicePhaseSequence();
+        deviceSelectOverlay.classList.add('hidden');
+        deviceSelectOverlay.setAttribute('aria-hidden', 'true');
+        deviceSelectButtons.forEach(button => button.removeEventListener('click', handleSelect));
+        resolve(storedValue);
+      };
+      deviceSelectButtons.forEach(button => button.addEventListener('click', handleSelect));
+    });
   }
 
   function readMedalStorage() {
@@ -1595,7 +1657,8 @@
     if (levelCache.has(dayNumber)) {
       const cached = levelCache.get(dayNumber);
       dayPhaseEntries = new Map(cached.entries);
-      dayPhaseSequence = cached.sequence.slice();
+      baseDayPhaseSequence = cached.sequence.slice();
+      applyDevicePhaseSequence();
       dayEntries = cached.allEntries.slice();
       return;
     }
@@ -1615,7 +1678,8 @@
     }
 
     dayPhaseEntries = entries;
-    dayPhaseSequence = sequence;
+    baseDayPhaseSequence = sequence;
+    applyDevicePhaseSequence();
     dayEntries = allEntries;
     levelCache.set(dayNumber, {
       entries: new Map(entries),
@@ -3548,6 +3612,10 @@
     if (!phaseTransition || !phaseTransitionBtn || !phaseTransitionTitle) {
       startPhase(nextPhase);
       return;
+    }
+
+    if (nextPhase === 1 && !singlePhaseMode) {
+      await ensureDeviceSelection();
     }
 
     const config = {

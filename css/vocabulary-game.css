@@ -1415,6 +1415,23 @@
       font-weight: 800;
     }
 
+    .device-select__subtitle {
+      margin: -10px 0 18px;
+      font-size: 16px;
+      color: rgba(11, 31, 68, 0.7);
+    }
+
+    .device-select__options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .device-select__button {
+      padding: 14px 18px;
+      font-size: 16px;
+    }
+
     .phase-list {
       list-style: none;
       padding-left: 0;
