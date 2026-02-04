@@ -858,7 +858,8 @@
       }
       const entry = {
         main: importedMain,
-        bodyClasses: Array.from(doc.body.classList)
+        bodyClasses: Array.from(doc.body.classList),
+        lensContext: doc.body.getAttribute('data-lens-context') || ''
       };
       pageCache.set(pathKey, entry);
       return entry;
@@ -876,6 +877,14 @@
         }
         entry.main.removeAttribute('hidden');
         updateBodyClasses(classes);
+        if (entry && entry.lensContext) {
+          body.dataset.lensContext = entry.lensContext;
+        } else {
+          delete body.dataset.lensContext;
+        }
+        if (window.playtalkSettings && typeof window.playtalkSettings.applyVisualPreferences === 'function') {
+          window.playtalkSettings.applyVisualPreferences(window.playtalkSettings.loadSettings());
+        }
         if (typeof window.runPlaytalkPage === 'function' && classes.length) {
           window.runPlaytalkPage(classes, { container: entry.main });
         }
