@@ -304,17 +304,7 @@
 
   function applyGameBackground({ gameBackgroundType, gameBackgroundData } = {}) {
     const body = document.body;
-    if (!body || body.dataset.lensContext !== 'game') {
-      if (body) {
-        body.classList.remove('has-game-background');
-      }
-      const existing = document.getElementById('game-background');
-      if (existing) {
-        existing.innerHTML = '';
-        existing.style.removeProperty('background-image');
-      }
-      return;
-    }
+    if (!body) return;
     const type = typeof gameBackgroundType === 'string' ? gameBackgroundType : '';
     const data = typeof gameBackgroundData === 'string' ? gameBackgroundData : '';
     const hasBackground = Boolean(type && data);
