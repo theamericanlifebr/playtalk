@@ -4,6 +4,9 @@
   const initPlayPage = () => {
     if (initialized) return;
     initialized = true;
+        const resolveGameSound = typeof window.getGameSoundUrl === 'function'
+          ? window.getGameSoundUrl
+          : path => path;
         const FLASHCARD_STATS_STORAGE_KEY = 'playtalk-flashcard-stats';
         const FLASHCARD_PRONUNCIATION_LIMIT = 6;
         const FLASHCARD_METRIC_LIMIT = 10;
@@ -25,10 +28,10 @@
         const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.opus', '.ogg', '.webm'];
         const MIRROR_PATH = 'data/mirror.json';
         const MEMORY_EFFECT_SOUNDS = {
-          star: 'gamesounds/star.mp3',
-          starless: 'gamesounds/starless.mp3',
-          seeding: 'gamesounds/seeding.mp3',
-          report: 'gamesounds/report.wav'
+          star: resolveGameSound('gamesounds/star.mp3'),
+          starless: resolveGameSound('gamesounds/starless.mp3'),
+          seeding: resolveGameSound('gamesounds/seeding.mp3'),
+          report: resolveGameSound('gamesounds/report.wav')
         };
         const CARD_SLIDE_DURATION = 500;
         const CARD_SNOOZE_DAYS = 10;

@@ -2,20 +2,23 @@
   const CHUNK_SECONDS = 30;
   const BITRATE = 128000; // bits per second
   const CHUNK_BYTES = Math.floor(BITRATE / 8 * CHUNK_SECONDS);
+  const resolveGameSound = typeof window.getGameSoundUrl === 'function'
+    ? window.getGameSoundUrl
+    : path => `gamesounds/${path}`;
   const songs = [
-    'gamesounds/letsplay.mp3',
-    'gamesounds/letsplay2.mp3',
-    'gamesounds/mode1first.mp3',
-    'gamesounds/mode2first.mp3',
-    'gamesounds/mode3first.mp3',
-    'gamesounds/mode4first.mp3',
-    'gamesounds/mode5first.mp3',
-    'gamesounds/mode6first.mp3',
-    'gamesounds/nextlevel.mp3',
-    'gamesounds/success.mp3',
-    'gamesounds/error.mp3',
-    'gamesounds/welcome.mp3'
-  ];
+    'letsplay.mp3',
+    'letsplay2.mp3',
+    'mode1first.mp3',
+    'mode2first.mp3',
+    'mode3first.mp3',
+    'mode4first.mp3',
+    'mode5first.mp3',
+    'mode6first.mp3',
+    'nextlevel.mp3',
+    'success.mp3',
+    'error.mp3',
+    'welcome.mp3'
+  ].map(resolveGameSound);
   const cache = {};
   let current = null;
 

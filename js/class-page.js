@@ -55,6 +55,10 @@
 
   function setMediaSource(element, src) {
     if (!element || !src) return;
+    if (typeof window.getGameSoundUrl === 'function' && src.includes('gamesounds/')) {
+      element.src = window.getGameSoundUrl(src);
+      return;
+    }
     if (!shouldResolveMedia(src)) {
       element.src = src;
       return;
