@@ -1,4 +1,5 @@
-const { readDatabase } = require('../_utils/db');
+const { getUserByKey, ensureUserDefaults } = require('../_utils/db');
+const { authenticateRequest } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -7,15 +8,32 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  const auth = authenticateRequest(req);
+  if (!auth.success) {
+    res.status(auth.status).json({ success: false, message: auth.message });
+    return;
+  }
+
   try {
-    const database = await readDatabase();
+    const user = await getUserByKey(auth.payload.key);
+
+    if (!user) {
+      res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const normalizedUser = ensureUserDefaults(user);
+
     res.status(200).json({
       success: true,
-      users: database.users,
-      updatedAt: database.updatedAt
+      user: {
+        key: normalizedUser.key,
+        username: normalizedUser.username,
+        data: normalizedUser.data
+      }
     });
   } catch (error) {
-    console.error('Erro ao ler usuários:', error);
-    res.status(500).json({ success: false, message: 'Erro ao carregar usuários.' });
+    console.error('Erro ao ler usuário:', error);
+    res.status(500).json({ success: false, message: 'Erro ao carregar usuário.' });
   }
 };

@@ -1,10 +1,14 @@
+const bcrypt = require('bcryptjs');
 const {
   normalizeKey,
-  readDatabase,
-  writeDatabase,
   createDefaultData,
-  ensureUserDefaults
+  ensureUserDefaults,
+  getUserByKey,
+  createUser
 } = require('../_utils/db');
+const { signAuthToken } = require('../_utils/auth');
+
+const BCRYPT_ROUNDS = Number.parseInt(process.env.BCRYPT_ROUNDS || '12', 10);
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -24,32 +28,43 @@ module.exports = async function handler(req, res) {
 
   const { username, password } = payload;
 
-  if (!username || !password) {
-    res.status(400).json({ success: false, message: 'Usuário e senha são obrigatórios.' });
+  if (!username || !password || String(password).length < 8) {
+    res.status(400).json({
+      success: false,
+      message: 'Usuário e senha são obrigatórios (senha com mínimo de 8 caracteres).'
+    });
     return;
   }
 
   const key = normalizeKey(username);
 
   try {
-    const database = await readDatabase();
-    if (database.users[key]) {
+    const existing = await getUserByKey(key);
+    if (existing) {
       res.status(409).json({ success: false, message: 'Usuário já existe.' });
       return;
     }
 
-    const user = ensureUserDefaults({
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+    const user = await createUser({
+      key,
       username: username.trim(),
-      password,
+      passwordHash,
       data: createDefaultData()
     });
 
-    database.users[key] = user;
-    await writeDatabase(database);
+    const normalizedUser = ensureUserDefaults(user);
+    const token = signAuthToken({ key: normalizedUser.key, username: normalizedUser.username });
 
     res.status(201).json({
       success: true,
-      user: { key, ...user }
+      token,
+      user: {
+        key: normalizedUser.key,
+        username: normalizedUser.username,
+        data: normalizedUser.data
+      }
     });
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);

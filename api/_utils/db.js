@@ -1,16 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const fsPromises = fs.promises;
-
-const DEFAULT_DATA_DIR = path.join(process.cwd(), 'data');
-const DATA_ROOT = process.env.PLAYTALK_DATA_DIR
-  ? path.resolve(process.env.PLAYTALK_DATA_DIR)
-  : DEFAULT_DATA_DIR;
-const USERS_DB_PATH = process.env.PLAYTALK_USERS_DB
-  ? path.resolve(process.env.PLAYTALK_USERS_DB)
-  : path.join(DATA_ROOT, 'users.json');
-const DATA_DIR = path.dirname(USERS_DB_PATH);
+const { Pool } = require('pg');
 
 const PROGRESS_SCHEMA = {
   acertosTotais: { type: 'number', default: 0 },
@@ -35,6 +23,23 @@ const PROGRESS_SCHEMA = {
     default: { entries: [], totalChars: 0, totalTime: 0 }
   }
 };
+
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (!DATABASE_URL) {
+  throw new Error('DATABASE_URL não configurada. Defina a env var no Render.');
+}
+
+const shouldUseSsl = process.env.PGSSL === 'true' || DATABASE_URL.includes('render.com');
+
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: shouldUseSsl
+    ? {
+        rejectUnauthorized: false
+      }
+    : false
+});
 
 function normalizeKey(username = '') {
   return username.trim().toLowerCase();
@@ -72,44 +77,119 @@ function ensureUserDefaults(user) {
   return user;
 }
 
-async function ensureDataDirectory() {
-  await fsPromises.mkdir(DATA_DIR, { recursive: true });
+async function query(text, params) {
+  return pool.query(text, params);
 }
 
-async function readDatabase() {
-  await ensureDataDirectory();
-  try {
-    const raw = await fsPromises.readFile(USERS_DB_PATH, 'utf8');
-    const parsed = JSON.parse(raw);
-    if (!parsed.users || typeof parsed.users !== 'object') {
-      parsed.users = {};
-    }
-    return parsed;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return { users: {}, updatedAt: new Date().toISOString() };
-    }
-    throw error;
+async function getUserByKey(key) {
+  const result = await query(
+    `SELECT username_key, username, password_hash, data, created_at, updated_at
+     FROM users
+     WHERE username_key = $1`,
+    [key]
+  );
+
+  if (result.rows.length === 0) {
+    return null;
   }
+
+  const row = result.rows[0];
+  const user = ensureUserDefaults({
+    key: row.username_key,
+    username: row.username,
+    passwordHash: row.password_hash,
+    data: row.data || {}
+  });
+
+  return {
+    ...user,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
 }
 
-async function writeDatabase(data) {
-  await ensureDataDirectory();
-  const payload = {
-    users: data.users || {},
-    updatedAt: new Date().toISOString()
+async function createUser({ key, username, passwordHash, data }) {
+  const normalized = ensureUserDefaults({
+    key,
+    username,
+    passwordHash,
+    data: data || createDefaultData()
+  });
+
+  const result = await query(
+    `INSERT INTO users (username_key, username, password_hash, data)
+     VALUES ($1, $2, $3, $4::jsonb)
+     RETURNING username_key, username, password_hash, data, created_at, updated_at`,
+    [normalized.key, normalized.username, normalized.passwordHash, JSON.stringify(normalized.data)]
+  );
+
+  const row = result.rows[0];
+
+  return {
+    key: row.username_key,
+    username: row.username,
+    passwordHash: row.password_hash,
+    data: row.data,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
   };
-  await fsPromises.writeFile(USERS_DB_PATH, JSON.stringify(payload, null, 2));
-  return payload;
+}
+
+async function updateUser({ key, username, passwordHash, data }) {
+  const fields = [];
+  const values = [];
+
+  if (typeof username === 'string' && username.trim()) {
+    fields.push(`username = $${fields.length + 1}`);
+    values.push(username.trim());
+  }
+
+  if (typeof passwordHash === 'string' && passwordHash) {
+    fields.push(`password_hash = $${fields.length + 1}`);
+    values.push(passwordHash);
+  }
+
+  if (data && typeof data === 'object') {
+    fields.push(`data = $${fields.length + 1}::jsonb`);
+    values.push(JSON.stringify(data));
+  }
+
+  if (fields.length === 0) {
+    return getUserByKey(key);
+  }
+
+  values.push(key);
+
+  const result = await query(
+    `UPDATE users
+     SET ${fields.join(', ')}, updated_at = NOW()
+     WHERE username_key = $${values.length}
+     RETURNING username_key, username, password_hash, data, created_at, updated_at`,
+    values
+  );
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  const row = result.rows[0];
+  return {
+    key: row.username_key,
+    username: row.username,
+    passwordHash: row.password_hash,
+    data: row.data,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
 }
 
 module.exports = {
-  DATA_DIR,
-  USERS_DB_PATH,
   PROGRESS_SCHEMA,
   normalizeKey,
   createDefaultData,
   ensureUserDefaults,
-  readDatabase,
-  writeDatabase
+  query,
+  getUserByKey,
+  createUser,
+  updateUser
 };
