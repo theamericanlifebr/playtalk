@@ -8714,3 +8714,48 @@ body.page-fun #fun-container.flashcards-layout {
   padding: 18px;
   border: 1px solid var(--border);
 }
+
+.site-header__auth-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+.site-header__auth-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #1a8dff, #4dd0ff);
+  cursor: pointer;
+}
+
+.site-header__auth-btn--ghost {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.playtalk-auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+}
+
+.playtalk-auth-modal[hidden] {
+  display: none !important;
+}
+
+.playtalk-auth-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 15, 26, 0.66);
+}
+
+.playtalk-auth-modal .auth-modal-content {
+  position: relative;
+  z-index: 1;
+}
