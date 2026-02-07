@@ -15,14 +15,17 @@
   <script src="js/settings.js"></script>
   <script src="js/lens.js"></script>
   <script src="js/site-nav.js"></script>
+  <script src="js/auth.js" defer></script>
 </head>
 <body class="page-fun" data-lens-context="menus">
   <header class="site-header" id="global-header">
     <div class="site-header__profile">
       <div class="site-header__text">
         <span class="site-header__name">PlayTalk</span>
+        <span class="site-header__user" id="auth-user-name"></span>
       </div>
     </div>
+    <button class="logout-button is-hidden" id="logout-button" type="button">Sair</button>
   </header>
   <main id="fun-container" class="fun-layout flashcards-layout" data-page-transition>
     <section class="flashcards-page">
@@ -162,6 +165,40 @@
       </div>
     </div>
   </main>
+  <div class="auth-modal hidden" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title" aria-hidden="true">
+    <div class="auth-modal-content">
+      <button class="auth-close" id="auth-close" type="button" aria-label="Fechar">×</button>
+      <h2 id="auth-title">Entrar no PlayTalk</h2>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" type="button" role="tab" data-auth-tab="login" aria-selected="true">Entrar</button>
+        <button class="auth-tab" type="button" role="tab" data-auth-tab="register" aria-selected="false">Criar conta</button>
+      </div>
+      <form class="auth-form active" id="auth-login-form">
+        <label>
+          Usuário
+          <input type="text" name="username" autocomplete="username" required>
+        </label>
+        <label>
+          Senha
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <button class="auth-submit" type="submit">Entrar</button>
+        <div class="auth-message" id="auth-login-message" aria-live="polite"></div>
+      </form>
+      <form class="auth-form" id="auth-register-form">
+        <label>
+          Usuário
+          <input type="text" name="username" autocomplete="username" required>
+        </label>
+        <label>
+          Senha
+          <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <button class="auth-submit" type="submit">Criar conta</button>
+        <div class="auth-message" id="auth-register-message" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
   <script src="js/fun-page.js" defer></script>
   <footer class="page-footer">
     <nav id="main-nav">
