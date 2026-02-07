@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const { ensureAuthSchema } = require('./api/_utils/db');
 const loginHandler = require('./api/users/login');
 const registerHandler = require('./api/users/register');
 const userProfileHandler = require('./api/users/index');
@@ -476,10 +477,17 @@ app.use((req, res, next) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Serving static content from ${staticDir}`);
-    console.log(`Server running on port ${PORT}`);
-  });
+  ensureAuthSchema()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Serving static content from ${staticDir}`);
+        console.log(`Server running on port ${PORT}`);
+      });
+    })
+    .catch(error => {
+      console.error('Falha ao preparar schema de autenticação:', error);
+      process.exit(1);
+    });
 }
 
 module.exports = app;
