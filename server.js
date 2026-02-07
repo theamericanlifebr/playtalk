@@ -47,7 +47,8 @@ const SUPPORTED_MEDIA_EXTENSIONS = new Set([
   ...SUPPORTED_AUDIO_EXTENSIONS,
   ...SUPPORTED_VIDEO_EXTENSIONS
 ]);
-const GAME_SOUNDS_BASE_URL = (process.env.GAME_SOUNDS_BASE_URL || '').trim();
+const DEFAULT_GAME_SOUNDS_BASE_URL = 'https://pub-1208463a3c774431bf7e0ddcbd3cf670.r2.dev';
+const GAME_SOUNDS_BASE_URL = (process.env.GAME_SOUNDS_BASE_URL || DEFAULT_GAME_SOUNDS_BASE_URL).trim();
 let imageIndex = null;
 let imageLevelIndex = null;
 let voiceIndex = null;
