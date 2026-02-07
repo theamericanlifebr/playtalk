@@ -21,6 +21,13 @@
     token: null,
     user: null
   };
+  const apiBaseUrl = (() => {
+    if (typeof window === 'undefined') return '';
+    const rawBase = window.PLAYTALK_API_BASE_URL;
+    if (typeof rawBase !== 'string') return '';
+    const trimmed = rawBase.trim();
+    return trimmed ? trimmed.replace(/\/+$/, '') : '';
+  })();
 
   const readStoredUser = () => {
     const raw = localStorage.getItem(AUTH_USER_KEY);
@@ -109,7 +116,10 @@
       submitButton.disabled = true;
     }
     try {
-      const response = await fetch(`/api/users/${endpoint}`, {
+      const url = apiBaseUrl
+        ? `${apiBaseUrl}/api/users/${endpoint}`
+        : `/api/users/${endpoint}`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
