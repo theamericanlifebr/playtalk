@@ -15,6 +15,14 @@
 - `BCRYPT_ROUNDS`: custo do bcrypt (recomendado: `12`).
 - `PGSSL`: `true` para forçar SSL quando necessário.
 
+## Configuração do front-end (quando estático)
+Se o front-end estiver hospedado separado da API, defina `window.PLAYTALK_API_BASE_URL`
+em `config.js` (carregado antes do `auth.js`). Exemplo:
+
+```js
+window.PLAYTALK_API_BASE_URL = 'https://sua-api.exemplo.com';
+```
+
 ## Endpoints
 
 ### POST `/api/users/register`
