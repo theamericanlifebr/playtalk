@@ -2615,12 +2615,49 @@ body.theme-blue .menu-mode__label {
 
 .logout-button {
   background: linear-gradient(135deg, #4dd0ff, #1a8dff);
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logout-button:hover {
   transform: translateY(-2px);
   opacity: 0.9;
+}
+
+.logout-button.is-hidden {
+  display: none;
+}
+
+.site-header__user {
+  display: block;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 16, 34, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 9999;
+}
+
+.auth-modal.hidden {
+  display: none;
+}
+
+body.auth-locked {
+  overflow: hidden;
+}
+
+body.auth-locked #global-header,
+body.auth-locked .page-footer {
+  pointer-events: none;
+  filter: blur(2px);
 }
 
 .auth-modal-content {
@@ -2650,6 +2687,10 @@ body.theme-blue .auth-modal-content {
   font-size: 24px;
   cursor: pointer;
   color: inherit;
+}
+
+.auth-close[aria-hidden="true"] {
+  display: none;
 }
 
 .auth-tabs {
