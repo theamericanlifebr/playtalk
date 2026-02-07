@@ -7,6 +7,17 @@
 - `api/users/update`: endpoint protegido por JWT para atualizar perfil/senha do próprio usuário.
 - `api/_utils/db.js`: camada simples de acesso ao PostgreSQL.
 - `api/_utils/auth.js`: criação e validação de JWT (Bearer Token).
+- `js/auth-client.js`: cliente de autenticação no front-end (`window.playtalkAuth`).
+
+## Onde os dados do usuário ficam no PostgreSQL?
+Os dados ficam na tabela `users`, criada por `sql/auth_schema.sql`.
+
+Campos principais:
+- `username_key`: chave única normalizada do usuário (ex.: `joao`).
+- `username`: nome exibido.
+- `password_hash`: hash `bcrypt` da senha (nunca senha em texto puro).
+- `data` (`jsonb`): progresso completo do jogo (pontos, modos, stats, etc.).
+- `created_at` e `updated_at`: auditoria de criação/atualização.
 
 ## Variáveis de ambiente (Render)
 - `DATABASE_URL`: URL de conexão PostgreSQL do Render.
@@ -69,6 +80,28 @@ Body:
   "data": { "points": 100 }
 }
 ```
+
+## Como usar no front-end do site
+A página principal já carrega `js/auth-client.js`, que expõe:
+- `playtalkAuth.register(username, password)`
+- `playtalkAuth.login(username, password)`
+- `playtalkAuth.getMe()`
+- `playtalkAuth.updateUserData(dataPatch)`
+- `playtalkAuth.logout()`
+- `playtalkAuth.getToken()` e `playtalkAuth.getCurrentUser()`
+
+Exemplo rápido:
+```js
+const user = await window.playtalkAuth.login('joao', 'senha1234');
+console.log('Logado como:', user.username);
+
+const me = await window.playtalkAuth.getMe();
+console.log('Perfil atual:', me);
+
+await window.playtalkAuth.updateUserData({ points: 120, tutorialDone: true });
+```
+
+> Observação: o cliente salva sessão no storage do navegador (`playtalk.auth.token` e `playtalk.auth.user`).
 
 ## Checklist Render
 1. Definir env vars (`DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `PGSSL`).
