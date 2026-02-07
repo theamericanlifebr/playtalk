@@ -47,6 +47,7 @@ const SUPPORTED_MEDIA_EXTENSIONS = new Set([
   ...SUPPORTED_AUDIO_EXTENSIONS,
   ...SUPPORTED_VIDEO_EXTENSIONS
 ]);
+const GAME_SOUNDS_BASE_URL = (process.env.GAME_SOUNDS_BASE_URL || '').trim();
 let imageIndex = null;
 let imageLevelIndex = null;
 let voiceIndex = null;
@@ -345,6 +346,13 @@ app.get('/api/media/resolve', async (req, res) => {
     console.error('Erro ao resolver arquivo de mídia:', error);
     res.status(500).json({ success: false, message: 'Erro ao resolver arquivo de mídia.' });
   }
+});
+
+app.get('/config.js', (req, res) => {
+  const fallbackBase = '/gamesounds';
+  const baseUrl = GAME_SOUNDS_BASE_URL || fallbackBase;
+  res.type('application/javascript');
+  res.send(`window.GAME_SOUNDS_BASE_URL = ${JSON.stringify(baseUrl)};`);
 });
 
 app.get('/images/:filePath(*)', async (req, res, next) => {

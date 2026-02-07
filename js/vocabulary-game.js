@@ -910,8 +910,11 @@
       .split('/')
       .map(segment => encodeURIComponent(segment))
       .join('/');
-    resolvedAudioCache.set(trimmed, `gamesounds/${fallbackPath}`);
-    return `gamesounds/${fallbackPath}`;
+    const fallbackUrl = typeof window.getGameSoundUrl === 'function'
+      ? window.getGameSoundUrl(`gamesounds/${fallbackPath}`)
+      : `gamesounds/${fallbackPath}`;
+    resolvedAudioCache.set(trimmed, fallbackUrl);
+    return fallbackUrl;
   }
 
   async function getAudioElementFromName(fileName) {
