@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { Pool } = require('pg');
 
 const PROGRESS_SCHEMA = {
@@ -40,6 +42,8 @@ const pool = new Pool({
       }
     : false
 });
+const AUTH_SCHEMA_PATH = path.join(__dirname, '..', '..', 'sql', 'auth_schema.sql');
+let schemaReadyPromise = null;
 
 function normalizeKey(username = '') {
   return username.trim().toLowerCase();
@@ -79,6 +83,20 @@ function ensureUserDefaults(user) {
 
 async function query(text, params) {
   return pool.query(text, params);
+}
+
+async function ensureAuthSchema() {
+  if (!schemaReadyPromise) {
+    schemaReadyPromise = (async () => {
+      const schemaSql = await fs.promises.readFile(AUTH_SCHEMA_PATH, 'utf8');
+      await query(schemaSql);
+    })().catch(error => {
+      schemaReadyPromise = null;
+      throw error;
+    });
+  }
+
+  return schemaReadyPromise;
 }
 
 async function getUserByKey(key) {
@@ -189,6 +207,7 @@ module.exports = {
   createDefaultData,
   ensureUserDefaults,
   query,
+  ensureAuthSchema,
   getUserByKey,
   createUser,
   updateUser
