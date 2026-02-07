@@ -1,8 +1,10 @@
+const bcrypt = require('bcryptjs');
 const {
   normalizeKey,
-  readDatabase,
+  getUserByKey,
   ensureUserDefaults
 } = require('../_utils/db');
+const { signAuthToken } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -30,23 +32,30 @@ module.exports = async function handler(req, res) {
   const key = normalizeKey(username);
 
   try {
-    const database = await readDatabase();
-    const entry = database.users[key];
+    const user = await getUserByKey(key);
 
-    if (!entry || entry.password !== password) {
+    if (!user || !user.passwordHash) {
       res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
       return;
     }
 
-    ensureUserDefaults(entry);
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isValidPassword) {
+      res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
+      return;
+    }
+
+    const normalizedUser = ensureUserDefaults(user);
+    const token = signAuthToken({ key: normalizedUser.key, username: normalizedUser.username });
 
     res.status(200).json({
       success: true,
+      token,
       user: {
-        key,
-        username: entry.username || username.trim(),
-        password: entry.password,
-        data: entry.data
+        key: normalizedUser.key,
+        username: normalizedUser.username,
+        data: normalizedUser.data
       }
     });
   } catch (error) {
