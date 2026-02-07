@@ -47,8 +47,37 @@ const SUPPORTED_MEDIA_EXTENSIONS = new Set([
   ...SUPPORTED_AUDIO_EXTENSIONS,
   ...SUPPORTED_VIDEO_EXTENSIONS
 ]);
-const DEFAULT_GAME_SOUNDS_BASE_URL = 'https://pub-1208463a3c774431bf7e0ddcbd3cf670.r2.dev';
+const DEFAULT_GAME_SOUNDS_BASE_URL = 'https://pub-1208463a3c774431bf7e0ddcbd3cf670.r2.dev/gamesounds';
 const GAME_SOUNDS_BASE_URL = (process.env.GAME_SOUNDS_BASE_URL || DEFAULT_GAME_SOUNDS_BASE_URL).trim();
+
+const FORCE_R2_GAME_SOUND_FILES = new Set([
+  '001.mp3',
+  '002.mp3',
+  '003.mp3',
+  '004.mp3',
+  '005.mp3',
+  '006.mp3',
+  '007.mp3',
+  '008.mp3',
+  '009.mp3',
+  '010.mp3',
+  'abertura.mp3',
+  'conclusão.mp3',
+  'conclusão1.mp3',
+  'conclusao.mp3',
+  'conclusao1.mp3',
+  'error.mp3',
+  'fase1.mp3',
+  'fase2.mp3',
+  'fase3.mp3',
+  'fase4.mp3',
+  'fase5.mp3',
+  'fase6.mp3',
+  'fase7.mp3',
+  'final.mp3',
+  'final_1.mp3.mp3',
+  'final_1.mp3'
+]);
 let imageIndex = null;
 let imageLevelIndex = null;
 let voiceIndex = null;
@@ -174,6 +203,10 @@ async function resolveMediaUrl(fileName) {
   const normalized = fileName.replace(/\\/g, '/');
   const baseName = path.basename(normalized);
   const ext = path.extname(baseName).toLowerCase();
+
+  if (FORCE_R2_GAME_SOUND_FILES.has(baseName)) {
+    return `${GAME_SOUNDS_BASE_URL}/${encodeURIComponent(baseName)}`;
+  }
 
   if (ext && !SUPPORTED_MEDIA_EXTENSIONS.has(ext)) {
     return null;
@@ -350,7 +383,7 @@ app.get('/api/media/resolve', async (req, res) => {
 });
 
 app.get('/config.js', (req, res) => {
-  const fallbackBase = '/gamesounds';
+  const fallbackBase = DEFAULT_GAME_SOUNDS_BASE_URL;
   const baseUrl = GAME_SOUNDS_BASE_URL || fallbackBase;
   res.type('application/javascript');
   res.send(`window.GAME_SOUNDS_BASE_URL = ${JSON.stringify(baseUrl)};`);

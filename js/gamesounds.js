@@ -1,5 +1,5 @@
 (function() {
-  const DEFAULT_BASE = 'gamesounds';
+  const DEFAULT_BASE = 'https://pub-1208463a3c774431bf7e0ddcbd3cf670.r2.dev/gamesounds';
 
   function normalizeBaseUrl(value) {
     if (typeof value !== 'string') return DEFAULT_BASE;
