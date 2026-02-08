@@ -77,6 +77,18 @@ if (!DATABASE_URL && !(PG_HOST && PG_DATABASE && PG_USER)) {
   );
 }
 
+const poolOptions = DATABASE_URL
+  ? { connectionString: DATABASE_URL, ssl: sslConfig }
+  : { host: PG_HOST, port: PG_PORT ? Number(PG_PORT) : undefined, database: PG_DATABASE, user: PG_USER, password: PG_PASSWORD, ssl: sslConfig };
+
+console.log('DB RUNTIME ID', {
+  hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+  databaseUrlHost: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).host : null,
+  pgHost: process.env.PGHOST || null,
+  pgDatabase: process.env.PGDATABASE || null,
+  pgUser: process.env.PGUSER || null
+});
+
 const pool = new Pool(poolOptions);
 const AUTH_SCHEMA_PATH = path.join(__dirname, '..', '..', 'sql', 'auth_schema.sql');
 let schemaReadyPromise = null;
