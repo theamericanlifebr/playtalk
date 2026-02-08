@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS public.users (
   id BIGSERIAL PRIMARY KEY,
   username_key TEXT NOT NULL UNIQUE,
   username TEXT NOT NULL,
@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_username_key ON users (username_key);
+CREATE INDEX IF NOT EXISTS idx_users_username_key ON public.users (username_key);
 
-CREATE OR REPLACE FUNCTION set_updated_at()
+CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -18,8 +18,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_users_set_updated_at ON users;
+DROP TRIGGER IF EXISTS trg_users_set_updated_at ON public.users;
 CREATE TRIGGER trg_users_set_updated_at
-BEFORE UPDATE ON users
+BEFORE UPDATE ON public.users
 FOR EACH ROW
-EXECUTE FUNCTION set_updated_at();
+EXECUTE FUNCTION public.set_updated_at();
