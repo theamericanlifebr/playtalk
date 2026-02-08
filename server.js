@@ -3,12 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
-const { ensureAuthSchema } = require('./api/_utils/db');
-const loginHandler = require('./api/users/login');
-const registerHandler = require('./api/users/register');
-const userProfileHandler = require('./api/users/index');
-const updateUserHandler = require('./api/users/update');
-
 
 const staticDir = (() => {
   const customDir = process.env.STATIC_DIR;
@@ -330,10 +324,6 @@ function ensureVoiceDirectories() {
 }
 
 ensureVoiceDirectories();
-app.post('/api/users/login', loginHandler);
-app.post('/api/users/register', registerHandler);
-app.get('/api/users', userProfileHandler);
-app.post('/api/users/update', updateUserHandler);
 app.get('/api/image-levels', async (req, res) => {
   try {
     if (!imageLevelIndex) {
@@ -477,17 +467,10 @@ app.use((req, res, next) => {
 });
 
 if (require.main === module) {
-  ensureAuthSchema()
-    .then(() => {
-      app.listen(PORT, () => {
-        console.log(`Serving static content from ${staticDir}`);
-        console.log(`Server running on port ${PORT}`);
-      });
-    })
-    .catch(error => {
-      console.error('Falha ao preparar schema de autenticação:', error);
-      process.exit(1);
-    });
+  app.listen(PORT, () => {
+    console.log(`Serving static content from ${staticDir}`);
+    console.log(`Server running on port ${PORT}`);
+  });
 }
 
 module.exports = app;

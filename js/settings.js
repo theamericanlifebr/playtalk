@@ -144,9 +144,6 @@
     }
     applyVisualPreferences(normalized);
     notifySettingsChange(normalized);
-    if (window.playtalkAuth && typeof window.playtalkAuth.persistProgress === 'function') {
-      window.playtalkAuth.persistProgress();
-    }
     return normalized;
   }
 
