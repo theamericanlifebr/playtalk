@@ -102,7 +102,7 @@ async function ensureAuthSchema() {
 async function getUserByKey(key) {
   const result = await query(
     `SELECT username_key, username, password_hash, data, created_at, updated_at
-     FROM users
+     FROM public.users
      WHERE username_key = $1`,
     [key]
   );
@@ -135,7 +135,7 @@ async function createUser({ key, username, passwordHash, data }) {
   });
 
   const result = await query(
-    `INSERT INTO users (username_key, username, password_hash, data)
+    `INSERT INTO public.users (username_key, username, password_hash, data)
      VALUES ($1, $2, $3, $4::jsonb)
      RETURNING username_key, username, password_hash, data, created_at, updated_at`,
     [normalized.key, normalized.username, normalized.passwordHash, JSON.stringify(normalized.data)]
@@ -179,8 +179,8 @@ async function updateUser({ key, username, passwordHash, data }) {
   values.push(key);
 
   const result = await query(
-    `UPDATE users
-     SET ${fields.join(', ')}, updated_at = NOW()
+    `UPDATE public.users
+     SET ${fields.join(', ')}
      WHERE username_key = $${values.length}
      RETURNING username_key, username, password_hash, data, created_at, updated_at`,
     values
