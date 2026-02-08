@@ -3,10 +3,12 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
 const DATABASE_SSL = process.env.DATABASE_SSL === 'true';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const pool = DATABASE_URL
   ? new Pool({
@@ -336,6 +338,18 @@ function ensureVoiceDirectories() {
 
 ensureVoiceDirectories();
 
+function createAuthToken(user) {
+  if (!JWT_SECRET) {
+    return null;
+  }
+
+  return jwt.sign(
+    { sub: user.id, email: user.email },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+}
+
 app.post('/register', async (req, res) => {
   try {
     if (!pool) {
@@ -358,7 +372,10 @@ app.post('/register', async (req, res) => {
       [email, passwordHash]
     );
 
-    res.status(201).json({ success: true, user: result.rows[0] });
+    const user = result.rows[0];
+    const token = createAuthToken(user);
+
+    res.status(201).json({ success: true, user, token });
   } catch (error) {
     if (error.code === '23505') {
       res.status(409).json({ success: false, message: 'Email já cadastrado.' });
@@ -366,6 +383,57 @@ app.post('/register', async (req, res) => {
     }
     console.error('Erro ao registrar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro ao registrar usuário.' });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  try {
+    if (!pool) {
+      res.status(500).json({ success: false, message: 'DATABASE_URL não configurada.' });
+      return;
+    }
+
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
+
+    if (!email || !password) {
+      res.status(400).json({ success: false, message: 'Email e senha são obrigatórios.' });
+      return;
+    }
+
+    const result = await pool.query(
+      'SELECT id, email, password_hash, created_at FROM public.users WHERE email = $1',
+      [email]
+    );
+
+    if (!result.rows.length) {
+      res.status(401).json({ success: false, message: 'Email ou senha inválidos.' });
+      return;
+    }
+
+    const user = result.rows[0];
+    const passwordOk = await bcrypt.compare(password, user.password_hash);
+
+    if (!passwordOk) {
+      res.status(401).json({ success: false, message: 'Email ou senha inválidos.' });
+      return;
+    }
+
+    if (!JWT_SECRET) {
+      res.status(500).json({ success: false, message: 'JWT_SECRET não configurado.' });
+      return;
+    }
+
+    const token = createAuthToken(user);
+
+    res.json({
+      success: true,
+      token,
+      user: { id: user.id, email: user.email, created_at: user.created_at }
+    });
+  } catch (error) {
+    console.error('Erro ao autenticar usuário:', error);
+    res.status(500).json({ success: false, message: 'Erro ao autenticar usuário.' });
   }
 });
 app.get('/api/image-levels', async (req, res) => {
