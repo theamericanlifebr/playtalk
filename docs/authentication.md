@@ -9,11 +9,13 @@
 - `api/_utils/auth.js`: criação e validação de JWT (Bearer Token).
 
 ## Variáveis de ambiente (Render)
-- `DATABASE_URL`: URL de conexão PostgreSQL do Render.
+- `DATABASE_URL`: URL de conexão PostgreSQL do Render (opção principal).
+- Alternativa sem URL (útil para infra própria): `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`.
 - `JWT_SECRET`: segredo forte para assinar o token JWT.
 - `JWT_EXPIRES_IN`: validade do token (ex.: `7d`).
 - `BCRYPT_ROUNDS`: custo do bcrypt (recomendado: `12`).
 - `PGSSL`: `true` para forçar SSL quando necessário.
+- `PGSSLMODE`: `require` para forçar SSL (compatível com libpg).
 
 ## Configuração do front-end (quando estático)
 Se o front-end estiver hospedado separado da API, defina `window.PLAYTALK_API_BASE_URL`
@@ -79,7 +81,7 @@ Body:
 ```
 
 ## Checklist Render
-1. Definir env vars (`DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `PGSSL`).
+1. Definir env vars (`DATABASE_URL` ou `PGHOST/PGDATABASE/PGUSER/PGPASSWORD`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `PGSSL`).
 2. Rodar `sql/auth_schema.sql` no banco PostgreSQL do Render.
 3. Fazer deploy.
 4. Validar `POST /api/users/register`, `POST /api/users/login` e rota protegida com Bearer.
