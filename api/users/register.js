@@ -11,6 +11,9 @@ const { signAuthToken } = require('../_utils/auth');
 const BCRYPT_ROUNDS = Number.parseInt(process.env.BCRYPT_ROUNDS || '12', 10);
 
 module.exports = async function handler(req, res) {
+  // 🔥 PROVA 1: endpoint realmente foi chamado
+  console.log('REGISTER ENDPOINT HIT');
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     res.status(405).json({ success: false, message: 'Método não permitido.' });
@@ -37,15 +40,22 @@ module.exports = async function handler(req, res) {
   }
 
   const key = normalizeKey(username);
+  console.log('REGISTER PAYLOAD:', { key, username });
 
   try {
     const existing = await getUserByKey(key);
+    console.log('EXISTING USER:', existing ? 'YES' : 'NO');
+
     if (existing) {
       res.status(409).json({ success: false, message: 'Usuário já existe.' });
       return;
     }
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    console.log('PASSWORD HASH GENERATED');
+
+    // 🔥 PROVA 2: createUser está sendo chamado
+    console.log('CALLING createUser()');
 
     const user = await createUser({
       key,
@@ -54,8 +64,13 @@ module.exports = async function handler(req, res) {
       data: createDefaultData()
     });
 
+    console.log('USER CREATED IN DB:', user.key);
+
     const normalizedUser = ensureUserDefaults(user);
-    const token = signAuthToken({ key: normalizedUser.key, username: normalizedUser.username });
+    const token = signAuthToken({
+      key: normalizedUser.key,
+      username: normalizedUser.username
+    });
 
     res.status(201).json({
       success: true,
