@@ -27,21 +27,45 @@ const PROGRESS_SCHEMA = {
 };
 
 const DATABASE_URL = process.env.DATABASE_URL;
+const PG_HOST = process.env.PGHOST;
+const PG_PORT = process.env.PGPORT;
+const PG_DATABASE = process.env.PGDATABASE;
+const PG_USER = process.env.PGUSER;
+const PG_PASSWORD = process.env.PGPASSWORD;
+const PG_SSLMODE = process.env.PGSSLMODE;
 
-if (!DATABASE_URL) {
-  throw new Error('DATABASE_URL não configurada. Defina a env var no Render.');
+const shouldUseSsl = process.env.PGSSL === 'true'
+  || PG_SSLMODE === 'require'
+  || (DATABASE_URL && DATABASE_URL.includes('render.com'))
+  || (PG_HOST && PG_HOST.includes('render.com'));
+
+const sslConfig = shouldUseSsl
+  ? {
+      rejectUnauthorized: false
+    }
+  : false;
+
+const poolOptions = DATABASE_URL
+  ? {
+      connectionString: DATABASE_URL,
+      ssl: sslConfig
+    }
+  : {
+      host: PG_HOST,
+      port: PG_PORT ? Number(PG_PORT) : undefined,
+      database: PG_DATABASE,
+      user: PG_USER,
+      password: PG_PASSWORD,
+      ssl: sslConfig
+    };
+
+if (!DATABASE_URL && !(PG_HOST && PG_DATABASE && PG_USER)) {
+  throw new Error(
+    'PostgreSQL não configurado. Defina DATABASE_URL ou PGHOST/PGDATABASE/PGUSER (+ PGPASSWORD).'
+  );
 }
 
-const shouldUseSsl = process.env.PGSSL === 'true' || DATABASE_URL.includes('render.com');
-
-const pool = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: shouldUseSsl
-    ? {
-        rejectUnauthorized: false
-      }
-    : false
-});
+const pool = new Pool(poolOptions);
 const AUTH_SCHEMA_PATH = path.join(__dirname, '..', '..', 'sql', 'auth_schema.sql');
 let schemaReadyPromise = null;
 
