@@ -1,8 +1,19 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
+const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DATABASE_URL = process.env.DATABASE_URL;
+const DATABASE_SSL = process.env.DATABASE_SSL === 'true';
+
+const pool = DATABASE_URL
+  ? new Pool({
+    connectionString: DATABASE_URL,
+    ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false
+  })
+  : null;
 
 const staticDir = (() => {
   const customDir = process.env.STATIC_DIR;
@@ -324,6 +335,39 @@ function ensureVoiceDirectories() {
 }
 
 ensureVoiceDirectories();
+
+app.post('/register', async (req, res) => {
+  try {
+    if (!pool) {
+      res.status(500).json({ success: false, message: 'DATABASE_URL não configurada.' });
+      return;
+    }
+
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
+
+    if (!email || !password) {
+      res.status(400).json({ success: false, message: 'Email e senha são obrigatórios.' });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      'INSERT INTO public.users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
+      [email, passwordHash]
+    );
+
+    res.status(201).json({ success: true, user: result.rows[0] });
+  } catch (error) {
+    if (error.code === '23505') {
+      res.status(409).json({ success: false, message: 'Email já cadastrado.' });
+      return;
+    }
+    console.error('Erro ao registrar usuário:', error);
+    res.status(500).json({ success: false, message: 'Erro ao registrar usuário.' });
+  }
+});
 app.get('/api/image-levels', async (req, res) => {
   try {
     if (!imageLevelIndex) {
