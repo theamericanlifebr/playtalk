@@ -59,6 +59,18 @@ const poolOptions = DATABASE_URL
       ssl: sslConfig
     };
 
+console.log('DB CONFIG (runtime)', {
+  hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+  databaseUrlHost: process.env.DATABASE_URL
+    ? new URL(process.env.DATABASE_URL).host
+    : null,
+  pgHost: process.env.PGHOST || null,
+  pgDatabase: process.env.PGDATABASE || null,
+  pgUser: process.env.PGUSER || null,
+  ssl: Boolean(poolOptions.ssl)
+});
+
+
 if (!DATABASE_URL && !(PG_HOST && PG_DATABASE && PG_USER)) {
   throw new Error(
     'PostgreSQL não configurado. Defina DATABASE_URL ou PGHOST/PGDATABASE/PGUSER (+ PGPASSWORD).'
