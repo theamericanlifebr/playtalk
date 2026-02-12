@@ -6,7 +6,9 @@ const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATABASE_URL = process.env.DATABASE_URL;
+const env = (value) => (typeof value === 'string' ? value.trim() : value);
+
+const DATABASE_URL = env(process.env.DATABASE_URL);
 const DATABASE_SSL = process.env.DATABASE_SSL
   ? process.env.DATABASE_SSL === 'true'
   : Boolean(DATABASE_URL && DATABASE_URL.includes('render.com'));
@@ -18,11 +20,11 @@ const DATABASE_CONFIG = DATABASE_URL
     ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false
   }
   : {
-    host: process.env.DATABASE_HOST,
+    host: env(process.env.DATABASE_HOST),
     port: process.env.DATABASE_PORT ? Number(process.env.DATABASE_PORT) : 5432,
-    database: process.env.DATABASE_NAME,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
+    database: env(process.env.DATABASE_NAME),
+    user: env(process.env.DATABASE_USER),
+    password: env(process.env.DATABASE_PASSWORD),
     ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false
   };
 
