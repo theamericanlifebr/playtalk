@@ -338,6 +338,24 @@ function ensureVoiceDirectories() {
 
 ensureVoiceDirectories();
 
+
+function buildTechnicalError(code, details = {}) {
+  return {
+    code,
+    timestamp: new Date().toISOString(),
+    ...details
+  };
+}
+
+function sendAuthError(res, status, message, code, details = {}) {
+  res.status(status).json({
+    success: false,
+    message,
+    code,
+    technical: buildTechnicalError(code, details)
+  });
+}
+
 function createAuthToken(user) {
   if (!JWT_SECRET) {
     return null;
@@ -353,7 +371,7 @@ function createAuthToken(user) {
 app.post('/register', async (req, res) => {
   try {
     if (!pool) {
-      res.status(500).json({ success: false, message: 'DATABASE_URL não configurada.' });
+      sendAuthError(res, 500, 'Serviço de autenticação indisponível no momento.', 'AUTH_DATABASE_NOT_CONFIGURED', { hint: 'Configure DATABASE_URL no server.js' });
       return;
     }
 
@@ -361,7 +379,7 @@ app.post('/register', async (req, res) => {
     const password = typeof req.body.password === 'string' ? req.body.password : '';
 
     if (!email || !password) {
-      res.status(400).json({ success: false, message: 'Email e senha são obrigatórios.' });
+      sendAuthError(res, 400, 'Email e senha são obrigatórios.', 'AUTH_MISSING_CREDENTIALS');
       return;
     }
 
@@ -389,7 +407,7 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     if (!pool) {
-      res.status(500).json({ success: false, message: 'DATABASE_URL não configurada.' });
+      sendAuthError(res, 500, 'Serviço de autenticação indisponível no momento.', 'AUTH_DATABASE_NOT_CONFIGURED', { hint: 'Configure DATABASE_URL no server.js' });
       return;
     }
 
@@ -397,7 +415,7 @@ app.post('/login', async (req, res) => {
     const password = typeof req.body.password === 'string' ? req.body.password : '';
 
     if (!email || !password) {
-      res.status(400).json({ success: false, message: 'Email e senha são obrigatórios.' });
+      sendAuthError(res, 400, 'Email e senha são obrigatórios.', 'AUTH_MISSING_CREDENTIALS');
       return;
     }
 
@@ -407,7 +425,7 @@ app.post('/login', async (req, res) => {
     );
 
     if (!result.rows.length) {
-      res.status(401).json({ success: false, message: 'Email ou senha inválidos.' });
+      sendAuthError(res, 401, 'Email ou senha inválidos.', 'AUTH_INVALID_CREDENTIALS');
       return;
     }
 
@@ -415,12 +433,12 @@ app.post('/login', async (req, res) => {
     const passwordOk = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordOk) {
-      res.status(401).json({ success: false, message: 'Email ou senha inválidos.' });
+      sendAuthError(res, 401, 'Email ou senha inválidos.', 'AUTH_INVALID_CREDENTIALS');
       return;
     }
 
     if (!JWT_SECRET) {
-      res.status(500).json({ success: false, message: 'JWT_SECRET não configurado.' });
+      sendAuthError(res, 500, 'Falha interna de autenticação. Tente novamente em instantes.', 'AUTH_JWT_NOT_CONFIGURED', { hint: 'Configure JWT_SECRET no ambiente' });
       return;
     }
 
@@ -433,7 +451,7 @@ app.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao autenticar usuário:', error);
-    res.status(500).json({ success: false, message: 'Erro ao autenticar usuário.' });
+    sendAuthError(res, 500, 'Erro interno ao autenticar usuário.', 'AUTH_SERVER_ERROR', { error: error.message });
   }
 });
 app.get('/api/image-levels', async (req, res) => {

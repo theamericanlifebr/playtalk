@@ -29,7 +29,30 @@
     </div>
     </header>
   <main id="home-main" class="home-layout" data-page-transition>
-    <section class="journey-panel" id="journey-panel">
+    <section class="auth-panel" id="auth-panel" aria-live="polite">
+      <h1 class="journey-title">Entrar na sua conta</h1>
+      <p class="auth-panel__subtitle">Faça login para liberar a Jornada PlayTalk.</p>
+
+      <form id="auth-login-form" class="auth-form" novalidate>
+        <label class="auth-form__label" for="auth-email">Email</label>
+        <input class="auth-form__input" id="auth-email" name="email" type="email" autocomplete="email" required>
+
+        <label class="auth-form__label" for="auth-password">Senha</label>
+        <input class="auth-form__input" id="auth-password" name="password" type="password" autocomplete="current-password" required>
+
+        <button class="journey-button" id="auth-submit-btn" type="submit">Entrar</button>
+      </form>
+
+      <div class="auth-feedback auth-feedback--error is-hidden" id="auth-error-simple" role="alert"></div>
+      <pre class="auth-feedback auth-feedback--technical is-hidden" id="auth-error-technical" aria-live="polite"></pre>
+
+      <p class="auth-panel__user is-hidden" id="auth-user"></p>
+      <button class="journey-button journey-button--secondary is-hidden" id="auth-logout-btn" type="button">
+        Sair
+      </button>
+    </section>
+
+    <section class="journey-panel is-hidden" id="journey-panel">
       <h1 class="journey-title">Jornada PlayTalk</h1>
       <button class="journey-button" id="journey-start-btn" type="button">Iniciar Jornada</button>
       <button class="journey-button journey-button--secondary is-hidden" id="journey-reset-btn" type="button">
@@ -185,6 +208,7 @@
     </nav>
   </footer>
   <script src="js/main.js" defer></script>
+  <script src="js/home-auth.js" defer></script>
   <script src="js/vocabulary-game.js" defer></script>
 </body>
 </html>

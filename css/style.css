@@ -8551,3 +8551,72 @@ body.page-fun #fun-container.flashcards-layout {
   padding: 18px;
   border: 1px solid var(--border);
 }
+
+.auth-panel {
+  width: min(92vw, 420px);
+  margin: clamp(16px, 5vh, 48px) auto;
+  background: rgba(8, 22, 45, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 22px;
+  padding: 22px 18px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.auth-panel__subtitle {
+  margin: 8px 0 18px;
+  color: rgba(255, 255, 255, 0.82);
+  text-align: center;
+  font-size: 0.96rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 10px;
+}
+
+.auth-form__label {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.88rem;
+}
+
+.auth-form__input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(3, 10, 24, 0.6);
+  color: #fff;
+  padding: 12px;
+  font-size: 1rem;
+}
+
+.auth-form__input:focus-visible {
+  outline: 2px solid #67f7e8;
+  outline-offset: 1px;
+}
+
+.auth-feedback {
+  margin-top: 12px;
+  border-radius: 12px;
+  padding: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.auth-feedback--error {
+  background: rgba(255, 94, 94, 0.15);
+  border: 1px solid rgba(255, 120, 120, 0.45);
+  color: #ffd5d5;
+}
+
+.auth-feedback--technical {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #adfffa;
+  font-size: 0.8rem;
+}
+
+.auth-panel__user {
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+}
