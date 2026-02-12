@@ -6,7 +6,9 @@ const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATABASE_URL = process.env.DATABASE_URL;
+const env = (value) => (typeof value === 'string' ? value.trim() : value);
+
+const DATABASE_URL = env(process.env.DATABASE_URL);
 const DATABASE_SSL = process.env.DATABASE_SSL
   ? process.env.DATABASE_SSL === 'true'
   : Boolean(DATABASE_URL && DATABASE_URL.includes('render.com'));
@@ -18,17 +20,69 @@ const DATABASE_CONFIG = DATABASE_URL
     ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false
   }
   : {
-    host: process.env.DATABASE_HOST,
+    host: env(process.env.DATABASE_HOST),
     port: process.env.DATABASE_PORT ? Number(process.env.DATABASE_PORT) : 5432,
-    database: process.env.DATABASE_NAME,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
+    database: env(process.env.DATABASE_NAME),
+    user: env(process.env.DATABASE_USER),
+    password: env(process.env.DATABASE_PASSWORD),
     ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false
   };
 
+const describeDatabaseTarget = () => {
+  if (DATABASE_URL) {
+    try {
+      const parsedUrl = new URL(DATABASE_URL);
+      return {
+        source: 'DATABASE_URL',
+        host: parsedUrl.hostname,
+        port: parsedUrl.port || '5432',
+        database: parsedUrl.pathname ? parsedUrl.pathname.replace(/^\//, '') : null
+      };
+    } catch (_error) {
+      return {
+        source: 'DATABASE_URL',
+        host: '(URL inválida)',
+        port: null,
+        database: null
+      };
+    }
+  }
+
+  return {
+    source: 'DATABASE_HOST',
+    host: DATABASE_CONFIG.host || null,
+    port: DATABASE_CONFIG.port || null,
+    database: DATABASE_CONFIG.database || null
+  };
+};
+
+const databaseTarget = describeDatabaseTarget();
 const pool = (DATABASE_URL || DATABASE_CONFIG.host)
   ? new Pool(DATABASE_CONFIG)
   : null;
+
+const logDatabaseConnectionStatus = async () => {
+  if (!pool) {
+    console.warn('Banco de dados não configurado: defina DATABASE_URL ou DATABASE_HOST.');
+    return;
+  }
+
+  console.log(
+    `Postgres target: source=${databaseTarget.source}, host=${databaseTarget.host || '(vazio)'}, port=${databaseTarget.port || '(vazio)'}, db=${databaseTarget.database || '(vazio)'}, ssl=${DATABASE_SSL ? 'on' : 'off'}`
+  );
+
+  try {
+    await pool.query('SELECT 1');
+    console.log('Conexão com Postgres validada com sucesso.');
+  } catch (error) {
+    console.error('Falha ao conectar no Postgres:', {
+      code: error.code,
+      message: error.message,
+      host: databaseTarget.host,
+      source: databaseTarget.source
+    });
+  }
+};
 
 const staticDir = (() => {
   const customDir = process.env.STATIC_DIR;
@@ -710,6 +764,7 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Serving static content from ${staticDir}`);
     console.log(`Server running on port ${PORT}`);
+    logDatabaseConnectionStatus();
   });
 }
 
