@@ -28,9 +28,61 @@ const DATABASE_CONFIG = DATABASE_URL
     ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false
   };
 
+const describeDatabaseTarget = () => {
+  if (DATABASE_URL) {
+    try {
+      const parsedUrl = new URL(DATABASE_URL);
+      return {
+        source: 'DATABASE_URL',
+        host: parsedUrl.hostname,
+        port: parsedUrl.port || '5432',
+        database: parsedUrl.pathname ? parsedUrl.pathname.replace(/^\//, '') : null
+      };
+    } catch (_error) {
+      return {
+        source: 'DATABASE_URL',
+        host: '(URL inválida)',
+        port: null,
+        database: null
+      };
+    }
+  }
+
+  return {
+    source: 'DATABASE_HOST',
+    host: DATABASE_CONFIG.host || null,
+    port: DATABASE_CONFIG.port || null,
+    database: DATABASE_CONFIG.database || null
+  };
+};
+
+const databaseTarget = describeDatabaseTarget();
 const pool = (DATABASE_URL || DATABASE_CONFIG.host)
   ? new Pool(DATABASE_CONFIG)
   : null;
+
+const logDatabaseConnectionStatus = async () => {
+  if (!pool) {
+    console.warn('Banco de dados não configurado: defina DATABASE_URL ou DATABASE_HOST.');
+    return;
+  }
+
+  console.log(
+    `Postgres target: source=${databaseTarget.source}, host=${databaseTarget.host || '(vazio)'}, port=${databaseTarget.port || '(vazio)'}, db=${databaseTarget.database || '(vazio)'}, ssl=${DATABASE_SSL ? 'on' : 'off'}`
+  );
+
+  try {
+    await pool.query('SELECT 1');
+    console.log('Conexão com Postgres validada com sucesso.');
+  } catch (error) {
+    console.error('Falha ao conectar no Postgres:', {
+      code: error.code,
+      message: error.message,
+      host: databaseTarget.host,
+      source: databaseTarget.source
+    });
+  }
+};
 
 const staticDir = (() => {
   const customDir = process.env.STATIC_DIR;
@@ -712,6 +764,7 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Serving static content from ${staticDir}`);
     console.log(`Server running on port ${PORT}`);
+    logDatabaseConnectionStatus();
   });
 }
 
