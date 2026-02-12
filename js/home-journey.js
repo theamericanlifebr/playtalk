@@ -5,7 +5,6 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
   const PROGRESS_STORAGE_KEY = 'vocabulary-progress';
   const COMPLETION_STORAGE_KEY = 'vocabulary-last-complete';
 
-  const authPanel = document.getElementById('auth-panel');
   const journeyPanel = document.getElementById('journey-panel');
   const journeyButton = document.getElementById('journey-start-btn');
   const journeyReset = document.getElementById('journey-reset-btn');
@@ -48,18 +47,6 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
   };
 
   const showHome = () => {
-    if (window.playtalkAuth && !window.playtalkAuth.isAuthenticated()) {
-      if (authPanel) authPanel.classList.remove('is-hidden');
-      if (journeyPanel) journeyPanel.classList.add('is-hidden');
-      if (gamePanel) {
-        gamePanel.classList.add('is-hidden');
-        gamePanel.setAttribute('aria-hidden', 'true');
-      }
-      document.body.classList.remove('game-active');
-      return;
-    }
-
-    if (authPanel) authPanel.classList.add('is-hidden');
     if (journeyPanel) journeyPanel.classList.remove('is-hidden');
     if (gamePanel) {
       gamePanel.classList.add('is-hidden');
@@ -85,11 +72,6 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
   };
 
   const startJourney = () => {
-    if (window.playtalkAuth && !window.playtalkAuth.isAuthenticated()) {
-      showHome();
-      return;
-    }
-
     showGame();
     if (!window.playtalkGame) return;
     if (hasJourneyStarted()) {
@@ -113,10 +95,6 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
   if (journeyReset) {
     journeyReset.addEventListener('click', resetJourney);
   }
-
-  window.addEventListener('playtalk:auth-changed', () => {
-    showHome();
-  });
 
   window.addEventListener('DOMContentLoaded', () => {
     showHome();
