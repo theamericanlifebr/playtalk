@@ -7,14 +7,27 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
-const DATABASE_SSL = process.env.DATABASE_SSL === 'true';
+const DATABASE_SSL = process.env.DATABASE_SSL
+  ? process.env.DATABASE_SSL === 'true'
+  : Boolean(DATABASE_URL && DATABASE_URL.includes('render.com'));
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const pool = DATABASE_URL
-  ? new Pool({
+const DATABASE_CONFIG = DATABASE_URL
+  ? {
     connectionString: DATABASE_URL,
     ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false
-  })
+  }
+  : {
+    host: process.env.DATABASE_HOST,
+    port: process.env.DATABASE_PORT ? Number(process.env.DATABASE_PORT) : 5432,
+    database: process.env.DATABASE_NAME,
+    user: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD,
+    ssl: DATABASE_SSL ? { rejectUnauthorized: false } : false
+  };
+
+const pool = (DATABASE_URL || DATABASE_CONFIG.host)
+  ? new Pool(DATABASE_CONFIG)
   : null;
 
 const staticDir = (() => {
@@ -350,6 +363,53 @@ function createAuthToken(user) {
   );
 }
 
+function parseCookies(req) {
+  const header = req.headers.cookie;
+  if (!header) return {};
+
+  return header.split(';').reduce((acc, part) => {
+    const [name, ...valueParts] = part.trim().split('=');
+    if (!name) return acc;
+    acc[name] = decodeURIComponent(valueParts.join('='));
+    return acc;
+  }, {});
+}
+
+function getAuthenticatedUserFromRequest(req) {
+  if (!JWT_SECRET) return null;
+
+  const cookies = parseCookies(req);
+  const token = cookies.playtalk_token;
+  if (!token) return null;
+
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    return null;
+  }
+}
+
+function setAuthCookie(res, token) {
+  const secure = process.env.NODE_ENV === 'production';
+  const parts = [
+    `playtalk_token=${encodeURIComponent(token)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    'Max-Age=604800'
+  ];
+
+  if (secure) {
+    parts.push('Secure');
+  }
+
+  res.setHeader('Set-Cookie', parts.join('; '));
+}
+
+function clearAuthCookie(res) {
+  res.setHeader('Set-Cookie', 'playtalk_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+}
+
 app.post('/register', async (req, res) => {
   try {
     if (!pool) {
@@ -374,6 +434,10 @@ app.post('/register', async (req, res) => {
 
     const user = result.rows[0];
     const token = createAuthToken(user);
+
+    if (token) {
+      setAuthCookie(res, token);
+    }
 
     res.status(201).json({ success: true, user, token });
   } catch (error) {
@@ -426,6 +490,8 @@ app.post('/login', async (req, res) => {
 
     const token = createAuthToken(user);
 
+    setAuthCookie(res, token);
+
     res.json({
       success: true,
       token,
@@ -435,6 +501,21 @@ app.post('/login', async (req, res) => {
     console.error('Erro ao autenticar usuário:', error);
     res.status(500).json({ success: false, message: 'Erro ao autenticar usuário.' });
   }
+});
+
+app.get('/auth/session', (req, res) => {
+  const payload = getAuthenticatedUserFromRequest(req);
+  if (!payload) {
+    res.status(401).json({ success: false, message: 'Sessão inválida ou expirada.' });
+    return;
+  }
+
+  res.json({ success: true, user: { id: payload.sub, email: payload.email } });
+});
+
+app.post('/logout', (req, res) => {
+  clearAuthCookie(res);
+  res.json({ success: true });
 });
 app.get('/api/image-levels', async (req, res) => {
   try {
@@ -552,6 +633,53 @@ app.get('/voices/:filePath(*)', async (req, res, next) => {
     next(error);
   }
 });
+
+app.use((req, res, next) => {
+  if (req.method !== 'GET') {
+    next();
+    return;
+  }
+
+  const pathName = req.path;
+  const publicPaths = new Set([
+    '/auth.html',
+    '/login',
+    '/register',
+    '/logout',
+    '/auth/session',
+    '/config.js'
+  ]);
+
+  if (
+    publicPaths.has(pathName)
+    || pathName.startsWith('/css/')
+    || pathName.startsWith('/js/')
+    || pathName.startsWith('/images/')
+    || pathName.startsWith('/voices/')
+    || pathName.startsWith('/api/')
+    || pathName.startsWith('/videos/')
+    || pathName.startsWith('/SVG/')
+    || pathName.startsWith('/Fontes/')
+    || pathName.startsWith('/medalhas/')
+    || pathName.startsWith('/Avatar/')
+    || pathName.startsWith('/backgrounds/')
+    || pathName.startsWith('/data/')
+    || pathName === '/favicon.ico'
+    || (path.extname(pathName) && path.extname(pathName) !== '.html')
+  ) {
+    next();
+    return;
+  }
+
+  const payload = getAuthenticatedUserFromRequest(req);
+  if (!payload) {
+    res.redirect('/auth.html');
+    return;
+  }
+
+  next();
+});
+
 app.use(express.static(staticDir));
 
 app.get(['/class', '/class/'], (req, res) => {

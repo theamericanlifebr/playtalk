@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlayTalk | Login</title>
+  <link rel="icon" type="image/svg+xml" href="SVG/logo.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-page">
+  <main class="auth-card" aria-labelledby="auth-title">
+    <img src="SVG/logo.svg" alt="PlayTalk" class="auth-logo">
+    <h1 id="auth-title">Acesse sua conta</h1>
+    <p class="auth-subtitle">Faça login ou crie seu cadastro para continuar.</p>
+
+    <div class="auth-switch" role="tablist" aria-label="Selecionar ação">
+      <button class="auth-switch__btn is-active" id="tab-login" type="button" role="tab" aria-selected="true">Login</button>
+      <button class="auth-switch__btn" id="tab-register" type="button" role="tab" aria-selected="false">Cadastro</button>
+    </div>
+
+    <form id="auth-form" class="auth-form" novalidate>
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="email" required>
+
+      <label for="password">Senha</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" minlength="6" required>
+
+      <button id="auth-submit" type="submit" class="btn-primary">Entrar</button>
+    </form>
+
+    <p id="auth-message" class="auth-message" aria-live="polite"></p>
+  </main>
+
+  <script src="js/auth-page.js" defer></script>
+</body>
+</html>
