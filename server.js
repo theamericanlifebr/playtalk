@@ -1,12 +1,13 @@
-const cors = require("cors");
-app.use(cors());
 const express = require('express');
+const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const app = express();
+app.use(cors());
+app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const env = (value) => (typeof value === 'string' ? value.trim() : value);
 
