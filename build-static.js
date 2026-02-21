@@ -2,18 +2,8 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const rootDir = __dirname;
+const sourceDir = path.join(rootDir, 'www');
 const outputDir = path.join(rootDir, 'public');
-
-const filesToCopy = ['index.html', 'play.html', 'store.html'];
-const directoriesToCopy = [
-  'css',
-  'js',
-  'Audio',
-  'data',
-  'gamesounds',
-  'selos modos de jogo',
-  'selos_niveis'
-];
 
 async function removeDir(target) {
   await fs.rm(target, { recursive: true, force: true });
@@ -43,31 +33,14 @@ async function build() {
   await removeDir(outputDir);
   await ensureDir(outputDir);
 
-  for (const file of filesToCopy) {
-    const source = path.join(rootDir, file);
-    try {
-      await copyRecursive(source, path.join(outputDir, file));
-      console.log(`Copied ${file}`);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        console.warn(`File not found: ${file}, skipping.`);
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  for (const directory of directoriesToCopy) {
-    const source = path.join(rootDir, directory);
-    try {
-      await copyRecursive(source, path.join(outputDir, directory));
-      console.log(`Copied ${directory}/`);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        console.warn(`Directory not found: ${directory}, skipping.`);
-      } else {
-        throw error;
-      }
+  try {
+    await copyRecursive(sourceDir, outputDir);
+    console.log('Copied www/ to public/.');
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.warn('Directory not found: www/, skipping.');
+    } else {
+      throw error;
     }
   }
 

@@ -1,7 +1,13 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const PHRASES_DIR = path.join(process.cwd(), 'data', 'phrases');
+const PHRASES_DIR = (() => {
+  const candidates = [
+    path.join(process.cwd(), 'www', 'data', 'phrases'),
+    path.join(process.cwd(), 'data', 'phrases')
+  ];
+  return candidates.find((candidate) => require('fs').existsSync(candidate)) || candidates[0];
+})();
 const CONFIG_PATH = path.join(PHRASES_DIR, 'config.json');
 
 function normalizePhraseEntry(phrase) {
