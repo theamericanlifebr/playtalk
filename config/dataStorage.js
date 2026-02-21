@@ -5,7 +5,13 @@ const APP_ROOT = path.resolve(__dirname, '..');
 const CUSTOM_DATA_DIR = process.env.PLAYTALK_DATA_DIR && process.env.PLAYTALK_DATA_DIR.trim();
 const CUSTOM_DATA_FILE = process.env.PLAYTALK_DATA_FILE && process.env.PLAYTALK_DATA_FILE.trim();
 const RUNTIME_DATA_DIR = path.join(APP_ROOT, 'runtime-data');
-const SEED_DATA_FILE = path.join(APP_ROOT, 'data', 'users.json');
+const SEED_DATA_FILE = (() => {
+  const candidates = [
+    path.join(APP_ROOT, 'www', 'data', 'users.json'),
+    path.join(APP_ROOT, 'data', 'users.json')
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0];
+})();
 
 const DATA_DIR = CUSTOM_DATA_FILE
   ? path.dirname(path.resolve(CUSTOM_DATA_FILE))

@@ -122,7 +122,7 @@ const staticDir = (() => {
     return path.resolve(__dirname, customDir);
   }
 
-  const candidateDirs = ['public', 'dist'];
+  const candidateDirs = ['www', 'public', 'dist'];
   for (const dir of candidateDirs) {
     const candidatePath = path.join(__dirname, dir);
     if (fs.existsSync(candidatePath)) {
@@ -134,21 +134,26 @@ const staticDir = (() => {
 })();
 
 const IMAGES_ROOT = (() => {
-  const candidateDirs = ['imagens', 'images'];
+  const candidateDirs = [
+    path.join('www', 'imagens'),
+    path.join('www', 'images'),
+    'imagens',
+    'images'
+  ];
   for (const dir of candidateDirs) {
     const fullPath = path.join(__dirname, dir);
     if (fs.existsSync(fullPath)) return fullPath;
   }
-  return path.join(__dirname, 'images');
+  return path.join(staticDir, 'images');
 })();
 
 const VOICES_ROOT = (() => {
-  const candidateDirs = ['voices'];
+  const candidateDirs = [path.join('www', 'voices'), 'voices'];
   for (const dir of candidateDirs) {
     const fullPath = path.join(__dirname, dir);
     if (fs.existsSync(fullPath)) return fullPath;
   }
-  return path.join(__dirname, 'voices');
+  return path.join(staticDir, 'voices');
 })();
 const SUPPORTED_IMAGE_EXTENSIONS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.bmp']);
 const SUPPORTED_AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.opus', '.ogg', '.oga', '.webm']);
@@ -769,19 +774,19 @@ app.use((req, res, next) => {
 app.use(express.static(staticDir));
 
 app.get(['/class', '/class/'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'class.html'));
+  res.sendFile(path.join(staticDir, 'class.html'));
 });
 
 app.get(['/game', '/game/'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'game.html'));
+  res.sendFile(path.join(staticDir, 'game.html'));
 });
 
 app.get(['/vocabulary', '/vocabulary/'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'vocabulary.html'));
+  res.sendFile(path.join(staticDir, 'vocabulary.html'));
 });
 
 app.get(['/levels', '/levels/'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'levels.html'));
+  res.sendFile(path.join(staticDir, 'levels.html'));
 });
 
 app.use((req, res, next) => {
