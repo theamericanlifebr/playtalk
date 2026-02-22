@@ -31,7 +31,35 @@
   <main id="home-main" class="home-layout" data-page-transition>
     <section class="journey-panel" id="journey-panel">
       <h1 class="journey-title">Jornada PlayTalk</h1>
+      <label class="journey-field" for="journey-card-count">
+        Flashcards da jornada
+        <select id="journey-card-count">
+          <option value="6">6</option>
+          <option value="8" selected>8</option>
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="16">16</option>
+        </select>
+      </label>
       <button class="journey-button" id="journey-start-btn" type="button">Iniciar Jornada</button>
+      <label class="journey-field" for="journey-phase-select">
+        Jogar fase avulsa
+        <div class="journey-phase-row">
+          <select id="journey-phase-select">
+            <option value="1">Fase 1</option>
+            <option value="2">Fase 2</option>
+            <option value="3">Fase 3</option>
+            <option value="4">Fase 4</option>
+            <option value="5">Fase 5</option>
+            <option value="6">Fase 6</option>
+            <option value="7">Fase 7</option>
+            <option value="8">Fase 8</option>
+            <option value="9">Fase 9</option>
+            <option value="10">Fase 10</option>
+          </select>
+          <button class="journey-button journey-button--secondary-solid" id="journey-phase-btn" type="button">Jogar fase</button>
+        </div>
+      </label>
       <button class="journey-button journey-button--secondary is-hidden" id="journey-reset-btn" type="button">
         Começar do zero
       </button>

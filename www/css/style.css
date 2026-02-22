@@ -340,6 +340,32 @@ body.page-inplay .container-screen {
   text-align: center;
 }
 
+.journey-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #0b1f44;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.journey-field select {
+  min-width: 140px;
+  border: 1px solid rgba(11, 31, 68, 0.25);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0b1f44;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.journey-phase-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .journey-title {
   font-size: clamp(32px, 6vw, 52px);
   font-weight: 800;
@@ -371,6 +397,14 @@ body.page-inplay .container-screen {
   box-shadow: none;
   padding: 0;
   font-size: 16px;
+}
+
+.journey-button--secondary-solid {
+  background: #ffffff;
+  color: #2f6fff;
+  box-shadow: 0 8px 16px rgba(47, 111, 255, 0.2);
+  padding: 10px 18px;
+  font-size: 15px;
 }
 
 .home-game {
