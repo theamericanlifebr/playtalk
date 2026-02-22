@@ -140,6 +140,7 @@
     : (Number.isFinite(modePhase) ? modePhase : null);
   const singlePhaseMode = Number.isFinite(forcedPhase) && forcedPhase >= 1 && forcedPhase <= MAX_PHASE;
   const isFlashcardLaunch = urlParams.get('source') === 'flashcards';
+  const JOURNEY_FLASHCARD_SET_KEY = 'playtalk-journey-flashcards';
 
   function playSuccessAudio() {
     if (!successAudio) return;
@@ -188,6 +189,9 @@
   let writingState = null;
   let writingCleanup = null;
   let writingColorTimer = null;
+  let shouldUnlockFlashcardsOnCompletion = false;
+  let selectedFlashcardCount = 8;
+  let returnToHomeAfterSinglePhase = false;
 
   let awaiting = false;
   let recognition = null;
@@ -1740,6 +1744,32 @@
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
+  }
+
+  function buildFlashcardUnlockSet(dayNumber, limit = 8) {
+    const unique = new Map();
+    dayEntries.forEach(entry => {
+      if (!entry) return;
+      const file = String(entry.file || '').trim();
+      const en = String(entry.en || entry.nomeIngles || '').trim();
+      if (!file || !en) return;
+      const key = `${file}::${en.toLowerCase()}`;
+      if (!unique.has(key)) {
+        unique.set(key, { file, en });
+      }
+    });
+    const selected = shuffle(Array.from(unique.values())).slice(0, Math.max(1, Number(limit) || 8));
+    return {
+      unlocked: true,
+      day: Number(dayNumber) || 1,
+      count: selected.length,
+      cards: selected
+    };
+  }
+
+  function unlockJourneyFlashcards(dayNumber, limit) {
+    const payload = buildFlashcardUnlockSet(dayNumber, limit);
+    localStorage.setItem(JOURNEY_FLASHCARD_SET_KEY, JSON.stringify(payload));
   }
 
   function resetProgress() {
@@ -3890,6 +3920,11 @@
     stopPhaseTrack();
     if (singlePhaseMode) {
       dissolveEnvironment(() => {
+        if (returnToHomeAfterSinglePhase) {
+          resetJourneyState({ resetLevel: false });
+          window.dispatchEvent(new CustomEvent('playtalk:return-home'));
+          return;
+        }
         startPhase(forcedPhase, { skipIntroAudio: true });
       });
       return;
@@ -3900,6 +3935,9 @@
       const finalElapsedMs = getLevelElapsedMs();
       registerMedalResult(completedLevel, medalKey);
       updateLevelBestTime(completedLevel, finalElapsedMs);
+      if (shouldUnlockFlashcardsOnCompletion) {
+        unlockJourneyFlashcards(completedLevel, selectedFlashcardCount);
+      }
       updateFinalMedal(medalKey);
       currentMedalKey = medalKey;
       saveCompletionStorage({
@@ -4080,6 +4118,8 @@
     completedLevelSnapshot = null;
     awaiting = false;
     gameStarted = false;
+    returnToHomeAfterSinglePhase = false;
+    shouldUnlockFlashcardsOnCompletion = false;
   }
 
   function resumeJourney() {
@@ -4121,9 +4161,34 @@
     });
   }
 
-  function startNewJourney() {
+  function startNewJourney(options = {}) {
+    const count = Number.parseInt(options.flashcardCount, 10);
+    selectedFlashcardCount = Number.isFinite(count) && count > 0 ? count : 8;
+    shouldUnlockFlashcardsOnCompletion = true;
+    returnToHomeAfterSinglePhase = false;
     resetJourneyState({ resetLevel: true });
+    shouldUnlockFlashcardsOnCompletion = true;
     handleStartInteraction();
+  }
+
+  function startSinglePhase(phaseNumber) {
+    const nextPhase = Number.parseInt(phaseNumber, 10);
+    if (!Number.isFinite(nextPhase) || nextPhase < 1 || nextPhase > MAX_PHASE) {
+      return;
+    }
+    shouldUnlockFlashcardsOnCompletion = false;
+    returnToHomeAfterSinglePhase = true;
+    resetJourneyState({ resetLevel: false });
+    gameStarted = true;
+    if (startScreen) {
+      startScreen.classList.add('start-screen--blank');
+      startScreen.classList.add('hidden');
+    }
+    loadJourneyData(level).then(() => {
+      phase = dayPhaseSequence.includes(nextPhase) ? nextPhase : (getFirstPhaseForDay() || 1);
+      updatePhaseLabel();
+      showPhaseTransition(phase);
+    });
   }
 
   function setupMedalSkipShortcut() {
@@ -4279,6 +4344,7 @@
 
   window.playtalkGame = {
     startNewJourney,
+    startSinglePhase,
     resumeJourney,
     resetJourney: resetJourneyState,
     hasSavedJourneyState

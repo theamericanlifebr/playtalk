@@ -8,6 +8,9 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
   const journeyPanel = document.getElementById('journey-panel');
   const journeyButton = document.getElementById('journey-start-btn');
   const journeyReset = document.getElementById('journey-reset-btn');
+  const journeyCardCount = document.getElementById('journey-card-count');
+  const journeyPhaseSelect = document.getElementById('journey-phase-select');
+  const journeyPhaseButton = document.getElementById('journey-phase-btn');
   const gamePanel = document.getElementById('home-game');
 
   const safeParse = (key) => {
@@ -71,6 +74,11 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
     }
   };
 
+  const getSelectedCardCount = () => {
+    const count = Number.parseInt((journeyCardCount && journeyCardCount.value) || '8', 10);
+    return Number.isFinite(count) && count > 0 ? count : 8;
+  };
+
   const startJourney = () => {
     showGame();
     if (!window.playtalkGame) return;
@@ -78,7 +86,14 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
       window.playtalkGame.resumeJourney();
       return;
     }
-    window.playtalkGame.startNewJourney();
+    window.playtalkGame.startNewJourney({ flashcardCount: getSelectedCardCount() });
+  };
+
+  const startSinglePhase = () => {
+    showGame();
+    if (!window.playtalkGame || typeof window.playtalkGame.startSinglePhase !== 'function') return;
+    const phase = Number.parseInt((journeyPhaseSelect && journeyPhaseSelect.value) || '1', 10);
+    window.playtalkGame.startSinglePhase(phase);
   };
 
   const resetJourney = () => {
@@ -92,9 +107,15 @@ window.PLAYTALK_GAME_CONFIG = { deferAutoStart: true };
     journeyButton.addEventListener('click', startJourney);
   }
 
+  if (journeyPhaseButton) {
+    journeyPhaseButton.addEventListener('click', startSinglePhase);
+  }
+
   if (journeyReset) {
     journeyReset.addEventListener('click', resetJourney);
   }
+
+  window.addEventListener('playtalk:return-home', showHome);
 
   window.addEventListener('DOMContentLoaded', () => {
     showHome();

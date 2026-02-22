@@ -36,6 +36,7 @@
           </svg>
         `;
 
+        const JOURNEY_FLASHCARD_SET_KEY = 'playtalk-journey-flashcards';
         const flashcardGrid = document.getElementById('flashcardGrid');
         const levelFilter = document.getElementById('levelFilter');
         const detailPronuncia = document.getElementById('detailPronuncia');
@@ -516,6 +517,18 @@
           return Number.isFinite(numeric) && numeric > 0 ? numeric : 1;
         }
 
+        function readJourneyFlashcardSet() {
+          try {
+            const raw = JSON.parse(localStorage.getItem(JOURNEY_FLASHCARD_SET_KEY) || '{}');
+            if (!raw || raw.unlocked !== true || !Array.isArray(raw.cards) || !raw.cards.length) {
+              return null;
+            }
+            return raw;
+          } catch (error) {
+            return null;
+          }
+        }
+
         function normalizeFlashcardEntry(entry, source, levelMap) {
           if (!entry || typeof entry !== 'object') return null;
           const file = entry.file || entry.imagem;
@@ -700,8 +713,21 @@
         }
 
         function renderDays() {
-          const days = Array.from(new Set(flashcards.map(card => card.day))).sort((a, b) => a - b);
+          const unlockedSet = readJourneyFlashcardSet();
+          const sourceCards = unlockedSet
+            ? flashcards.filter(card => unlockedSet.cards.some(item => item.file === card.file && item.en === card.nomeIngles))
+            : flashcards;
+          const days = Array.from(new Set(sourceCards.map(card => card.day))).sort((a, b) => a - b);
           levelFilter.innerHTML = '';
+          if (!days.length) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Bloqueado';
+            levelFilter.appendChild(option);
+            levelFilter.disabled = true;
+            return;
+          }
+          levelFilter.disabled = false;
           const storedDay = getStoredDay();
           days.forEach(day => {
             const option = document.createElement('option');
@@ -731,8 +757,18 @@
         function renderCards() {
           flashcardStats = loadFlashcardStats();
           clearPhraseIntervals();
+          const unlockedSet = readJourneyFlashcardSet();
+          if (!unlockedSet) {
+            flashcardGrid.innerHTML = '';
+            emptyState.hidden = false;
+            emptyState.textContent = 'Conclua as 10 fases na Jornada para liberar seus flashcards.';
+            return;
+          }
           const day = Number(levelFilter.value || getStoredDay());
-          const dayCards = flashcards
+          const unlockedCards = flashcards.filter(card => (
+            unlockedSet.cards.some(item => item.file === card.file && item.en === card.nomeIngles)
+          ));
+          const dayCards = unlockedCards
             .filter(card => card.day === day && card.imageSrc);
 
           dayCards.sort((a, b) => {
