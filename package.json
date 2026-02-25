@@ -6,7 +6,11 @@
   "scripts": {
     "start": "node server.js",
     "build": "node build-static.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cap:init": "npx cap init PlayTalk com.playtalk.app --web-dir www",
+    "cap:add:android": "npx cap add android",
+    "cap:sync:android": "npx cap sync android",
+    "cap:open:android": "npx cap open android"
   },
   "engines": {
     "node": ">=18"
@@ -16,6 +20,11 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.12.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3"
   }
 }
