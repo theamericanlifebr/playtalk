@@ -14,7 +14,7 @@
         const CONNECT_CHOICES = 4;
         const MEMORY_HISTORY_LIMIT = 10;
         const MEMORY_SEEDING_DAYS = [3, 7, 15, 30];
-        const MEMORY_STAR_COUNT = 6;
+        const MEMORY_STAR_COUNT = 5;
         const MEMORY_DECK_STORAGE_KEY = 'playtalk-memory-deck';
         const MEMORY_DECK_INITIAL = 6;
         const MEMORY_DECK_ADD = 2;

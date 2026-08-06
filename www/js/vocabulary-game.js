@@ -1,6 +1,8 @@
 (function () {
   const STORAGE_KEY = 'vocabulary-level';
   const JOURNEY_STARTED_KEY = 'playtalk-journey-started';
+  const MAIN_MODE_STORAGE_KEY = 'playtalk-main-mode';
+  const CARD_COUNT_STORAGE_KEY = 'playtalk-cards-per-journey';
   const GAME_CONFIG = window.PLAYTALK_GAME_CONFIG || {};
   const deferAutoStart = Boolean(GAME_CONFIG.deferAutoStart);
   const gameRoot = document.querySelector('[data-game-root]') || document.body;
@@ -192,6 +194,7 @@
   let shouldUnlockFlashcardsOnCompletion = false;
   let selectedFlashcardCount = 8;
   let returnToHomeAfterSinglePhase = false;
+  let explorerSession = false;
 
   let awaiting = false;
   let recognition = null;
@@ -1746,7 +1749,7 @@
     return arr;
   }
 
-  function buildFlashcardUnlockSet(dayNumber, limit = 8) {
+  function buildFlashcardUnlockSet(dayNumber, limit = 8, excludedKeys = new Set()) {
     const unique = new Map();
     dayEntries.forEach(entry => {
       if (!entry) return;
@@ -1754,6 +1757,7 @@
       const en = String(entry.en || entry.nomeIngles || '').trim();
       if (!file || !en) return;
       const key = `${file}::${en.toLowerCase()}`;
+      if (excludedKeys.has(key)) return;
       if (!unique.has(key)) {
         unique.set(key, { file, en });
       }
@@ -1767,8 +1771,40 @@
     };
   }
 
+  function readFlashcardUnlockSet() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(JOURNEY_FLASHCARD_SET_KEY) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
   function unlockJourneyFlashcards(dayNumber, limit) {
-    const payload = buildFlashcardUnlockSet(dayNumber, limit);
+    const previous = readFlashcardUnlockSet();
+    const cards = new Map();
+    const addCard = card => {
+      const file = String(card?.file || '').trim();
+      const en = String(card?.en || '').trim();
+      if (!file || !en) return;
+      cards.set(`${file}::${en.toLowerCase()}`, { file, en });
+    };
+    if (Array.isArray(previous.cards)) previous.cards.forEach(addCard);
+    const earned = buildFlashcardUnlockSet(dayNumber, limit, new Set(cards.keys()));
+    earned.cards.forEach(addCard);
+    const previousDays = Array.isArray(previous.days) ? previous.days : [previous.day];
+    const days = Array.from(new Set([...previousDays, earned.day]
+      .map(Number)
+      .filter(day => Number.isFinite(day) && day > 0)))
+      .sort((a, b) => a - b);
+    const payload = {
+      unlocked: true,
+      day: earned.day,
+      days,
+      count: cards.size,
+      cards: Array.from(cards.values()),
+      updatedAt: Date.now()
+    };
     localStorage.setItem(JOURNEY_FLASHCARD_SET_KEY, JSON.stringify(payload));
   }
 
@@ -1830,7 +1866,7 @@
   }
 
   function persistProgressState() {
-    if (!gameStarted || singlePhaseMode) return;
+    if (!gameStarted || singlePhaseMode || explorerSession) return;
     saveProgressStorage({
       level,
       phase,
@@ -3918,10 +3954,14 @@
   function handlePhaseComplete(options = {}) {
     const { skipIntroAudio = false, nextPhase = getNextPhaseForDay(phase) } = options;
     stopPhaseTrack();
-    if (singlePhaseMode) {
+    if (singlePhaseMode || explorerSession) {
       dissolveEnvironment(() => {
         if (returnToHomeAfterSinglePhase) {
-          resetJourneyState({ resetLevel: false });
+          gameStarted = false;
+          explorerSession = false;
+          returnToHomeAfterSinglePhase = false;
+          clearBoard();
+          hidePhaseElements();
           window.dispatchEvent(new CustomEvent('playtalk:return-home'));
           return;
         }
@@ -4120,10 +4160,19 @@
     gameStarted = false;
     returnToHomeAfterSinglePhase = false;
     shouldUnlockFlashcardsOnCompletion = false;
+    explorerSession = false;
   }
 
-  function resumeJourney() {
+  function resumeJourney(options = {}) {
     if (gameStarted) return;
+    const requestedCount = Number.parseInt(options.flashcardCount, 10);
+    const storedCount = Number.parseInt(localStorage.getItem(CARD_COUNT_STORAGE_KEY) || '8', 10);
+    selectedFlashcardCount = Number.isFinite(requestedCount) && requestedCount > 0
+      ? requestedCount
+      : (Number.isFinite(storedCount) && storedCount > 0 ? storedCount : 8);
+    localStorage.setItem(CARD_COUNT_STORAGE_KEY, String(selectedFlashcardCount));
+    shouldUnlockFlashcardsOnCompletion = true;
+    explorerSession = false;
     if (!hasSavedJourneyState()) {
       handleStartInteraction();
       return;
@@ -4164,8 +4213,11 @@
   function startNewJourney(options = {}) {
     const count = Number.parseInt(options.flashcardCount, 10);
     selectedFlashcardCount = Number.isFinite(count) && count > 0 ? count : 8;
+    localStorage.setItem(MAIN_MODE_STORAGE_KEY, 'cards');
+    localStorage.setItem(CARD_COUNT_STORAGE_KEY, String(selectedFlashcardCount));
     shouldUnlockFlashcardsOnCompletion = true;
     returnToHomeAfterSinglePhase = false;
+    explorerSession = false;
     resetJourneyState({ resetLevel: true });
     shouldUnlockFlashcardsOnCompletion = true;
     handleStartInteraction();
@@ -4176,9 +4228,26 @@
     if (!Number.isFinite(nextPhase) || nextPhase < 1 || nextPhase > MAX_PHASE) {
       return;
     }
+    localStorage.setItem(MAIN_MODE_STORAGE_KEY, 'explorer');
     shouldUnlockFlashcardsOnCompletion = false;
     returnToHomeAfterSinglePhase = true;
-    resetJourneyState({ resetLevel: false });
+    explorerSession = true;
+    clearLevelUnlockTimer();
+    dayPhaseEntries = new Map();
+    dayPhaseSequence = [];
+    dayEntries = [];
+    phase = nextPhase;
+    resetLevelState();
+    resetProgress();
+    clearBoard();
+    hidePhaseElements();
+    if (levelComplete) levelComplete.classList.add('hidden');
+    if (phaseTransition) phaseTransition.classList.add('hidden');
+    if (progressCompleteOverlay) progressCompleteOverlay.setAttribute('aria-hidden', 'true');
+    if (finalOverlay) {
+      finalOverlay.classList.remove('active');
+      finalOverlay.setAttribute('aria-hidden', 'true');
+    }
     gameStarted = true;
     if (startScreen) {
       startScreen.classList.add('start-screen--blank');
