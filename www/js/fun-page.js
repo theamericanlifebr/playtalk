@@ -12,7 +12,7 @@
         const MEMORY_SEEDING_DAYS = [3, 7, 15, 30];
         const MEMORY_SEEDING_HOLD_DELAY_MS = 10000;
         const MEMORY_SEEDING_HOLD_DECREASE_HOURS = 2;
-        const MEMORY_STAR_COUNT = 6;
+        const MEMORY_STAR_COUNT = 5;
         const FLASHCARD_FORM_BACKGROUNDS = {
           question: 'images/pergunta.png',
           imperative: 'images/imperativo.png',
